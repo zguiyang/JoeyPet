@@ -1,5 +1,7 @@
 # JoeyPet
 
+[简体中文](./README.zh-CN.md)
+
 A tiny desktop pet that watches over your Mac, reacts to system status, and helps with everyday chores.
 
 JoeyPet is a lightweight, native desktop pet designed to live quietly on your desktop and respond to the state of your computer.
