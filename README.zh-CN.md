@@ -23,6 +23,11 @@ JoeyPet 是一款原生 macOS 桌面宠物工具。它会安静地生活在桌�
 
 第一版本将优先支持 macOS，并使用 Swift 原生技术栈进行开发。
 
+## 文档
+
+- [AGENTS.md](./AGENTS.md) — Agent 开发规则
+- [docs/](docs/) — 产品、架构、传感器、安全、路线图、ADR
+
 ## 设计原则
 
 - 轻量、低资源占用

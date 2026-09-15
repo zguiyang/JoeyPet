@@ -14,6 +14,11 @@ Research and early development.
 
 The first version is focused on macOS and will be built as a native Swift application.
 
+## Documentation
+
+- [AGENTS.md](./AGENTS.md) — rules for coding agents
+- [docs/](docs/) — product, architecture, sensors, safety, roadmap, ADRs
+
 ## Principles
 
 - Lightweight and resource-friendly
