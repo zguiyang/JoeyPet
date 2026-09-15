@@ -11,6 +11,26 @@
 		D7BABD68305978720070926E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7BABD64305978720070926E /* ContentView.swift */; };
 		D7BABD69305978720070926E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D7BABD63305978720070926E /* Assets.xcassets */; };
 		D7BABD6C305978E70070926E /* JoeyPetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7BABD6A305978E70070926E /* JoeyPetTests.swift */; };
+		D7PET101305978720070926E /* SignalSeverity.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET001305978720070926E /* SignalSeverity.swift */; };
+		D7PET102305978720070926E /* PetState.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET002305978720070926E /* PetState.swift */; };
+		D7PET103305978720070926E /* SystemSignal.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET003305978720070926E /* SystemSignal.swift */; };
+		D7PET104305978720070926E /* PetBehavior.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET004305978720070926E /* PetBehavior.swift */; };
+		D7PET105305978720070926E /* SensorThresholds.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET005305978720070926E /* SensorThresholds.swift */; };
+		D7PET106305978720070926E /* BehaviorEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET006305978720070926E /* BehaviorEngine.swift */; };
+		D7PET107305978720070926E /* SystemSensor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET007305978720070926E /* SystemSensor.swift */; };
+		D7PET108305978720070926E /* ThermalSensor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET008305978720070926E /* ThermalSensor.swift */; };
+		D7PET109305978720070926E /* MemoryPressureSensor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET009305978720070926E /* MemoryPressureSensor.swift */; };
+		D7PET10A305978720070926E /* StorageSensor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET00A305978720070926E /* StorageSensor.swift */; };
+		D7PET10B305978720070926E /* SensorHub.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET00B305978720070926E /* SensorHub.swift */; };
+		D7PET10C305978720070926E /* PetRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET00C305978720070926E /* PetRuntime.swift */; };
+		D7PET10D305978720070926E /* PetScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET00D305978720070926E /* PetScene.swift */; };
+		D7PET10E305978720070926E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET00E305978720070926E /* AppDelegate.swift */; };
+		D7PET10F305978720070926E /* PetCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET00F305978720070926E /* PetCoordinator.swift */; };
+		D7PET110305978720070926E /* SleepWakeMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET010305978720070926E /* SleepWakeMonitor.swift */; };
+		D7PET111305978720070926E /* DebugStateInjector.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET011305978720070926E /* DebugStateInjector.swift */; };
+		D7PET112305978720070926E /* PetPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET012305978720070926E /* PetPanel.swift */; };
+		D7PET113305978720070926E /* PetSpriteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET013305978720070926E /* PetSpriteView.swift */; };
+		D7PET114305978720070926E /* PetPanelController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET014305978720070926E /* PetPanelController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -30,6 +50,26 @@
 		D7BABD64305978720070926E /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		D7BABD65305978720070926E /* JoeyPetApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeyPetApp.swift; sourceTree = "<group>"; };
 		D7BABD6A305978E70070926E /* JoeyPetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeyPetTests.swift; sourceTree = "<group>"; };
+		D7PET001305978720070926E /* SignalSeverity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalSeverity.swift; sourceTree = "<group>"; };
+		D7PET002305978720070926E /* PetState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetState.swift; sourceTree = "<group>"; };
+		D7PET003305978720070926E /* SystemSignal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemSignal.swift; sourceTree = "<group>"; };
+		D7PET004305978720070926E /* PetBehavior.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetBehavior.swift; sourceTree = "<group>"; };
+		D7PET005305978720070926E /* SensorThresholds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorThresholds.swift; sourceTree = "<group>"; };
+		D7PET006305978720070926E /* BehaviorEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BehaviorEngine.swift; sourceTree = "<group>"; };
+		D7PET007305978720070926E /* SystemSensor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemSensor.swift; sourceTree = "<group>"; };
+		D7PET008305978720070926E /* ThermalSensor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThermalSensor.swift; sourceTree = "<group>"; };
+		D7PET009305978720070926E /* MemoryPressureSensor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryPressureSensor.swift; sourceTree = "<group>"; };
+		D7PET00A305978720070926E /* StorageSensor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageSensor.swift; sourceTree = "<group>"; };
+		D7PET00B305978720070926E /* SensorHub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorHub.swift; sourceTree = "<group>"; };
+		D7PET00C305978720070926E /* PetRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetRuntime.swift; sourceTree = "<group>"; };
+		D7PET00D305978720070926E /* PetScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetScene.swift; sourceTree = "<group>"; };
+		D7PET00E305978720070926E /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		D7PET00F305978720070926E /* PetCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetCoordinator.swift; sourceTree = "<group>"; };
+		D7PET010305978720070926E /* SleepWakeMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepWakeMonitor.swift; sourceTree = "<group>"; };
+		D7PET011305978720070926E /* DebugStateInjector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugStateInjector.swift; sourceTree = "<group>"; };
+		D7PET012305978720070926E /* PetPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetPanel.swift; sourceTree = "<group>"; };
+		D7PET013305978720070926E /* PetSpriteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetSpriteView.swift; sourceTree = "<group>"; };
+		D7PET014305978720070926E /* PetPanelController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetPanelController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -71,12 +111,96 @@
 		D7BABD66305978720070926E /* JoeyPet */ = {
 			isa = PBXGroup;
 			children = (
+				D7PET207305978720070926E /* App */,
+				D7PET201305978720070926E /* Domain */,
+				D7PET204305978720070926E /* Pet */,
+				D7PET202305978720070926E /* System */,
+				D7PET208305978720070926E /* UI */,
 				D7BABD63305978720070926E /* Assets.xcassets */,
 				D7BABD64305978720070926E /* ContentView.swift */,
 				D7BABD65305978720070926E /* JoeyPetApp.swift */,
 			);
 			name = JoeyPet;
 			path = src/JoeyPet;
+			sourceTree = "<group>";
+		};
+		D7PET201305978720070926E /* Domain */ = {
+			isa = PBXGroup;
+			children = (
+				D7PET006305978720070926E /* BehaviorEngine.swift */,
+				D7PET004305978720070926E /* PetBehavior.swift */,
+				D7PET002305978720070926E /* PetState.swift */,
+				D7PET005305978720070926E /* SensorThresholds.swift */,
+				D7PET001305978720070926E /* SignalSeverity.swift */,
+				D7PET003305978720070926E /* SystemSignal.swift */,
+			);
+			path = Domain;
+			sourceTree = "<group>";
+		};
+		D7PET202305978720070926E /* System */ = {
+			isa = PBXGroup;
+			children = (
+				D7PET203305978720070926E /* Sensors */,
+			);
+			path = System;
+			sourceTree = "<group>";
+		};
+		D7PET203305978720070926E /* Sensors */ = {
+			isa = PBXGroup;
+			children = (
+				D7PET009305978720070926E /* MemoryPressureSensor.swift */,
+				D7PET00B305978720070926E /* SensorHub.swift */,
+				D7PET007305978720070926E /* SystemSensor.swift */,
+				D7PET00A305978720070926E /* StorageSensor.swift */,
+				D7PET008305978720070926E /* ThermalSensor.swift */,
+			);
+			path = Sensors;
+			sourceTree = "<group>";
+		};
+		D7PET204305978720070926E /* Pet */ = {
+			isa = PBXGroup;
+			children = (
+				D7PET205305978720070926E /* Runtime */,
+				D7PET206305978720070926E /* Sprite */,
+			);
+			path = Pet;
+			sourceTree = "<group>";
+		};
+		D7PET205305978720070926E /* Runtime */ = {
+			isa = PBXGroup;
+			children = (
+				D7PET00C305978720070926E /* PetRuntime.swift */,
+			);
+			path = Runtime;
+			sourceTree = "<group>";
+		};
+		D7PET206305978720070926E /* Sprite */ = {
+			isa = PBXGroup;
+			children = (
+				D7PET00D305978720070926E /* PetScene.swift */,
+			);
+			path = Sprite;
+			sourceTree = "<group>";
+		};
+		D7PET207305978720070926E /* App */ = {
+			isa = PBXGroup;
+			children = (
+				D7PET00E305978720070926E /* AppDelegate.swift */,
+				D7PET011305978720070926E /* DebugStateInjector.swift */,
+				D7PET00F305978720070926E /* PetCoordinator.swift */,
+				D7PET010305978720070926E /* SleepWakeMonitor.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		D7PET208305978720070926E /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				D7PET012305978720070926E /* PetPanel.swift */,
+				D7PET014305978720070926E /* PetPanelController.swift */,
+				D7PET013305978720070926E /* PetSpriteView.swift */,
+			);
+			path = UI;
 			sourceTree = "<group>";
 		};
 		D7BABD6B305978E70070926E /* JoeyPetTests */ = {
@@ -192,8 +316,28 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D7BABD67305978720070926E /* JoeyPetApp.swift in Sources */,
+				D7PET10E305978720070926E /* AppDelegate.swift in Sources */,
+				D7PET106305978720070926E /* BehaviorEngine.swift in Sources */,
 				D7BABD68305978720070926E /* ContentView.swift in Sources */,
+				D7PET111305978720070926E /* DebugStateInjector.swift in Sources */,
+				D7BABD67305978720070926E /* JoeyPetApp.swift in Sources */,
+				D7PET109305978720070926E /* MemoryPressureSensor.swift in Sources */,
+				D7PET104305978720070926E /* PetBehavior.swift in Sources */,
+				D7PET10F305978720070926E /* PetCoordinator.swift in Sources */,
+				D7PET112305978720070926E /* PetPanel.swift in Sources */,
+				D7PET114305978720070926E /* PetPanelController.swift in Sources */,
+				D7PET10C305978720070926E /* PetRuntime.swift in Sources */,
+				D7PET10D305978720070926E /* PetScene.swift in Sources */,
+				D7PET102305978720070926E /* PetState.swift in Sources */,
+				D7PET113305978720070926E /* PetSpriteView.swift in Sources */,
+				D7PET10B305978720070926E /* SensorHub.swift in Sources */,
+				D7PET105305978720070926E /* SensorThresholds.swift in Sources */,
+				D7PET101305978720070926E /* SignalSeverity.swift in Sources */,
+				D7PET110305978720070926E /* SleepWakeMonitor.swift in Sources */,
+				D7PET10A305978720070926E /* StorageSensor.swift in Sources */,
+				D7PET103305978720070926E /* SystemSignal.swift in Sources */,
+				D7PET107305978720070926E /* SystemSensor.swift in Sources */,
+				D7PET108305978720070926E /* ThermalSensor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
