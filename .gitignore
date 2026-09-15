@@ -1,0 +1,27 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Xcode user-specific files
+xcuserdata/
+*.xcuserstate
+UserInterfaceState.xcuserstate
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+
+# Xcode build products and local build data
+build/
+DerivedData/
+*.xcarchive
+*.ipa
+*.dSYM
+
+# Swift Package Manager local state and build products
+.build/
+.swiftpm/
+
+# Local workspace metadata
+*.xcscmblueprint
