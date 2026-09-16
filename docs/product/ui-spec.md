@@ -57,40 +57,81 @@ JoeyPet
 - 关闭窗口只隐藏 Main Window，Joey 继续运行。
 - 所有异步状态都必须有可见的 loading、完成或错误反馈。
 
-## 4. Overview
+## 4. Overview — Lightweight Mac System Overview
 
-### Page Goal
+### Overview Goal
 
-用户打开后几秒内知道 Mac 当前是否正常，并能找到 Cleanup 的摘要入口。
+用户打开后几秒内知道 Mac 当前运行得怎么样。Overview 是轻量的 System Monitoring 界面，不是专业监控、硬件诊断或 System Management 工具。
 
 ### Information Hierarchy
 
-1. **Overall status**：正常、需要留意、需要注意或比较紧张。
-2. **Thermal / Memory Pressure / Storage**：三项事实和各自严重程度。
-3. **Cleanup summary**：最近一次结果或尚未扫描，以及进入 Cleanup 的入口。
+1. **Overall Mac Status**：使用共享的 normal、notice、warning、critical 语义给出结论。
+2. **Current Metrics**：CPU、Memory、Network、Storage、Thermal 的当前状态。
+3. **Recent Trends**：CPU、Memory、Network 在适合时显示短时趋势。
+4. **Cleanup Summary**：小型摘要和进入 Cleanup 的入口。
 
-不要用三块同等重量的大卡片制造指标墙。整体状态应由位置、文字和颜色共同表达，不能只靠颜色。
+使用 section、row、轻量 usage indicator 或小型 sparkline 组织信息。不要把每个指标做成巨大的独立 Card、Gauge 或 Analytics 面板；整体状态必须由文字、层级和视觉提示共同表达，不能只靠颜色。
+
+### Overall Status
+
+Overall Mac Status 必须与 Joey 使用同一套 `normal`、`notice`、`warning`、`critical` 语义。它是当前系统事实的汇总，不建立与 Joey 不一致的第二套严重程度模型。
+
+CPU 使用率可以作为当前状态信息，但不能仅因为 CPU 较高就自动产生新的 Joey behavior。Thermal、Memory Pressure、Storage 仍然负责正式的 Joey semantic reactions。
+
+### CPU
+
+显示当前 CPU Usage，并在样本足够时显示最近短时间趋势。表达重点是“当前是否繁忙”，不显示进程列表、每进程 CPU 或优化操作。
+
+### Memory
+
+显示当前 Memory Usage（例如 used/total 或同等清晰表达），并单独显示 Memory Pressure 这一健康语义。两者不能合并为一个指标，也不能把缺失值当作正常。
+
+### Network
+
+显示当前 Download 与 Upload 活动，并在适合时提供短时趋势。不显示 network process list、packet inspector、connection manager 或网络控制项。
+
+### Storage
+
+显示 used、free、total 和当前存储健康状态。Storage 继续与 Joey 的 carryingTrash 语义及 Cleanup summary 保持一致，但 Overview 不直接替用户执行清理。
+
+### Thermal
+
+显示 macOS Thermal State：nominal、fair、serious、critical，并使用共享 severity 语义。它不是 CPU 温度读数。
+
+### Optional Hardware Metrics
+
+Fan RPM 和 Exact Temperature 是 Conditional Capability：只有在可靠、稳定且权限合理的方案通过技术验证后才显示。不可用时保留 Thermal State，并清楚显示 unavailable 或 fallback。
+
+绝对不能从 Thermal State 推算 °C，也不能伪造 RPM 或温度。两项不是 V1 Definition of Done 的硬性 blocker。
+
+### Recent Trends
+
+趋势只属于当前运行 session 的短时数据。CPU、Memory、Network 可以使用小型 trend line、sparkline 或 usage indicator；不提供过去 7/30 天、历史报告、时间范围选择器、数据库或跨重启持久化。
+
+### Cleanup Summary
+
+Cleanup Summary 是 Overview 的小型次要区块，显示最近一次执行摘要或尚未扫描，并提供进入 Cleanup 的入口。它不是候选路径历史，也不重复 Cleanup 页面完整列表。
 
 ### Primary and Secondary Actions
 
-- Primary：当没有可直接处理的状态时为 Scan and View；如果当前已有 Cleanup 结果，则为进入 Cleanup 查看。
-- Secondary：查看具体状态或切换到其他一级页面。
+- Primary：按当前状态提供查看 Cleanup 或进入相关详情的入口；Overview 不提供系统优化动作。
+- Secondary：重新查看可用状态或切换 Overview/Cleanup/Settings。
 
 ### UI States
 
 | State | 用户应看到什么 | 可用操作 |
 |---|---|---|
-| Loading | 整体状态区域显示正在读取，不显示猜测值 | 等待 |
-| Normal | Mac 状态正常；三项状态简洁排列 | 查看 Cleanup |
-| Warning | 明确指出哪一项需要注意，并保留其他状态 | 查看相关状态、进入 Cleanup |
-| Critical | 明确指出严重项，主要动作优先 | 查看详情、进入相关 Cleanup |
-| Unavailable | 具体项显示暂时不可用和简短原因 | 稍后重试或继续查看其他项 |
+| Loading | 未就绪指标显示读取中，不显示猜测值 | 等待 |
+| Normal | Overall Mac Status 正常，当前指标简洁可读 | 查看 Cleanup |
+| Warning | 明确指出需要留意的指标，并保留其他可用指标 | 查看状态、进入 Cleanup |
+| Critical | 明确指出严重项，主要查看入口优先 | 查看状态、进入相关 Cleanup |
+| Unavailable | 具体指标显示暂时不可用和简短原因 | 稍后重试，继续查看其他指标 |
 | Cleanup not scanned | 显示尚未扫描，不假报没有内容 | Scan and View |
 | Cleanup summary | 显示最近结果摘要，不展示候选路径历史 | 查看 Cleanup |
 
 ### Implementation Gap
 
-当前实现有三项状态和 Cleanup 摘要，但“整体状态优先”、loading/unavailable 以及页面主次层级仍需 M1 重新整理，标记为 **NEEDS REDESIGN**。
+当前实现只有 Thermal、Memory Pressure、Storage 和 Cleanup summary；CPU Usage、Memory Usage、Network Activity 及短时指标趋势尚未实现。Fan RPM 与 Exact Temperature 需要技术验证。因此 Overview 继续标记为 **NEEDS REDESIGN**，并且存在 **MISSING** 的 V1 数据来源，不得标记为 DONE。
 
 ## 5. Cleanup
 
@@ -313,7 +354,9 @@ Examples:
 
 | Area | Current State | V1 UI Requirement | Gap |
 |---|---|---|---|
-| Overview | 三项状态、Cleanup 摘要、Scan and View 已有 | 整体状态优先，状态完整且不可用可解释 | NEEDS REDESIGN |
+| Overview | Thermal、Memory Pressure、Storage、Cleanup 摘要、Scan and View 已有 | Overall Mac Status、完整 V1 metrics、短时趋势与 unavailable 状态 | NEEDS REDESIGN |
+| Overview | CPU Usage、Memory Usage、Network Activity | V1 必需当前指标；CPU/Memory/Network 适合时提供短时趋势 | MISSING |
+| Overview | Fan RPM、Exact Temperature | 可靠方案通过技术验证后才展示，不是 Done blocker | CONDITIONAL |
 | Cleanup | Scan、Quick Clean、候选选择、确认和结果已有 | 安全分组、全状态、主 CTA 和失败处理清晰 | NEEDS REDESIGN |
 | Settings | 四项正式设置大体已有 | 极简分组、即时状态和错误反馈 | NEEDS REDESIGN |
 | Bubble | 信息、动作、成功/警告文本与超时已有 | 统一类型、重复抑制、动作与边缘布局 | NEEDS REDESIGN |

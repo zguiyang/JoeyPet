@@ -1,6 +1,24 @@
 # System Sensors
 
-V1 sensors are **read-only**. Each sensor produces `SystemSignal` values; none drive UI directly.
+Current sensor implementation is **read-only**. Each implemented sensor
+produces `SystemSignal` values; none drives UI directly.
+
+The product V1 System Overview target is broader than the currently
+implemented semantic sensors. Product scope is defined in
+[`docs/product/mvp-scope.md`](product/mvp-scope.md) and [`docs/product/feature-spec.md`](product/feature-spec.md);
+this technical document records implementation facts and does not expand the
+scope by itself.
+
+| V1 Overview target | Current implementation | Product note |
+|---|---|---|
+| CPU Usage | Missing | Required for Overview; short trend where meaningful |
+| Memory Usage | Missing | Required and separate from Memory Pressure |
+| Memory Pressure | Done | Semantic health signal and Joey reaction |
+| Storage Usage | Done | Current used/free/total data and low-space signal |
+| Network Activity | Missing | Download/upload and short trend |
+| Thermal State | Done | Semantic state and Joey reaction; not CPU temperature |
+| Fan RPM | Conditional | Show only after reliable technical validation |
+| Exact Temperature | Conditional | Never infer from Thermal State |
 
 ## Shared principles
 

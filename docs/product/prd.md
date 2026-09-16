@@ -10,7 +10,7 @@ JoeyPet 是一只生活在 Mac 桌面上的像素宠物：它感知 Mac 的基�
 
 传统系统工具通常只有在用户主动打开时才出现。用户因此要么看不到值得注意的状态，要么必须打开复杂的监控或清理工具才能处理一件小事。
 
-JoeyPet 要解决的是“系统状态和少量维护任务如何自然进入日常桌面体验”，不是再做一个系统监控 Dashboard。它常驻但安静，在有必要时提供可理解的反馈和下一步操作。
+JoeyPet 要解决的是“系统状态和少量维护任务如何自然进入日常桌面体验”。它常驻但安静，在有必要时提供可理解的反馈和下一步操作；其中 Overview 是轻量的 Mac System Overview，而不是专业监控或系统管理套件。
 
 ## 3. Target User
 
@@ -53,27 +53,45 @@ JoeyPet 的核心循环是：
 
 应用启动后 Joey 出现在桌面并保持 ambient 状态。系统状态发生变化时，Joey 以对应动作和严重程度反应；必要时显示一条短 Bubble。用户可以查看 Overview，或从 Bubble、右键菜单进入 Cleanup。Cleanup 扫描允许的范围，展示可安全处理和需要查看的内容；用户触发 Quick Clean 或选择并确认项目后，文件被移到废纸篓并显示成功或失败结果。反馈结束后 Joey 回到 ambient 状态，应用继续安静运行。
 
-## 9. Success Criteria
+## 9. Lightweight Mac System Overview
+
+Overview 让用户在几秒内理解 Mac 当前运行状态。它展示当前值，并在有意义的指标上提供短时间趋势：
+
+- CPU Usage：当前使用情况与短时趋势。
+- Memory Usage：当前使用情况；同时独立显示 Memory Pressure 这一健康语义。
+- Storage Usage：used、free、total 与当前存储健康状态。
+- Network Activity：Download、Upload 与短时趋势。
+- Thermal State：macOS 的 nominal、fair、serious、critical 状态。
+- Fan RPM、Exact Temperature：只有在可靠、稳定且权限合理时才显示；否则保留 Thermal State，不猜测或伪造数值。
+
+System Monitoring 与 System Management 分开。Overview 不显示进程列表，不结束进程，不提供优化动作，也不承担硬件诊断。趋势只属于当前运行 session，不需要长期历史、数据库或指标持久化；应用重启后可以重新开始。
+
+CPU Usage、Memory Usage、Network Activity 首先服务 Overview，不自动新增 Joey 行为。Joey 的语义反应仍由正式的 Thermal、Memory Pressure、Storage 状态定义。
+
+## 10. Success Criteria
 
 V1 以可观察的产品结果判断成功：
 
 - 用户能理解 Joey 为什么改变表情、动作或严重程度。
 - Thermal、Memory Pressure、Storage 三种状态能被稳定、正确地表达。
+- 用户打开 Overview 后能看到 CPU、Memory、Storage、Network 和 Thermal 的当前状态；CPU、Memory、Network 在适合时能看到短时趋势。
+- Fan RPM 与 Exact Temperature 不可用时，Overview 不伪造数值，并能清楚说明不可用。
 - 用户可以完成一次从扫描、判断、确认到移入废纸篓的 Cleanup 流程。
 - 用户打开 Main Window 后能理解 Overview、Cleanup、Settings 的用途和当前状态。
 - 正常状态下 Joey 不频繁打扰；同一警告不会重复刷出。
 - 关闭 Main Window 后 Joey 仍然运行，用户可以持续使用并恢复设置与位置。
 - 真实 Beta 使用中，核心路径的错误、权限、屏幕切换和睡眠唤醒行为可解释、可恢复。
 
-## 10. Non-goals
+## 11. Non-goals
 
 V1 不做：
 
 - AI companion、LLM runtime、聊天、Agent 或自然语言控制。
-- Process Manager、杀进程、Memory Cleaner、CPU Optimizer。
+- Memory Cleaner、CPU Optimizer。
 - 全盘清理、磁盘分析、重复文件或大文件工具。
 - Desktop/Downloads Organizer 和自动文件分类。
-- CPU 百分比、精确 CPU 温度、电池、网络、GPU、风扇或磁盘健康监控。
+- 电池、GPU、Disk I/O、进程列表、网络连接、SMART、CPU 频率、swap dashboard、load average 等未纳入 V1 的指标。
+- Process Manager、Kill Process、CPU/Memory Optimizer 或其他系统管理动作。
 - Idle/Active Duration、Break Reminder、Pomodoro、Quiet Hours。
 - 多角色、角色选择、换肤、Marketplace。
 - 云端同步、数据库、运行时网络服务。

@@ -14,13 +14,13 @@
 
 **Status: In Progress**
 
-重新整理 Main Window 基础：shell、Overview/Cleanup/Settings 导航、布局、文字层级、间距、共享状态呈现、共享 loading/error 呈现，并移除临时或 debug-looking 的视觉结构。
+重新整理 Main Window 基础：shell、Overview/Cleanup/Settings 导航、布局、文字层级、间距、共享状态呈现、共享 loading/error 呈现，并移除临时或 debug-looking 的视觉结构。Overview 同时完成 Lightweight Mac System Overview 的 presentation：Overall Mac Status、CPU、Memory、Memory Pressure、Storage、Network、Thermal、短时趋势，以及可靠性允许时的 Conditional hardware metrics。
 
-**Dependencies**：UI Spec、当前系统状态与 Cleanup 数据契约。
+**Dependencies**：UI Spec、当前系统状态与 Cleanup 数据契约；CPU Usage、Memory Usage、Network Activity 的 V1 data sources 需要在本 Milestone 补齐。Fan RPM 与 Exact Temperature 只需在可靠方案通过技术验证时纳入。
 
 **Entry Criteria**：UI Spec 已锁定；不新增一级页面和 V1 功能。
 
-**Exit Criteria**：三个页面的基础结构、主要操作和真实状态符合 UI Spec，用户不需要阅读长说明才能理解下一步。
+**Exit Criteria**：三个页面的基础结构、主要操作和真实状态符合 UI Spec；Overview 能以轻量方式呈现 V1 metrics 与短时趋势，用户不需要阅读长说明才能理解当前 Mac 状态和下一步。
 
 ## MVP M2 — Desktop Joey Experience
 

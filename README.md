@@ -7,8 +7,13 @@ A tiny desktop pet that watches over your Mac, reacts to system status, and help
 JoeyPet is a lightweight, native desktop pet designed to live quietly on your desktop and respond to the state of your computer.
 
 JoeyPet is not an AI companion or chatbot. It focuses on a quiet desktop
-presence, three read-only system signals (thermal pressure, memory pressure,
-and storage), and a small safety-gated cleanup workflow.
+presence, a lightweight Mac System Overview, three semantic signals for Joey's
+reactions (thermal pressure, memory pressure, and storage), and a small
+safety-gated cleanup workflow.
+
+The V1 Overview target includes CPU, memory, storage, network, and thermal
+status with short-term trends where useful. It is system monitoring, not
+process management or system optimization.
 
 ## Current Status
 

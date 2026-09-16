@@ -89,7 +89,7 @@ Joey 回到 idle → 等待一个低频间隔 → 触发 blink、sleeping 或 wa
 
 ### Purpose
 
-用易理解的宠物状态表达三类基础 Mac 状态，让用户不用打开监控工具也能察觉值得注意的变化。
+用易理解的宠物状态表达三类语义化 Mac 状态，让用户不用打开专业监控工具也能察觉值得注意的变化。
 
 ### User Entry
 
@@ -109,12 +109,14 @@ Joey 回到 idle → 等待一个低频间隔 → 触发 blink、sleeping 或 wa
 
 ### Product Rules
 
-- V1 只支持 Thermal、Memory Pressure、Storage。
+- F03 只定义 Semantic System State → Joey Behavior，不负责把所有 Overview raw metrics 映射成宠物行为。
+- V1 的正式 Joey reaction signals 是 Thermal、Memory Pressure、Storage。
 - Thermal serious/critical → `sweating`。
 - Memory warning/critical → `tired`。
 - Storage low → `carryingTrash`。
+- CPU Usage、Memory Usage、Network Activity 首先属于 Overview monitoring；本 Feature 不为它们新增 Pet behavior。
 - UI severity 与 Joey severity 使用同一套 normal/notice/warning/critical 语义。
-- 只表达压力等级或阈值状态，不展示伪造的 CPU °C、RAM 精确占用或技术指标墙。
+- 只表达压力等级或阈值状态，不把 CPU Usage 当作 CPU 温度，也不从 Thermal State 猜测温度。
 - 更高严重程度和更高优先级状态可打断较低优先级反应；状态相同时不重启动画。
 
 ### Edge Cases
@@ -261,42 +263,72 @@ Quick Clean 和 Scan and View 在对应操作忙碌时禁用，不能制造并�
 
 ### Purpose
 
-让用户在几秒内知道“我的 Mac 现在怎么样”，并找到 Cleanup 的下一步。
+让用户在几秒内知道“我的 Mac 现在运行得怎么样”，同时保留 JoeyPet 的轻量、安静和非管理定位。
 
 ### User Entry
 
-Main Window 默认页面、Bubble 的查看动作。
+Main Window 默认页面、Bubble 的查看动作、Context Menu 的打开 JoeyPet。
 
 ### User Flow
 
-打开 Overview → 先看整体状态 → 查看 Thermal、Memory Pressure、Storage → 查看 Cleanup summary → 需要时进入 Cleanup。
+打开 Overview → 先看 Overall Mac Status → 查看 CPU、Memory、Network、Storage、Thermal 的当前状态 → 在 CPU/Memory/Network 上查看短时趋势（适用时）→ 查看 Cleanup summary → 需要时进入 Cleanup。
+
+### Metrics
+
+| Metric | V1 product target | Display intent |
+|---|---|---|
+| CPU Usage | Required | 当前使用情况与短时趋势，帮助理解 Mac 是否繁忙 |
+| Memory Usage | Required | used/total 或同等清晰的当前使用表达 |
+| Memory Pressure | Required | 与 Memory Usage 分开，表达系统健康压力 |
+| Storage Usage | Required | used/free/total 与存储健康状态 |
+| Network Activity | Required | Download、Upload 与短时趋势 |
+| Thermal State | Required | nominal/fair/serious/critical；不是 CPU 温度 |
+| Fan RPM | Conditional | 可靠、稳定、权限合理时显示，否则不占用主层级 |
+| Exact Temperature | Conditional | 可靠时显示明确温度，否则显示 Thermal State；绝不猜测 |
+
+### Recent Trends
+
+趋势只关注当前运行 session 的短时间变化。CPU、Memory、Network 可以使用小型 trend line、sparkline 或 usage indicator；不做 7/30 天历史、报表、时间范围选择器、数据库或跨重启指标持久化。
+
+### Overall Status
+
+Overall Mac Status 是首要信息，使用与 Joey 共享的 `normal`、`notice`、`warning`、`critical` 语义。它是系统事实的汇总表达，不建立第二套 severity model，也不把 CPU 高使用量自动转换成新的 Pet behavior。
 
 ### States
 
-- `loading`：初始状态数据尚未就绪。
-- `normal`：整体无需要行动的状态。
-- `warning`：至少一项状态需要留意。
-- `critical`：至少一项状态严重。
-- `unavailable`：某项数据不可用。
+- `loading`：一个或多个核心指标尚未就绪。
+- `normal`：当前没有需要行动的系统状态。
+- `warning`：至少一项语义状态需要留意。
+- `critical`：至少一项语义状态严重。
+- `unavailable`：某项指标无法可靠取得；其他可用指标仍可显示。
 
 ### Product Rules
 
-- 信息层级固定为：整体状态 → 三类系统状态 → Cleanup summary。
-- 整体状态必须是视觉和语义上的第一信息。
-- 只展示 Thermal、Memory Pressure、Storage，不伪造精确 CPU 温度、RAM 占用或图表。
+- Overview 是 Lightweight Mac System Overview，不是 Activity Monitor、iStat Menus 或系统管理工具。
+- 信息层级固定为：Overall Mac Status → 当前 Metrics 与短时趋势 → Cleanup summary。
+- 不显示 process list、network process list、packet inspector、connection manager 或 optimizer action。
+- Memory Usage 与 Memory Pressure 必须分别呈现；Storage 保留现有 used/free/total 语义。
+- Fan RPM 与 Exact Temperature 只有技术验证通过才进入产品；它们不是 V1 Done blocker。
 - Cleanup summary 是摘要和入口，不变成 History 页面。
 
 ### Edge Cases
 
-- Storage 读数不可用时，明确显示 unavailable，不隐藏整页或假报正常。
-- 只有一项 warning 时，整体状态不能被正常项稀释。
+- CPU、Memory 或 Network 尚未可用时，显示具体 unavailable 状态，不把缺失当作 0 或 normal。
+- Fan RPM 或 Exact Temperature 不可用时，继续显示 Thermal State，不展示推算或伪造的 °C/RPM。
+- 只有一项 warning/critical 时，Overall Mac Status 不能被正常项稀释。
 - 没有 Cleanup 扫描记录时，显示简短的未扫描状态和 Scan and View 入口。
+- 应用重启后短时趋势可以从空状态重新开始，不显示虚构的历史。
 
 ### Acceptance Criteria
 
-- Given 用户打开 Overview，When 数据可用，Then 第一眼能看到整体状态，并能找到三项状态与 Cleanup summary。
-- Given Thermal 为 warning，When Overview 显示，Then 整体状态为至少 warning，并说明对应项。
-- Given 一项数据不可用，When Overview 显示，Then 该项标为 unavailable，不被当作 normal。
+- Given 用户打开 Overview，When 核心数据可用，Then 第一眼能看到 Overall Mac Status，并能找到 CPU、Memory、Memory Pressure、Storage、Network 和 Thermal。
+- Given CPU Usage 可用，When Overview 显示，Then 用户能看到当前 CPU 使用情况，并在数据足够时看到短时趋势。
+- Given Memory Usage 可用，When Overview 显示，Then 当前使用情况与 Memory Pressure 分开呈现。
+- Given Storage 数据可用，When Overview 显示，Then 用户能看到 used、free、total 和存储健康状态。
+- Given Network Activity 可用，When Overview 显示，Then 用户能看到 Download、Upload，并在适合时看到短时趋势。
+- Given Thermal State 为 serious/critical，When Overview 显示，Then 使用共享 severity 语义，不显示猜测的 CPU 温度。
+- Given Fan RPM 或 Exact Temperature 不可用，When Overview 显示，Then 显示 unavailable 或 Thermal fallback，不伪造数值。
+- Given 用户打开 Overview，When 页面提供操作，Then 不出现 process list、kill process 或 system optimization action。
 
 ## F08 — Cleanup Scan
 
