@@ -46,6 +46,10 @@ final class PetScene: SKScene {
         )
     }
 
+    func applyStatusSeverity(_ severity: SignalSeverity) {
+        rootNode.character.applyStatusSeverity(severity)
+    }
+
     private func setupNodes() {
         rootNode.position = CGPoint(x: size.width / 2, y: size.height / 2)
         addChild(rootNode)

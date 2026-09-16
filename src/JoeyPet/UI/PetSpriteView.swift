@@ -4,6 +4,8 @@ import SpriteKit
 
 final class PetSpriteView: SKView {
     var interactiveRadius: CGFloat = PetScene.interactiveRadius
+    var onLeftClick: (() -> Void)?
+    var onRightClick: ((NSEvent) -> Void)?
 
     private var dragStartMouseLocation: NSPoint?
     private var dragStartWindowOrigin: NSPoint?
@@ -73,6 +75,10 @@ final class PetSpriteView: SKView {
     }
 
     override func mouseUp(with event: NSEvent) {
+        let wasClick = dragStartMouseLocation.map { start in
+            let end = window?.convertPoint(toScreen: event.locationInWindow) ?? start
+            return hypot(end.x - start.x, end.y - start.y) < 4
+        } ?? false
 #if DEBUG
         if dragStartMouseLocation != nil {
             Self.interactionLogger.debug("drag ended")
@@ -80,5 +86,10 @@ final class PetSpriteView: SKView {
 #endif
         dragStartMouseLocation = nil
         dragStartWindowOrigin = nil
+        if wasClick { onLeftClick?() }
+    }
+
+    override func rightMouseDown(with event: NSEvent) {
+        onRightClick?(event)
     }
 }

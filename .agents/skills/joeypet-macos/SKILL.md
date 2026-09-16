@@ -83,6 +83,11 @@ Any utility path:
 
 See [references/safety.md](references/safety.md).
 
+For Cleanup MVP work, also verify explicit allowlisted roots, a read-only
+scanner, `safe` / `review` risk classification, Quick Clean's safe-only scope,
+user action before file changes, Move to Trash, fixture-based tests, and never
+`rm -rf`.
+
 ## Performance checks
 
 - Sensors: prefer notifications over tight polling; document interval if polling.

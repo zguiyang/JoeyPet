@@ -47,7 +47,7 @@ final class MemoryPressureSensor: SystemSensor {
         switch event {
         case .normal:
             level = .normal
-            severity = .info
+            severity = .normal
         case .warning:
             level = .warning
             severity = .warning
@@ -56,7 +56,7 @@ final class MemoryPressureSensor: SystemSensor {
             severity = .critical
         default:
             level = .normal
-            severity = .info
+            severity = .normal
         }
 
         return SystemSignal(

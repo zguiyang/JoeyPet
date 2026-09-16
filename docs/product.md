@@ -32,6 +32,14 @@ JoeyPet is a **macOS-only V1** native Swift desktop pet and lightweight system r
 
 Utilities always follow the safety pipeline: explain, recommend, wait for approval, then act.
 
+## Phase 4 MVP
+
+The first usable slice adds a native Overview / Cleanup / Settings window,
+short status bubbles, unified severity colors, low-frequency short desktop
+movement, and a small safety-gated cleanup utility. Quick Clean only moves
+explicitly classified safe candidates to Trash; review candidates require
+selection in the Cleanup page.
+
 ## V1 platform
 
 macOS only. See [decisions/001-macos-only-v1.md](decisions/001-macos-only-v1.md).

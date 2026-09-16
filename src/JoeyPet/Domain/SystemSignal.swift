@@ -45,7 +45,7 @@ struct SystemSignal: Equatable, Sendable {
             case .critical: return 80
             case .warning: return 50
             case .notice: return 40
-            case .info: return 0
+            case .normal: return 0
             }
         }
     }
@@ -70,9 +70,48 @@ struct SystemSignal: Equatable, Sendable {
             switch severity {
             case .notice, .warning, .critical:
                 return .carryingTrash
-            case .info:
+            case .normal:
                 return nil
             }
         }
+    }
+}
+
+struct SystemStatusSnapshot: Equatable, Sendable {
+    let thermal: ThermalPressureLevel
+    let memory: MemoryPressureLevel
+    let storageAvailableBytes: Int64?
+    let storageTotalBytes: Int64?
+    let storageSeverity: SignalSeverity
+
+    static let initial = SystemStatusSnapshot(
+        thermal: .nominal,
+        memory: .normal,
+        storageAvailableBytes: nil,
+        storageTotalBytes: nil,
+        storageSeverity: .normal
+    )
+
+    var overallSeverity: SignalSeverity {
+        var severity = storageSeverity
+        switch thermal {
+        case .nominal: break
+        case .fair: severity = max(severity, .notice)
+        case .serious: severity = max(severity, .warning)
+        case .critical: severity = max(severity, .critical)
+        }
+        switch memory {
+        case .normal: break
+        case .warning: severity = max(severity, .warning)
+        case .critical: severity = max(severity, .critical)
+        }
+        return severity
+    }
+
+    var storageUsedFraction: Double? {
+        guard let available = storageAvailableBytes,
+              let total = storageTotalBytes,
+              total > 0 else { return nil }
+        return min(max(Double(total - available) / Double(total), 0), 1)
     }
 }

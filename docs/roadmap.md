@@ -76,6 +76,13 @@ Follow-up on Phase 1 sensors and signal pipeline — no duplicate spike scope. C
 - Quiet notifications; attention budget (conceptual limits in product behavior)
 - Break reminders; non-intrusive prompts
 
+### Phase 4 MVP product slice
+
+- Native Overview / Cleanup / Settings window
+- Unified status colors, short bubbles, left-click interaction, and context menu
+- Quiet short desktop locomotion
+- Safety-gated cleanup of a small allowlist; see [cleanup.md](cleanup.md)
+
 ## Phase 5 — Utilities (Safety-Gated)
 
 - Read-only scans (cache, large files, desktop clutter)

@@ -52,7 +52,7 @@ final class ThermalSensor: SystemSensor {
         switch thermalState {
         case .nominal:
             level = .nominal
-            severity = .info
+            severity = .normal
         case .fair:
             level = .fair
             severity = .notice
@@ -64,7 +64,7 @@ final class ThermalSensor: SystemSensor {
             severity = .critical
         @unknown default:
             level = .nominal
-            severity = .info
+            severity = .normal
         }
 
         return SystemSignal(

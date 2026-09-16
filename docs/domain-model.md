@@ -66,6 +66,14 @@ Strongly typed, `Codable` pet package definition (`pet.json`):
 
 V1 ships one built-in package: `JoeyRobot` under `Resources/Pets/JoeyRobot/`.
 
+### Cleanup
+
+`CleanupCandidate` is a read-only discovery result with an id, path, display
+name, size, category, risk, reason, and optional modification date.
+`CleanupRisk` is intentionally limited to `safe` and `review`. A
+`CleanupScanResult` is ephemeral and a `CleanupExecutionResult` records
+per-item success or failure after an approved Trash move.
+
 ### PetPreferences
 
 User settings: enabled sensors, quiet hours, utility opt-in, position memory. Stored via UserDefaults / `@AppStorage` in V1.

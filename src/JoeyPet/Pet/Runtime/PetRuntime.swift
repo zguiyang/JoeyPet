@@ -82,6 +82,14 @@ final class PetRuntime {
         applyAnimation(for: animationID, state: currentState)
     }
 
+    func updateStatusSeverity(_ severity: SignalSeverity) {
+        scene.applyStatusSeverity(severity)
+    }
+
+    func finishTransientIfCurrent(_ behavior: PetTransientBehavior) {
+        finishTransientBehavior(behavior)
+    }
+
     private func applyAnimation(
         for animationID: String,
         state: PetState,

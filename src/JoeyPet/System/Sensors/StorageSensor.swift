@@ -8,6 +8,7 @@ final class StorageSensor: SystemSensor {
     private static let logger = Logger(subsystem: "com.zguiyang.JoeyPet", category: "StorageSensor")
     private nonisolated(unsafe) var pollTask: Task<Void, Never>?
     private let volumeURL: URL
+    private(set) var currentCapacity: (available: Int64, total: Int64)?
 
     init(volumeURL: URL = URL(fileURLWithPath: NSHomeDirectory())) {
         self.volumeURL = volumeURL
@@ -46,6 +47,7 @@ final class StorageSensor: SystemSensor {
     }
 
     private func emitCurrentCapacity() {
+        currentCapacity = Self.capacity(for: volumeURL)
         onSignal?(Self.makeSignal(for: volumeURL))
     }
 
@@ -85,22 +87,23 @@ final class StorageSensor: SystemSensor {
     }
 
     private static func availableCapacityBytes(for volumeURL: URL) -> Int64 {
+        capacity(for: volumeURL)?.available ?? Int64.max
+    }
+
+    private static func capacity(for volumeURL: URL) -> (available: Int64, total: Int64)? {
         do {
             let values = try volumeURL.resourceValues(forKeys: [
                 .volumeAvailableCapacityForImportantUsageKey,
-                .volumeAvailableCapacityKey
+                .volumeAvailableCapacityKey,
+                .volumeTotalCapacityKey
             ])
-
-            if let important = values.volumeAvailableCapacityForImportantUsage {
-                return important
-            }
-            if let available = values.volumeAvailableCapacity {
-                return Int64(available)
-            }
+            let available = values.volumeAvailableCapacityForImportantUsage
+                ?? values.volumeAvailableCapacity.map(Int64.init)
+            guard let available, let total = values.volumeTotalCapacity else { return nil }
+            return (available, Int64(total))
         } catch {
             logger.error("Failed to read storage capacity: \(error.localizedDescription, privacy: .public)")
+            return nil
         }
-
-        return Int64.max
     }
 }

@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import OSLog
 
@@ -10,19 +11,32 @@ final class PetCoordinator {
     private let ambientScheduler: AmbientBehaviorScheduler
     private var behaviorEngine = BehaviorEngine()
     private let panelController: PetPanelController
+    private var lastAnnouncedState: PetState = .idle
+
+    var onSystemSnapshot: ((SystemStatusSnapshot) -> Void)?
+    var onBubble: ((JoeyBubbleMessage, NSRect, (() -> Void)?, (() -> Void)?) -> Void)?
+    var onQuickClean: (() -> Void)?
+    var onScan: (() -> Void)?
 
     init(panelController: PetPanelController) {
         self.panelController = panelController
         self.ambientScheduler = AmbientBehaviorScheduler()
         self.ambientScheduler.onBehavior = { [weak self] behavior in
             guard let self else { return }
-            _ = self.panelController.petRuntime.perform(behavior)
+            if behavior == .walking {
+                self.panelController.moveShortDistance()
+            } else {
+                _ = self.panelController.petRuntime.perform(behavior)
+            }
         }
     }
 
     func start() {
         sensorHub.onSignal = { [weak self] signal in
             self?.handle(signal: signal)
+        }
+        sensorHub.onSnapshot = { [weak self] snapshot in
+            self?.onSystemSnapshot?(snapshot)
         }
 
         sleepWakeMonitor.onSleep = { [weak self] in
@@ -71,9 +85,44 @@ final class PetCoordinator {
         Self.logger.info("PetCoordinator stopped")
     }
 
+    func refreshPreferences() {
+        ambientScheduler.update(sustainedState: behaviorEngine.currentBehavior.state)
+    }
+
     private func handle(signal: SystemSignal) {
+        if signal.proposedPetState != nil {
+            panelController.stopMovement()
+        }
         let behavior = behaviorEngine.ingest(signal, now: signal.timestamp)
         panelController.petRuntime.apply(behavior: behavior)
+        panelController.petRuntime.updateStatusSeverity(sensorHub.currentSnapshot.overallSeverity)
+        onSystemSnapshot?(sensorHub.currentSnapshot)
         ambientScheduler.update(sustainedState: behavior.state)
+
+        let status = sensorHub.currentSnapshot.overallSeverity
+        let proactiveBubblesEnabled = UserDefaults.standard.object(forKey: "proactiveBubblesEnabled") as? Bool ?? true
+        if behavior.state != lastAnnouncedState,
+           behavior.state != .idle,
+           status.isActionable,
+           proactiveBubblesEnabled {
+            lastAnnouncedState = behavior.state
+            let message: JoeyBubbleMessage
+            switch behavior.state {
+            case .sweating:
+                message = JoeyBubbleMessage(text: "Mac 有点热。", severity: status, primaryTitle: nil, secondaryTitle: nil)
+            case .tired:
+                message = JoeyBubbleMessage(text: "内存有点紧张。", severity: status, primaryTitle: nil, secondaryTitle: nil)
+            case .carryingTrash:
+                message = JoeyBubbleMessage(text: "磁盘空间有点挤，要清理一下吗？", severity: status, primaryTitle: "快速清理", secondaryTitle: "查看")
+            case .idle:
+                return
+            }
+            onBubble?(message, panelController.currentFrame(),
+                      message.primaryTitle == nil ? nil : { [weak self] in self?.onQuickClean?() },
+                      message.secondaryTitle == nil ? nil : { [weak self] in self?.onScan?() })
+        }
+        if behavior.state == .idle {
+            lastAnnouncedState = .idle
+        }
     }
 }

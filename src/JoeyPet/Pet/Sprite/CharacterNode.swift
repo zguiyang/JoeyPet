@@ -39,4 +39,9 @@ final class CharacterNode: SKSpriteNode {
             run(.sequence(actions), withKey: "petAnimation")
         }
     }
+
+    func applyStatusSeverity(_ severity: SignalSeverity) {
+        color = severity.statusColor
+        colorBlendFactor = severity == .normal ? 0 : 0.22
+    }
 }

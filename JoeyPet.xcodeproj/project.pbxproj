@@ -40,6 +40,13 @@
 		D7PET11E305978720070926E /* PetTransientBehavior.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET01B305978720070926E /* PetTransientBehavior.swift */; };
 		D7PET11D305978720070926E /* Pets in Resources */ = {isa = PBXBuildFile; fileRef = D7PET20C305978720070926E /* Pets */; };
 		D7PET11F305978720070926E /* AmbientBehaviorScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET01C305978720070926E /* AmbientBehaviorScheduler.swift */; };
+		D7PET120305978720070926E /* CleanupModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET020305978720070926E /* CleanupModels.swift */; };
+		D7PET121305978720070926E /* CleanupScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET021305978720070926E /* CleanupScanner.swift */; };
+		D7PET122305978720070926E /* CleanupExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET022305978720070926E /* CleanupExecutor.swift */; };
+		D7PET123305978720070926E /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET023305978720070926E /* AppModel.swift */; };
+		D7PET124305978720070926E /* MainWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET024305978720070926E /* MainWindowController.swift */; };
+		D7PET125305978720070926E /* JoeyBubbleController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET025305978720070926E /* JoeyBubbleController.swift */; };
+		D7PET126305978720070926E /* StatusColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET026305978720070926E /* StatusColor.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -88,6 +95,13 @@
 		D7PET01B305978720070926E /* PetTransientBehavior.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetTransientBehavior.swift; sourceTree = "<group>"; };
 		D7PET01C305978720070926E /* AmbientBehaviorScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientBehaviorScheduler.swift; sourceTree = "<group>"; };
 		D7PET20C305978720070926E /* Pets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Pets; path = src/JoeyPet/Resources/Pets; sourceTree = SOURCE_ROOT; };
+		D7PET020305978720070926E /* CleanupModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleanupModels.swift; sourceTree = "<group>"; };
+		D7PET021305978720070926E /* CleanupScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleanupScanner.swift; sourceTree = "<group>"; };
+		D7PET022305978720070926E /* CleanupExecutor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleanupExecutor.swift; sourceTree = "<group>"; };
+		D7PET023305978720070926E /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		D7PET024305978720070926E /* MainWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowController.swift; sourceTree = "<group>"; };
+		D7PET025305978720070926E /* JoeyBubbleController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeyBubbleController.swift; sourceTree = "<group>"; };
+		D7PET026305978720070926E /* StatusColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusColor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -135,6 +149,7 @@
 				D7PET204305978720070926E /* Pet */,
 				D7PET202305978720070926E /* System */,
 				D7PET208305978720070926E /* UI */,
+				D7PET210305978720070926E /* Utilities */,
 				D7PET209305978720070926E /* Resources */,
 				D7BABD63305978720070926E /* Assets.xcassets */,
 				D7BABD64305978720070926E /* ContentView.swift */,
@@ -164,6 +179,7 @@
 				D7PET005305978720070926E /* SensorThresholds.swift */,
 				D7PET001305978720070926E /* SignalSeverity.swift */,
 				D7PET003305978720070926E /* SystemSignal.swift */,
+				D7PET020305978720070926E /* CleanupModels.swift */,
 			);
 			path = Domain;
 			sourceTree = "<group>";
@@ -240,6 +256,7 @@
 				D7PET011305978720070926E /* DebugStateInjector.swift */,
 				D7PET00F305978720070926E /* PetCoordinator.swift */,
 				D7PET010305978720070926E /* SleepWakeMonitor.swift */,
+				D7PET023305978720070926E /* AppModel.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -250,8 +267,20 @@
 				D7PET012305978720070926E /* PetPanel.swift */,
 				D7PET014305978720070926E /* PetPanelController.swift */,
 				D7PET013305978720070926E /* PetSpriteView.swift */,
+				D7PET024305978720070926E /* MainWindowController.swift */,
+				D7PET025305978720070926E /* JoeyBubbleController.swift */,
+				D7PET026305978720070926E /* StatusColor.swift */,
 			);
 			path = UI;
+			sourceTree = "<group>";
+		};
+		D7PET210305978720070926E /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				D7PET021305978720070926E /* CleanupScanner.swift */,
+				D7PET022305978720070926E /* CleanupExecutor.swift */,
+			);
+			path = Utilities;
 			sourceTree = "<group>";
 		};
 		D7BABD6B305978E70070926E /* JoeyPetTests */ = {
@@ -369,9 +398,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				D7PET115305978720070926E /* AnimationClip.swift in Sources */,
+				D7PET123305978720070926E /* AppModel.swift in Sources */,
 				D7PET10E305978720070926E /* AppDelegate.swift in Sources */,
 				D7PET106305978720070926E /* BehaviorEngine.swift in Sources */,
 				D7PET119305978720070926E /* CharacterNode.swift in Sources */,
+				D7PET120305978720070926E /* CleanupModels.swift in Sources */,
+				D7PET122305978720070926E /* CleanupExecutor.swift in Sources */,
+				D7PET121305978720070926E /* CleanupScanner.swift in Sources */,
 				D7BABD68305978720070926E /* ContentView.swift in Sources */,
 				D7PET111305978720070926E /* DebugStateInjector.swift in Sources */,
 				D7BABD67305978720070926E /* JoeyPetApp.swift in Sources */,
@@ -398,6 +431,9 @@
 				D7PET107305978720070926E /* SystemSensor.swift in Sources */,
 				D7PET108305978720070926E /* ThermalSensor.swift in Sources */,
 				D7PET11F305978720070926E /* AmbientBehaviorScheduler.swift in Sources */,
+				D7PET125305978720070926E /* JoeyBubbleController.swift in Sources */,
+				D7PET124305978720070926E /* MainWindowController.swift in Sources */,
+				D7PET126305978720070926E /* StatusColor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -546,7 +582,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				ENABLE_APP_SANDBOX = YES;
+				ENABLE_APP_SANDBOX = NO;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -577,7 +613,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				ENABLE_APP_SANDBOX = YES;
+				ENABLE_APP_SANDBOX = NO;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;

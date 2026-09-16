@@ -292,7 +292,7 @@ struct PetTransientBehaviorTests {
         #expect(!PetTransientBehavior.cleaning.isAmbient)
         #expect(!PetTransientBehavior.celebrating.isAmbient)
         #expect(!PetTransientBehavior.notifying.isAmbient)
-        #expect(PetTransientBehavior.walking.sessionDuration == 5)
+        #expect(PetTransientBehavior.walking.sessionDuration == 2)
         #expect(PetTransientBehavior.cleaning.sessionDuration == 5)
         #expect(PetTransientBehavior.sleeping.sessionDuration == 18)
         #expect(PetTransientBehavior.allCases.count == 6)
@@ -475,6 +475,98 @@ struct PetStateAnimationMappingTests {
         #expect(PetStateAnimationMapping.animationID(for: .sweating) == "sweating")
         #expect(PetStateAnimationMapping.animationID(for: .tired) == "tired")
         #expect(PetStateAnimationMapping.animationID(for: .carryingTrash) == "carryingTrash")
+    }
+}
+
+struct CleanupTests {
+    private let fm = FileManager.default
+
+    private func candidate(path: String, risk: CleanupRisk) -> CleanupCandidate {
+        CleanupCandidate(
+            id: path,
+            url: URL(fileURLWithPath: path),
+            displayName: URL(fileURLWithPath: path).lastPathComponent,
+            size: 10,
+            category: .developerCache,
+            risk: risk,
+            reason: "test",
+            lastModified: nil
+        )
+    }
+
+    @Test func quickCleanOnlyIncludesSafeCandidates() {
+        let safe = candidate(path: "/tmp/safe-cache", risk: .safe)
+        let review = candidate(path: "/tmp/review-cache", risk: .review)
+        let result = CleanupScanResult(candidates: [safe, review], scannedAt: Date(), skippedCount: 0)
+
+        #expect(result.quickCleanCandidates == [safe])
+        #expect(result.reviewCandidates == [review])
+    }
+
+    @Test func pathSafetyRejectsOutsideAndSymlinkEscape() throws {
+        let root = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("joeypet-path-test-\(UUID().uuidString)")
+        let allowed = root.appendingPathComponent("allowed", isDirectory: true)
+        let outside = root.appendingPathComponent("outside", isDirectory: true)
+        try fm.createDirectory(at: allowed, withIntermediateDirectories: true)
+        try fm.createDirectory(at: outside, withIntermediateDirectories: true)
+        defer { try? fm.removeItem(at: root) }
+
+        let child = allowed.appendingPathComponent("child")
+        try Data("fixture".utf8).write(to: child)
+        #expect(CleanupScanner.isSafeCandidate(child, inside: allowed))
+        #expect(!CleanupScanner.isSafeCandidate(allowed, inside: allowed))
+        #expect(!CleanupScanner.isSafeCandidate(allowed.appendingPathComponent("../outside"), inside: allowed))
+
+        let link = allowed.appendingPathComponent("escape")
+        try fm.createSymbolicLink(at: link, withDestinationURL: outside)
+        #expect(!CleanupScanner.isSafeCandidate(link, inside: allowed))
+    }
+
+    @Test @MainActor func scannerFindsFixtureRulesWithoutTouchingUserRoots() async throws {
+        let home = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("joeypet-scan-test-\(UUID().uuidString)")
+        let derived = home.appendingPathComponent("Library/Developer/Xcode/DerivedData/Fixture", isDirectory: true)
+        let logs = home.appendingPathComponent("Library/Logs", isDirectory: true)
+        let caches = home.appendingPathComponent("Library/Caches/FixtureApp", isDirectory: true)
+        try fm.createDirectory(at: derived, withIntermediateDirectories: true)
+        try fm.createDirectory(at: logs, withIntermediateDirectories: true)
+        try fm.createDirectory(at: caches, withIntermediateDirectories: true)
+        try Data(repeating: 1, count: 16).write(to: derived.appendingPathComponent("derived.data"))
+        try Data(repeating: 2, count: 8).write(to: logs.appendingPathComponent("old.log"))
+        try Data(repeating: 3, count: 4).write(to: caches.appendingPathComponent("cache.data"))
+        let oldDate = Date().addingTimeInterval(-40 * 24 * 60 * 60)
+        try fm.setAttributes([.modificationDate: oldDate], ofItemAtPath: logs.appendingPathComponent("old.log").path)
+        defer { try? fm.removeItem(at: home) }
+
+        let result = await CleanupScanner(homeURL: home).scan()
+        #expect(result.candidates.contains { $0.category == .developerCache && $0.risk == .safe })
+        #expect(result.candidates.contains { $0.category == .oldLogs && $0.risk == .review })
+        #expect(result.candidates.contains { $0.category == .applicationCaches && $0.risk == .review })
+    }
+
+    @Test @MainActor func executorReportsPartialFailureWithFakeMover() async {
+        let first = candidate(path: "/tmp/first", risk: .safe)
+        let second = candidate(path: "/tmp/second", risk: .safe)
+        let mover = FakeTrashMover(failingPath: second.url.path)
+        let result = await CleanupExecutor().execute([first, second], mover: mover)
+
+        #expect(result.succeededCount == 1)
+        #expect(result.failedCount == 1)
+        #expect(mover.movedPaths == [first.url.path])
+    }
+}
+
+private final class FakeTrashMover: FileTrashMoving, @unchecked Sendable {
+    private let failingPath: String
+    private(set) var movedPaths: [String] = []
+    private let lock = NSLock()
+
+    init(failingPath: String) { self.failingPath = failingPath }
+
+    nonisolated func moveToTrash(_ url: URL) throws {
+        if url.path == failingPath { throw NSError(domain: NSCocoaErrorDomain, code: NSFileWriteNoPermissionError) }
+        lock.lock()
+        movedPaths.append(url.path)
+        lock.unlock()
     }
 }
 

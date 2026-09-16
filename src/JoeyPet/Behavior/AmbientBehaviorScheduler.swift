@@ -55,7 +55,8 @@ final class AmbientBehaviorScheduler {
     }
 
     func update(sustainedState: PetState) {
-        if sustainedState == .idle {
+        let enabled = UserDefaults.standard.object(forKey: "ambientBehaviorsEnabled") as? Bool ?? true
+        if sustainedState == .idle, enabled {
             start()
         } else {
             stop()

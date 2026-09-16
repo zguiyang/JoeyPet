@@ -4,6 +4,11 @@
 
 JoeyPet splits **system sensing** from **pet presentation**. System code observes macOS; pet code expresses character and animation. Utilities sit behind an explicit safety gate.
 
+Phase 4 product UI consumes the existing sensor pipeline through a
+`SystemStatusSnapshot`; it does not create a second monitor. Cleanup uses a
+read-only `CleanupScanner` followed by an independently approved
+`CleanupExecutor`, and product events reach the pet through `PetRuntime`.
+
 ## Data flow
 
 ```
