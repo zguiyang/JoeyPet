@@ -37,7 +37,9 @@
 		D7PET118305978720070926E /* PetAssetLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET018305978720070926E /* PetAssetLoader.swift */; };
 		D7PET119305978720070926E /* CharacterNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET019305978720070926E /* CharacterNode.swift */; };
 		D7PET11A305978720070926E /* PetRootNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET01A305978720070926E /* PetRootNode.swift */; };
+		D7PET11E305978720070926E /* PetTransientBehavior.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET01B305978720070926E /* PetTransientBehavior.swift */; };
 		D7PET11D305978720070926E /* Pets in Resources */ = {isa = PBXBuildFile; fileRef = D7PET20C305978720070926E /* Pets */; };
+		D7PET11F305978720070926E /* AmbientBehaviorScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET01C305978720070926E /* AmbientBehaviorScheduler.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -83,6 +85,8 @@
 		D7PET018305978720070926E /* PetAssetLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetAssetLoader.swift; sourceTree = "<group>"; };
 		D7PET019305978720070926E /* CharacterNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacterNode.swift; sourceTree = "<group>"; };
 		D7PET01A305978720070926E /* PetRootNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetRootNode.swift; sourceTree = "<group>"; };
+		D7PET01B305978720070926E /* PetTransientBehavior.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetTransientBehavior.swift; sourceTree = "<group>"; };
+		D7PET01C305978720070926E /* AmbientBehaviorScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientBehaviorScheduler.swift; sourceTree = "<group>"; };
 		D7PET20C305978720070926E /* Pets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Pets; path = src/JoeyPet/Resources/Pets; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -126,6 +130,7 @@
 			isa = PBXGroup;
 			children = (
 				D7PET207305978720070926E /* App */,
+				D7PET20D305978720070926E /* Behavior */,
 				D7PET201305978720070926E /* Domain */,
 				D7PET204305978720070926E /* Pet */,
 				D7PET202305978720070926E /* System */,
@@ -139,6 +144,14 @@
 			path = src/JoeyPet;
 			sourceTree = "<group>";
 		};
+		D7PET20D305978720070926E /* Behavior */ = {
+			isa = PBXGroup;
+			children = (
+				D7PET01C305978720070926E /* AmbientBehaviorScheduler.swift */,
+			);
+			path = Behavior;
+			sourceTree = "<group>";
+		};
 		D7PET201305978720070926E /* Domain */ = {
 			isa = PBXGroup;
 			children = (
@@ -146,6 +159,7 @@
 				D7PET006305978720070926E /* BehaviorEngine.swift */,
 				D7PET016305978720070926E /* PetManifest.swift */,
 				D7PET004305978720070926E /* PetBehavior.swift */,
+				D7PET01B305978720070926E /* PetTransientBehavior.swift */,
 				D7PET002305978720070926E /* PetState.swift */,
 				D7PET005305978720070926E /* SensorThresholds.swift */,
 				D7PET001305978720070926E /* SignalSeverity.swift */,
@@ -373,6 +387,7 @@
 				D7PET11A305978720070926E /* PetRootNode.swift in Sources */,
 				D7PET117305978720070926E /* PetStateAnimationMapping.swift in Sources */,
 				D7PET102305978720070926E /* PetState.swift in Sources */,
+				D7PET11E305978720070926E /* PetTransientBehavior.swift in Sources */,
 				D7PET113305978720070926E /* PetSpriteView.swift in Sources */,
 				D7PET10B305978720070926E /* SensorHub.swift in Sources */,
 				D7PET105305978720070926E /* SensorThresholds.swift in Sources */,
@@ -382,6 +397,7 @@
 				D7PET103305978720070926E /* SystemSignal.swift in Sources */,
 				D7PET107305978720070926E /* SystemSensor.swift in Sources */,
 				D7PET108305978720070926E /* ThermalSensor.swift in Sources */,
+				D7PET11F305978720070926E /* AmbientBehaviorScheduler.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

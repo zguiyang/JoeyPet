@@ -31,6 +31,15 @@ enum DebugStateInjector {
         #endif
     }
 
+    /// Debug-only transient / ambient behavior for Phase 3 playback checks.
+    static func injectedTransientBehavior() -> PetTransientBehavior? {
+        #if DEBUG
+        return transientBehavior(from: ProcessInfo.processInfo.arguments)
+        #else
+        return nil
+        #endif
+    }
+
     /// Parses `-JoeyPetDebugPet <id>` / `-JoeyPetDebugPet=<id>` from launch arguments.
     static func packageID(from arguments: [String]) -> String? {
         #if DEBUG
@@ -44,6 +53,18 @@ enum DebugStateInjector {
     static func animationID(from arguments: [String]) -> String? {
         #if DEBUG
         return debugArgumentValue(prefix: "-JoeyPetDebugAnimation", arguments: arguments)
+        #else
+        return nil
+        #endif
+    }
+
+    /// Parses `-JoeyPetDebugBehavior <id>` / `-JoeyPetDebugBehavior=<id>`.
+    static func transientBehavior(from arguments: [String]) -> PetTransientBehavior? {
+        #if DEBUG
+        guard let value = debugArgumentValue(prefix: "-JoeyPetDebugBehavior", arguments: arguments) else {
+            return nil
+        }
+        return PetTransientBehavior(rawValue: value)
         #else
         return nil
         #endif

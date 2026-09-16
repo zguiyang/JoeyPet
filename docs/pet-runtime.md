@@ -1,6 +1,8 @@
 # Pet Runtime
 
-The pet runtime turns `PetState` decisions into stable on-screen behavior. It sits between the behavior engine and SpriteKit.
+The pet runtime turns sustained `PetState` decisions and short-lived
+`PetTransientBehavior` requests into stable on-screen behavior. It sits between
+the behavior engine and SpriteKit.
 
 ## Responsibilities
 
@@ -9,6 +11,8 @@ The pet runtime turns `PetState` decisions into stable on-screen behavior. It si
 - Forward animation requests to `PetScene`; do not parse manifest business rules in the scene.
 - Apply timing and stability rules so the pet does not flicker when sensors update frequently.
 - Enforce interruption and fallback when higher-priority behaviors arrive.
+- Keep the underlying sustained state while a transient animation is playing.
+- Complete non-looping clips and restore the current underlying state.
 
 ## Asset loading (Phase 1.5)
 
@@ -37,6 +41,31 @@ Signals in → BehaviorEngine evaluates rules → proposed PetState
     → Accept or defer → select AnimationClip → SpriteKit plays clip
 ```
 
+## Phase 3 behavior arbitration
+
+`BehaviorEngine` owns sustained system state. `AmbientBehaviorScheduler` emits
+low-frequency ambient requests only while the sustained state is `idle`.
+`PetRuntime.perform(_:)` is the entry point for ambient and explicit transient
+behaviors; callers do not play animation ids directly.
+
+Priority is predictable:
+
+```
+system warning/critical > explicit transient > ambient > idle
+```
+
+In the current V1 runtime, transient requests are dropped when any sustained
+system state is active. A system state arriving during a transient immediately
+preempts it. A completed one-shot returns to the latest underlying state; no
+generic behavior queue is retained.
+
+Ambient scheduling waits one randomized interval (12–35 seconds, clamped) per
+event. It does not poll, use a display link, or run a high-frequency timer.
+The scheduler is stopped on system sleep and on runtime teardown, and started
+at most once after wake when the sustained state is eligible.
+
+`walking` is an in-place animation only; it never moves the `NSPanel`.
+
 ## Anti-flicker
 
 - Debounce or hysteresis at the behavior layer; runtime enforces minimum duration.
@@ -52,6 +81,9 @@ Signals in → BehaviorEngine evaluates rules → proposed PetState
 - **Points vs backing pixels:** logical points are AppKit / SpriteKit units. Physical pixels on the glass also depend on `NSScreen.backingScaleFactor` (commonly 2.0 on Retina, not guaranteed and not fixed in code). Do not treat `defaultScale` as a Retina or backing-pixel factor.
 - Animation playback uses `SKAction.animate` (no per-frame timers or display links).
 - Debug builds may directly hold a manifest clip via `-JoeyPetDebugAnimation <id>` (`PetCoordinator` → `PetRuntime` → `PetScene`) without changing `PetState` or `PetStateAnimationMapping`; Release ignores the flag. `-JoeyPetDebugState <state>` remains the independent state-chain check. Unknown animation ids use the manifest fallback.
+- Debug builds may request `-JoeyPetDebugBehavior <id>` for transient/ambient
+  runtime checks. `DebugState`, `DebugBehavior`, and `DebugAnimation` remain
+  separate entry points; Release ignores all three overrides.
 
 See [ADR 008](decisions/008-pixel-perfect-display-scaling.md) and [character-design.md](character-design.md).
 

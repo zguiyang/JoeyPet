@@ -19,7 +19,8 @@ final class CharacterNode: SKSpriteNode {
     func playAnimation(
         id: String,
         clip: AnimationClip,
-        textures: [SKTexture]
+        textures: [SKTexture],
+        completion: (() -> Void)? = nil
     ) {
         guard currentAnimationID != id else { return }
         currentAnimationID = id
@@ -34,7 +35,8 @@ final class CharacterNode: SKSpriteNode {
         if clip.loop {
             run(.repeatForever(animate), withKey: "petAnimation")
         } else {
-            run(animate, withKey: "petAnimation")
+            let actions: [SKAction] = completion.map { [animate, .run($0)] } ?? [animate]
+            run(.sequence(actions), withKey: "petAnimation")
         }
     }
 }

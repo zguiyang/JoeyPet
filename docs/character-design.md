@@ -151,6 +151,27 @@ Target ~10 clips for Phase 2B production. Ids below align with package / mapping
 
 Phase 2B-2 delivers the first production set in `JoeyRobot`: all ten clips below, with props composited into their frames. The runtime remains manifest-driven and does not gain animation-specific business branches.
 
+### Phase 3 runtime semantics
+
+The ten production clips are intentionally split by runtime meaning:
+
+| Animation id | Runtime meaning |
+|--------------|-----------------|
+| `idle` | Sustained neutral fallback |
+| `blink` | Ambient transient, most frequent |
+| `walking` | Ambient in-place transient; no window movement |
+| `sleeping` | Rare ambient session |
+| `sweating` | Sustained thermal system state |
+| `tired` | Sustained memory-pressure system state |
+| `carryingTrash` | Sustained low-storage system state |
+| `cleaning` | Explicit utility behavior hook; no cleanup utility in V1 |
+| `celebrating` | Explicit transient success feedback |
+| `notifying` | Explicit transient attention cue; never random ambient behavior |
+
+System states may preempt transient behavior. Transient completion resumes the
+latest sustained state, and ambient behavior is discarded rather than queued
+when a warning is active.
+
 ## Asset Rules
 
 - Package layout: `Resources/Pets/<PackageID>/pet.json` + spritesheet PNG ([ADR 007](decisions/007-configurable-sprite-asset-package.md)).

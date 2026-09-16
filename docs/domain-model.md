@@ -20,15 +20,23 @@ Pet vocabulary is **character-based**, not system-metric-based.
 
 ### PetState
 
-Current expressive mode of the pet. Examples:
-
-- `idle`, `curious`, `sweating`, `tired`, `draggingTrash`, `remindingBreak`
+Current **sustained** expressive mode of the pet. The Phase 3 system mappings
+use `idle`, `sweating`, `tired`, and `carryingTrash`.
 
 **Do not name states** `cpuHigh`, `diskLow`, `memoryHigh`, or similar system labels. Map system signals to pet states in the behavior engine.
 
 ### PetBehavior
 
-Named reaction rule: when certain signals (with severity and hysteresis) apply, propose a `PetState` and optional utility hook. Includes priority, cooldown, minimum duration.
+The sustained reaction decision produced by the behavior engine: when certain
+signals (with severity and hysteresis) apply, propose a `PetState` and optional
+utility hook. Includes priority, cooldown, and minimum duration.
+
+### PetTransientBehavior
+
+A short-lived behavior that is not a sustained state. `blink`, `walking`, and
+`sleeping` are ambient behaviors; `cleaning`, `celebrating`, and `notifying`
+are explicit behaviors. All enter the runtime through the same arbitration
+point and resolve to an existing animation id.
 
 ### AnimationClip
 
@@ -67,9 +75,15 @@ User settings: enabled sensors, quiet hours, utility opt-in, position memory. St
 ```
 SystemSignal ──► BehaviorEngine ──► PetBehavior ──► PetState
                                                       │
+                             PetTransientBehavior ────┤
                                                       ▼
                                               PetRuntime ──► AnimationClip
 ```
+
+System-backed sustained states have priority over ambient and explicit
+transient behaviors. A transient behavior may be dropped while a system state
+is active; when a transient clip completes, the runtime resumes its current
+underlying sustained state rather than assuming `idle`.
 
 ## Related docs
 

@@ -54,6 +54,15 @@ Pipeline: `SystemSensor → SystemSignal → BehaviorEngine → PetBehavior/PetS
 5. Build and verify in app; use `-JoeyPetDebugState <state>` in Debug for quick checks.
 6. Confirm same animation id does not restart when state is re-applied unchanged.
 
+## Add a pet behavior (Phase 3+)
+
+1. Classify the request as sustained state, ambient behavior, or transient behavior.
+2. Keep system mapping in `BehaviorEngine`; do not bypass `PetRuntime` with direct scene playback.
+3. Reuse an existing animation id and define priority, interruption, completion, and resume semantics.
+4. Add focused unit tests for mapping, arbitration, timing, and lifecycle as applicable.
+5. Validate the corresponding DebugState, DebugBehavior, or DebugAnimation entry point.
+6. Check sleep/wake cancellation and confirm no high-frequency polling or CPU regression.
+
 ## Update production Joey assets (Phase 2B-2)
 
 1. Read `character-design.md` and lock the shared master silhouette and palette.

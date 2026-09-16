@@ -29,7 +29,7 @@ final class PetScene: SKScene {
         nil
     }
 
-    func applyAnimation(_ animationID: String) {
+    func applyAnimation(_ animationID: String, completion: (() -> Void)? = nil) {
         let resolvedID = PetManifestValidator.resolvedAnimationID(
             requestedID: animationID,
             manifest: package.manifest
@@ -41,7 +41,8 @@ final class PetScene: SKScene {
         rootNode.character.playAnimation(
             id: resolvedID,
             clip: clip,
-            textures: package.frameTextures
+            textures: package.frameTextures,
+            completion: completion
         )
     }
 

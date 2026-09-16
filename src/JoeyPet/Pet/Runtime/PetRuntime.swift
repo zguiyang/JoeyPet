@@ -9,10 +9,12 @@ final class PetRuntime {
 
     private(set) var currentState: PetState = .idle
     private(set) var currentAnimationID: String
+    private(set) var currentTransientBehavior: PetTransientBehavior? = nil
     let scene: PetScene
 
     private let package: LoadedPetPackage
     private var hasAppliedInitialAnimation = false
+    private var transientSessionTask: Task<Void, Never>?
 
     init(sceneSize: CGSize, package: LoadedPetPackage? = nil) {
         let loadedPackage = package ?? PetAssetLoader.loadBundledPackage()
@@ -27,8 +29,52 @@ final class PetRuntime {
     }
 
     func apply(behavior: PetBehavior) {
+        currentState = behavior.state
+
+        if behavior.state != .idle {
+            transientSessionTask?.cancel()
+            transientSessionTask = nil
+            currentTransientBehavior = nil
+        } else if currentTransientBehavior != nil {
+            return
+        }
+
         let animationID = PetStateAnimationMapping.animationID(for: behavior.state)
         applyAnimation(for: animationID, state: behavior.state)
+    }
+
+    /// Requests one explicit or ambient behavior through the runtime arbitration point.
+    /// Ambient and explicit behaviors are intentionally dropped while a system state is active.
+    @discardableResult
+    func perform(_ behavior: PetTransientBehavior) -> Bool {
+        guard currentState == .idle, currentTransientBehavior == nil else { return false }
+        guard package.manifest.animations[behavior.animationID] != nil else { return false }
+
+        currentTransientBehavior = behavior
+        applyAnimation(for: behavior.animationID, state: currentState) { [weak self] in
+            self?.finishTransientBehavior(behavior)
+        }
+
+        if let duration = behavior.sessionDuration {
+            transientSessionTask = Task { [weak self] in
+                do {
+                    try await Task.sleep(for: .seconds(duration))
+                } catch {
+                    return
+                }
+                guard !Task.isCancelled else { return }
+                self?.finishTransientBehavior(behavior)
+            }
+        }
+
+        Self.logger.info("PetRuntime transient -> \(behavior.rawValue, privacy: .public)")
+        return true
+    }
+
+    func stop() {
+        transientSessionTask?.cancel()
+        transientSessionTask = nil
+        currentTransientBehavior = nil
     }
 
     /// Direct asset playback hook for Debug builds; it does not alter PetState or behavior mapping.
@@ -36,7 +82,11 @@ final class PetRuntime {
         applyAnimation(for: animationID, state: currentState)
     }
 
-    private func applyAnimation(for animationID: String, state: PetState) {
+    private func applyAnimation(
+        for animationID: String,
+        state: PetState,
+        completion: (() -> Void)? = nil
+    ) {
         let resolvedID = PetManifestValidator.resolvedAnimationID(
             requestedID: animationID,
             manifest: package.manifest
@@ -49,8 +99,18 @@ final class PetRuntime {
         hasAppliedInitialAnimation = true
         currentState = state
         currentAnimationID = resolvedID
-        scene.applyAnimation(resolvedID)
+        scene.applyAnimation(resolvedID, completion: completion)
         Self.logger.info("PetRuntime state -> \(state.rawValue, privacy: .public) animation -> \(resolvedID, privacy: .public)")
+    }
+
+    private func finishTransientBehavior(_ behavior: PetTransientBehavior) {
+        guard currentTransientBehavior == behavior else { return }
+        transientSessionTask?.cancel()
+        transientSessionTask = nil
+        currentTransientBehavior = nil
+
+        let animationID = PetStateAnimationMapping.animationID(for: currentState)
+        applyAnimation(for: animationID, state: currentState)
     }
 
     private static func fallbackPackage() -> LoadedPetPackage {

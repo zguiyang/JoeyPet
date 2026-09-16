@@ -246,7 +246,83 @@ struct DebugStateInjectorTests {
         #expect(DebugStateInjector.animationID(from: ["JoeyPet", "-JoeyPetDebugState", "idle"]) == nil)
         #expect(DebugStateInjector.animationID(from: ["JoeyPet", "-JoeyPetDebugAnimation"]) == nil)
     }
+
+    @Test func parsesDebugBehaviorSpaceSeparatedArgument() {
+        let behavior = DebugStateInjector.transientBehavior(
+            from: ["JoeyPet", "-JoeyPetDebugBehavior", "blink"]
+        )
+        #expect(behavior == .blink)
+    }
+
+    @Test func parsesDebugBehaviorEqualsArgument() {
+        let behavior = DebugStateInjector.transientBehavior(
+            from: ["-JoeyPetDebugBehavior=walking"]
+        )
+        #expect(behavior == .walking)
+    }
+
+    @Test func invalidDebugBehaviorArgumentReturnsNil() {
+        #expect(
+            DebugStateInjector.transientBehavior(
+                from: ["JoeyPet", "-JoeyPetDebugBehavior", "not-a-behavior"]
+            ) == nil
+        )
+    }
+
+    @Test func missingDebugBehaviorArgumentReturnsNil() {
+        #expect(
+            DebugStateInjector.transientBehavior(
+                from: ["JoeyPet", "-JoeyPetDebugState", "idle"]
+            ) == nil
+        )
+        #expect(
+            DebugStateInjector.transientBehavior(
+                from: ["JoeyPet", "-JoeyPetDebugBehavior"]
+            ) == nil
+        )
+    }
     #endif
+}
+
+struct PetTransientBehaviorTests {
+    @Test func productionTransientBehaviorSemanticsStaySeparated() {
+        #expect(PetTransientBehavior.blink.animationID == "blink")
+        #expect(PetTransientBehavior.walking.isAmbient)
+        #expect(PetTransientBehavior.sleeping.isAmbient)
+        #expect(!PetTransientBehavior.cleaning.isAmbient)
+        #expect(!PetTransientBehavior.celebrating.isAmbient)
+        #expect(!PetTransientBehavior.notifying.isAmbient)
+        #expect(PetTransientBehavior.walking.sessionDuration == 5)
+        #expect(PetTransientBehavior.cleaning.sessionDuration == 5)
+        #expect(PetTransientBehavior.sleeping.sessionDuration == 18)
+        #expect(PetTransientBehavior.allCases.count == 6)
+    }
+
+    @Test @MainActor func ambientSchedulerStopsDuringSystemStateAndRestartsOnce() {
+        let scheduler = AmbientBehaviorScheduler(
+            delayProvider: { 0.1 },
+            behaviorProvider: { .blink },
+            sleeper: { _ in false }
+        )
+
+        scheduler.update(sustainedState: .sweating)
+        #expect(!scheduler.isRunning)
+
+        scheduler.update(sustainedState: .idle)
+        #expect(scheduler.isRunning)
+        scheduler.update(sustainedState: .idle)
+        #expect(scheduler.isRunning)
+
+        scheduler.stop()
+        #expect(!scheduler.isRunning)
+    }
+
+    @Test func ambientSchedulerClampsShortDelays() {
+        let configuration = AmbientBehaviorScheduler.Configuration(minimumDelay: 12, maximumDelay: 35)
+        #expect(AmbientBehaviorScheduler.boundedDelay(0.1, configuration: configuration) == 12)
+        #expect(AmbientBehaviorScheduler.boundedDelay(20, configuration: configuration) == 20)
+        #expect(AmbientBehaviorScheduler.boundedDelay(60, configuration: configuration) == 35)
+    }
 }
 
 struct PetManifestTests {
@@ -417,7 +493,9 @@ struct PetSpriteRuntimeTests {
             fallbackAnimation: "idle",
             animations: [
                 "idle": AnimationClip(frames: [0], fps: 2, loop: true),
-                "sweating": AnimationClip(frames: [1], fps: 4, loop: true)
+                "sweating": AnimationClip(frames: [1], fps: 4, loop: true),
+                "blink": AnimationClip(frames: [0, 1], fps: 6, loop: false),
+                "celebrating": AnimationClip(frames: [0, 1], fps: 4, loop: false)
             ]
         )
 
@@ -483,6 +561,32 @@ struct PetSpriteRuntimeTests {
         runtime.applyDebugAnimation("sweating")
 
         #expect(runtime.currentState == .idle)
+        #expect(runtime.currentAnimationID == "sweating")
+    }
+
+    @Test func transientBehaviorStartsAndPreservesUnderlyingState() {
+        let package = makeTestPackage()
+        let runtime = PetRuntime(sceneSize: CGSize(width: 100, height: 100), package: package)
+
+        #expect(runtime.perform(.celebrating))
+        #expect(runtime.currentState == .idle)
+        #expect(runtime.currentTransientBehavior == .celebrating)
+        #expect(runtime.currentAnimationID == "celebrating")
+    }
+
+    @Test func transientBehaviorIsRejectedDuringSystemWarning() {
+        let package = makeTestPackage()
+        let runtime = PetRuntime(sceneSize: CGSize(width: 100, height: 100), package: package)
+        runtime.apply(behavior: PetBehavior(
+            state: .sweating,
+            priority: 70,
+            triggeringSignal: .thermalPressure(level: .serious),
+            decidedAt: Date()
+        ))
+
+        #expect(!runtime.perform(.blink))
+        #expect(!runtime.perform(.celebrating))
+        #expect(runtime.currentState == .sweating)
         #expect(runtime.currentAnimationID == "sweating")
     }
 
