@@ -55,7 +55,11 @@ V1 sensors are **read-only**. Each sensor produces `SystemSignal` values; none d
 
 ---
 
-## Idle / Active Duration Sensor
+## Idle / Active Duration Sensor (Not Implemented; Not in V1)
+
+This is a future V1.1 candidate, not a current JoeyPet sensor or MVP
+requirement. The following notes preserve the earlier exploration without
+claiming that the capability exists.
 
 | Item | Detail |
 |------|--------|

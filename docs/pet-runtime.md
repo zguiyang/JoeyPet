@@ -64,7 +64,10 @@ event. It does not poll, use a display link, or run a high-frequency timer.
 The scheduler is stopped on system sleep and on runtime teardown, and started
 at most once after wake when the sustained state is eligible.
 
-`walking` is an in-place animation only; it never moves the `NSPanel`.
+`walking` is an ambient transient that may move the panel a short distance
+inside the visible screen area. It must remain low-frequency and can be
+interrupted by a system warning. The product decision supersedes the older
+in-place-only example; state/behavior separation remains unchanged.
 
 ## Anti-flicker
 

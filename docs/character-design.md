@@ -141,13 +141,13 @@ Target ~10 clips for Phase 2B production. Ids below align with package / mapping
 | `idle` | Default breathing / presence | 2 |
 | `blink` | Occasional eye close (or short idle variant) | 2 |
 | `walking` | Soft locomotion on desk | 2–4 |
-| `sleeping` | Rest / quiet hours metaphor | 2–3 |
+| `sleeping` | Rest / low-activity metaphor | 2–3 |
 | `sweating` | Thermal / heat metaphor | 2–4 |
 | `tired` | Memory pressure / sluggish metaphor | 2–3 |
 | `carryingTrash` | Storage / clutter motif | 2–4 |
 | `cleaning` | Cleanup utility mood (broom) | 2–4 |
 | `celebrating` | Positive feedback after approved action | 2–4 |
-| `notifying` | Gentle attention / break reminder cue | 2–3 |
+| `notifying` | Gentle attention or result cue | 2–3 |
 
 Phase 2B-2 delivers the first production set in `JoeyRobot`: all ten clips below, with props composited into their frames. The runtime remains manifest-driven and does not gain animation-specific business branches.
 
@@ -159,7 +159,7 @@ The ten production clips are intentionally split by runtime meaning:
 |--------------|-----------------|
 | `idle` | Sustained neutral fallback |
 | `blink` | Ambient transient, most frequent |
-| `walking` | Ambient in-place transient; no window movement |
+| `walking` | Ambient short-distance locomotion transient; window movement allowed |
 | `sleeping` | Rare ambient session |
 | `sweating` | Sustained thermal system state |
 | `tired` | Sustained memory-pressure system state |

@@ -19,9 +19,11 @@ ambient and explicit actions as `PetTransientBehavior`. Route both through
 `PetRuntime`, where system state has priority, transient requests may be
 dropped, and completion resumes the latest underlying sustained state.
 
-Ambient scheduling remains a small low-frequency task with no queue and no
-window locomotion. Explicit utility behaviors are runtime hooks only until a
-future feature supplies a real approved product event.
+Ambient scheduling remains a small low-frequency task with no queue. The
+later product definition permits `walking` to move the desktop panel a short
+distance; that change supersedes the old no-locomotion example, not the
+state/behavior separation decision. Explicit utility behaviors are runtime
+hooks only until a future feature supplies a real approved product event.
 
 ## Consequences
 

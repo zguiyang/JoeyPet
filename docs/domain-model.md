@@ -76,7 +76,10 @@ per-item success or failure after an approved Trash move.
 
 ### PetPreferences
 
-User settings: enabled sensors, quiet hours, utility opt-in, position memory. Stored via UserDefaults / `@AppStorage` in V1.
+Current V1 settings are Launch at Login, Ambient Behaviors, Proactive Bubbles,
+and Reset Joey Position. They use UserDefaults / `@AppStorage`. Sensor
+selection, quiet hours, utility opt-in, and similar advanced settings are not
+V1 capabilities.
 
 ## Relationships
 

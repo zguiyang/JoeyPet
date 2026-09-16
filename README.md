@@ -6,18 +6,21 @@ A tiny desktop pet that watches over your Mac, reacts to system status, and help
 
 JoeyPet is a lightweight, native desktop pet designed to live quietly on your desktop and respond to the state of your computer.
 
-Instead of being an AI companion or chatbot, JoeyPet focuses on small, practical everyday tasks. It can react visually to system conditions such as thermal pressure, memory pressure, storage usage, and work duration, while gradually providing utilities such as cleanup assistance, file organization, and break reminders.
+JoeyPet is not an AI companion or chatbot. It focuses on a quiet desktop
+presence, three read-only system signals (thermal pressure, memory pressure,
+and storage), and a small safety-gated cleanup workflow.
 
 ## Current Status
 
-Research and early development.
+macOS desktop pet MVP in active development.
 
 The first version is focused on macOS and will be built as a native Swift application.
 
 ## Documentation
 
 - [AGENTS.md](./AGENTS.md) — rules for coding agents
-- [docs/](docs/) — product, architecture, sensors, safety, roadmap, ADRs
+- [docs/product/](docs/product/) — product Source of Truth: PRD, V1 scope, feature/UI specs, and roadmap
+- [docs/](docs/) — technical architecture, sensors, safety, lifecycle, and ADRs
 
 ## Principles
 
