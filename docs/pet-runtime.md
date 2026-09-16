@@ -4,9 +4,19 @@ The pet runtime turns `PetState` decisions into stable on-screen behavior. It si
 
 ## Responsibilities
 
-- Hold current `PetState` and active `AnimationClip`.
+- Hold current `PetState` and active animation id.
+- Map `PetState` → animation id via `PetStateAnimationMapping` (single source of truth).
+- Forward animation requests to `PetScene`; do not parse manifest business rules in the scene.
 - Apply timing and stability rules so the pet does not flicker when sensors update frequently.
 - Enforce interruption and fallback when higher-priority behaviors arrive.
+
+## Asset loading (Phase 1.5)
+
+- `PetAssetLoader` reads bundled `pet.json` + spritesheet from `Resources/Pets/<PackageID>/`.
+- Validates JSON, sheet dimensions, layout, non-empty clips, in-bounds frame indices, and fallback animation.
+- Caches manifest, sliced frame textures, and clips after first load.
+- Release: log + fallback on load failure; never crash.
+- Unknown animation ids resolve to `fallbackAnimation` from the manifest.
 
 ## Required rule dimensions
 
@@ -31,6 +41,14 @@ Signals in → BehaviorEngine evaluates rules → proposed PetState
 
 - Debounce or hysteresis at the behavior layer; runtime enforces minimum duration.
 - Do not re-trigger animation restart on every sensor poll if state unchanged.
+- Same animation id → keep current `SKAction` running; do not restart from frame 0.
+
+## Sprite presentation (Phase 1.5)
+
+- `PetScene` hosts `PetRootNode` → `CharacterNode` (`SKSpriteNode`); optional `EffectNode` children.
+- Scene does not read system signals, create sensors, or interpret behavior rules.
+- Frame textures use nearest filtering; `defaultScale` from manifest is applied as integer scale.
+- Animation playback uses `SKAction.animate` (no per-frame timers or display links).
 
 ## Out of scope (V1)
 

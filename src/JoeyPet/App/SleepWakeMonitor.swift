@@ -21,7 +21,9 @@ final class SleepWakeMonitor {
                 object: nil,
                 queue: .main
             ) { [weak self] _ in
-                self?.handleSleep()
+                Task { @MainActor [weak self] in
+                    self?.handleSleep()
+                }
             }
         )
         observers.append(
@@ -30,7 +32,9 @@ final class SleepWakeMonitor {
                 object: nil,
                 queue: .main
             ) { [weak self] _ in
-                self?.handleWake()
+                Task { @MainActor [weak self] in
+                    self?.handleWake()
+                }
             }
         )
 

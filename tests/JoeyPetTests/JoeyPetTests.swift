@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import SpriteKit
 import Testing
 @testable import JoeyPet
 
@@ -217,4 +218,233 @@ struct DebugStateInjectorTests {
         }
     }
     #endif
+}
+
+struct PetManifestTests {
+    private func sampleManifest(
+        frameWidth: Int = 32,
+        frameHeight: Int = 32,
+        columns: Int = 4,
+        rows: Int = 3,
+        defaultScale: Int = 3,
+        animations: [String: AnimationClip] = [
+            "idle": AnimationClip(frames: [0, 1], fps: 2, loop: true),
+            "sweating": AnimationClip(frames: [2, 3, 4], fps: 4, loop: true)
+        ]
+    ) -> PetManifest {
+        PetManifest(
+            id: "test-pet",
+            name: "Test Pet",
+            spriteSheet: "sheet.png",
+            frameWidth: frameWidth,
+            frameHeight: frameHeight,
+            columns: columns,
+            rows: rows,
+            defaultScale: defaultScale,
+            fallbackAnimation: "idle",
+            animations: animations
+        )
+    }
+
+    @Test func decodesManifestAndClipFromJSON() throws {
+        let json = """
+        {
+          "id": "demo",
+          "name": "Demo",
+          "spriteSheet": "sheet.png",
+          "frameWidth": 32,
+          "frameHeight": 32,
+          "columns": 4,
+          "rows": 3,
+          "defaultScale": 3,
+          "fallbackAnimation": "idle",
+          "animations": {
+            "idle": { "frames": [0, 1], "fps": 2, "loop": true }
+          }
+        }
+        """
+        let manifest = try JSONDecoder().decode(PetManifest.self, from: Data(json.utf8))
+        #expect(manifest.id == "demo")
+        #expect(manifest.defaultScale == 3)
+        #expect(manifest.animations["idle"]?.frames == [0, 1])
+        #expect(manifest.animations["idle"]?.fps == 2)
+        #expect(manifest.animations["idle"]?.loop == true)
+    }
+
+    @Test func defaultScaleIsPreserved() {
+        let manifest = sampleManifest(defaultScale: 4)
+        #expect(manifest.defaultScale == 4)
+    }
+
+    @Test func validatesSheetDimensions() {
+        let manifest = sampleManifest()
+        let error = PetManifestValidator.validate(manifest, sheetPixelWidth: 128, sheetPixelHeight: 96)
+        #expect(error == nil)
+    }
+
+    @Test func rejectsMismatchedSheetDimensions() {
+        let manifest = sampleManifest()
+        let error = PetManifestValidator.validate(manifest, sheetPixelWidth: 64, sheetPixelHeight: 96)
+        #expect(error == .invalidDimensions(expectedWidth: 128, expectedHeight: 96, actualWidth: 64, actualHeight: 96))
+    }
+
+    @Test func rejectsEmptyAnimations() {
+        let manifest = sampleManifest(animations: [:])
+        let error = PetManifestValidator.validate(manifest, sheetPixelWidth: 128, sheetPixelHeight: 96)
+        #expect(error == .emptyAnimations)
+    }
+
+    @Test func rejectsNonPositiveDefaultScale() {
+        let zeroScale = sampleManifest(defaultScale: 0)
+        let zeroError = PetManifestValidator.validate(zeroScale, sheetPixelWidth: 128, sheetPixelHeight: 96)
+        #expect(zeroError == .invalidDefaultScale(0))
+
+        let negativeScale = sampleManifest(defaultScale: -1)
+        let negativeError = PetManifestValidator.validate(negativeScale, sheetPixelWidth: 128, sheetPixelHeight: 96)
+        #expect(negativeError == .invalidDefaultScale(-1))
+    }
+
+    @Test func rejectsOutOfBoundsFrameIndex() {
+        let manifest = sampleManifest(animations: [
+            "idle": AnimationClip(frames: [99], fps: 2, loop: true)
+        ])
+        let error = PetManifestValidator.validate(manifest, sheetPixelWidth: 128, sheetPixelHeight: 96)
+        #expect(error == .outOfBoundsFrame(animationID: "idle", frameIndex: 99, maxIndex: 11))
+    }
+
+    @Test func resolvesUnknownAnimationToFallback() {
+        let manifest = sampleManifest()
+        let resolved = PetManifestValidator.resolvedAnimationID(requestedID: "missing", manifest: manifest)
+        #expect(resolved == "idle")
+    }
+
+    @Test func nonSquareFrameLayoutCalculation() {
+        let manifest = sampleManifest(
+            frameWidth: 64,
+            frameHeight: 48,
+            columns: 2,
+            rows: 2,
+            animations: [
+                "idle": AnimationClip(frames: [0, 1], fps: 2, loop: true),
+                "sweating": AnimationClip(frames: [2, 3], fps: 4, loop: true)
+            ]
+        )
+        #expect(manifest.totalFrameCount == 4)
+        #expect(manifest.frameRect(for: 0)?.column == 0)
+        #expect(manifest.frameRect(for: 0)?.row == 0)
+        #expect(manifest.frameRect(for: 1)?.column == 1)
+        #expect(manifest.frameRect(for: 1)?.row == 0)
+        #expect(manifest.frameRect(for: 2)?.column == 0)
+        #expect(manifest.frameRect(for: 2)?.row == 1)
+        #expect(manifest.frameRect(for: 3)?.column == 1)
+        #expect(manifest.frameRect(for: 3)?.row == 1)
+        #expect(manifest.frameRect(for: 4) == nil)
+
+        let error = PetManifestValidator.validate(manifest, sheetPixelWidth: 128, sheetPixelHeight: 96)
+        #expect(error == nil)
+    }
+}
+
+struct PetStateAnimationMappingTests {
+    @Test func mapsAllStatesToAnimationIDs() {
+        #expect(PetStateAnimationMapping.animationID(for: .idle) == "idle")
+        #expect(PetStateAnimationMapping.animationID(for: .sweating) == "sweating")
+        #expect(PetStateAnimationMapping.animationID(for: .tired) == "tired")
+        #expect(PetStateAnimationMapping.animationID(for: .carryingTrash) == "carryingTrash")
+    }
+}
+
+@MainActor
+struct PetSpriteRuntimeTests {
+    private func makeTestPackage() -> LoadedPetPackage {
+        let manifest = PetManifest(
+            id: "test",
+            name: "Test",
+            spriteSheet: "sheet.png",
+            frameWidth: 1,
+            frameHeight: 1,
+            columns: 2,
+            rows: 1,
+            defaultScale: 2,
+            fallbackAnimation: "idle",
+            animations: [
+                "idle": AnimationClip(frames: [0], fps: 2, loop: true),
+                "sweating": AnimationClip(frames: [1], fps: 4, loop: true)
+            ]
+        )
+
+        let textureA = SKTexture()
+        let textureB = SKTexture()
+        textureA.filteringMode = .nearest
+        textureB.filteringMode = .nearest
+
+        return LoadedPetPackage(
+            manifest: manifest,
+            frameTextures: [textureA, textureB],
+            clipsByID: manifest.animations
+        )
+    }
+
+    @Test func sameAnimationDoesNotRestart() {
+        let package = makeTestPackage()
+        let scene = PetScene(size: CGSize(width: 100, height: 100), package: package)
+
+        scene.applyAnimation("idle")
+        let firstAction = scene.children.first?.children.first?.action(forKey: "petAnimation")
+
+        scene.applyAnimation("idle")
+        let secondAction = scene.children.first?.children.first?.action(forKey: "petAnimation")
+
+        #expect(firstAction != nil)
+        #expect(secondAction === firstAction)
+    }
+
+    @Test func runtimePlaysIdleAnimationOnInit() {
+        let package = makeTestPackage()
+        let runtime = PetRuntime(sceneSize: CGSize(width: 100, height: 100), package: package)
+
+        let action = runtime.scene.children.first?.children.first?.action(forKey: "petAnimation")
+
+        #expect(runtime.currentAnimationID == "idle")
+        #expect(action != nil)
+    }
+
+    @Test func runtimeForwardsStateToAnimationWithoutRestartingSameClip() {
+        let package = makeTestPackage()
+        let runtime = PetRuntime(sceneSize: CGSize(width: 100, height: 100), package: package)
+
+        let firstAction = runtime.scene.children.first?.children.first?.action(forKey: "petAnimation")
+
+        runtime.apply(behavior: PetBehavior(
+            state: .idle,
+            priority: 0,
+            triggeringSignal: .thermalPressure(level: .nominal),
+            decidedAt: Date()
+        ))
+        let secondAction = runtime.scene.children.first?.children.first?.action(forKey: "petAnimation")
+
+        #expect(runtime.currentAnimationID == "idle")
+        #expect(firstAction != nil)
+        #expect(secondAction === firstAction)
+    }
+
+    @Test func bundledJoeyRobotPackageLoadsFromAppBundle() {
+        PetAssetLoader.resetCacheForTesting()
+        let bundle = Bundle(for: PetRuntime.self)
+        let result = PetAssetLoader.load(packageID: "JoeyRobot", bundle: bundle)
+        #expect(result.isSuccess)
+        if case .success(let package) = result {
+            #expect(package.manifest.id == "joey-robot")
+            #expect(package.manifest.defaultScale == 3)
+            #expect(package.frameTextures.count == 12)
+            #expect(package.clipsByID["idle"]?.frames.count == 2)
+        }
+    }
+}
+
+private extension Result {
+    var isSuccess: Bool {
+        if case .success = self { return true }
+        return false
+    }
 }

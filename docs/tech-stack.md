@@ -8,7 +8,7 @@ Fixed direction for JoeyPet V1. Deviations require a new ADR and explicit approv
 |------|--------|
 | Language | Swift |
 | UI shell | SwiftUI + AppKit (e.g. `NSPanel`, menu extras as needed) |
-| Pet rendering | SpriteKit (2D sprites) |
+| Pet rendering | SpriteKit (2D sprites, config-driven `pet.json` + spritesheet packages) |
 | Concurrency | Swift Concurrency (`async`/`await`, actors where appropriate) |
 | Frameworks | Apple first: Foundation, Combine only if needed |
 | Persistence | UserDefaults, `@AppStorage` |
@@ -42,6 +42,7 @@ Do not introduce:
 - [decisions/003-2d-sprite-runtime.md](decisions/003-2d-sprite-runtime.md)
 - [decisions/004-no-database-in-v1.md](decisions/004-no-database-in-v1.md)
 - [decisions/006-no-llm-runtime-in-v1.md](decisions/006-no-llm-runtime-in-v1.md)
+- [decisions/007-configurable-sprite-asset-package.md](decisions/007-configurable-sprite-asset-package.md)
 
 ## Related docs
 

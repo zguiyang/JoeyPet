@@ -38,10 +38,21 @@ Pipeline: `SystemSensor → SystemSignal → BehaviorEngine → PetBehavior/PetS
 
 ## Add a new behavior / pet state
 
-1. Define `PetState` and `AnimationClip` in domain terms ([domain-model.md](../../../docs/domain-model.md)).
+1. Define `PetState` in domain terms ([domain-model.md](../../../docs/domain-model.md)).
 2. Add behavior rule: priority, cooldown, hysteresis, minimum duration.
-3. Wire through `PetRuntime` — not directly from sensor.
-4. Table-test transitions; manually validate animation stability.
+3. Add animation id entry in `PetStateAnimationMapping` (single mapping file).
+4. Add clip to `Resources/Pets/JoeyRobot/pet.json` and frames to `spritesheet.png`.
+5. Wire through `PetRuntime` — not directly from sensor.
+6. Table-test transitions; manually validate animation stability.
+
+## Add or change a sprite animation (Phase 1.5)
+
+1. Edit `src/JoeyPet/Resources/Pets/JoeyRobot/spritesheet.png` — keep row-major layout matching `columns` × `rows` in `pet.json`.
+2. Add or update an entry under `animations` in `pet.json` (`frames`, `fps`, `loop`).
+3. If the animation maps to a `PetState`, update `PetStateAnimationMapping.swift` only — do not scatter animation id strings elsewhere.
+4. Run `PetManifestValidator` tests (dimensions, in-bounds frames, fallback).
+5. Build and verify in app; use `-JoeyPetDebugState <state>` in Debug for quick checks.
+6. Confirm same animation id does not restart when state is re-applied unchanged.
 
 ## Safety verification
 

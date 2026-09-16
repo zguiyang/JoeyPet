@@ -32,11 +32,31 @@ Named reaction rule: when certain signals (with severity and hysteresis) apply, 
 
 ### AnimationClip
 
-SpriteKit-ready animation reference: clip id, loop mode, duration hint, asset key. Selected by `PetRuntime` from current `PetState`.
+Strongly typed, `Codable` animation definition used by `PetManifest`:
+
+| Field | Type | Purpose |
+|-------|------|---------|
+| `frames` | `[Int]` | Row-major sprite sheet frame indices |
+| `fps` | `Double` | Playback rate |
+| `loop` | `Bool` | Repeat when true |
+
+Clips are keyed by animation id inside the manifest. `PetRuntime` resolves the clip for the current `PetState` via a centralized state → animation mapping.
 
 ### PetManifest
 
-Static definition of the pet character: available states, clips, default preferences, asset bundle references.
+Strongly typed, `Codable` pet package definition (`pet.json`):
+
+| Field | Purpose |
+|-------|---------|
+| `id`, `name` | Package identity |
+| `spriteSheet` | Spritesheet filename in the package folder |
+| `frameWidth`, `frameHeight` | Per-frame pixel size (may differ) |
+| `columns`, `rows` | Sheet layout (row-major, left-to-right, top-to-bottom) |
+| `defaultScale` | Integer display scale (nearest filtering) |
+| `fallbackAnimation` | Clip id used when a requested animation is missing |
+| `animations` | Map of animation id → `AnimationClip` |
+
+V1 ships one built-in package: `JoeyRobot` under `Resources/Pets/JoeyRobot/`.
 
 ### PetPreferences
 

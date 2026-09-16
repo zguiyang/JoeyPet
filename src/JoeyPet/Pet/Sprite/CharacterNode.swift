@@ -1,0 +1,40 @@
+import SpriteKit
+
+@MainActor
+final class CharacterNode: SKSpriteNode {
+    private var currentAnimationID: String?
+
+    init(texture: SKTexture?, displayScale: Int) {
+        let scale = max(1, displayScale)
+        super.init(texture: texture, color: .clear, size: texture?.size() ?? .zero)
+        setScale(CGFloat(scale))
+        texture?.filteringMode = .nearest
+    }
+
+    @available(*, unavailable)
+    required init?(coder aDecoder: NSCoder) {
+        nil
+    }
+
+    func playAnimation(
+        id: String,
+        clip: AnimationClip,
+        textures: [SKTexture]
+    ) {
+        guard currentAnimationID != id else { return }
+        currentAnimationID = id
+
+        let frameTextures = clip.frames.map { textures[$0] }
+        guard !frameTextures.isEmpty else { return }
+
+        removeAction(forKey: "petAnimation")
+        let frameDuration = 1.0 / clip.fps
+        let animate = SKAction.animate(with: frameTextures, timePerFrame: frameDuration)
+
+        if clip.loop {
+            run(.repeatForever(animate), withKey: "petAnimation")
+        } else {
+            run(animate, withKey: "petAnimation")
+        }
+    }
+}

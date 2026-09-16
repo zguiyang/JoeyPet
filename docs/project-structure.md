@@ -2,55 +2,34 @@
 
 Current layout and suggested growth. **Do not create empty placeholder directories** until a phase needs them.
 
-## Current (Phase 0)
+## Current (Phase 1.5)
 
 ```
 JoeyPet/
 ├── AGENTS.md
-├── README.md
-├── README.zh-CN.md
 ├── JoeyPet.xcodeproj/
-├── .agents/
-│   └── skills/
-│       └── joeypet-macos/
-│           ├── SKILL.md
-│           └── references/
+├── .agents/skills/joeypet-macos/
 ├── docs/
-│   ├── product.md
-│   ├── architecture.md
-│   ├── domain-model.md
-│   ├── pet-runtime.md
-│   ├── system-sensors.md
-│   ├── safety.md
-│   ├── tech-stack.md
-│   ├── project-structure.md
-│   ├── development.md
-│   ├── roadmap.md
-│   └── decisions/
-├── src/
-│   └── JoeyPet/
-│       ├── JoeyPetApp.swift
-│       ├── ContentView.swift
-│       └── Assets.xcassets/
-└── tests/
-    └── JoeyPetTests/
-        └── JoeyPetTests.swift
+├── src/JoeyPet/
+│   ├── App/                 # AppDelegate, PetCoordinator, debug/sleep-wake
+│   ├── Domain/              # SystemSignal, PetState, PetManifest, AnimationClip, BehaviorEngine
+│   ├── Pet/
+│   │   ├── Runtime/         # PetRuntime, PetAssetLoader, state→animation mapping
+│   │   └── Sprite/          # PetScene, CharacterNode, PetRootNode
+│   ├── System/Sensors/      # Thermal, memory, storage (read-only)
+│   ├── UI/                  # PetPanel, PetSpriteView
+│   ├── Resources/
+│   │   └── Pets/
+│   │       └── JoeyRobot/   # pet.json + spritesheet.png (built-in package)
+│   └── Assets.xcassets/
+└── tests/JoeyPetTests/
 ```
 
 ## Suggested future layout (implement when needed)
 
 ```
 src/JoeyPet/
-├── App/                 # App entry, lifecycle
-├── UI/                  # SwiftUI views, NSPanel wiring
-├── Pet/
-│   ├── Runtime/         # State machine, clip selection
-│   ├── Sprite/          # SpriteKit scene, nodes
-│   └── Assets/          # Sprite atlases (may stay in Assets.xcassets early on)
-├── System/
-│   └── Sensors/         # Thermal, memory, storage, idle/active
-├── Domain/              # SystemSignal, PetState, rules (pure Swift)
-├── Behavior/            # BehaviorEngine, mappings
+├── Behavior/            # Extracted behavior rules if engine grows
 └── Utilities/           # Approved cleanup / organize actions
 ```
 
