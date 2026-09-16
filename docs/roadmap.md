@@ -37,9 +37,27 @@ End-to-end spike: desktop pet window, SpriteKit presentation, read-only sensors,
 - Signal → state → animation transitions (spike-level rules)
 - Low idle resource usage
 
+## Phase 2A — Joey Character Design Foundation
+
+Design-only: lock Joey as the default Pixel Robot without shipping final sprites.
+
+- [character-design.md](character-design.md) — role, personality, visual language, proportions, expression, animation principles, initial clip set, asset rules
+- [pixel-asset-workflow.md](pixel-asset-workflow.md) — concept → sheet → `pet.json` → debug / runtime validation
+- Respect existing package contract (`32×32`, integer `defaultScale`, silhouette-first); runtime stays character-agnostic
+- No production `spritesheet.png` / `pet.json` replacement in this phase
+
+## Phase 2B — Production Sprite Assets
+
+Art production follow-up on 2A — still no new runtime architecture.
+
+- Draw and pack the initial animation set (~10 clips) into the JoeyRobot package
+- Manual pixel QA (consistency, silhouette, alignment, palette, jitter)
+- Update `pet.json` clip entries to match the sheet; validate via manifest tests and debug states
+- Props limited to in-frame Trash Can / Broom; no attachment system
+
 ## Phase 2 — System Awareness Hardening / Refinement
 
-Follow-up on Phase 1 sensors and signal pipeline — no duplicate spike scope.
+Follow-up on Phase 1 sensors and signal pipeline — no duplicate spike scope. Can proceed in parallel with 2A/2B.
 
 - Idle / active duration sensor
 - Threshold tuning, debouncing, and hysteresis on sensor inputs
@@ -81,3 +99,5 @@ Follow-up on Phase 1 sensors and signal pipeline — no duplicate spike scope.
 
 - [product.md](product.md)
 - [development.md](development.md)
+- [character-design.md](character-design.md)
+- [pixel-asset-workflow.md](pixel-asset-workflow.md)
