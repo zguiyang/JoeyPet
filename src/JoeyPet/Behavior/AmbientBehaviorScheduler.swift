@@ -19,6 +19,7 @@ final class AmbientBehaviorScheduler {
     private let delayProvider: () -> TimeInterval
     private let behaviorProvider: () -> PetTransientBehavior
     private let sleeper: (TimeInterval) async -> Bool
+    private let defaults: UserDefaults
     private var task: Task<Void, Never>?
 
     var onBehavior: ((PetTransientBehavior) -> Void)?
@@ -30,12 +31,14 @@ final class AmbientBehaviorScheduler {
             TimeInterval.random(in: 12...35)
         },
         behaviorProvider: @escaping () -> PetTransientBehavior = AmbientBehaviorScheduler.randomBehavior,
-        sleeper: @escaping (TimeInterval) async -> Bool = AmbientBehaviorScheduler.sleep
+        sleeper: @escaping (TimeInterval) async -> Bool = AmbientBehaviorScheduler.sleep,
+        defaults: UserDefaults = .standard
     ) {
         self.configuration = configuration
         self.delayProvider = delayProvider
         self.behaviorProvider = behaviorProvider
         self.sleeper = sleeper
+        self.defaults = defaults
     }
 
     func start() {
@@ -55,7 +58,7 @@ final class AmbientBehaviorScheduler {
     }
 
     func update(sustainedState: PetState) {
-        let enabled = UserDefaults.standard.object(forKey: "ambientBehaviorsEnabled") as? Bool ?? true
+        let enabled = PetPreferences.ambientBehaviorsEnabled(defaults: defaults)
         if sustainedState == .idle, enabled {
             start()
         } else {

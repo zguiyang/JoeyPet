@@ -47,6 +47,10 @@
 		D7PET124305978720070926E /* MainWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET024305978720070926E /* MainWindowController.swift */; };
 		D7PET125305978720070926E /* JoeyBubbleController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET025305978720070926E /* JoeyBubbleController.swift */; };
 		D7PET126305978720070926E /* StatusColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET026305978720070926E /* StatusColor.swift */; };
+		D7PET127305978720070926E /* PetPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET027305978720070926E /* PetPreferences.swift */; };
+		D7PET128305978720070926E /* PetPosition.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET028305978720070926E /* PetPosition.swift */; };
+		D7PET129305978720070926E /* PetPositionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET029305978720070926E /* PetPositionStore.swift */; };
+		D7PET12A305978720070926E /* LaunchAtLoginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET02A305978720070926E /* LaunchAtLoginManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -102,6 +106,10 @@
 		D7PET024305978720070926E /* MainWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowController.swift; sourceTree = "<group>"; };
 		D7PET025305978720070926E /* JoeyBubbleController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeyBubbleController.swift; sourceTree = "<group>"; };
 		D7PET026305978720070926E /* StatusColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusColor.swift; sourceTree = "<group>"; };
+		D7PET027305978720070926E /* PetPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetPreferences.swift; sourceTree = "<group>"; };
+		D7PET028305978720070926E /* PetPosition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetPosition.swift; sourceTree = "<group>"; };
+		D7PET029305978720070926E /* PetPositionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetPositionStore.swift; sourceTree = "<group>"; };
+		D7PET02A305978720070926E /* LaunchAtLoginManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -180,6 +188,8 @@
 				D7PET001305978720070926E /* SignalSeverity.swift */,
 				D7PET003305978720070926E /* SystemSignal.swift */,
 				D7PET020305978720070926E /* CleanupModels.swift */,
+				D7PET027305978720070926E /* PetPreferences.swift */,
+				D7PET028305978720070926E /* PetPosition.swift */,
 			);
 			path = Domain;
 			sourceTree = "<group>";
@@ -257,6 +267,7 @@
 				D7PET00F305978720070926E /* PetCoordinator.swift */,
 				D7PET010305978720070926E /* SleepWakeMonitor.swift */,
 				D7PET023305978720070926E /* AppModel.swift */,
+				D7PET02A305978720070926E /* LaunchAtLoginManager.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -279,6 +290,7 @@
 			children = (
 				D7PET021305978720070926E /* CleanupScanner.swift */,
 				D7PET022305978720070926E /* CleanupExecutor.swift */,
+				D7PET029305978720070926E /* PetPositionStore.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -428,6 +440,10 @@
 				D7PET110305978720070926E /* SleepWakeMonitor.swift in Sources */,
 				D7PET10A305978720070926E /* StorageSensor.swift in Sources */,
 				D7PET103305978720070926E /* SystemSignal.swift in Sources */,
+				D7PET127305978720070926E /* PetPreferences.swift in Sources */,
+				D7PET128305978720070926E /* PetPosition.swift in Sources */,
+				D7PET129305978720070926E /* PetPositionStore.swift in Sources */,
+				D7PET12A305978720070926E /* LaunchAtLoginManager.swift in Sources */,
 				D7PET107305978720070926E /* SystemSensor.swift in Sources */,
 				D7PET108305978720070926E /* ThermalSensor.swift in Sources */,
 				D7PET11F305978720070926E /* AmbientBehaviorScheduler.swift in Sources */,

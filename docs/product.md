@@ -40,6 +40,14 @@ movement, and a small safety-gated cleanup utility. Quick Clean only moves
 explicitly classified safe candidates to Trash; review candidates require
 selection in the Cleanup page.
 
+## Phase 5 Daily-use productization
+
+JoeyPet remembers the user's pet position, recovers safely when display
+geometry changes, supports optional launch at login, and keeps Ambient
+Behaviors, Proactive Bubbles, and the single Main Window lifecycle coherent.
+Cleanup remembers only its last execution summary and does not cache candidate
+paths across launches.
+
 ## V1 platform
 
 macOS only. See [decisions/001-macos-only-v1.md](decisions/001-macos-only-v1.md).

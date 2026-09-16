@@ -36,6 +36,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             appModel?.scan()
         }
         appModel.onPreferencesChanged = { [weak coordinator] in coordinator?.refreshPreferences() }
+        appModel.onResetPetPosition = { [weak panelController] in panelController?.resetPosition() }
         appModel.onCleanupStarted = { [weak panelController] in
             _ = panelController?.petRuntime.perform(.cleaning)
         }
@@ -69,6 +70,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         appModel?.cancelOperations()
         bubbleController.dismiss()
     }
+
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 
     @objc private func openMainWindow() { mainWindowController?.show(section: .overview) }
     @objc private func quickClean() { appModel?.quickClean() }

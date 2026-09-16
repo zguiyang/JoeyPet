@@ -88,6 +88,13 @@ scanner, `safe` / `review` risk classification, Quick Clean's safe-only scope,
 user action before file changes, Move to Trash, fixture-based tests, and never
 `rm -rf`.
 
+For daily-use lifecycle work, keep position persistence in UserDefaults,
+persist only after drag-end, treat ambient movement as temporary, recover
+fully off-screen positions to a safe main-screen default, use Apple's
+`SMAppService` for launch at login, and keep Main Window close separate from
+app quit. Test pure geometry and setting boundaries without introducing a
+database or UI testing dependency.
+
 ## Performance checks
 
 - Sensors: prefer notifications over tight polling; document interval if polling.

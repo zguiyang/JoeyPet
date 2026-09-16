@@ -8,6 +8,7 @@ final class PetPanelController {
 
     private let panel: PetPanel
     private let spriteView: PetSpriteView
+    private let positionStore: PetPositionStore
     private(set) var petRuntime: PetRuntime
     var onLeftClick: (() -> Void)?
     var onRightClick: ((NSEvent) -> Void)?
@@ -15,8 +16,13 @@ final class PetPanelController {
 
     private let panelSize = NSSize(width: 160, height: 160)
 
-    init() {
-        let frame = Self.initialFrame(size: panelSize)
+    convenience init() {
+        self.init(positionStore: PetPositionStore())
+    }
+
+    init(positionStore: PetPositionStore) {
+        self.positionStore = positionStore
+        let frame = Self.restoredFrame(size: panelSize, savedPosition: positionStore.load())
         panel = PetPanel(contentRect: NSRect(origin: frame.origin, size: panelSize))
 
         spriteView = PetSpriteView(frame: NSRect(origin: .zero, size: panelSize))
@@ -30,6 +36,7 @@ final class PetPanelController {
         panel.contentView = spriteView
         spriteView.onLeftClick = { [weak self] in self?.onLeftClick?() }
         spriteView.onRightClick = { [weak self] event in self?.onRightClick?(event) }
+        spriteView.onDragEnded = { [weak self] origin in self?.saveUserPosition(origin: origin) }
     }
 
     /// Loads a Debug launch-argument package when present and valid; otherwise `nil` (default JoeyRobot).
@@ -95,12 +102,37 @@ final class PetPanelController {
         }
     }
 
+    func resetPosition() {
+        positionStore.clear()
+        let frame = Self.initialFrame(size: panelSize)
+        panel.setFrameOrigin(frame.origin)
+    }
+
     func showContextMenu(_ menu: NSMenu, for event: NSEvent) {
         menu.popUp(positioning: nil, at: event.locationInWindow, in: spriteView)
     }
 
     private func screenForPanel() -> NSScreen? {
         NSScreen.screens.first { $0.visibleFrame.intersects(panel.frame) } ?? NSScreen.main
+    }
+
+    private func saveUserPosition(origin: NSPoint) {
+        guard let screen = screenForPanel() else { return }
+        let visibleFrame = screen.visibleFrame
+        let visibleGeometry = PetPositionRect(
+            minX: visibleFrame.minX,
+            minY: visibleFrame.minY,
+            width: visibleFrame.width,
+            height: visibleFrame.height
+        )
+        let point = PetPositionPoint(x: origin.x, y: origin.y)
+        let size = PetPositionPoint(x: panelSize.width, y: panelSize.height)
+        positionStore.save(PetPositionRecord(
+            screenIdentifier: Self.screenIdentifier(for: screen),
+            absoluteOrigin: point,
+            normalizedOrigin: PetPositionGeometry.normalizedOrigin(point, in: visibleGeometry, windowSize: size),
+            savedVisibleFrame: visibleGeometry
+        ))
     }
 
     deinit {
@@ -118,5 +150,30 @@ final class PetPanelController {
             y: visible.minY + 24
         )
         return NSRect(origin: origin, size: size)
+    }
+
+    private static func restoredFrame(size: NSSize, savedPosition: PetPositionRecord?) -> NSRect {
+        let sizePoint = PetPositionPoint(x: size.width, y: size.height)
+        let screens = NSScreen.screens.map { screen in
+            PetScreenGeometry(
+                identifier: screenIdentifier(for: screen),
+                visibleFrame: PetPositionRect(
+                    minX: screen.visibleFrame.minX,
+                    minY: screen.visibleFrame.minY,
+                    width: screen.visibleFrame.width,
+                    height: screen.visibleFrame.height
+                ),
+                isMain: screen == NSScreen.main
+            )
+        }
+        let origin = PetPositionGeometry.restore(savedPosition, on: screens, windowSize: sizePoint)
+        return NSRect(origin: NSPoint(x: origin.x, y: origin.y), size: size)
+    }
+
+    private static func screenIdentifier(for screen: NSScreen) -> String {
+        if let number = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber {
+            return "display-\(number.uint32Value)"
+        }
+        return "\(screen.localizedName)-\(screen.frame.origin.x)-\(screen.frame.origin.y)"
     }
 }

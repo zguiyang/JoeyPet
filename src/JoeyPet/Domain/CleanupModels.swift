@@ -96,3 +96,24 @@ struct CleanupExecutionResult: Sendable {
     nonisolated var failedCount: Int { failedItems.count }
     nonisolated var movedBytes: Int64 { succeededItems.reduce(0) { $0 + $1.candidate.size } }
 }
+
+struct CleanupExecutionSummary: Codable, Equatable, Sendable {
+    let finishedAt: Date
+    let succeededCount: Int
+    let failedCount: Int
+    let movedBytes: Int64
+
+    nonisolated init(finishedAt: Date, succeededCount: Int, failedCount: Int, movedBytes: Int64) {
+        self.finishedAt = finishedAt
+        self.succeededCount = succeededCount
+        self.failedCount = failedCount
+        self.movedBytes = movedBytes
+    }
+
+    nonisolated init(execution: CleanupExecutionResult) {
+        self.finishedAt = execution.finishedAt
+        self.succeededCount = execution.succeededCount
+        self.failedCount = execution.failedCount
+        self.movedBytes = execution.movedBytes
+    }
+}

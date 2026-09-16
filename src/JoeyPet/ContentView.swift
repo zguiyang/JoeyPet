@@ -167,6 +167,10 @@ private struct CleanupView: View {
                 Text("Last result: \(execution.succeededCount) moved to Trash, \(execution.failedCount) failed.")
                     .font(.callout)
                     .foregroundStyle(execution.failedCount == 0 ? Color.secondary : Color.orange)
+            } else if let summary = model.lastCleanupSummary {
+                Text("Last Cleanup: \(summary.finishedAt.formatted(date: .abbreviated, time: .shortened)) · \(summary.succeededCount) moved to Trash · \(Self.byteFormatter.string(fromByteCount: summary.movedBytes)) processed")
+                    .font(.callout)
+                    .foregroundStyle(summary.failedCount == 0 ? Color.secondary : Color.orange)
             }
         }
     }
@@ -241,13 +245,23 @@ private struct SummaryValue: View {
 
 private struct SettingsView: View {
     @ObservedObject var model: AppModel
-    @AppStorage("ambientBehaviorsEnabled") private var ambientBehaviorsEnabled = true
-    @AppStorage("proactiveBubblesEnabled") private var proactiveBubblesEnabled = true
+    @AppStorage(PetPreferences.ambientBehaviorsEnabledKey) private var ambientBehaviorsEnabled = PetPreferences.defaultAmbientBehaviorsEnabled
+    @AppStorage(PetPreferences.proactiveBubblesEnabledKey) private var proactiveBubblesEnabled = PetPreferences.defaultProactiveBubblesEnabled
 
     var body: some View {
         Form {
+            Section("General") {
+                Toggle("Launch JoeyPet at Login", isOn: Binding(
+                    get: { model.launchAtLoginEnabled },
+                    set: { model.setLaunchAtLogin($0) }
+                ))
+                if let error = model.launchAtLoginError {
+                    Text(error).font(.caption).foregroundStyle(.red)
+                }
+            }
             Section("Pet") {
                 Toggle("Ambient behaviors", isOn: $ambientBehaviorsEnabled)
+                Button("Reset Joey Position") { model.resetPetPosition() }
             }
             Section("Hints") {
                 Toggle("Show proactive bubbles", isOn: $proactiveBubblesEnabled)

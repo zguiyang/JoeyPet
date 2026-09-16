@@ -2,7 +2,7 @@
 
 Current layout and suggested growth. **Do not create empty placeholder directories** until a phase needs them.
 
-## Current (Phase 2B-2)
+## Current (Phase 5)
 
 ```
 JoeyPet/
@@ -11,13 +11,14 @@ JoeyPet/
 ├── .agents/skills/joeypet-macos/
 ├── docs/
 ├── src/JoeyPet/
-│   ├── App/                 # AppDelegate, PetCoordinator, debug/sleep-wake
-│   ├── Domain/              # SystemSignal, PetState, PetManifest, AnimationClip, BehaviorEngine
+│   ├── App/                 # AppDelegate, AppModel, PetCoordinator, lifecycle adapters
+│   ├── Domain/              # Signals, pet state, cleanup and position models
 │   ├── Pet/
 │   │   ├── Runtime/         # PetRuntime, PetAssetLoader, state→animation mapping
 │   │   └── Sprite/          # PetScene, CharacterNode, PetRootNode
 │   ├── System/Sensors/      # Thermal, memory, storage (read-only)
-│   ├── UI/                  # PetPanel, PetSpriteView
+│   ├── UI/                  # PetPanel, Main Window, Bubble, PetSpriteView
+│   ├── Utilities/           # Cleanup scanner/executor and position store
 │   ├── Resources/
 │   │   └── Pets/
 │   │       └── JoeyRobot/              # default built-in production package (32@4)

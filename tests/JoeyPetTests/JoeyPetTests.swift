@@ -555,6 +555,163 @@ struct CleanupTests {
     }
 }
 
+struct Phase5PersistenceTests {
+    @Test func positionRecordRoundTrips() throws {
+        let record = PetPositionRecord(
+            screenIdentifier: "display-main",
+            absoluteOrigin: PetPositionPoint(x: 420, y: 180),
+            normalizedOrigin: PetPositionPoint(x: 0.5, y: 0.33),
+            savedVisibleFrame: PetPositionRect(minX: 0, minY: 0, width: 1200, height: 800)
+        )
+        let data = try JSONEncoder().encode(record)
+        #expect(try JSONDecoder().decode(PetPositionRecord.self, from: data) == record)
+    }
+
+    @Test func restoresPositionRelativeToMatchingScreen() {
+        let screen = PetScreenGeometry(
+            identifier: "display-main",
+            visibleFrame: PetPositionRect(minX: 0, minY: 0, width: 1000, height: 700),
+            isMain: true
+        )
+        let saved = PetPositionRecord(
+            screenIdentifier: screen.identifier,
+            absoluteOrigin: PetPositionPoint(x: 10, y: 10),
+            normalizedOrigin: PetPositionPoint(x: 0.8, y: 0.2),
+            savedVisibleFrame: screen.visibleFrame
+        )
+
+        let restored = PetPositionGeometry.restore(
+            saved,
+            on: [screen],
+            windowSize: PetPositionPoint(x: 160, y: 160)
+        )
+        #expect(abs(restored.x - 672) < 0.01)
+        #expect(abs(restored.y - 108) < 0.01)
+    }
+
+    @Test func offScreenPositionFallsBackToMainScreen() {
+        let screen = PetScreenGeometry(
+            identifier: "display-main",
+            visibleFrame: PetPositionRect(minX: 0, minY: 0, width: 1000, height: 700),
+            isMain: true
+        )
+        let saved = PetPositionRecord(
+            screenIdentifier: "display-removed",
+            absoluteOrigin: PetPositionPoint(x: 5_000, y: 5_000),
+            normalizedOrigin: PetPositionPoint(x: 1, y: 1),
+            savedVisibleFrame: PetPositionRect(minX: 5_000, minY: 5_000, width: 1_000, height: 700)
+        )
+
+        let restored = PetPositionGeometry.restore(
+            saved,
+            on: [screen],
+            windowSize: PetPositionPoint(x: 160, y: 160)
+        )
+        #expect(restored == PetPositionPoint(x: 816, y: 24))
+    }
+
+    @Test func positionStoreClearResetsSavedPosition() {
+        let suiteName = "JoeyPetTests.position.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let store = PetPositionStore(defaults: defaults)
+        let record = PetPositionRecord(
+            screenIdentifier: "display-main",
+            absoluteOrigin: PetPositionPoint(x: 1, y: 2),
+            normalizedOrigin: PetPositionPoint(x: 0.1, y: 0.1),
+            savedVisibleFrame: PetPositionRect(minX: 0, minY: 0, width: 100, height: 100)
+        )
+
+        store.save(record)
+        #expect(store.load() == record)
+        store.clear()
+        #expect(store.load() == nil)
+    }
+
+    @Test func settingsDefaultToEnabledAmbientAndBubbles() {
+        let suiteName = "JoeyPetTests.preferences.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        #expect(PetPreferences.ambientBehaviorsEnabled(defaults: defaults))
+        #expect(PetPreferences.proactiveBubblesEnabled(defaults: defaults))
+        defaults.set(false, forKey: PetPreferences.ambientBehaviorsEnabledKey)
+        defaults.set(false, forKey: PetPreferences.proactiveBubblesEnabledKey)
+        #expect(!PetPreferences.ambientBehaviorsEnabled(defaults: defaults))
+        #expect(!PetPreferences.proactiveBubblesEnabled(defaults: defaults))
+    }
+
+    @Test @MainActor func ambientDisabledDoesNotStartScheduler() {
+        let suiteName = "JoeyPetTests.scheduler.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        defaults.set(false, forKey: PetPreferences.ambientBehaviorsEnabledKey)
+
+        let scheduler = AmbientBehaviorScheduler(
+            configuration: .init(minimumDelay: 1, maximumDelay: 1),
+            delayProvider: { 1 },
+            sleeper: { _ in false },
+            defaults: defaults
+        )
+        scheduler.update(sustainedState: .idle)
+        #expect(!scheduler.isRunning)
+    }
+
+    @Test func proactiveBubblePreferenceSuppressesOnlyProactiveEvents() {
+        let suiteName = "JoeyPetTests.bubbles.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        defaults.set(false, forKey: PetPreferences.proactiveBubblesEnabledKey)
+
+        #expect(!PetPreferences.allowsProactiveBubble(isUserInitiated: false, defaults: defaults))
+        #expect(PetPreferences.allowsProactiveBubble(isUserInitiated: true, defaults: defaults))
+    }
+
+    @Test func cleanupSummaryRoundTripsWithoutCandidatePaths() throws {
+        let summary = CleanupExecutionSummary(
+            finishedAt: Date(timeIntervalSinceReferenceDate: 123),
+            succeededCount: 12,
+            failedCount: 1,
+            movedBytes: 154_000_000
+        )
+        let data = try JSONEncoder().encode(summary)
+        #expect(try JSONDecoder().decode(CleanupExecutionSummary.self, from: data) == summary)
+        #expect(!String(decoding: data, as: UTF8.self).contains("candidate"))
+    }
+
+    @Test @MainActor func launchAtLoginToggleReflectsManagerState() {
+        let manager = FakeLaunchAtLoginManager()
+        let suiteName = "JoeyPetTests.login.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let model = AppModel(
+            scanner: CleanupScanner(homeURL: URL(fileURLWithPath: "/tmp/joeypet-fixture")),
+            executor: CleanupExecutor(),
+            defaults: defaults,
+            launchAtLoginManager: manager
+        )
+
+        #expect(!model.launchAtLoginEnabled)
+        model.setLaunchAtLogin(true)
+        #expect(model.launchAtLoginEnabled)
+        #expect(manager.registerCalls == 1)
+        model.setLaunchAtLogin(false)
+        #expect(!model.launchAtLoginEnabled)
+        #expect(manager.unregisterCalls == 1)
+    }
+}
+
+private final class FakeLaunchAtLoginManager: LaunchAtLoginManaging {
+    private(set) var isRegistered = false
+    private(set) var registerCalls = 0
+    private(set) var unregisterCalls = 0
+
+    func setRegistered(_ registered: Bool) throws {
+        if registered { registerCalls += 1 } else { unregisterCalls += 1 }
+        isRegistered = registered
+    }
+}
+
 private final class FakeTrashMover: FileTrashMoving, @unchecked Sendable {
     private let failingPath: String
     private(set) var movedPaths: [String] = []

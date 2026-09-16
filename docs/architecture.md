@@ -55,6 +55,12 @@ Implementation details: [pet-runtime.md](pet-runtime.md), [system-sensors.md](sy
 
 User preferences and lightweight state via UserDefaults / `@AppStorage`. No database. See [decisions/004-no-database-in-v1.md](decisions/004-no-database-in-v1.md).
 
+Daily-use state remains small and explicit: `PetPositionGeometry` is a pure
+domain resolver, `PetPositionStore` persists only the user's drag-end record,
+and `LaunchAtLoginManager` is the Apple `SMAppService` boundary. Ambient
+movement never writes the saved position. `AppModel` persists only a
+`CleanupExecutionSummary`, not candidate paths.
+
 ## Testing strategy
 
 - Unit tests for signal → behavior mapping and runtime rules (Swift Testing).

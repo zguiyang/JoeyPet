@@ -100,11 +100,10 @@ final class PetCoordinator {
         ambientScheduler.update(sustainedState: behavior.state)
 
         let status = sensorHub.currentSnapshot.overallSeverity
-        let proactiveBubblesEnabled = UserDefaults.standard.object(forKey: "proactiveBubblesEnabled") as? Bool ?? true
         if behavior.state != lastAnnouncedState,
            behavior.state != .idle,
            status.isActionable,
-           proactiveBubblesEnabled {
+           PetPreferences.allowsProactiveBubble(isUserInitiated: false) {
             lastAnnouncedState = behavior.state
             let message: JoeyBubbleMessage
             switch behavior.state {

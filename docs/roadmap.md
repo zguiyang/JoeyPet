@@ -83,6 +83,17 @@ Follow-up on Phase 1 sensors and signal pipeline — no duplicate spike scope. C
 - Quiet short desktop locomotion
 - Safety-gated cleanup of a small allowlist; see [cleanup.md](cleanup.md)
 
+### Phase 5 — Daily-use productization
+
+- Persist user-dragged pet position with screen-aware off-screen recovery.
+- Add `SMAppService` launch-at-login wiring, defaulting to off.
+- Make Ambient Behaviors, Proactive Bubbles, Reset Position, and the single
+  Main Window lifecycle immediately effective and persistent where appropriate.
+- Persist only the last Cleanup execution summary; rescan instead of caching
+  candidate paths.
+- Keep distribution, new sensors, new cleanup roots, and broader utilities out
+  of this phase.
+
 ## Phase 5 — Utilities (Safety-Gated)
 
 - Read-only scans (cache, large files, desktop clutter)
