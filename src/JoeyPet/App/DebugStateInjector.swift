@@ -22,10 +22,28 @@ enum DebugStateInjector {
         #endif
     }
 
+    /// Debug-only animation id for direct production-asset playback checks.
+    static func injectedAnimationID() -> String? {
+        #if DEBUG
+        return animationID(from: ProcessInfo.processInfo.arguments)
+        #else
+        return nil
+        #endif
+    }
+
     /// Parses `-JoeyPetDebugPet <id>` / `-JoeyPetDebugPet=<id>` from launch arguments.
     static func packageID(from arguments: [String]) -> String? {
         #if DEBUG
         return debugArgumentValue(prefix: "-JoeyPetDebugPet", arguments: arguments)
+        #else
+        return nil
+        #endif
+    }
+
+    /// Parses `-JoeyPetDebugAnimation <id>` / `-JoeyPetDebugAnimation=<id>`.
+    static func animationID(from arguments: [String]) -> String? {
+        #if DEBUG
+        return debugArgumentValue(prefix: "-JoeyPetDebugAnimation", arguments: arguments)
         #else
         return nil
         #endif

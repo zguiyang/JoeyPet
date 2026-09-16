@@ -2,7 +2,7 @@
 
 Current layout and suggested growth. **Do not create empty placeholder directories** until a phase needs them.
 
-## Current (Phase 2B-1)
+## Current (Phase 2B-2)
 
 ```
 JoeyPet/
@@ -20,9 +20,7 @@ JoeyPet/
 │   ├── UI/                  # PetPanel, PetSpriteView
 │   ├── Resources/
 │   │   └── Pets/
-│   │       ├── JoeyRobot/              # default built-in package
-│   │       ├── JoeyRobot32Candidate/   # Phase 2B-1 idle compare (32@4)
-│   │       └── JoeyRobot64Candidate/   # Phase 2B-1 idle compare (64@2)
+│   │       └── JoeyRobot/              # default built-in production package (32@4)
 │   └── Assets.xcassets/
 └── tests/JoeyPetTests/
 ```

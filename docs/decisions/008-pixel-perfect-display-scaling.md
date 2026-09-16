@@ -21,5 +21,5 @@ JoeyPet renders config-driven pixel pets via SpriteKit. Frame art lives on an as
 
 - Art and docs reason in points vs backing pixels separately; sharpness checks must consider the active `NSScreen.backingScaleFactor`.
 - Invalid `defaultScale <= 0` remains rejected by `PetManifestValidator`.
-- Debug-only `-JoeyPetDebugPet` can load idle candidates without a product pet picker; Release stays on default `JoeyRobot`.
+- Phase 2B-1 used a Debug-only package override to compare idle candidates without a product pet picker; those experiment assets were removed after the 32@4 production decision. Release stays on default `JoeyRobot`.
 - No `DisplayScaleManager` / Retina engine abstraction in V1; revisit only if multi-screen scale handling becomes a real runtime requirement.

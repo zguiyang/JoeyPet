@@ -1,6 +1,6 @@
 # Joey Character Design
 
-Phase **2A** foundation for Joey — the default built-in Pixel Robot. Phase **2B-1** adds display-scale rules and two **idle-only** resolution candidates for fair visual comparison. Production full clip set remains later in **2B**.
+Phase **2B-2** production definition for Joey — the default built-in Pixel Robot. Phase 2A established the character direction and Phase 2B-1 validated display density; this phase locks the first reusable Joey sprite set.
 
 **Runtime note:** Joey is the V1 built-in character (`Resources/Pets/JoeyRobot/`). Runtime remains **character-agnostic** — load any valid `pet.json` + spritesheet package; do not hard-code Joey-specific branches in Swift.
 
@@ -8,11 +8,9 @@ Current packages:
 
 | Package | Role | Frame | `defaultScale` | Logical size |
 |---------|------|-------|----------------|--------------|
-| `JoeyRobot` | Shipping placeholder / default | `32` × `32` | `3` | **96** × **96** pt |
-| `JoeyRobot32Candidate` | Phase 2B-1 compare candidate | `32` × `32` | `4` | **128** × **128** pt |
-| `JoeyRobot64Candidate` | Phase 2B-1 compare candidate | `64` × `64` | `2` | **128** × **128** pt |
+| `JoeyRobot` | Shipping production package / default | `32` × `32` | `4` | **128** × **128** pt |
 
-Fair comparison for 2B-1 is **32@4 vs 64@2** (both 128 pt). Do **not** treat 64@96 pt (e.g. scale 1.5) as a production configuration. Candidates are idle-only; select via Debug `-JoeyPetDebugPet` (see [pixel-asset-workflow.md](pixel-asset-workflow.md)). Do not overwrite shipping `JoeyRobot` until a later recommendation step.
+The production decision is **32@4** (128 pt). Do **not** treat 64@96 pt (e.g. scale 1.5) as a production configuration. The 2B-1 candidates were comparison-only and are not shipped.
 
 Sheet contract: `columns` × `rows`, row-major; `fallbackAnimation: idle`; integer `defaultScale`; nearest filtering ([ADR 007](decisions/007-configurable-sprite-asset-package.md), [ADR 008](decisions/008-pixel-perfect-display-scaling.md)).
 
@@ -79,7 +77,7 @@ Asset / Texel Grid  →  Logical Points  →  Physical / Backing Pixels
 
 ## Color System
 
-Do **not** freeze final RGB/HEX in this phase. Use a small, consistent palette when drawing:
+The production palette is locked for the first Joey V1 sprite set:
 
 | Role | Guidance |
 |------|----------|
@@ -89,7 +87,19 @@ Do **not** freeze final RGB/HEX in this phase. Use a small, consistent palette w
 | Status accents | Few colors for sweat, sleep Z’s, notify blink, antenna light |
 | Outline | Single dark outline or high-contrast edge for silhouette |
 
-**Budget:** about **2–3 main colors** plus a **small set of status accents**. Reuse the same palette across all clips and across 32/64 candidates.
+**Palette:**
+
+| Role | HEX |
+|------|-----|
+| Outline / eye | `#162030` |
+| Body base | `#46749E` |
+| Body shadow | `#234360` |
+| Face panel | `#BEDCE8` |
+| Calm / bright lamp | `#E4B84E` |
+| Heat accent | `#DF7E63` |
+| Dim lamp | `#7589A3` |
+
+Transparent pixels are fully transparent; no semi-transparent edge pixels are used. Reuse this palette across every production clip.
 
 ## Proportions
 
@@ -114,7 +124,7 @@ Do not encode system metric names into art filenames or animation ids (`cpuHigh`
 
 ## Animation Principles
 
-- Prefer **2–4 frames** per clip (looping ambient states). Phase 2B-1 candidates ship **idle only** (≤2 frames).
+- Prefer **2–4 frames** per clip (looping ambient states). Phase 2B-1 candidates were **idle-only** comparison assets (≤2 frames) and are no longer shipped.
 - **Integer pixel** motion only — no subpixel offsets, no interpolated soft moves in source art.
 - Hold silhouette stability across frames; change a few pixels for life (blink, antenna, sweat drops).
 - Avoid animation jitter: locked pivot, aligned feet, shared outline where pose allows.
@@ -139,7 +149,7 @@ Target ~10 clips for Phase 2B production. Ids below align with package / mapping
 | `celebrating` | Positive feedback after approved action | 2–4 |
 | `notifying` | Gentle attention / break reminder cue | 2–3 |
 
-Phase 2B-1 delivers **idle candidates + display rules**. Placeholder shipping frames remain until a later replace step.
+Phase 2B-2 delivers the first production set in `JoeyRobot`: all ten clips below, with props composited into their frames. The runtime remains manifest-driven and does not gain animation-specific business branches.
 
 ## Asset Rules
 
@@ -164,10 +174,9 @@ Phase 2B-1 delivers **idle candidates + display rules**. Placeholder shipping fr
 - Expanding into multi-character select, remote asset download, sound, or LLM “personality chat” in this phase.
 - Comparing 32@4 to 64 at a different logical size and calling it a resolution decision.
 
-## Out of scope (Phase 2A / 2B-1)
+## Out of scope (Phase 2B-2)
 
-- Replacing shipping `JoeyRobot` `spritesheet.png` / `pet.json` without an explicit recommendation decision.
-- Full 10-clip production set, pet picker UI, sensors/settings/utilities changes.
+- Pet picker UI, sensors/settings/utilities changes.
 - Installing or training ComfyUI / LoRA pipelines.
 
 ## Related docs

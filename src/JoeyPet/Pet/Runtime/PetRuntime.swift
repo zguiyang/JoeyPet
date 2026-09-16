@@ -31,6 +31,11 @@ final class PetRuntime {
         applyAnimation(for: animationID, state: behavior.state)
     }
 
+    /// Direct asset playback hook for Debug builds; it does not alter PetState or behavior mapping.
+    func applyDebugAnimation(_ animationID: String) {
+        applyAnimation(for: animationID, state: currentState)
+    }
+
     private func applyAnimation(for animationID: String, state: PetState) {
         let resolvedID = PetManifestValidator.resolvedAnimationID(
             requestedID: animationID,

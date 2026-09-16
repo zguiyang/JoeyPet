@@ -54,6 +54,14 @@ Pipeline: `SystemSensor → SystemSignal → BehaviorEngine → PetBehavior/PetS
 5. Build and verify in app; use `-JoeyPetDebugState <state>` in Debug for quick checks.
 6. Confirm same animation id does not restart when state is re-applied unchanged.
 
+## Update production Joey assets (Phase 2B-2)
+
+1. Read `character-design.md` and lock the shared master silhouette and palette.
+2. Update `Resources/Pets/JoeyRobot/spritesheet.png` and `pet.json` together.
+3. Run manifest and sheet validation, then inspect every frame at 4×.
+4. Use `-JoeyPetDebugAnimation <id>` for direct clip checks and `-JoeyPetDebugState <state>` for the normal state chain.
+5. Run Debug/Release builds, tests, and representative Release performance checks.
+
 ## Safety verification
 
 Any utility path:

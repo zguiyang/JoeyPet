@@ -51,7 +51,7 @@ Signals in → BehaviorEngine evaluates rules → proposed PetState
 - `defaultScale` from the manifest is an **integer logical multiplier**: `CharacterNode` applies it with `setScale(CGFloat(defaultScale))`. Logical on-screen size in points is approximately `frameWidth × defaultScale` by `frameHeight × defaultScale` (see `PetManifest.logicalPointSize()`).
 - **Points vs backing pixels:** logical points are AppKit / SpriteKit units. Physical pixels on the glass also depend on `NSScreen.backingScaleFactor` (commonly 2.0 on Retina, not guaranteed and not fixed in code). Do not treat `defaultScale` as a Retina or backing-pixel factor.
 - Animation playback uses `SKAction.animate` (no per-frame timers or display links).
-- Debug builds may inject a package via `-JoeyPetDebugPet` (`PetPanelController` → `PetRuntime`); Release ignores the flag and keeps bundled `JoeyRobot`.
+- Debug builds may directly hold a manifest clip via `-JoeyPetDebugAnimation <id>` (`PetCoordinator` → `PetRuntime` → `PetScene`) without changing `PetState` or `PetStateAnimationMapping`; Release ignores the flag. `-JoeyPetDebugState <state>` remains the independent state-chain check. Unknown animation ids use the manifest fallback.
 
 See [ADR 008](decisions/008-pixel-perfect-display-scaling.md) and [character-design.md](character-design.md).
 

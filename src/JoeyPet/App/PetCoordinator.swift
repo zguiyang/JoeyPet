@@ -23,16 +23,23 @@ final class PetCoordinator {
             self?.sensorHub.stop()
         }
         sleepWakeMonitor.onWake = { [weak self] in
+            guard DebugStateInjector.injectedAnimationID() == nil else { return }
             self?.sensorHub.start()
         }
 
         sleepWakeMonitor.start()
-        sensorHub.start()
 
         if let debugState = DebugStateInjector.injectedPetState() {
             Self.logger.info("Injecting debug state \(debugState.rawValue, privacy: .public)")
             let signal = SystemSignal.debugSignal(for: debugState)
             handle(signal: signal)
+        }
+
+        if let debugAnimation = DebugStateInjector.injectedAnimationID() {
+            panelController.petRuntime.applyDebugAnimation(debugAnimation)
+            Self.logger.info("Injecting debug animation \(debugAnimation, privacy: .public)")
+        } else {
+            sensorHub.start()
         }
 
         Self.logger.info("PetCoordinator started")

@@ -231,6 +231,21 @@ struct DebugStateInjectorTests {
     @Test func missingDebugPetPackageArgumentReturnsNil() {
         #expect(DebugStateInjector.packageID(from: ["JoeyPet", "-JoeyPetDebugState", "idle"]) == nil)
     }
+
+    @Test func parsesDebugAnimationSpaceSeparatedArgument() {
+        let id = DebugStateInjector.animationID(from: ["JoeyPet", "-JoeyPetDebugAnimation", "cleaning"])
+        #expect(id == "cleaning")
+    }
+
+    @Test func parsesDebugAnimationEqualsArgument() {
+        let id = DebugStateInjector.animationID(from: ["-JoeyPetDebugAnimation=notifying"])
+        #expect(id == "notifying")
+    }
+
+    @Test func missingDebugAnimationArgumentReturnsNil() {
+        #expect(DebugStateInjector.animationID(from: ["JoeyPet", "-JoeyPetDebugState", "idle"]) == nil)
+        #expect(DebugStateInjector.animationID(from: ["JoeyPet", "-JoeyPetDebugAnimation"]) == nil)
+    }
     #endif
 }
 
@@ -461,6 +476,16 @@ struct PetSpriteRuntimeTests {
         #expect(secondAction === firstAction)
     }
 
+    @Test func debugAnimationOverrideDoesNotChangePetState() {
+        let package = makeTestPackage()
+        let runtime = PetRuntime(sceneSize: CGSize(width: 100, height: 100), package: package)
+
+        runtime.applyDebugAnimation("sweating")
+
+        #expect(runtime.currentState == .idle)
+        #expect(runtime.currentAnimationID == "sweating")
+    }
+
     @Test func bundledJoeyRobotPackageLoadsFromAppBundle() {
         PetAssetLoader.resetCacheForTesting()
         let bundle = Bundle(for: PetRuntime.self)
@@ -468,53 +493,33 @@ struct PetSpriteRuntimeTests {
         #expect(result.isSuccess)
         if case .success(let package) = result {
             #expect(package.manifest.id == "joey-robot")
-            #expect(package.manifest.defaultScale == 3)
-            #expect(package.frameTextures.count == 12)
-            #expect(package.clipsByID["idle"]?.frames.count == 2)
-        }
-    }
-
-    @Test func bundled32CandidatePackageLoadsIdleOnly() {
-        PetAssetLoader.resetCacheForTesting()
-        let bundle = Bundle(for: PetRuntime.self)
-        let result = PetAssetLoader.load(packageID: "JoeyRobot32Candidate", bundle: bundle)
-        #expect(result.isSuccess)
-        if case .success(let package) = result {
+            #expect(package.manifest.name == "Joey")
             #expect(package.manifest.frameWidth == 32)
             #expect(package.manifest.frameHeight == 32)
+            #expect(package.manifest.columns == 10)
+            #expect(package.manifest.rows == 3)
             #expect(package.manifest.defaultScale == 4)
             #expect(package.manifest.logicalPointSize()?.width == 128)
-            #expect(package.manifest.animations.keys.sorted() == ["idle"])
-            #expect(package.clipsByID["idle"]?.frames == [0, 1])
-            #expect(package.frameTextures.count == 2)
+            #expect(package.manifest.logicalPointSize()?.height == 128)
+            #expect(package.frameTextures.count == 30)
+            #expect(package.clipsByID["idle"]?.frames.count == 2)
+            let expectedIDs = [
+                "idle", "blink", "walking", "sleeping", "sweating",
+                "tired", "carryingTrash", "cleaning", "celebrating", "notifying"
+            ]
+            #expect(package.clipsByID.keys.sorted() == expectedIDs.sorted())
+            for (animationID, clip) in package.clipsByID {
+                #expect(!clip.frames.isEmpty)
+                #expect(clip.fps > 0)
+                #expect(clip.frames.allSatisfy { $0 >= 0 && $0 < package.manifest.totalFrameCount })
+                #expect(package.manifest.animationClip(for: animationID) == clip)
+            }
+            #expect(package.manifest.fallbackAnimation == "idle")
             #expect(
                 PetManifestValidator.validate(
                     package.manifest,
-                    sheetPixelWidth: 64,
-                    sheetPixelHeight: 32
-                ) == nil
-            )
-        }
-    }
-
-    @Test func bundled64CandidatePackageLoadsIdleOnly() {
-        PetAssetLoader.resetCacheForTesting()
-        let bundle = Bundle(for: PetRuntime.self)
-        let result = PetAssetLoader.load(packageID: "JoeyRobot64Candidate", bundle: bundle)
-        #expect(result.isSuccess)
-        if case .success(let package) = result {
-            #expect(package.manifest.frameWidth == 64)
-            #expect(package.manifest.frameHeight == 64)
-            #expect(package.manifest.defaultScale == 2)
-            #expect(package.manifest.logicalPointSize()?.width == 128)
-            #expect(package.manifest.animations.keys.sorted() == ["idle"])
-            #expect(package.clipsByID["idle"]?.frames == [0, 1])
-            #expect(package.frameTextures.count == 2)
-            #expect(
-                PetManifestValidator.validate(
-                    package.manifest,
-                    sheetPixelWidth: 128,
-                    sheetPixelHeight: 64
+                    sheetPixelWidth: 320,
+                    sheetPixelHeight: 96
                 ) == nil
             )
         }
