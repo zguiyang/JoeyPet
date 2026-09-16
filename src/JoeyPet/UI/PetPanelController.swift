@@ -21,10 +21,25 @@ final class PetPanelController {
         spriteView.wantsLayer = true
         spriteView.layer?.backgroundColor = NSColor.clear.cgColor
 
-        petRuntime = PetRuntime(sceneSize: panelSize)
+        petRuntime = PetRuntime(sceneSize: panelSize, package: Self.debugOverridePackage())
         spriteView.presentScene(petRuntime.scene)
 
         panel.contentView = spriteView
+    }
+
+    /// Loads a Debug launch-argument package when present and valid; otherwise `nil` (default JoeyRobot).
+    private static func debugOverridePackage() -> LoadedPetPackage? {
+        guard let packageID = DebugStateInjector.injectedPackageID() else {
+            return nil
+        }
+
+        if let package = PetAssetLoader.loadBundledPackage(packageID: packageID) {
+            logger.info("Using debug pet package \(packageID, privacy: .public)")
+            return package
+        }
+
+        logger.error("Debug pet package \(packageID, privacy: .public) failed to load; falling back to default")
+        return nil
     }
 
     func show() {

@@ -1,0 +1,18 @@
+{
+  "id": "joey-robot-32-candidate",
+  "name": "Joey Robot 32 Candidate",
+  "spriteSheet": "spritesheet.png",
+  "frameWidth": 32,
+  "frameHeight": 32,
+  "columns": 2,
+  "rows": 1,
+  "defaultScale": 4,
+  "fallbackAnimation": "idle",
+  "animations": {
+    "idle": {
+      "frames": [0, 1],
+      "fps": 2,
+      "loop": true
+    }
+  }
+}

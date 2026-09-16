@@ -43,6 +43,7 @@ Do not introduce:
 - [decisions/004-no-database-in-v1.md](decisions/004-no-database-in-v1.md)
 - [decisions/006-no-llm-runtime-in-v1.md](decisions/006-no-llm-runtime-in-v1.md)
 - [decisions/007-configurable-sprite-asset-package.md](decisions/007-configurable-sprite-asset-package.md)
+- [decisions/008-pixel-perfect-display-scaling.md](decisions/008-pixel-perfect-display-scaling.md)
 
 ## Related docs
 

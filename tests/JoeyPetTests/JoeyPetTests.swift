@@ -217,6 +217,20 @@ struct DebugStateInjectorTests {
             }
         }
     }
+
+    @Test func parsesDebugPetPackageSpaceSeparatedArgument() {
+        let id = DebugStateInjector.packageID(from: ["JoeyPet", "-JoeyPetDebugPet", "JoeyRobot32Candidate"])
+        #expect(id == "JoeyRobot32Candidate")
+    }
+
+    @Test func parsesDebugPetPackageEqualsArgument() {
+        let id = DebugStateInjector.packageID(from: ["-JoeyPetDebugPet=JoeyRobot64Candidate"])
+        #expect(id == "JoeyRobot64Candidate")
+    }
+
+    @Test func missingDebugPetPackageArgumentReturnsNil() {
+        #expect(DebugStateInjector.packageID(from: ["JoeyPet", "-JoeyPetDebugState", "idle"]) == nil)
+    }
     #endif
 }
 
@@ -274,6 +288,25 @@ struct PetManifestTests {
     @Test func defaultScaleIsPreserved() {
         let manifest = sampleManifest(defaultScale: 4)
         #expect(manifest.defaultScale == 4)
+    }
+
+    @Test func logicalPointSizeMapsAssetScalePairs() {
+        let at3 = sampleManifest(frameWidth: 32, frameHeight: 32, defaultScale: 3)
+        #expect(at3.logicalPointSize()?.width == 96)
+        #expect(at3.logicalPointSize()?.height == 96)
+
+        let at4 = sampleManifest(frameWidth: 32, frameHeight: 32, defaultScale: 4)
+        #expect(at4.logicalPointSize()?.width == 128)
+        #expect(at4.logicalPointSize()?.height == 128)
+
+        let dense = sampleManifest(frameWidth: 64, frameHeight: 64, defaultScale: 2)
+        #expect(dense.logicalPointSize()?.width == 128)
+        #expect(dense.logicalPointSize()?.height == 128)
+    }
+
+    @Test func logicalPointSizeRejectsNonPositiveScale() {
+        #expect(sampleManifest(defaultScale: 0).logicalPointSize() == nil)
+        #expect(sampleManifest(defaultScale: -1).logicalPointSize() == nil)
     }
 
     @Test func validatesSheetDimensions() {
@@ -438,6 +471,52 @@ struct PetSpriteRuntimeTests {
             #expect(package.manifest.defaultScale == 3)
             #expect(package.frameTextures.count == 12)
             #expect(package.clipsByID["idle"]?.frames.count == 2)
+        }
+    }
+
+    @Test func bundled32CandidatePackageLoadsIdleOnly() {
+        PetAssetLoader.resetCacheForTesting()
+        let bundle = Bundle(for: PetRuntime.self)
+        let result = PetAssetLoader.load(packageID: "JoeyRobot32Candidate", bundle: bundle)
+        #expect(result.isSuccess)
+        if case .success(let package) = result {
+            #expect(package.manifest.frameWidth == 32)
+            #expect(package.manifest.frameHeight == 32)
+            #expect(package.manifest.defaultScale == 4)
+            #expect(package.manifest.logicalPointSize()?.width == 128)
+            #expect(package.manifest.animations.keys.sorted() == ["idle"])
+            #expect(package.clipsByID["idle"]?.frames == [0, 1])
+            #expect(package.frameTextures.count == 2)
+            #expect(
+                PetManifestValidator.validate(
+                    package.manifest,
+                    sheetPixelWidth: 64,
+                    sheetPixelHeight: 32
+                ) == nil
+            )
+        }
+    }
+
+    @Test func bundled64CandidatePackageLoadsIdleOnly() {
+        PetAssetLoader.resetCacheForTesting()
+        let bundle = Bundle(for: PetRuntime.self)
+        let result = PetAssetLoader.load(packageID: "JoeyRobot64Candidate", bundle: bundle)
+        #expect(result.isSuccess)
+        if case .success(let package) = result {
+            #expect(package.manifest.frameWidth == 64)
+            #expect(package.manifest.frameHeight == 64)
+            #expect(package.manifest.defaultScale == 2)
+            #expect(package.manifest.logicalPointSize()?.width == 128)
+            #expect(package.manifest.animations.keys.sorted() == ["idle"])
+            #expect(package.clipsByID["idle"]?.frames == [0, 1])
+            #expect(package.frameTextures.count == 2)
+            #expect(
+                PetManifestValidator.validate(
+                    package.manifest,
+                    sheetPixelWidth: 128,
+                    sheetPixelHeight: 64
+                ) == nil
+            )
         }
     }
 }
