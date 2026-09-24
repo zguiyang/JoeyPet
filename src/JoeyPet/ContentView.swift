@@ -15,7 +15,7 @@ struct ContentView: View {
                     .tag(section)
             }
             .navigationTitle("JoeyPet")
-            .frame(minWidth: 170)
+            .frame(minWidth: 180, idealWidth: 190)
         } detail: {
             Group {
                 switch model.selectedSection {
@@ -24,9 +24,55 @@ struct ContentView: View {
                 case .settings: SettingsView(model: model)
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .padding(24)
         }
+    }
+}
+
+private struct PageShell<Content: View>: View {
+    let title: String
+    let content: Content
+
+    init(title: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.content = content()
+    }
+
+    var body: some View {
+        content
+            .frame(maxWidth: 720, maxHeight: .infinity, alignment: .topLeading)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .padding(.horizontal, 28)
+            .padding(.vertical, 24)
+            .navigationTitle(title)
+    }
+}
+
+private struct SectionHeader: View {
+    let title: String
+
+    var body: some View {
+        Text(title)
+            .font(.headline)
+    }
+}
+
+private struct StatusLabel: View {
+    let severity: SignalSeverity
+    let text: String?
+
+    init(severity: SignalSeverity, text: String? = nil) {
+        self.severity = severity
+        self.text = text
+    }
+
+    var body: some View {
+        Label {
+            Text(text ?? severity.uiDisplayName)
+        } icon: {
+            Image(systemName: severity.uiSymbolName)
+                .foregroundStyle(severity.swiftUIColor)
+        }
+        .accessibilityLabel("Status: \(text ?? severity.uiDisplayName)")
     }
 }
 
@@ -44,32 +90,36 @@ private struct OverviewView: View {
     @ObservedObject var model: AppModel
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                Text("Mac Status").font(.title2.weight(.semibold))
-                VStack(spacing: 0) {
-                    StatusRow(title: "Thermal", value: model.systemStatus.thermal.displayName, severity: model.systemStatus.thermal.severity)
-                    Divider()
-                    StatusRow(title: "Memory Pressure", value: model.systemStatus.memory.displayName, severity: model.systemStatus.memory.severity)
-                    Divider()
-                    StatusRow(title: "Storage", value: storageSummary, severity: model.systemStatus.storageSeverity)
-                }
-                .background(Color(nsColor: .windowBackgroundColor), in: RoundedRectangle(cornerRadius: 10))
-                .overlay(RoundedRectangle(cornerRadius: 10).stroke(.quaternary))
-
-                Text("Cleanup").font(.title2.weight(.semibold))
-                VStack(alignment: .leading, spacing: 8) {
-                    if let result = model.scanResult {
-                        Text("Last scan: \(result.scannedAt.formatted(date: .abbreviated, time: .shortened))")
-                        Text("Safe cleanup: \(Self.byteFormatter.string(fromByteCount: result.safeSize))")
-                            .foregroundStyle(.secondary)
-                    } else {
-                        Text("No scan yet")
-                            .foregroundStyle(.secondary)
+        PageShell(title: MainSection.overview.title) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        SectionHeader(title: "Mac Status")
+                        StatusLabel(severity: model.systemStatus.overallSeverity)
                     }
-                    Button("Scan and view") {
-                        model.selectedSection = .cleanup
-                        model.scan()
+
+                    VStack(spacing: 0) {
+                        StatusRow(title: "Thermal", value: model.systemStatus.thermal.displayName, severity: model.systemStatus.thermal.severity)
+                        Divider()
+                        StatusRow(title: "Memory Pressure", value: model.systemStatus.memory.displayName, severity: model.systemStatus.memory.severity)
+                        Divider()
+                        StatusRow(title: "Storage", value: storageSummary, severity: model.systemStatus.storageSeverity)
+                    }
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        SectionHeader(title: "Cleanup")
+                        if let result = model.scanResult {
+                            Text("Last scan: \(result.scannedAt.formatted(date: .abbreviated, time: .shortened))")
+                            Text("Safe cleanup: \(Self.byteFormatter.string(fromByteCount: result.safeSize))")
+                                .foregroundStyle(.secondary)
+                        } else {
+                            Text("No scan yet")
+                                .foregroundStyle(.secondary)
+                        }
+                        Button("Scan and view") {
+                            model.selectedSection = .cleanup
+                            model.scan()
+                        }
                     }
                 }
             }
@@ -100,14 +150,16 @@ private struct StatusRow: View {
     let severity: SignalSeverity
 
     var body: some View {
-        HStack {
-            Circle().fill(severity.swiftUIColor).frame(width: 9, height: 9)
+        HStack(alignment: .firstTextBaseline) {
             Text(title)
             Spacer()
-            Text(value).foregroundStyle(.secondary)
+            HStack(spacing: 10) {
+                Text(value).foregroundStyle(.secondary)
+                StatusLabel(severity: severity)
+                    .font(.callout)
+            }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 11)
+        .padding(.vertical, 10)
     }
 }
 
@@ -116,61 +168,65 @@ private struct CleanupView: View {
     @State private var showConfirmation = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Cleanup").font(.title2.weight(.semibold))
-                    Text(statusText).foregroundStyle(.secondary)
+        PageShell(title: MainSection.cleanup.title) {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    Text(statusText)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button("Scan") { model.scan() }
+                        .disabled(model.isBusy)
+                    Button("Quick Clean") { model.quickClean() }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(model.isBusy)
                 }
-                Spacer()
-                Button("Scan") { model.scan() }
-                    .disabled(model.isBusy)
-                Button("Quick Clean") { model.quickClean() }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(model.isBusy)
-            }
 
-            if let result = model.scanResult {
-                HStack(spacing: 18) {
-                    SummaryValue(title: "Total", value: byteFormatter.string(fromByteCount: result.totalSize))
-                    SummaryValue(title: "Safe", value: byteFormatter.string(fromByteCount: result.safeSize))
-                    SummaryValue(title: "Review", value: byteFormatter.string(fromByteCount: result.reviewSize))
-                }
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 18) {
-                        ForEach(CleanupCategory.allCases, id: \.self) { category in
-                            let candidates = result.candidates.filter { $0.category == category }
-                            if !candidates.isEmpty {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text(category.displayName).font(.headline)
-                                    ForEach(candidates) { candidate in
-                                        CandidateRow(candidate: candidate, selected: selection(for: candidate))
+                if let result = model.scanResult {
+                    HStack(spacing: 18) {
+                        SummaryValue(title: "Total", value: byteFormatter.string(fromByteCount: result.totalSize))
+                        SummaryValue(title: "Safe", value: byteFormatter.string(fromByteCount: result.safeSize))
+                        SummaryValue(title: "Review", value: byteFormatter.string(fromByteCount: result.reviewSize))
+                    }
+                    ScrollView {
+                        LazyVStack(alignment: .leading, spacing: 18) {
+                            ForEach(CleanupCategory.allCases, id: \.self) { category in
+                                let candidates = result.candidates.filter { $0.category == category }
+                                if !candidates.isEmpty {
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        Text(category.displayName).font(.headline)
+                                        ForEach(candidates) { candidate in
+                                            CandidateRow(candidate: candidate, selected: selection(for: candidate))
+                                        }
                                     }
                                 }
                             }
                         }
                     }
+                    Button("Move selected to Trash") { showConfirmation = true }
+                        .disabled(model.isBusy || model.selectedCandidateIDs.isEmpty)
+                        .confirmationDialog("Move selected items to Trash?", isPresented: $showConfirmation, titleVisibility: .visible) {
+                            Button("Move to Trash", role: .destructive) { model.executeSelected() }
+                            Button("Cancel", role: .cancel) {}
+                        }
+                } else if model.cleanupPhase == .scanning {
+                    ProgressView("Scanning allowed roots…")
+                } else {
+                    ContentUnavailableView("No scan yet", systemImage: "sparkle.magnifyingglass", description: Text("Scan a small set of regenerable caches and old logs."))
                 }
-                Button("Move selected to Trash") { showConfirmation = true }
-                    .disabled(model.isBusy || model.selectedCandidateIDs.isEmpty)
-                    .confirmationDialog("Move selected items to Trash?", isPresented: $showConfirmation, titleVisibility: .visible) {
-                        Button("Move to Trash", role: .destructive) { model.executeSelected() }
-                        Button("Cancel", role: .cancel) {}
-                    }
-            } else if model.cleanupPhase == .scanning {
-                ProgressView("Scanning allowed roots…")
-            } else {
-                ContentUnavailableView("No scan yet", systemImage: "sparkle.magnifyingglass", description: Text("Scan a small set of regenerable caches and old logs."))
-            }
 
-            if let execution = model.executionResult {
-                Text("Last result: \(execution.succeededCount) moved to Trash, \(execution.failedCount) failed.")
+                if let execution = model.executionResult {
+                    StatusLabel(
+                        severity: execution.failedCount == 0 ? .normal : .warning,
+                        text: "Last result: \(execution.succeededCount) moved to Trash, \(execution.failedCount) failed."
+                    )
                     .font(.callout)
-                    .foregroundStyle(execution.failedCount == 0 ? Color.secondary : Color.orange)
-            } else if let summary = model.lastCleanupSummary {
-                Text("Last Cleanup: \(summary.finishedAt.formatted(date: .abbreviated, time: .shortened)) · \(summary.succeededCount) moved to Trash · \(Self.byteFormatter.string(fromByteCount: summary.movedBytes)) processed")
+                } else if let summary = model.lastCleanupSummary {
+                    StatusLabel(
+                        severity: summary.failedCount == 0 ? .normal : .warning,
+                        text: "Last Cleanup: \(summary.finishedAt.formatted(date: .abbreviated, time: .shortened)) · \(summary.succeededCount) moved to Trash · \(Self.byteFormatter.string(fromByteCount: summary.movedBytes)) processed"
+                    )
                     .font(.callout)
-                    .foregroundStyle(summary.failedCount == 0 ? Color.secondary : Color.orange)
+                }
             }
         }
     }
@@ -249,27 +305,49 @@ private struct SettingsView: View {
     @AppStorage(PetPreferences.proactiveBubblesEnabledKey) private var proactiveBubblesEnabled = PetPreferences.defaultProactiveBubblesEnabled
 
     var body: some View {
-        Form {
-            Section("General") {
-                Toggle("Launch JoeyPet at Login", isOn: Binding(
-                    get: { model.launchAtLoginEnabled },
-                    set: { model.setLaunchAtLogin($0) }
-                ))
-                if let error = model.launchAtLoginError {
-                    Text(error).font(.caption).foregroundStyle(.red)
+        PageShell(title: MainSection.settings.title) {
+            Form {
+                Section("General") {
+                    Toggle("Launch JoeyPet at Login", isOn: Binding(
+                        get: { model.launchAtLoginEnabled },
+                        set: { model.setLaunchAtLogin($0) }
+                    ))
+                    if let error = model.launchAtLoginError {
+                        Text(error).font(.caption).foregroundStyle(.red)
+                    }
+                }
+                Section("Pet") {
+                    Toggle("Ambient behaviors", isOn: $ambientBehaviorsEnabled)
+                    Button("Reset Joey Position") { model.resetPetPosition() }
+                }
+                Section("Hints") {
+                    Toggle("Show proactive bubbles", isOn: $proactiveBubblesEnabled)
                 }
             }
-            Section("Pet") {
-                Toggle("Ambient behaviors", isOn: $ambientBehaviorsEnabled)
-                Button("Reset Joey Position") { model.resetPetPosition() }
-            }
-            Section("Hints") {
-                Toggle("Show proactive bubbles", isOn: $proactiveBubblesEnabled)
-            }
+            .formStyle(.grouped)
+            .onChange(of: ambientBehaviorsEnabled) { _, _ in model.notifyPreferencesChanged() }
+            .onChange(of: proactiveBubblesEnabled) { _, _ in model.notifyPreferencesChanged() }
         }
-        .formStyle(.grouped)
-        .onChange(of: ambientBehaviorsEnabled) { _, _ in model.notifyPreferencesChanged() }
-        .onChange(of: proactiveBubblesEnabled) { _, _ in model.notifyPreferencesChanged() }
+    }
+}
+
+private extension SignalSeverity {
+    var uiDisplayName: String {
+        switch self {
+        case .normal: return "All clear"
+        case .notice: return "Worth a look"
+        case .warning: return "Needs attention"
+        case .critical: return "Critical"
+        }
+    }
+
+    var uiSymbolName: String {
+        switch self {
+        case .normal: return "checkmark.circle.fill"
+        case .notice: return "info.circle.fill"
+        case .warning: return "exclamationmark.triangle.fill"
+        case .critical: return "xmark.octagon.fill"
+        }
     }
 }
 
