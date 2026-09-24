@@ -457,6 +457,15 @@ Joey
 - **Dependency**：当前 `AppModel`、`SystemStatusSnapshot`、UI Spec；不等待 CPU/Memory/Network 完整数据才能开始。
 - **Exit Criteria**：默认进入 Overview；三项导航、关闭/复用窗口正确；窗口在推荐范围可读；页面不再依赖大面积 card 或重复说明；loading/unavailable 可显示。
 
+**Implementation result (2026-09-16)**：已完成 Main Window shell foundation。保留三项
+`NavigationSplitView` 导航，统一三个详情页的内容宽度、内边距和标题栏标题；默认窗口为
+`800×560`，最小窗口为 `720×480`。新增轻量 `PageShell`、`SectionHeader` 和
+`StatusLabel`，复用现有 `SignalSeverity` 及语义颜色/图标；Overview 仅呈现已有的
+Thermal、Memory Pressure、Storage、Overall Status 和 Cleanup summary，并移除状态区外层
+装饰卡片。CPU、Memory Usage、Network Activity、趋势和完整 Cleanup/Settings 重构仍留在
+后续 slices。Debug/Release build 与全量 Unit Tests 已通过；实际窗口视觉 smoke 因验证主机
+当时处于锁屏状态尚未完成。
+
 ### M1.2 — Minimal Overview monitoring data contract
 
 - **Goal**：补齐 Overview 所需的 CPU Usage、Memory Usage、Network Activity 和 bounded session trend buffer 的最小只读数据来源。
