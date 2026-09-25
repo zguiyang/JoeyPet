@@ -82,12 +82,24 @@ final class SensorHub {
         }()
         let storage: (available: Int64, total: Int64)? = storageSensor.currentCapacity
         let storageSeverity = latestSignals["storage"]?.severity ?? .normal
+        let memoryMetrics = MemoryMetricsReader.current()
+        let volumeName = Self.bootVolumeName()
         return SystemStatusSnapshot(
             thermal: thermal,
             memory: memory,
             storageAvailableBytes: storage?.available,
             storageTotalBytes: storage?.total,
-            storageSeverity: storageSeverity
+            storageSeverity: storageSeverity,
+            physicalMemoryBytes: memoryMetrics?.physicalBytes,
+            usedMemoryBytes: memoryMetrics?.usedBytes,
+            swapUsedBytes: memoryMetrics?.swapUsedBytes,
+            volumeName: volumeName,
+            updatedAt: Date()
         )
+    }
+
+    private static func bootVolumeName() -> String? {
+        let home = URL(fileURLWithPath: NSHomeDirectory())
+        return try? home.resourceValues(forKeys: [.volumeNameKey]).volumeName
     }
 }

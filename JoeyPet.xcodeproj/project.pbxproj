@@ -58,6 +58,14 @@
 		D7SH004305978720070926EB /* AppShellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7SH004305978720070926E /* AppShellView.swift */; };
 		D7SH005305978720070926EB /* JoeyStageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7SH005305978720070926E /* JoeyStageView.swift */; };
 		D7SH006305978720070926EB /* MacCareRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7SH006305978720070926E /* MacCareRootView.swift */; };
+		D7MAC001305978720070926EB /* MacCareHomePresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7MAC001305978720070926E /* MacCareHomePresentation.swift */; };
+		D7MAC002305978720070926EB /* MacCareHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7MAC002305978720070926E /* MacCareHomeView.swift */; };
+		D7MAC003305978720070926EB /* MacCareHomeMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7MAC003305978720070926E /* MacCareHomeMetrics.swift */; };
+		D7MAC004305978720070926EB /* StorageCompositionDonutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7MAC004305978720070926E /* StorageCompositionDonutView.swift */; };
+		D7MAC005305978720070926EB /* MacCareHomeMotion.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7MAC005305978720070926E /* MacCareHomeMotion.swift */; };
+		D7STO001305978720070926EB /* StorageComposition.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7STO001305978720070926E /* StorageComposition.swift */; };
+		D7STO002305978720070926EB /* StorageCategoryEstimator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7STO002305978720070926E /* StorageCategoryEstimator.swift */; };
+		D7MEM002305978720070926EB /* MemoryMetricsReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7MEM001305978720070926E /* MemoryMetricsReader.swift */; };
 		D7SH007305978720070926EB /* LegacyCleanupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7SH007305978720070926E /* LegacyCleanupView.swift */; };
 		D7SH008305978720070926EB /* WorkRhythmRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7SH008305978720070926E /* WorkRhythmRootView.swift */; };
 		D7SH009305978720070926EB /* SettingsRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7SH009305978720070926E /* SettingsRootView.swift */; };
@@ -133,6 +141,14 @@
 		D7SH004305978720070926E /* AppShellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppShellView.swift; sourceTree = "<group>"; };
 		D7SH005305978720070926E /* JoeyStageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeyStageView.swift; sourceTree = "<group>"; };
 		D7SH006305978720070926E /* MacCareRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacCareRootView.swift; sourceTree = "<group>"; };
+		D7MAC001305978720070926E /* MacCareHomePresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacCareHomePresentation.swift; sourceTree = "<group>"; };
+		D7MAC002305978720070926E /* MacCareHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacCareHomeView.swift; sourceTree = "<group>"; };
+		D7MAC003305978720070926E /* MacCareHomeMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacCareHomeMetrics.swift; sourceTree = "<group>"; };
+		D7MAC004305978720070926E /* StorageCompositionDonutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageCompositionDonutView.swift; sourceTree = "<group>"; };
+		D7MAC005305978720070926E /* MacCareHomeMotion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacCareHomeMotion.swift; sourceTree = "<group>"; };
+		D7STO001305978720070926E /* StorageComposition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageComposition.swift; sourceTree = "<group>"; };
+		D7STO002305978720070926E /* StorageCategoryEstimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageCategoryEstimator.swift; sourceTree = "<group>"; };
+		D7MEM001305978720070926E /* MemoryMetricsReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryMetricsReader.swift; sourceTree = "<group>"; };
 		D7SH007305978720070926E /* LegacyCleanupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyCleanupView.swift; sourceTree = "<group>"; };
 		D7SH008305978720070926E /* WorkRhythmRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkRhythmRootView.swift; sourceTree = "<group>"; };
 		D7SH009305978720070926E /* SettingsRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsRootView.swift; sourceTree = "<group>"; };
@@ -223,6 +239,7 @@
 				D7PET020305978720070926E /* CleanupModels.swift */,
 				D7PET027305978720070926E /* PetPreferences.swift */,
 				D7PET028305978720070926E /* PetPosition.swift */,
+				D7STO001305978720070926E /* StorageComposition.swift */,
 			);
 			path = Domain;
 			sourceTree = "<group>";
@@ -231,8 +248,17 @@
 			isa = PBXGroup;
 			children = (
 				D7PET203305978720070926E /* Sensors */,
+				D7STOGR305978720070926E /* Storage */,
 			);
 			path = System;
+			sourceTree = "<group>";
+		};
+		D7STOGR305978720070926E /* Storage */ = {
+			isa = PBXGroup;
+			children = (
+				D7STO002305978720070926E /* StorageCategoryEstimator.swift */,
+			);
+			path = Storage;
 			sourceTree = "<group>";
 		};
 		D7PET203305978720070926E /* Sensors */ = {
@@ -240,6 +266,7 @@
 			children = (
 				D7PET009305978720070926E /* MemoryPressureSensor.swift */,
 				D7PET00B305978720070926E /* SensorHub.swift */,
+				D7MEM001305978720070926E /* MemoryMetricsReader.swift */,
 				D7PET007305978720070926E /* SystemSensor.swift */,
 				D7PET00A305978720070926E /* StorageSensor.swift */,
 				D7PET008305978720070926E /* ThermalSensor.swift */,
@@ -328,6 +355,11 @@
 			isa = PBXGroup;
 			children = (
 				D7SH006305978720070926E /* MacCareRootView.swift */,
+				D7MAC001305978720070926E /* MacCareHomePresentation.swift */,
+				D7MAC002305978720070926E /* MacCareHomeView.swift */,
+				D7MAC003305978720070926E /* MacCareHomeMetrics.swift */,
+				D7MAC004305978720070926E /* StorageCompositionDonutView.swift */,
+				D7MAC005305978720070926E /* MacCareHomeMotion.swift */,
 				D7SH007305978720070926E /* LegacyCleanupView.swift */,
 			);
 			path = MacCare;
@@ -521,7 +553,14 @@
 		D7SH017305978720070926EB /* SettingsFormComponents.swift in Sources */,
 		D7SH004305978720070926EB /* AppShellView.swift in Sources */,
 		D7SH005305978720070926EB /* JoeyStageView.swift in Sources */,
-		D7SH006305978720070926EB /* MacCareRootView.swift in Sources */,
+				D7SH006305978720070926EB /* MacCareRootView.swift in Sources */,
+				D7MAC001305978720070926EB /* MacCareHomePresentation.swift in Sources */,
+				D7MAC002305978720070926EB /* MacCareHomeView.swift in Sources */,
+				D7MAC003305978720070926EB /* MacCareHomeMetrics.swift in Sources */,
+				D7MAC004305978720070926EB /* StorageCompositionDonutView.swift in Sources */,
+				D7MAC005305978720070926EB /* MacCareHomeMotion.swift in Sources */,
+				D7STO001305978720070926EB /* StorageComposition.swift in Sources */,
+				D7STO002305978720070926EB /* StorageCategoryEstimator.swift in Sources */,
 		D7SH007305978720070926EB /* LegacyCleanupView.swift in Sources */,
 		D7SH008305978720070926EB /* WorkRhythmRootView.swift in Sources */,
 		D7SH009305978720070926EB /* SettingsRootView.swift in Sources */,
@@ -547,6 +586,7 @@
 				D7PET11E305978720070926E /* PetTransientBehavior.swift in Sources */,
 				D7PET113305978720070926E /* PetSpriteView.swift in Sources */,
 				D7PET10B305978720070926E /* SensorHub.swift in Sources */,
+				D7MEM002305978720070926EB /* MemoryMetricsReader.swift in Sources */,
 				D7PET105305978720070926E /* SensorThresholds.swift in Sources */,
 				D7PET101305978720070926E /* SignalSeverity.swift in Sources */,
 				D7PET110305978720070926E /* SleepWakeMonitor.swift in Sources */,

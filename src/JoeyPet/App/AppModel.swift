@@ -36,6 +36,8 @@ final class AppModel: ObservableObject {
     private static let logger = Logger(subsystem: "com.zguiyang.JoeyPet", category: "AppModel")
 
     @Published private(set) var systemStatus = SystemStatusSnapshot.initial
+    @Published private(set) var memoryTrendSamples: [Double] = []
+    @Published private(set) var storageCompositionState: StorageCompositionLoadState = .idle
     @Published private(set) var cleanupPhase: CleanupPhase = .idle
     @Published private(set) var scanResult: CleanupScanResult?
     @Published private(set) var executionResult: CleanupExecutionResult?
@@ -49,6 +51,8 @@ final class AppModel: ObservableObject {
     private let defaults: UserDefaults
     private let launchAtLoginManager: any LaunchAtLoginManaging
     private var task: Task<Void, Never>?
+    private var storageCompositionTask: Task<Void, Never>?
+    private let maxMemoryTrendSamples = 48
 
     var onCleanupStarted: (() -> Void)?
     var onCleanupFinished: ((CleanupExecutionResult) -> Void)?
@@ -85,6 +89,65 @@ final class AppModel: ObservableObject {
 
     func update(systemStatus: SystemStatusSnapshot) {
         self.systemStatus = systemStatus
+        appendMemoryTrendSample(from: systemStatus)
+        refreshStorageCompositionIfNeeded()
+    }
+
+    func refreshStorageCompositionIfNeeded() {
+        guard let total = systemStatus.storageTotalBytes,
+              let available = systemStatus.storageAvailableBytes,
+              total > 0
+        else { return }
+
+        switch storageCompositionState {
+        case .idle, .unavailable:
+            break
+        case .loading:
+            return
+        case .loaded(let existing):
+            if existing.totalBytes == total, existing.availableBytes == available {
+                return
+            }
+            storageCompositionState = .idle
+        }
+
+        storageCompositionState = .loading
+        storageCompositionTask?.cancel()
+        storageCompositionTask = Task { [weak self] in
+            guard let self else { return }
+            let estimate = await StorageCategoryEstimator.estimate()
+            guard !Task.isCancelled else { return }
+            let composed = StorageCompositionBuilder.compose(
+                totalBytes: total,
+                availableBytes: available,
+                estimates: estimate.categories
+            )
+            await MainActor.run {
+                guard !Task.isCancelled else { return }
+                if let composed {
+                    self.storageCompositionState = .loaded(composed)
+                } else {
+                    self.storageCompositionState = .unavailable
+                }
+            }
+        }
+    }
+
+    func invalidateStorageComposition() {
+        storageCompositionTask?.cancel()
+        storageCompositionState = .idle
+    }
+
+    private func appendMemoryTrendSample(from snapshot: SystemStatusSnapshot) {
+        guard let used = snapshot.usedMemoryBytes,
+              let physical = snapshot.physicalMemoryBytes,
+              physical > 0
+        else { return }
+        let fraction = min(max(Double(used) / Double(physical), 0), 1)
+        memoryTrendSamples.append(fraction)
+        if memoryTrendSamples.count > maxMemoryTrendSamples {
+            memoryTrendSamples.removeFirst(memoryTrendSamples.count - maxMemoryTrendSamples)
+        }
     }
 
     func scan() {
@@ -140,6 +203,8 @@ final class AppModel: ObservableObject {
             executionResult = execution
             save(summary: CleanupExecutionSummary(execution: execution))
             cleanupPhase = execution.failedCount == execution.items.count ? .failed : .completed
+            invalidateStorageComposition()
+            refreshStorageCompositionIfNeeded()
             onCleanupFinished?(execution)
         }
     }
@@ -159,6 +224,8 @@ final class AppModel: ObservableObject {
             executionResult = execution
             save(summary: CleanupExecutionSummary(execution: execution))
             cleanupPhase = execution.failedCount == execution.items.count ? .failed : .completed
+            invalidateStorageComposition()
+            refreshStorageCompositionIfNeeded()
             onCleanupFinished?(execution)
         }
     }
@@ -191,6 +258,7 @@ final class AppModel: ObservableObject {
 
     deinit {
         task?.cancel()
+        storageCompositionTask?.cancel()
     }
 
     private func save(summary: CleanupExecutionSummary) {

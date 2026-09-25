@@ -83,13 +83,23 @@ struct SystemStatusSnapshot: Equatable, Sendable {
     let storageAvailableBytes: Int64?
     let storageTotalBytes: Int64?
     let storageSeverity: SignalSeverity
+    let physicalMemoryBytes: Int64?
+    let usedMemoryBytes: Int64?
+    let swapUsedBytes: Int64?
+    let volumeName: String?
+    let updatedAt: Date?
 
     static let initial = SystemStatusSnapshot(
         thermal: .nominal,
         memory: .normal,
         storageAvailableBytes: nil,
         storageTotalBytes: nil,
-        storageSeverity: .normal
+        storageSeverity: .normal,
+        physicalMemoryBytes: nil,
+        usedMemoryBytes: nil,
+        swapUsedBytes: nil,
+        volumeName: nil,
+        updatedAt: nil
     )
 
     var overallSeverity: SignalSeverity {
