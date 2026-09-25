@@ -6,21 +6,21 @@
 
 **Status: Done**
 
-锁定 PRD、V1 Scope、Feature Spec、UI Spec 与本 Roadmap，建立产品 Source of Truth 和冲突处理规则。
+锁定 PRD、V1 Scope、Feature Spec、[Design.md](../../Design.md)（Stitch 上游）与本 Roadmap，建立产品 Source of Truth 和冲突处理规则。
 
-**Exit Criteria**：五份产品文档完成，旧入口已指向新文档，V1 边界和验收标准可被新开发任务直接引用。
+**Exit Criteria**：产品文档与 Design.md 完成，旧 UI Spec 已退役，V1 边界和验收标准可被新开发任务直接引用。
 
 ## MVP M1 — UI Foundation
 
 **Status: In Progress**
 
-重新整理 Main Window 基础：shell、Overview/Cleanup/Settings 导航、布局、文字层级、间距、共享状态呈现、共享 loading/error 呈现，并移除临时或 debug-looking 的视觉结构。Overview 同时完成 Lightweight Mac System Overview 的 presentation：Overall Mac Status、CPU、Memory、Memory Pressure、Storage、Network、Thermal、短时趋势，以及可靠性允许时的 Conditional hardware metrics。
+重新整理 Main Window 基础：Stitch 两栏壳（Joey Stage + Inspector）、Mac Care / Work Rhythm 分段、Settings 独立界面、布局、文字层级、间距、共享状态呈现、共享 loading/error 呈现，并移除临时或 debug-looking 的视觉结构。Mac Care 同时完成 Lightweight Mac System Overview 的 presentation：Overall Mac Status、CPU、Memory、Memory Pressure、Storage、Network、Thermal、短时趋势，以及可靠性允许时的 Conditional hardware metrics。
 
-**Dependencies**：UI Spec、当前系统状态与 Cleanup 数据契约；CPU Usage、Memory Usage、Network Activity 的 V1 data sources 需要在本 Milestone 补齐。Fan RPM 与 Exact Temperature 只需在可靠方案通过技术验证时纳入。
+**Dependencies**：[Design.md](../../Design.md)、Stitch 冻结稿、当前系统状态与 Cleanup 数据契约；CPU Usage、Memory Usage、Network Activity 的 V1 data sources 需要在本 Milestone 补齐。Fan RPM 与 Exact Temperature 只需在可靠方案通过技术验证时纳入。
 
-**Entry Criteria**：UI Spec 已锁定；不新增一级页面和 V1 功能。
+**Entry Criteria**：Design.md 与 Stitch IA 已对齐；不新增 Stitch 未定义的顶层导航范式。
 
-**Exit Criteria**：三个页面的基础结构、主要操作和真实状态符合 UI Spec；Overview 能以轻量方式呈现 V1 metrics 与短时趋势，用户不需要阅读长说明才能理解当前 Mac 状态和下一步。
+**Exit Criteria**：主窗口壳与 Mac Care / Work Rhythm / Settings 的主要操作和真实状态符合 Stitch 与 Design.md；Mac Care 能以轻量方式呈现 V1 metrics 与短时趋势，用户不需要阅读长说明才能理解当前 Mac 状态和下一步。
 
 ## MVP M2 — Desktop Joey Experience
 

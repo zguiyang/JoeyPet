@@ -17,7 +17,7 @@ JoeyPet 是一款原生 macOS 桌面宠物工具。它会安静地生活在桌�
 
 V1 Overview 目标包括 CPU、内存、存储、网络和 Thermal 的当前状态与有意义的短时趋势；这属于 System Monitoring，不提供进程管理或系统优化。
 
-JoeyPet 不是 AI 陪伴、聊天机器人或系统监控 Dashboard。V1 暂不包含桌面/下载目录整理、休息提醒和更多系统工具。
+JoeyPet 不是 AI 陪伴、聊天机器人或系统监控 Dashboard。V1 暂不包含桌面/下载目录整理与无确认的激进系统工具；**Work Rhythm** 与 **Mac Care** 主窗口体验以 Stitch 与 [Design.md](./Design.md) 为准。
 
 ## 当前状态
 
@@ -28,7 +28,8 @@ JoeyPet 不是 AI 陪伴、聊天机器人或系统监控 Dashboard。V1 暂不�
 ## 文档
 
 - [AGENTS.md](./AGENTS.md) — Agent 开发规则
-- [docs/product/](docs/product/) — 产品 Source of Truth：PRD、V1 范围、功能/UI 规格与路线图
+- [Design.md](./Design.md) — UI/UX 原生实现规范（Stitch 上游）
+- [docs/product/](docs/product/) — 产品 Source of Truth：PRD、V1 范围、功能规格与路线图
 - [docs/](docs/) — 技术架构、传感器、安全、生命周期与 ADR
 
 ## 设计原则

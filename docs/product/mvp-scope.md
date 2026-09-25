@@ -16,9 +16,9 @@
 | System Awareness | Lightweight Mac System Overview：CPU Usage、Memory Usage、Memory Pressure、Storage Usage、Network Activity、Thermal State，以及有意义的短时趋势 | PARTIAL |
 | Bubble | 短解释、必要时一个主要动作、成功/警告反馈、可关闭主动 Bubble | NEEDS REDESIGN |
 | Context Menu | 打开、快速清理、扫描并查看、设置、退出 | NEEDS REDESIGN |
-| Overview | Overall Mac Status、CPU/Memory/Network/Storage/Thermal 当前状态、短时趋势、Cleanup summary | NEEDS REDESIGN |
-| Cleanup | 冻结的三类范围、只读扫描、Safe/Review 分类 | PARTIAL |
-| Settings | Launch at Login、Ambient Behaviors、Proactive Bubbles、Reset Joey Position | NEEDS REDESIGN |
+| Mac Care | Overall Mac Status、CPU/Memory/Network/Storage/Thermal、短时趋势、清理/扫描流程、Applications（设计范围内） | NEEDS REDESIGN |
+| Work Rhythm | 专注/休息/统计（Stitch 冻结稿范围内） | MISSING / PARTIAL |
+| Settings | 通用 / 电脑状态 / 工作状态（Stitch 冻结稿）；含 Launch at Login、Joey 行为与位置等 | NEEDS REDESIGN |
 | Lifecycle | 关主窗口不退出、Quit 才退出、睡眠唤醒恢复、设置持久化 | DONE |
 | Release | 可安装的 macOS Beta/RC 包与基本发布检查 | MISSING |
 
@@ -43,9 +43,9 @@ Nice to Have 不能引入新传感器、新清理范围、新一级页面或新�
 
 ## Explicitly Not in V1
 
-### User Activity / Wellness
+### User Activity / Wellness (out of scope unless in Stitch + Feature Spec)
 
-Idle / Active Duration、Continuous Work Duration、Break Reminder、Pomodoro、Quiet Hours。可在 V1.1 重新评估。
+独立于主产品的 Pomodoro 市场功能、Quiet Hours 复杂调度、第三方健康集成。**Work Rhythm** 主窗口模式已在 Stitch 与 [Design.md](../../Design.md) 中定义；实现进度以本表与 Feature F16 为准，不视为“未来才设计”。
 
 ### File Organization
 
@@ -53,7 +53,9 @@ Desktop Organizer、Downloads Organizer、自动文件分类。
 
 ### System Utilities
 
-Process Manager、Kill Process、Memory Cleaner、CPU Optimizer、App Uninstaller、Duplicate Finder、Large File Finder、Disk Analyzer。
+Process Manager、Kill Process、Memory Cleaner、CPU Optimizer、Duplicate Finder、Large File Finder、Disk Analyzer。
+
+**Applications / 关联卸载** 在 Stitch Mac Care 流程中有 UI 设计；产品实现须遵守 [`docs/safety.md`](../safety.md) 与确认流程，不等同于无确认的批量卸载工具。
 
 ### AI
 
@@ -71,8 +73,8 @@ Developer ID、Notarization、DMG、GitHub Release 属于 MVP RC 的发布工作
 
 V1 Done 不是“所有 class 写完”。必须同时满足：
 
-1. 核心用户路径可从启动、状态反应、Overview 查看、扫描、确认、移入废纸篓一直走到反馈。
-2. Overview、Cleanup、Settings 的信息层级与状态呈现符合 UI Spec。
+1. 核心用户路径可从启动、状态反应、Mac Care 查看、扫描、确认、移入废纸篓一直走到反馈。
+2. 主窗口（Mac Care / Work Rhythm / Settings）的信息层级与状态呈现符合 Stitch 冻结稿与 [Design.md](../../Design.md)。
 3. Loading、Empty、Normal、Warning、Error、Success、Disabled 等真实需要的状态可理解。
 4. 传感、权限、文件消失、部分失败、屏幕变化、睡眠唤醒等主要错误有明确反馈。
 5. Cleanup 的 allowlist、Safe/Review 边界、用户确认和 Move to Trash 行为通过验证。
@@ -97,7 +99,8 @@ V1 Done 不是“所有 class 写完”。必须同时满足：
 | System Awareness | Semantic state → Joey reaction | DONE | Thermal/Memory Pressure/Storage 共享 severity 语义 | Product review |
 | Bubble | 信息/动作/成功/警告反馈 | PARTIAL | 短、可替换、不刷屏、动作明确 | NEEDS REDESIGN |
 | Context Menu | 入口顺序与忙碌状态 | PARTIAL | 固定分组，重复操作时正确禁用 | NEEDS REDESIGN |
-| Overview | 整体状态、当前 metrics、短时趋势 | PARTIAL | 几秒内理解 Mac 是否正常 | NEEDS REDESIGN |
+| Mac Care | 整体状态、当前 metrics、短时趋势 | PARTIAL | 几秒内理解 Mac 是否正常 | NEEDS REDESIGN |
+| Work Rhythm | 专注/休息/统计 | MISSING | 与 Stitch / F16 一致 | MISSING / PARTIAL |
 | Cleanup | 三个冻结根目录的只读扫描 | DONE | 只读、allowlist、可解释候选 | None |
 | Cleanup | Safe/Review 的用户理解 | PARTIAL | 不要求用户理解技术枚举 | NEEDS REDESIGN |
 | Cleanup | Quick Clean | DONE | 只处理 Safe，用户明确触发 | Product/UI verification |

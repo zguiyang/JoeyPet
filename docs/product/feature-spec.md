@@ -232,7 +232,7 @@ Quick Clean 和 Scan and View 在对应操作忙碌时禁用，不能制造并�
 
 ### User Flow
 
-打开 Main Window → 默认进入 Overview 或指定页面 → 用户在三个一级页面间切换 → 完成查看或操作 → 关闭窗口，Joey 仍在桌面运行。
+打开 Main Window → 默认进入 **Mac Care** 正常态或指定深度链接（扫描、设置等）→ 通过工具栏在 **Mac Care** 与 **Work Rhythm** 间切换 → 左侧 **Joey Stage** 始终可见 → 完成查看或操作 → 关闭窗口，Joey 仍在桌面运行。
 
 ### States
 
@@ -243,9 +243,9 @@ Quick Clean 和 Scan and View 在对应操作忙碌时禁用，不能制造并�
 
 ### Product Rules
 
-正式 IA 只有：`JoeyPet → Overview / Cleanup / Settings`。
+正式主窗口 IA（见 [Design.md](../../Design.md)）：工具栏 **Mac Care | Work Rhythm**、持久 **Joey Stage**、右侧 Inspector；**Settings** 为独立设置界面（内含 通用 / 电脑状态 / 工作状态），不是第三个并列 sidebar 项。
 
-不增加 Dashboard、Activity、History、Pet、Tools、Monitor 或 About 一级页面。主窗口承载理解和操作，不承载高密度监控。
+不增加 Dashboard、Activity、History、Pet、Tools、Monitor 或 About 作为与 Mac Care 并列的顶层模式。主窗口承载理解和操作，不承载高密度监控。
 
 ### Edge Cases
 
@@ -255,23 +255,23 @@ Quick Clean 和 Scan and View 在对应操作忙碌时禁用，不能制造并�
 
 ### Acceptance Criteria
 
-- Given 用户打开 JoeyPet，When Main Window 显示，Then 只看到 Overview、Cleanup、Settings 三个一级入口。
+- Given 用户打开 JoeyPet，When Main Window 显示，Then 看到 Joey Stage、Mac Care / Work Rhythm 分段切换，且可通过入口打开 Settings。
 - Given Main Window 已打开，When 用户再次从菜单打开某页面，Then 复用窗口并显示目标页面。
 - Given 用户关闭 Main Window，When 关闭完成，Then Joey 仍可见且继续运行。
 
-## F07 — Overview
+## F07 — Mac Care System Status
 
 ### Purpose
 
-让用户在几秒内知道“我的 Mac 现在运行得怎么样”，同时保留 JoeyPet 的轻量、安静和非管理定位。
+让用户在几秒内知道“我的 Mac 现在运行得怎么样”，同时保留 JoeyPet 的轻量、安静和非管理定位。本能力呈现在主窗口 **Mac Care** 模式的 Inspector 中（Stitch：正常态 / 注意态等），不再使用独立的 Overview 一级页面。
 
 ### User Entry
 
-Main Window 默认页面、Bubble 的查看动作、Context Menu 的打开 JoeyPet。
+Main Window 默认 **Mac Care**、Bubble 的查看动作、Context Menu 的打开 JoeyPet。
 
 ### User Flow
 
-打开 Overview → 先看 Overall Mac Status → 查看 CPU、Memory、Network、Storage、Thermal 的当前状态 → 在 CPU/Memory/Network 上查看短时趋势（适用时）→ 查看 Cleanup summary → 需要时进入 Cleanup。
+打开 Mac Care → 先看 Overall Mac Status → 查看 CPU、Memory、Network、Storage、Thermal 的当前状态 → 在 CPU/Memory/Network 上查看短时趋势（适用时）→ 查看清理摘要或进入扫描/清理流程 → 需要时进入 Applications 等 Mac Care 子流程。
 
 ### Metrics
 
@@ -304,8 +304,8 @@ Overall Mac Status 是首要信息，使用与 Joey 共享的 `normal`、`notice
 
 ### Product Rules
 
-- Overview 是 Lightweight Mac System Overview，不是 Activity Monitor、iStat Menus 或系统管理工具。
-- 信息层级固定为：Overall Mac Status → 当前 Metrics 与短时趋势 → Cleanup summary。
+- Mac Care 系统状态区是 Lightweight Mac System Overview，不是 Activity Monitor、iStat Menus 或系统管理工具。
+- 信息层级固定为：Overall Mac Status → 当前 Metrics 与短时趋势 → 清理摘要 / 进入扫描。
 - 不显示 process list、network process list、packet inspector、connection manager 或 optimizer action。
 - Memory Usage 与 Memory Pressure 必须分别呈现；Storage 保留现有 used/free/total 语义。
 - Fan RPM 与 Exact Temperature 只有技术验证通过才进入产品；它们不是 V1 Done blocker。
@@ -321,14 +321,14 @@ Overall Mac Status 是首要信息，使用与 Joey 共享的 `normal`、`notice
 
 ### Acceptance Criteria
 
-- Given 用户打开 Overview，When 核心数据可用，Then 第一眼能看到 Overall Mac Status，并能找到 CPU、Memory、Memory Pressure、Storage、Network 和 Thermal。
-- Given CPU Usage 可用，When Overview 显示，Then 用户能看到当前 CPU 使用情况，并在数据足够时看到短时趋势。
-- Given Memory Usage 可用，When Overview 显示，Then 当前使用情况与 Memory Pressure 分开呈现。
-- Given Storage 数据可用，When Overview 显示，Then 用户能看到 used、free、total 和存储健康状态。
-- Given Network Activity 可用，When Overview 显示，Then 用户能看到 Download、Upload，并在适合时看到短时趋势。
-- Given Thermal State 为 serious/critical，When Overview 显示，Then 使用共享 severity 语义，不显示猜测的 CPU 温度。
-- Given Fan RPM 或 Exact Temperature 不可用，When Overview 显示，Then 显示 unavailable 或 Thermal fallback，不伪造数值。
-- Given 用户打开 Overview，When 页面提供操作，Then 不出现 process list、kill process 或 system optimization action。
+- Given 用户打开 Mac Care，When 核心数据可用，Then 第一眼能看到 Overall Mac Status，并能找到 CPU、Memory、Memory Pressure、Storage、Network 和 Thermal。
+- Given CPU Usage 可用，When Mac Care 显示，Then 用户能看到当前 CPU 使用情况，并在数据足够时看到短时趋势。
+- Given Memory Usage 可用，When Mac Care 显示，Then 当前使用情况与 Memory Pressure 分开呈现。
+- Given Storage 数据可用，When Mac Care 显示，Then 用户能看到 used、free、total 和存储健康状态。
+- Given Network Activity 可用，When Mac Care 显示，Then 用户能看到 Download、Upload，并在适合时看到短时趋势。
+- Given Thermal State 为 serious/critical，When Mac Care 显示，Then 使用共享 severity 语义，不显示猜测的 CPU 温度。
+- Given Fan RPM 或 Exact Temperature 不可用，When Mac Care 显示，Then 显示 unavailable 或 Thermal fallback，不伪造数值。
+- Given 用户打开 Mac Care，When 页面提供操作，Then 不出现 process list、kill process 或 system optimization action。
 
 ## F08 — Cleanup Scan
 
@@ -663,3 +663,30 @@ Settings → General → Launch at Login。
 - Given 系统进入睡眠，When 睡眠处理完成，Then ambient、传感和临时动作停止或暂停。
 - Given 系统唤醒，When 恢复完成，Then Joey 可见、状态链恢复，且没有重复任务。
 - Given 用户选择 Quit，When 应用结束，Then Joey、Bubble、传感与 Cleanup 任务均停止。
+
+## F16 — Work Rhythm
+
+### Purpose
+
+在 Mac Care 之外，用同一主窗口壳提供专注、休息提醒与会话统计，帮助用户形成可预测的工作节奏，而不变成通知中心或聊天伴侣。
+
+### User Entry
+
+Main Window 工具栏切换到 **Work Rhythm**；Settings 中 **工作状态** 相关偏好。
+
+### User Flow
+
+选择 Work Rhythm → 查看当前专注/休息状态 → 在临近休息时收到温和提醒 → 进入休息态 → 查看 Statistics 摘要 → 返回 Mac Care 或继续节奏。
+
+### Product Rules
+
+- 与 Mac Care 共享 Joey Stage；分段切换不关闭主窗口。
+- 提醒应温和、可关闭，遵守 Proactive Bubbles 等全局设置（见 F04、F12）。
+- Statistics 仅覆盖当前会话或产品定义的短时窗口，不做跨重启历史库。
+- UI 呈现遵循 [Design.md](../../Design.md) 与 Stitch Work Rhythm 冻结稿；不在此 Feature 中定义视觉 token。
+
+### Acceptance Criteria
+
+- Given 用户在主窗口，When 切换到 Work Rhythm，Then Joey Stage 仍可见且 Inspector 显示节奏相关内容。
+- Given 用户处于专注区间，When 临近休息时间，Then 可出现温和提醒且不打断 Mac Care 安全操作。
+- Given 用户查看 Statistics，When 数据可用，Then 以紧凑摘要呈现，不呈现 SaaS 式分析墙。

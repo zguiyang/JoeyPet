@@ -24,7 +24,8 @@ The first version is focused on macOS and will be built as a native Swift applic
 ## Documentation
 
 - [AGENTS.md](./AGENTS.md) — rules for coding agents
-- [docs/product/](docs/product/) — product Source of Truth: PRD, V1 scope, feature/UI specs, and roadmap
+- [Design.md](./Design.md) — native UI/UX implementation contract (Stitch upstream)
+- [docs/product/](docs/product/) — product Source of Truth: PRD, V1 scope, feature specs, and roadmap
 - [docs/](docs/) — technical architecture, sensors, safety, lifecycle, and ADRs
 
 ## Principles

@@ -7,6 +7,8 @@ description: Implement and review JoeyPet on macOS — native Swift desktop pet,
 
 Use when working on JoeyPet implementation or review. **Do not duplicate [AGENTS.md](../../../AGENTS.md)** — follow it; this skill adds workflow and layering.
 
+**UI/UX:** Stitch JoeyPet freeze screens + design system → [Design.md](../../../Design.md) → Apple HIG. Do not follow legacy `Overview / Cleanup / Settings` sidebar IA or deleted `ui-spec.md`.
+
 ## When to use
 
 - Adding or changing Swift code under `src/JoeyPet/`

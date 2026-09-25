@@ -36,6 +36,10 @@ Includes but is not limited to:
 - Write outside app sandbox to important directories (Desktop, Documents, Downloads, etc.)
 - Any operation that may cause **data loss**
 
+## Destructive action presentation
+
+User-facing copy and confirmation UI for file moves must follow [Design.md](../Design.md) safety semantics (e.g. **移到废纸篓**, explicit scope in sheets). Business rules and allowlists remain in this document and [cleanup.md](cleanup.md).
+
 ## Deletion policy
 
 - **Prefer Move to Trash** (`FileManager.trashItem` or Finder-equivalent).

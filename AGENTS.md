@@ -45,10 +45,21 @@ Behavior selection must support: priority, cooldown, hysteresis, minimum duratio
 
 Keep rules simple, predictable, and testable. Do not add Behavior Trees in V1.
 
+## UI / UX implementation
+
+For interface work:
+
+1. **Stitch MCP** — JoeyPet freeze screens + **JoeyPet macOS Native** design system (when a screen exists).
+2. **[Design.md](Design.md)** — native macOS implementation contract.
+3. **Apple HIG** — when Stitch and Design.md are silent.
+
+Do not use deleted legacy UI specs (`docs/product/ui-spec.md`) or the old three-sidebar IA (`Overview` / `Cleanup` / `Settings`) as design truth.
+
 ## Documentation map
 
 | Topic | Doc |
 |-------|-----|
+| UI / UX (native) | [Design.md](Design.md) (Stitch upstream) |
 | Product | [docs/product.md](docs/product.md) |
 | Architecture | [docs/architecture.md](docs/architecture.md) |
 | Domain model | [docs/domain-model.md](docs/domain-model.md) |
