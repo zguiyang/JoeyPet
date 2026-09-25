@@ -22,15 +22,30 @@ struct UnifiedWindowNavigation: ToolbarContent {
                 }
             }
             .pickerStyle(.segmented)
-            .frame(maxWidth: 280)
+            .controlSize(.small)
+            .frame(maxWidth: 248)
         }
-        ToolbarItem(placement: .primaryAction) {
+        settingsEntryToolbarItem
+    }
+
+    /// Gear opens Settings. Hide the unified-toolbar shared capsule (same as Settings title item).
+    @ToolbarContentBuilder
+    private var settingsEntryToolbarItem: some ToolbarContent {
+        let item = ToolbarItem(placement: .primaryAction) {
             Button {
                 shellState.openSettings()
             } label: {
-                Label("设置", systemImage: "gearshape")
+                Image(systemName: "gearshape")
+                    .font(.system(size: 13, weight: .medium))
             }
+            .buttonStyle(.borderless)
             .help("设置")
+            .accessibilityLabel("设置")
+        }
+        if #available(macOS 26.0, *) {
+            item.sharedBackgroundVisibility(.hidden)
+        } else {
+            item
         }
     }
 
