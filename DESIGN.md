@@ -449,6 +449,21 @@ Show real states only—no placeholder grids to “complete” a checklist.
 - **Joey:** animation driven by pet runtime; no looping decorative UI chrome.
 - Stitch 200 ms segment spring → approximate with short ease; do not block on custom spring physics.
 
+### Mac Care Home (live monitoring)
+
+Motion explains state—no decorative loops on static data.
+
+| Pattern | Behavior |
+|---------|----------|
+| **Memory trend** | Real in-app samples only; ~250 ms easeOut morph when a new sample arrives; no fake waves while idle. |
+| **Latest sample** | Very subtle pulse at the rightmost point (opacity / scale); disabled under Reduce Motion. |
+| **Memory / badge color** | Short easeOut when pressure level changes; no idle badge pulse. |
+| **Numeric labels** | Light `contentTransition` on memory, swap, storage totals when values change. |
+| **Thermal fan** | Fan glyph rotates continuously at constant angular speed; circle background stays static; speed from **thermal state** (no fake RPM); green / orange / red semantic color with short transition; pause rotation only under Reduce Motion (color + text remain). Main window is AppKit-hosted—do not gate fan on SwiftUI `scenePhase`. |
+| **Storage donut** | Static composition; hover + brief transition when classification or capacity updates only. |
+| **Cleanup CTA** | Native button only on home; no idle breathe/glow. |
+| **Last updated** | Text updates only; no clock animation unless an explicit refresh is in progress. |
+
 ---
 
 ## Light / Dark
