@@ -10,6 +10,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var appModel: AppModel?
     private var mainWindowController: MainWindowController?
     private let bubbleController = JoeyBubbleController()
+    private var statusItem: NSStatusItem?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)
@@ -62,6 +63,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         panelController.show()
         coordinator.start()
 
+        configureMenuBarStatusItem()
+
         Self.logger.info("JoeyPet desktop MVP launched")
     }
 
@@ -74,6 +77,75 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 
     @objc private func openMainWindow() { mainWindowController?.show(section: .overview) }
+
+    private func configureMenuBarStatusItem() {
+        #if DEBUG
+        print("[JoeyPet] configureMenuBarStatusItem")
+        #endif
+        Self.logger.info("configureMenuBarStatusItem")
+
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        statusItem = item
+
+        guard let button = item.button else {
+            #if DEBUG
+            print("[JoeyPet] NSStatusItem.button is nil")
+            #endif
+            Self.logger.error("NSStatusItem.button is nil")
+            return
+        }
+
+        button.target = self
+        button.action = #selector(openMainWindow)
+        button.toolTip = "JoeyPet"
+
+        if let image = Self.statusBarTemplateImage(named: "JoeyPetMenuBarTemplate") {
+            #if DEBUG
+            print("[JoeyPet] JoeyPetMenuBarTemplate asset loaded for status bar")
+            #endif
+            button.image = image
+            button.title = ""
+            button.imagePosition = .imageOnly
+            button.imageScaling = .scaleProportionallyDown
+        } else {
+            #if DEBUG
+            print("[JoeyPet] JoeyPetMenuBarTemplate asset NOT FOUND — using title fallback JP")
+            #endif
+            Self.logger.error("JoeyPetMenuBarTemplate asset NOT FOUND")
+            button.image = nil
+            button.title = "JP"
+        }
+
+        item.isVisible = true
+        #if DEBUG
+        print("[JoeyPet] statusItem configured visible=\(item.isVisible)")
+        #endif
+    }
+
+    /// Rasterize asset-catalog template artwork for NSStatusItem (SVG often has no bitmap backing).
+    private static func statusBarTemplateImage(named name: String, pointSize: CGFloat = 19) -> NSImage? {
+        guard let source = NSImage(named: name) ?? Bundle.main.image(forResource: name) else {
+            return nil
+        }
+        source.isTemplate = true
+        let size = NSSize(width: pointSize, height: pointSize)
+        let output = NSImage(size: size)
+        output.isTemplate = true
+        output.lockFocus()
+        defer { output.unlockFocus() }
+        NSColor.clear.set()
+        NSBezierPath(rect: NSRect(origin: .zero, size: size)).fill()
+        source.draw(
+            in: NSRect(origin: .zero, size: size),
+            from: NSRect(origin: .zero, size: source.size),
+            operation: .sourceOver,
+            fraction: 1,
+            respectFlipped: true,
+            hints: nil
+        )
+        return output
+    }
+
     @objc private func quickClean() { appModel?.quickClean() }
     @objc private func scanAndView() {
         mainWindowController?.show(section: .cleanup)
