@@ -68,6 +68,15 @@ enum DebugStateInjector {
         #endif
     }
 
+    /// `-JoeyPetDebugMacCareHome normal|attention` — DEBUG-only home presentation fixture.
+    static func macCareHomePresentationRaw() -> String? {
+        #if DEBUG
+        return debugArgumentValue(prefix: "-JoeyPetDebugMacCareHome")
+        #else
+        return nil
+        #endif
+    }
+
     static func qaTriggersScan() -> Bool {
         #if DEBUG
         ProcessInfo.processInfo.arguments.contains("-JoeyPetQATriggerScan")

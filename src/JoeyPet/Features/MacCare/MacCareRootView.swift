@@ -20,10 +20,7 @@ struct MacCareRootView: View {
 
     private var macCareHomeContainer: some View {
         featurePageContainer {
-            Text("电脑维护")
-                .font(.title3)
-                .foregroundStyle(.tertiary)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            MacCareHomeView(model: model, shellState: shellState)
         }
     }
 

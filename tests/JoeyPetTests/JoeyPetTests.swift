@@ -1026,6 +1026,165 @@ struct CleanupPagePresentationTests {
     }
 }
 
+struct MacCareHomePresentationTests {
+    private func snapshot(
+        memory: MemoryPressureLevel = .normal,
+        thermal: ThermalPressureLevel = .nominal,
+        storageSeverity: SignalSeverity = .normal,
+        available: Int64 = 500_000_000_000,
+        total: Int64 = 1_000_000_000_000
+    ) -> SystemStatusSnapshot {
+        SystemStatusSnapshot(
+            thermal: thermal,
+            memory: memory,
+            storageAvailableBytes: available,
+            storageTotalBytes: total,
+            storageSeverity: storageSeverity,
+            physicalMemoryBytes: 36_000_000_000,
+            usedMemoryBytes: 18_000_000_000,
+            swapUsedBytes: 0,
+            volumeName: "Macintosh HD",
+            updatedAt: Date(timeIntervalSince1970: 1_700_000_000)
+        )
+    }
+
+    @Test func normalToneWhenHealthy() {
+        let presentation = MacCareHomePresentationBuilder.make(
+            snapshot: snapshot(),
+            scanResult: nil,
+            cleanupPhase: .idle,
+            memoryTrendSampleCount: 0,
+            now: Date(timeIntervalSince1970: 1_700_000_600)
+        )
+        #expect(presentation.tone == .normal)
+        #expect(presentation.headline == "Mac 状态良好")
+    }
+
+    @Test func attentionWhenMemoryWarning() {
+        let presentation = MacCareHomePresentationBuilder.make(
+            snapshot: snapshot(memory: .warning),
+            scanResult: nil,
+            cleanupPhase: .idle,
+            memoryTrendSampleCount: 0,
+            now: Date()
+        )
+        #expect(presentation.tone == .attention)
+        #expect(presentation.headline == "Mac 需要关注")
+    }
+
+    @Test func cleanupNotScannedSummary() {
+        let presentation = MacCareHomePresentationBuilder.make(
+            snapshot: snapshot(),
+            scanResult: nil,
+            cleanupPhase: .idle,
+            memoryTrendSampleCount: 0
+        )
+        #expect(presentation.cleanup.kind == .notScanned)
+        #expect(presentation.cleanup.primaryActionTitle == "开始扫描")
+    }
+
+    @Test func cleanupMapsScanTotals() {
+        let candidate = CleanupCandidate(
+            id: "a",
+            url: URL(fileURLWithPath: "/tmp/a"),
+            displayName: "a",
+            size: 1024,
+            category: .developerCache,
+            risk: .safe,
+            reason: "test",
+            lastModified: nil
+        )
+        let result = CleanupScanResult(candidates: [candidate], scannedAt: .now, skippedCount: 0)
+        let presentation = MacCareHomePresentationBuilder.make(
+            snapshot: snapshot(),
+            scanResult: result,
+            cleanupPhase: .ready,
+            memoryTrendSampleCount: 3
+        )
+        #expect(presentation.cleanup.kind == .hasReclaimable)
+        #expect(presentation.showsMemoryTrend)
+    }
+
+    @Test func storageUnavailableWithoutCapacity() {
+        let empty = SystemStatusSnapshot.initial
+        let presentation = MacCareHomePresentationBuilder.make(
+            snapshot: empty,
+            scanResult: nil,
+            cleanupPhase: .idle,
+            memoryTrendSampleCount: 0
+        )
+        #expect(presentation.storage.usedFraction == nil)
+        #expect(presentation.storage.footnote?.contains("无法") == true)
+    }
+}
+
+struct MacCareHomeMotionTests {
+    @Test func fanPeriodIncreasesWithThermalSeverity() {
+        #expect(MacCareHomeMotion.fanPeriod(for: .nominal) > MacCareHomeMotion.fanPeriod(for: .critical))
+    }
+
+    @Test func lerpSamplesEndsAtTarget() {
+        let from = [0.2, 0.3]
+        let to = [0.2, 0.3, 0.5]
+        let result = MacCareHomeMotion.lerpSamples(from: from, to: to, progress: 1)
+        #expect(result == to)
+    }
+
+    @Test func lerpSamplesStartsFromAlignedSource() {
+        let from = [0.1]
+        let to = [0.1, 0.4]
+        let result = MacCareHomeMotion.lerpSamples(from: from, to: to, progress: 0)
+        #expect(result.count == 2)
+        #expect(result[1] == 0.1)
+    }
+}
+
+struct StorageCompositionBuilderTests {
+    @Test func categoriesDoNotExceedUsedBytes() {
+        let estimates = [
+            StorageCategorySize(category: .applications, bytes: 200, isEstimatePartial: false),
+            StorageCategorySize(category: .developer, bytes: 150, isEstimatePartial: false),
+            StorageCategorySize(category: .media, bytes: 100, isEstimatePartial: false),
+        ]
+        let composition = StorageCompositionBuilder.compose(
+            totalBytes: 1_000,
+            availableBytes: 400,
+            estimates: estimates
+        )
+        #expect(composition != nil)
+        let usedSum = composition!.usedCategories.reduce(Int64(0)) { $0 + $1.bytes }
+        #expect(usedSum <= composition!.usedBytes)
+    }
+
+    @Test func otherAbsorbsRemainder() {
+        let estimates = [
+            StorageCategorySize(category: .applications, bytes: 50, isEstimatePartial: false),
+        ]
+        let composition = StorageCompositionBuilder.compose(
+            totalBytes: 1_000,
+            availableBytes: 800,
+            estimates: estimates
+        )
+        #expect(composition?.usedBytes == 200)
+        let other = composition?.usedCategories.first { $0.category == .other }
+        #expect(other?.bytes == 150)
+    }
+
+    @Test func scalesDownWhenEstimateExceedsUsed() {
+        let estimates = [
+            StorageCategorySize(category: .applications, bytes: 500, isEstimatePartial: false),
+            StorageCategorySize(category: .developer, bytes: 500, isEstimatePartial: false),
+        ]
+        let composition = StorageCompositionBuilder.compose(
+            totalBytes: 1_000,
+            availableBytes: 900,
+            estimates: estimates
+        )
+        let usedSum = composition!.usedCategories.reduce(Int64(0)) { $0 + $1.bytes }
+        #expect(usedSum <= composition!.usedBytes)
+    }
+}
+
 @MainActor
 struct AppShellStateTests {
     @Test func settingsPreservesModeWhenClosing() {
