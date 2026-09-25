@@ -1,3 +1,6 @@
+# Local Storage Analyzer V3 diagnostic trigger (see scripts/run_storage_v3_diagnostic.sh)
+.storage-v3-diag
+
 # macOS
 .DS_Store
 .AppleDouble
@@ -18,6 +21,7 @@ DerivedData/
 *.xcarchive
 *.ipa
 *.dSYM
+*.profraw
 
 # Swift Package Manager local state and build products
 .build/
@@ -25,3 +29,22 @@ DerivedData/
 
 # Local workspace metadata
 *.xcscmblueprint
+
+# Script-generated artifacts (QA captures, diagnostics, icon pipeline intermediates)
+scripts/output/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Local agent / build tooling (machine-specific)
+.mobilebuildmcp/
+skills-lock.json
+
+# Locally installed agent skills (repository-owned skill: joeypet-macos)
+.agents/skills/**
+!.agents/skills/joeypet-macos/
+!.agents/skills/joeypet-macos/**
+
+# One-off analyzer reports (design notes under docs/ stay tracked when added intentionally)
+docs/storage-analyzer-*-report.md
