@@ -14,6 +14,7 @@ final class PetCoordinator {
     private var lastAnnouncedState: PetState = .idle
 
     var onSystemSnapshot: ((SystemStatusSnapshot) -> Void)?
+    var onStageSnapshot: ((JoeyStageSnapshot) -> Void)?
     var onBubble: ((JoeyBubbleMessage, NSRect, (() -> Void)?, (() -> Void)?) -> Void)?
     var onQuickClean: (() -> Void)?
     var onScan: (() -> Void)?
@@ -74,7 +75,17 @@ final class PetCoordinator {
             sensorHub.start()
         }
 
+        publishStageSnapshot()
         Self.logger.info("PetCoordinator started")
+    }
+
+    func publishStageSnapshot() {
+        let snapshot = JoeyStageSnapshot(
+            petState: panelController.petRuntime.currentState,
+            transientBehavior: panelController.petRuntime.currentTransientBehavior,
+            overallSeverity: sensorHub.currentSnapshot.overallSeverity
+        )
+        onStageSnapshot?(snapshot)
     }
 
     func stop() {
@@ -123,5 +134,6 @@ final class PetCoordinator {
         if behavior.state == .idle {
             lastAnnouncedState = .idle
         }
+        publishStageSnapshot()
     }
 }

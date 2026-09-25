@@ -64,7 +64,7 @@ struct CleanupScanner: Sendable {
                     size: directory.size,
                     category: .developerCache,
                     risk: .safe,
-                    reason: "Xcode can regenerate DerivedData when needed.",
+                    reason: "Xcode 需要时会重新生成，一般可以清理。",
                     lastModified: values.contentModificationDate,
                     sizeIsEstimated: !directory.isComplete
                 ))
@@ -89,7 +89,7 @@ struct CleanupScanner: Sendable {
                     size: Int64(values.fileSize ?? 0),
                     category: .oldLogs,
                     risk: .review,
-                    reason: "This log is older than 30 days; review before moving it to Trash.",
+                    reason: "超过 30 天的日志，移入废纸篓前请先确认。",
                     lastModified: modified
                 ))
             }
@@ -107,7 +107,7 @@ struct CleanupScanner: Sendable {
                     size: directory.size,
                     category: .applicationCaches,
                     risk: .review,
-                    reason: "Application caches may be in use; review before moving them to Trash.",
+                    reason: "应用缓存可能正在使用，移入废纸篓前请先确认。",
                     lastModified: values.contentModificationDate,
                     sizeIsEstimated: !directory.isComplete
                 ))

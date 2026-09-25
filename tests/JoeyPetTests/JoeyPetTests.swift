@@ -967,6 +967,86 @@ struct PetSpriteRuntimeTests {
     }
 }
 
+struct QuickCleanFlowTests {
+    @Test @MainActor func beginQuickCleanDoesNotExecuteWithoutConfirmation() async {
+        let suiteName = "JoeyPetTests.quickclean.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let model = AppModel(
+            scanner: CleanupScanner(homeURL: URL(fileURLWithPath: "/tmp/joeypet-fixture")),
+            executor: CleanupExecutor(),
+            defaults: defaults,
+            launchAtLoginManager: FakeLaunchAtLoginManager()
+        )
+        var confirmationRequested = false
+        model.onQuickCleanNeedsConfirmation = { confirmationRequested = true }
+
+        model.beginQuickClean()
+        for _ in 0..<50 {
+            if model.cleanupPhase != .scanning { break }
+            try? await Task.sleep(for: .milliseconds(50))
+        }
+
+        #expect(model.cleanupPhase == .ready || model.cleanupPhase == .scanning)
+        if model.scanResult?.quickCleanCandidates.isEmpty == false {
+            #expect(confirmationRequested)
+            #expect(model.cleanupPhase == .ready)
+        }
+    }
+}
+
+struct CleanupPagePresentationTests {
+    @Test func scanningOverridesStaleScanResult() {
+        let result = CleanupScanResult(candidates: [], scannedAt: .now, skippedCount: 0)
+        #expect(CleanupPagePresentation.resolve(phase: .scanning, scanResult: result) == .scanning)
+    }
+
+    @Test func cleaningOverridesStaleScanResult() {
+        let candidate = CleanupCandidate(
+            id: "/tmp/x",
+            url: URL(fileURLWithPath: "/tmp/x"),
+            displayName: "x",
+            size: 100,
+            category: .developerCache,
+            risk: .safe,
+            reason: "test",
+            lastModified: nil
+        )
+        let result = CleanupScanResult(candidates: [candidate], scannedAt: .now, skippedCount: 0)
+        #expect(CleanupPagePresentation.resolve(phase: .cleaning, scanResult: result) == .cleaning)
+    }
+
+    @Test func emptyScanResultIsNothingToClean() {
+        let result = CleanupScanResult(candidates: [], scannedAt: .now, skippedCount: 0)
+        #expect(CleanupPagePresentation.resolve(phase: .ready, scanResult: result) == .nothingToClean)
+    }
+
+    @Test func idleWithoutResultIsInitial() {
+        #expect(CleanupPagePresentation.resolve(phase: .idle, scanResult: nil) == .initial)
+    }
+}
+
+@MainActor
+struct AppShellStateTests {
+    @Test func settingsPreservesModeWhenClosing() {
+        let state = AppShellState()
+        state.mode = .workRhythm
+        state.openSettings()
+        #expect(state.presentation == .settings)
+        state.closeSettings()
+        #expect(state.presentation == .main)
+        #expect(state.mode == .workRhythm)
+    }
+
+    @Test func settingsDoesNotResetMacCareRoute() {
+        let state = AppShellState()
+        state.apply(intent: .macCareDetailMock)
+        state.openSettings()
+        state.closeSettings()
+        #expect(state.macCareRoute == .featureDetailMock)
+    }
+}
+
 private extension Result {
     var isSuccess: Bool {
         if case .success = self { return true }

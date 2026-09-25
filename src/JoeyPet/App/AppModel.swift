@@ -2,18 +2,22 @@ import Combine
 import Foundation
 import OSLog
 
-enum MainSection: String, CaseIterable, Hashable, Sendable, Identifiable {
-    case overview
-    case cleanup
-    case settings
+/// Resolves which Cleanup page body to show. Scanning/cleaning take priority over stale `scanResult`.
+enum CleanupPagePresentation: Equatable, Sendable {
+    case initial
+    case scanning
+    case cleaning
+    case nothingToClean
+    case results
 
-    var id: String { rawValue }
-
-    var title: String {
-        switch self {
-        case .overview: return "Overview"
-        case .cleanup: return "Cleanup"
-        case .settings: return "Settings"
+    static func resolve(phase: CleanupPhase, scanResult: CleanupScanResult?) -> CleanupPagePresentation {
+        switch phase {
+        case .scanning: return .scanning
+        case .cleaning: return .cleaning
+        case .idle, .ready, .completed, .failed:
+            guard let scanResult else { return .initial }
+            if scanResult.candidates.isEmpty { return .nothingToClean }
+            return .results
         }
     }
 }
@@ -31,7 +35,6 @@ enum CleanupPhase: Equatable, Sendable {
 final class AppModel: ObservableObject {
     private static let logger = Logger(subsystem: "com.zguiyang.JoeyPet", category: "AppModel")
 
-    @Published var selectedSection: MainSection = .overview
     @Published private(set) var systemStatus = SystemStatusSnapshot.initial
     @Published private(set) var cleanupPhase: CleanupPhase = .idle
     @Published private(set) var scanResult: CleanupScanResult?
@@ -49,7 +52,8 @@ final class AppModel: ObservableObject {
 
     var onCleanupStarted: (() -> Void)?
     var onCleanupFinished: ((CleanupExecutionResult) -> Void)?
-    var onCleanupEmpty: (() -> Void)?
+    var onQuickCleanNeedsConfirmation: (() -> Void)?
+    var onQuickCleanNothingToProcess: (() -> Void)?
     var onPreferencesChanged: (() -> Void)?
     var onResetPetPosition: (() -> Void)?
 
@@ -98,7 +102,8 @@ final class AppModel: ObservableObject {
         }
     }
 
-    func quickClean() {
+    /// Scans allowlisted roots, then asks for confirmation before moving Safe items to Trash.
+    func beginQuickClean() {
         guard !isBusy else { return }
         task?.cancel()
         cleanupPhase = .scanning
@@ -108,14 +113,29 @@ final class AppModel: ObservableObject {
             let result = await scanner.scan()
             guard !Task.isCancelled else { return }
             scanResult = result
+            executionResult = nil
             guard !result.quickCleanCandidates.isEmpty else {
                 cleanupPhase = .ready
-                onCleanupEmpty?()
+                onQuickCleanNothingToProcess?()
                 return
             }
-            cleanupPhase = .cleaning
-            onCleanupStarted?()
-            let execution = await executor.execute(result.quickCleanCandidates)
+            cleanupPhase = .ready
+            onQuickCleanNeedsConfirmation?()
+        }
+    }
+
+    /// Runs after user confirms Quick Clean; uses Safe items from the latest scan result only.
+    func confirmQuickClean() {
+        guard !isBusy,
+              let scanResult,
+              !scanResult.quickCleanCandidates.isEmpty else { return }
+        let candidates = scanResult.quickCleanCandidates
+        task?.cancel()
+        cleanupPhase = .cleaning
+        onCleanupStarted?()
+        task = Task { [weak self] in
+            guard let self else { return }
+            let execution = await executor.execute(candidates)
             guard !Task.isCancelled else { return }
             executionResult = execution
             save(summary: CleanupExecutionSummary(execution: execution))

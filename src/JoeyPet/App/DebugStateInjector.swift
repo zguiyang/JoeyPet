@@ -58,6 +58,24 @@ enum DebugStateInjector {
         #endif
     }
 
+    /// Debug GUI capture: `-JoeyPetQAOpenMain overview|cleanup|settings|maccare`
+    static func qaMainWindowIntent() -> MainWindowIntent? {
+        #if DEBUG
+        guard let raw = debugArgumentValue(prefix: "-JoeyPetQAOpenMain") else { return nil }
+        return AppShellState.intent(fromQAArgument: raw)
+        #else
+        return nil
+        #endif
+    }
+
+    static func qaTriggersScan() -> Bool {
+        #if DEBUG
+        ProcessInfo.processInfo.arguments.contains("-JoeyPetQATriggerScan")
+        #else
+        return false
+        #endif
+    }
+
     /// Parses `-JoeyPetDebugBehavior <id>` / `-JoeyPetDebugBehavior=<id>`.
     static func transientBehavior(from arguments: [String]) -> PetTransientBehavior? {
         #if DEBUG

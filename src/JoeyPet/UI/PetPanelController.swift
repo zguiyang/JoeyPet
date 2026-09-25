@@ -11,7 +11,6 @@ final class PetPanelController {
     private let positionStore: PetPositionStore
     private(set) var petRuntime: PetRuntime
     var onLeftClick: (() -> Void)?
-    var onRightClick: ((NSEvent) -> Void)?
     private var movementTask: Task<Void, Never>?
 
     private let panelSize = NSSize(width: 160, height: 160)
@@ -35,7 +34,6 @@ final class PetPanelController {
 
         panel.contentView = spriteView
         spriteView.onLeftClick = { [weak self] in self?.onLeftClick?() }
-        spriteView.onRightClick = { [weak self] event in self?.onRightClick?(event) }
         spriteView.onDragEnded = { [weak self] origin in self?.saveUserPosition(origin: origin) }
     }
 
@@ -106,10 +104,6 @@ final class PetPanelController {
         positionStore.clear()
         let frame = Self.initialFrame(size: panelSize)
         panel.setFrameOrigin(frame.origin)
-    }
-
-    func showContextMenu(_ menu: NSMenu, for event: NSEvent) {
-        menu.popUp(positioning: nil, at: event.locationInWindow, in: spriteView)
     }
 
     private func screenForPanel() -> NSScreen? {

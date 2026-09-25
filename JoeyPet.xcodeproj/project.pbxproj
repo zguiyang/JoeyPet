@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		D7BABD67305978720070926E /* JoeyPetApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7BABD65305978720070926E /* JoeyPetApp.swift */; };
-		D7BABD68305978720070926E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7BABD64305978720070926E /* ContentView.swift */; };
 		D7BABD69305978720070926E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D7BABD63305978720070926E /* Assets.xcassets */; };
 		D7BABD6C305978E70070926E /* JoeyPetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7BABD6A305978E70070926E /* JoeyPetTests.swift */; };
 		D7PET101305978720070926E /* SignalSeverity.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET001305978720070926E /* SignalSeverity.swift */; };
@@ -51,6 +50,23 @@
 		D7PET128305978720070926E /* PetPosition.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET028305978720070926E /* PetPosition.swift */; };
 		D7PET129305978720070926E /* PetPositionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET029305978720070926E /* PetPositionStore.swift */; };
 		D7PET12A305978720070926E /* LaunchAtLoginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET02A305978720070926E /* LaunchAtLoginManager.swift */; };
+		D7SH001305978720070926EB /* AppShellState.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7SH001305978720070926E /* AppShellState.swift */; };
+		D7SH002305978720070926EB /* JoeyStageState.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7SH002305978720070926E /* JoeyStageState.swift */; };
+		D7SH003305978720070926EB /* ShellMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7SH003305978720070926E /* ShellMetrics.swift */; };
+		D7SH016305978720070926EB /* SettingsMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7SH016305978720070926E /* SettingsMetrics.swift */; };
+		D7SH017305978720070926EB /* SettingsFormComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7SH017305978720070926E /* SettingsFormComponents.swift */; };
+		D7SH004305978720070926EB /* AppShellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7SH004305978720070926E /* AppShellView.swift */; };
+		D7SH005305978720070926EB /* JoeyStageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7SH005305978720070926E /* JoeyStageView.swift */; };
+		D7SH006305978720070926EB /* MacCareRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7SH006305978720070926E /* MacCareRootView.swift */; };
+		D7SH007305978720070926EB /* LegacyCleanupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7SH007305978720070926E /* LegacyCleanupView.swift */; };
+		D7SH008305978720070926EB /* WorkRhythmRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7SH008305978720070926E /* WorkRhythmRootView.swift */; };
+		D7SH009305978720070926EB /* SettingsRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7SH009305978720070926E /* SettingsRootView.swift */; };
+		D7SH010305978720070926EB /* LegacySettingsFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7SH010305978720070926E /* LegacySettingsFormView.swift */; };
+		D7SH011305978720070926EB /* StatusLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7SH011305978720070926E /* StatusLabel.swift */; };
+		D7SH012305978720070926EB /* UnifiedWindowNavigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7SH012305978720070926E /* UnifiedWindowNavigation.swift */; };
+		D7SH013305978720070926EB /* FeaturePageNavigationHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7SH013305978720070926E /* FeaturePageNavigationHeader.swift */; };
+		D7SH014305978720070926EB /* MainWindowChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7SH014305978720070926E /* MainWindowChrome.swift */; };
+		D7SH015305978720070926EB /* SettingsGlobalToolbarControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7SH015305978720070926E /* SettingsGlobalToolbarControls.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -67,7 +83,6 @@
 		D7BABD39305976420070926E /* JoeyPet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = JoeyPet.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D7BABD46305976430070926E /* JoeyPetTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = JoeyPetTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D7BABD63305978720070926E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		D7BABD64305978720070926E /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		D7BABD65305978720070926E /* JoeyPetApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeyPetApp.swift; sourceTree = "<group>"; };
 		D7BABD6A305978E70070926E /* JoeyPetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeyPetTests.swift; sourceTree = "<group>"; };
 		D7PET001305978720070926E /* SignalSeverity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalSeverity.swift; sourceTree = "<group>"; };
@@ -110,6 +125,23 @@
 		D7PET028305978720070926E /* PetPosition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetPosition.swift; sourceTree = "<group>"; };
 		D7PET029305978720070926E /* PetPositionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetPositionStore.swift; sourceTree = "<group>"; };
 		D7PET02A305978720070926E /* LaunchAtLoginManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginManager.swift; sourceTree = "<group>"; };
+		D7SH001305978720070926E /* AppShellState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppShellState.swift; sourceTree = "<group>"; };
+		D7SH002305978720070926E /* JoeyStageState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeyStageState.swift; sourceTree = "<group>"; };
+		D7SH003305978720070926E /* ShellMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellMetrics.swift; sourceTree = "<group>"; };
+		D7SH016305978720070926E /* SettingsMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsMetrics.swift; sourceTree = "<group>"; };
+		D7SH017305978720070926E /* SettingsFormComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsFormComponents.swift; sourceTree = "<group>"; };
+		D7SH004305978720070926E /* AppShellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppShellView.swift; sourceTree = "<group>"; };
+		D7SH005305978720070926E /* JoeyStageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeyStageView.swift; sourceTree = "<group>"; };
+		D7SH006305978720070926E /* MacCareRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacCareRootView.swift; sourceTree = "<group>"; };
+		D7SH007305978720070926E /* LegacyCleanupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyCleanupView.swift; sourceTree = "<group>"; };
+		D7SH008305978720070926E /* WorkRhythmRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkRhythmRootView.swift; sourceTree = "<group>"; };
+		D7SH009305978720070926E /* SettingsRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsRootView.swift; sourceTree = "<group>"; };
+		D7SH010305978720070926E /* LegacySettingsFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacySettingsFormView.swift; sourceTree = "<group>"; };
+		D7SH011305978720070926E /* StatusLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusLabel.swift; sourceTree = "<group>"; };
+		D7SH012305978720070926E /* UnifiedWindowNavigation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedWindowNavigation.swift; sourceTree = "<group>"; };
+		D7SH013305978720070926E /* FeaturePageNavigationHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeaturePageNavigationHeader.swift; sourceTree = "<group>"; };
+		D7SH014305978720070926E /* MainWindowChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowChrome.swift; sourceTree = "<group>"; };
+		D7SH015305978720070926E /* SettingsGlobalToolbarControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsGlobalToolbarControls.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -152,6 +184,8 @@
 			isa = PBXGroup;
 			children = (
 				D7PET207305978720070926E /* App */,
+				D7SHGRPDES /* Design */,
+				D7SHGRPFEAT /* Features */,
 				D7PET20D305978720070926E /* Behavior */,
 				D7PET201305978720070926E /* Domain */,
 				D7PET204305978720070926E /* Pet */,
@@ -160,8 +194,7 @@
 				D7PET210305978720070926E /* Utilities */,
 				D7PET209305978720070926E /* Resources */,
 				D7BABD63305978720070926E /* Assets.xcassets */,
-				D7BABD64305978720070926E /* ContentView.swift */,
-				D7BABD65305978720070926E /* JoeyPetApp.swift */,
+						D7BABD65305978720070926E /* JoeyPetApp.swift */,
 			);
 			name = JoeyPet;
 			path = src/JoeyPet;
@@ -259,6 +292,65 @@
 			name = Pets;
 			sourceTree = "<group>";
 		};
+		D7SHGRPFEAT /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				D7SHGRPSHELL /* Shell */,
+				D7SHGRPMAC /* MacCare */,
+				D7SHGRPWR /* WorkRhythm */,
+				D7SHGRPSET /* Settings */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		D7SHGRPDES /* Design */ = {
+			isa = PBXGroup;
+			children = (
+				D7SH003305978720070926E /* ShellMetrics.swift */,
+				D7SH016305978720070926E /* SettingsMetrics.swift */,
+			);
+			path = Design;
+			sourceTree = "<group>";
+		};
+		D7SHGRPSHELL /* Shell */ = {
+			isa = PBXGroup;
+			children = (
+				D7SH004305978720070926E /* AppShellView.swift */,
+				D7SH012305978720070926E /* UnifiedWindowNavigation.swift */,
+				D7SH015305978720070926E /* SettingsGlobalToolbarControls.swift */,
+				D7SH013305978720070926E /* FeaturePageNavigationHeader.swift */,
+				D7SH005305978720070926E /* JoeyStageView.swift */,
+			);
+			path = Shell;
+			sourceTree = "<group>";
+		};
+		D7SHGRPMAC /* MacCare */ = {
+			isa = PBXGroup;
+			children = (
+				D7SH006305978720070926E /* MacCareRootView.swift */,
+				D7SH007305978720070926E /* LegacyCleanupView.swift */,
+			);
+			path = MacCare;
+			sourceTree = "<group>";
+		};
+		D7SHGRPWR /* WorkRhythm */ = {
+			isa = PBXGroup;
+			children = (
+				D7SH008305978720070926E /* WorkRhythmRootView.swift */,
+			);
+			path = WorkRhythm;
+			sourceTree = "<group>";
+		};
+		D7SHGRPSET /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				D7SH009305978720070926E /* SettingsRootView.swift */,
+				D7SH017305978720070926E /* SettingsFormComponents.swift */,
+				D7SH010305978720070926E /* LegacySettingsFormView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
 		D7PET207305978720070926E /* App */ = {
 			isa = PBXGroup;
 			children = (
@@ -268,6 +360,8 @@
 				D7PET010305978720070926E /* SleepWakeMonitor.swift */,
 				D7PET023305978720070926E /* AppModel.swift */,
 				D7PET02A305978720070926E /* LaunchAtLoginManager.swift */,
+				D7SH001305978720070926E /* AppShellState.swift */,
+				D7SH002305978720070926E /* JoeyStageState.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -279,8 +373,10 @@
 				D7PET014305978720070926E /* PetPanelController.swift */,
 				D7PET013305978720070926E /* PetSpriteView.swift */,
 				D7PET024305978720070926E /* MainWindowController.swift */,
+				D7SH014305978720070926E /* MainWindowChrome.swift */,
 				D7PET025305978720070926E /* JoeyBubbleController.swift */,
 				D7PET026305978720070926E /* StatusColor.swift */,
+				D7SH011305978720070926E /* StatusLabel.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -417,9 +513,25 @@
 				D7PET120305978720070926E /* CleanupModels.swift in Sources */,
 				D7PET122305978720070926E /* CleanupExecutor.swift in Sources */,
 				D7PET121305978720070926E /* CleanupScanner.swift in Sources */,
-				D7BABD68305978720070926E /* ContentView.swift in Sources */,
-				D7PET111305978720070926E /* DebugStateInjector.swift in Sources */,
-				D7BABD67305978720070926E /* JoeyPetApp.swift in Sources */,
+						D7PET111305978720070926E /* DebugStateInjector.swift in Sources */,
+				D7SH001305978720070926EB /* AppShellState.swift in Sources */,
+		D7SH002305978720070926EB /* JoeyStageState.swift in Sources */,
+		D7SH003305978720070926EB /* ShellMetrics.swift in Sources */,
+		D7SH016305978720070926EB /* SettingsMetrics.swift in Sources */,
+		D7SH017305978720070926EB /* SettingsFormComponents.swift in Sources */,
+		D7SH004305978720070926EB /* AppShellView.swift in Sources */,
+		D7SH005305978720070926EB /* JoeyStageView.swift in Sources */,
+		D7SH006305978720070926EB /* MacCareRootView.swift in Sources */,
+		D7SH007305978720070926EB /* LegacyCleanupView.swift in Sources */,
+		D7SH008305978720070926EB /* WorkRhythmRootView.swift in Sources */,
+		D7SH009305978720070926EB /* SettingsRootView.swift in Sources */,
+		D7SH010305978720070926EB /* LegacySettingsFormView.swift in Sources */,
+		D7SH011305978720070926EB /* StatusLabel.swift in Sources */,
+		D7SH012305978720070926EB /* UnifiedWindowNavigation.swift in Sources */,
+		D7SH013305978720070926EB /* FeaturePageNavigationHeader.swift in Sources */,
+		D7SH014305978720070926EB /* MainWindowChrome.swift in Sources */,
+		D7SH015305978720070926EB /* SettingsGlobalToolbarControls.swift in Sources */,
+		D7BABD67305978720070926E /* JoeyPetApp.swift in Sources */,
 				D7PET109305978720070926E /* MemoryPressureSensor.swift in Sources */,
 				D7PET104305978720070926E /* PetBehavior.swift in Sources */,
 				D7PET10F305978720070926E /* PetCoordinator.swift in Sources */,

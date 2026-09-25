@@ -5,7 +5,6 @@ import SpriteKit
 final class PetSpriteView: SKView {
     var interactiveRadius: CGFloat = PetScene.interactiveRadius
     var onLeftClick: (() -> Void)?
-    var onRightClick: ((NSEvent) -> Void)?
     var onDragEnded: ((NSPoint) -> Void)?
 
     private var dragStartMouseLocation: NSPoint?
@@ -92,7 +91,4 @@ final class PetSpriteView: SKView {
         else if let finalOrigin { onDragEnded?(finalOrigin) }
     }
 
-    override func rightMouseDown(with event: NSEvent) {
-        onRightClick?(event)
-    }
 }
