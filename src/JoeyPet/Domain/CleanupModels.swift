@@ -54,11 +54,24 @@ struct CleanupScanResult: Sendable {
     let candidates: [CleanupCandidate]
     let scannedAt: Date
     let skippedCount: Int
+    let requestedScope: CleanupScanScope
+    let appliedScope: CleanupScanScope
+    let deepScanDeferred: Bool
 
-    nonisolated init(candidates: [CleanupCandidate], scannedAt: Date, skippedCount: Int) {
+    nonisolated init(
+        candidates: [CleanupCandidate],
+        scannedAt: Date,
+        skippedCount: Int,
+        requestedScope: CleanupScanScope = .baseline,
+        appliedScope: CleanupScanScope? = nil,
+        deepScanDeferred: Bool = false
+    ) {
         self.candidates = candidates
         self.scannedAt = scannedAt
         self.skippedCount = skippedCount
+        self.requestedScope = requestedScope
+        self.appliedScope = appliedScope ?? requestedScope
+        self.deepScanDeferred = deepScanDeferred
     }
 
     nonisolated var totalSize: Int64 { candidates.reduce(0) { $0 + $1.size } }

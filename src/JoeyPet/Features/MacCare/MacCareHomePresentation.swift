@@ -42,6 +42,9 @@ struct StoragePresentation: Equatable, Sendable {
     let legendSegments: [MacCareStorageSegment]
     let compositionState: StorageCompositionLoadState
     let footnote: String?
+    let limitedAnalysisBadge: String?
+    let limitedAnalysisFootnote: String?
+    let showsFullScanAction: Bool
     let accessibilitySummary: String
 }
 
@@ -75,6 +78,7 @@ struct CleanupSummaryPresentation: Equatable, Sendable {
     let safeSizeText: String?
     let reviewSizeText: String?
     let totalSizeText: String?
+    let deepScanDeferredNote: String?
 }
 
 enum MacCareHomePresentationBuilder {
@@ -84,6 +88,7 @@ enum MacCareHomePresentationBuilder {
         cleanupPhase: CleanupPhase,
         memoryTrendSampleCount: Int,
         storageCompositionState: StorageCompositionLoadState = .idle,
+        macCareAccessLevel: MacCareAccessLevel = .full,
         now: Date = Date()
     ) -> MacCareHomePresentation {
         let effective = applyDebugFixture(to: snapshot)
@@ -91,7 +96,7 @@ enum MacCareHomePresentationBuilder {
         let issues = attentionIssues(from: effective)
 
         let headline: String
-        let detail: String
+        var detail: String
         switch tone {
         case .normal:
             headline = "Mac 状态良好"
@@ -101,15 +106,27 @@ enum MacCareHomePresentationBuilder {
             detail = issues.first ?? "部分系统指标需要留意。"
         }
 
+        if macCareAccessLevel == .limited {
+            detail = "当前提供有限的磁盘分析。" + (detail.isEmpty ? "" : " \(detail)")
+        }
+
         return MacCareHomePresentation(
             tone: tone,
             headline: headline,
             detail: detail,
             lastCheckedText: relativeCheckText(from: effective.updatedAt, now: now),
-            storage: makeStorage(from: effective, compositionState: storageCompositionState),
+            storage: makeStorage(
+                from: effective,
+                compositionState: storageCompositionState,
+                macCareAccessLevel: macCareAccessLevel
+            ),
             memory: makeMemory(from: effective),
             thermal: makeThermal(from: effective),
-            cleanup: makeCleanup(scanResult: scanResult, phase: cleanupPhase),
+            cleanup: makeCleanup(
+                scanResult: scanResult,
+                phase: cleanupPhase,
+                macCareAccessLevel: macCareAccessLevel
+            ),
             showsMemoryTrend: memoryTrendSampleCount >= 2
         )
     }
@@ -172,7 +189,8 @@ enum MacCareHomePresentationBuilder {
 
     private static func makeStorage(
         from snapshot: SystemStatusSnapshot,
-        compositionState: StorageCompositionLoadState
+        compositionState: StorageCompositionLoadState,
+        macCareAccessLevel: MacCareAccessLevel
     ) -> StoragePresentation {
         let volume = snapshot.volumeName ?? "Macintosh HD"
         let title = "存储空间 (\(volume))"
@@ -192,6 +210,9 @@ enum MacCareHomePresentationBuilder {
                 legendSegments: [],
                 compositionState: .unavailable,
                 footnote: "暂时无法读取磁盘容量。",
+                limitedAnalysisBadge: nil,
+                limitedAnalysisFootnote: nil,
+                showsFullScanAction: false,
                 accessibilitySummary: "存储空间数据暂不可用。"
             )
         }
@@ -209,12 +230,24 @@ enum MacCareHomePresentationBuilder {
             compositionState: compositionState
         )
 
-        let footnote: String? = snapshot.storageSeverity >= .warning
+        var footnote: String? = snapshot.storageSeverity >= .warning
             ? "可用空间偏少"
             : "空间状态正常"
 
-        let summary =
+        let limitedBadge = macCareAccessLevel == .limited ? "有限分析" : nil
+        let limitedFootnote = macCareAccessLevel == .limited
+            ? "未开启完整磁盘访问，分类结果不完整。"
+            : nil
+        let showsFullScan = macCareAccessLevel == .limited
+        if limitedFootnote != nil, footnote == "空间状态正常" {
+            footnote = nil
+        }
+
+        var summary =
             "存储空间 \(volume)，已用 \(percent)%，可用 \(JoeyByteFormat.string(fromByteCount: available))。"
+        if macCareAccessLevel == .limited {
+            summary += " 当前为有限磁盘分析。"
+        }
 
         return StoragePresentation(
             volumeTitle: title,
@@ -227,6 +260,9 @@ enum MacCareHomePresentationBuilder {
             legendSegments: legendSegments,
             compositionState: compositionState,
             footnote: footnote,
+            limitedAnalysisBadge: limitedBadge,
+            limitedAnalysisFootnote: limitedFootnote,
+            showsFullScanAction: showsFullScan,
             accessibilitySummary: summary
         )
     }
@@ -341,8 +377,11 @@ enum MacCareHomePresentationBuilder {
 
     private static func makeCleanup(
         scanResult: CleanupScanResult?,
-        phase: CleanupPhase
+        phase: CleanupPhase,
+        macCareAccessLevel: MacCareAccessLevel
     ) -> CleanupSummaryPresentation {
+        let deferredNote = deepScanDeferredNote(scanResult: scanResult, accessLevel: macCareAccessLevel)
+
         switch phase {
         case .scanning:
             return CleanupSummaryPresentation(
@@ -352,7 +391,8 @@ enum MacCareHomePresentationBuilder {
                 primaryActionTitle: "查看清理项",
                 safeSizeText: nil,
                 reviewSizeText: nil,
-                totalSizeText: nil
+                totalSizeText: nil,
+                deepScanDeferredNote: deferredNote
             )
         case .idle, .ready, .cleaning, .completed, .failed:
             break
@@ -366,7 +406,8 @@ enum MacCareHomePresentationBuilder {
                 primaryActionTitle: "开始扫描",
                 safeSizeText: nil,
                 reviewSizeText: nil,
-                totalSizeText: nil
+                totalSizeText: nil,
+                deepScanDeferredNote: deferredNote
             )
         }
 
@@ -378,23 +419,40 @@ enum MacCareHomePresentationBuilder {
                 primaryActionTitle: "查看清理项",
                 safeSizeText: nil,
                 reviewSizeText: nil,
-                totalSizeText: nil
+                totalSizeText: nil,
+                deepScanDeferredNote: deferredNote
             )
         }
 
         let total = JoeyByteFormat.string(fromByteCount: scanResult.totalSize)
         let safe = JoeyByteFormat.string(fromByteCount: scanResult.safeSize)
         let review = JoeyByteFormat.string(fromByteCount: scanResult.reviewSize)
+        var subtitle = "扫描发现一些可以安全处理或需要确认的文件"
+        if let deferredNote {
+            subtitle += " \(deferredNote)"
+        }
 
         return CleanupSummaryPresentation(
             kind: .hasReclaimable,
             title: "可释放 \(total)",
-            subtitle: "扫描发现一些可以安全处理或需要确认的文件",
+            subtitle: subtitle,
             primaryActionTitle: "查看清理项",
             safeSizeText: safe,
             reviewSizeText: review,
-            totalSizeText: total
+            totalSizeText: total,
+            deepScanDeferredNote: deferredNote
         )
+    }
+
+    private static func deepScanDeferredNote(
+        scanResult: CleanupScanResult?,
+        accessLevel: MacCareAccessLevel
+    ) -> String? {
+        guard accessLevel == .limited else { return nil }
+        if scanResult?.deepScanDeferred == true {
+            return "已完成基础扫描；开启完全磁盘访问后可进行完整扫描。"
+        }
+        return nil
     }
 
     #if DEBUG

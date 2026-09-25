@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import OSLog
 
 @MainActor
@@ -14,6 +15,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let bubbleController = JoeyBubbleController()
     private var statusItem: NSStatusItem?
     private var statusBarMenu: NSMenu?
+    private var permissionStatusObservation: AnyCancellable?
+    private var didPresentPermissionOnboardingThisLaunch = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)
@@ -72,6 +75,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         panelController.show()
         coordinator.start()
 
+        #if DEBUG
+        if DebugStateInjector.resetsPermissionOnboarding() {
+            PermissionOnboardingPreferences.resetForDevelopment()
+        }
+        #endif
+
+        permissionStatusObservation = PermissionService.shared.$fullDiskAccessStatus
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] status in
+                self?.handlePermissionStatusForOnboarding(status)
+            }
+
+        PermissionService.shared.refresh()
+
         configureMenuBarStatusItem()
 
         #if DEBUG
@@ -91,6 +108,38 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
     #endif
+
+    func applicationDidBecomeActive(_ notification: Notification) {
+        PermissionService.shared.refresh()
+    }
+
+    private func handlePermissionStatusForOnboarding(_ status: FullDiskAccessStatus) {
+        let hasCompleted = PermissionOnboardingPreferences.hasCompleted()
+
+        if PermissionOnboardingGate.shouldAutoCompleteOnLaunch(
+            hasCompleted: hasCompleted,
+            fullDiskAccessStatus: status
+        ) {
+            PermissionOnboardingPreferences.markCompleted()
+            if shellState.presentation == .permissionOnboarding {
+                shellState.presentation = .main
+            }
+            return
+        }
+
+        guard PermissionOnboardingGate.shouldPresentOnboarding(
+            hasCompleted: hasCompleted,
+            fullDiskAccessStatus: status
+        ) else { return }
+
+        #if DEBUG
+        if DebugStateInjector.qaMainWindowIntent() != nil { return }
+        #endif
+
+        guard !didPresentPermissionOnboardingThisLaunch else { return }
+        didPresentPermissionOnboardingThisLaunch = true
+        mainWindowController?.present(intent: .permissionOnboarding)
+    }
 
     func applicationWillTerminate(_ notification: Notification) {
         coordinator?.stop()

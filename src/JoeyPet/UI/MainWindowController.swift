@@ -17,7 +17,11 @@ final class MainWindowController {
     func present(intent: MainWindowIntent = .default) {
         shellState.apply(intent: intent)
         if window == nil {
-            let root = AppShellView(model: model, shellState: shellState)
+            let root = AppShellView(
+                model: model,
+                shellState: shellState,
+                permissionService: PermissionService.shared
+            )
             let hosting = NSHostingController(rootView: root)
             let window = JoeyPetMainWindow(
                 contentRect: NSRect(x: 0, y: 0, width: ShellMetrics.defaultWindowWidth, height: ShellMetrics.defaultWindowHeight),

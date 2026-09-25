@@ -125,6 +125,18 @@ struct LegacyCleanupView: View {
     private var resultsBody: some View {
         if let result = model.scanResult {
             VStack(alignment: .leading, spacing: 16) {
+                if result.deepScanDeferred {
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "info.circle")
+                            .foregroundStyle(.secondary)
+                        Text("已完成基础扫描；开启完全磁盘访问后可进行完整扫描。")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                }
                 HStack(spacing: 24) {
                     SummaryValue(title: "可释放", value: JoeyByteFormat.string(fromByteCount: result.totalSize))
                     SummaryValue(title: "可快速处理", value: JoeyByteFormat.string(fromByteCount: result.safeSize))

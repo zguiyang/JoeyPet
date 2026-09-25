@@ -50,8 +50,10 @@ final class AppModel: ObservableObject {
     private let executor: CleanupExecutor
     private let defaults: UserDefaults
     private let launchAtLoginManager: any LaunchAtLoginManaging
+    private let permissionService: PermissionService
     private var task: Task<Void, Never>?
     private var storageCompositionTask: Task<Void, Never>?
+    private var permissionObservation: AnyCancellable?
     private let maxMemoryTrendSamples = 48
 
     var onCleanupStarted: (() -> Void)?
@@ -66,7 +68,8 @@ final class AppModel: ObservableObject {
             scanner: CleanupScanner(),
             executor: CleanupExecutor(),
             defaults: .standard,
-            launchAtLoginManager: LaunchAtLoginManager()
+            launchAtLoginManager: LaunchAtLoginManager(),
+            permissionService: .shared
         )
     }
 
@@ -74,15 +77,29 @@ final class AppModel: ObservableObject {
         scanner: CleanupScanner,
         executor: CleanupExecutor,
         defaults: UserDefaults,
-        launchAtLoginManager: any LaunchAtLoginManaging
+        launchAtLoginManager: any LaunchAtLoginManaging,
+        permissionService: PermissionService
     ) {
         self.scanner = scanner
         self.executor = executor
         self.defaults = defaults
         self.launchAtLoginManager = launchAtLoginManager
+        self.permissionService = permissionService
         self.lastCleanupSummary = Self.loadSummary(from: defaults)
         self.launchAtLoginEnabled = launchAtLoginManager.isRegistered
         self.launchAtLoginError = nil
+
+        permissionObservation = permissionService.$fullDiskAccessStatus
+            .removeDuplicates()
+            .sink { [weak self] _ in
+                self?.objectWillChange.send()
+                self?.invalidateStorageComposition()
+                self?.refreshStorageCompositionIfNeeded()
+            }
+    }
+
+    var macCareAccessLevel: MacCareAccessLevel {
+        permissionService.macCareAccessLevel
     }
 
     var isBusy: Bool { cleanupPhase == .scanning || cleanupPhase == .cleaning }
@@ -115,7 +132,8 @@ final class AppModel: ObservableObject {
         storageCompositionTask?.cancel()
         storageCompositionTask = Task { [weak self] in
             guard let self else { return }
-            let estimate = await StorageCategoryEstimator.estimate()
+            let accessLevel = permissionService.macCareAccessLevel
+            let estimate = await StorageCategoryEstimator.estimate(accessLevel: accessLevel)
             guard !Task.isCancelled else { return }
             let composed = StorageCompositionBuilder.compose(
                 totalBytes: total,
@@ -157,7 +175,10 @@ final class AppModel: ObservableObject {
         selectedCandidateIDs.removeAll()
         task = Task { [weak self] in
             guard let self else { return }
-            let result = await scanner.scan()
+            let result = await scanner.scan(
+                requestedScope: .deep,
+                accessLevel: permissionService.macCareAccessLevel
+            )
             guard !Task.isCancelled else { return }
             scanResult = result
             executionResult = nil
@@ -173,7 +194,10 @@ final class AppModel: ObservableObject {
         selectedCandidateIDs.removeAll()
         task = Task { [weak self] in
             guard let self else { return }
-            let result = await scanner.scan()
+            let result = await scanner.scan(
+                requestedScope: .baseline,
+                accessLevel: permissionService.macCareAccessLevel
+            )
             guard !Task.isCancelled else { return }
             scanResult = result
             executionResult = nil

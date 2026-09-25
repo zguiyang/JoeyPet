@@ -586,7 +586,7 @@ struct CleanupTests {
         try fm.setAttributes([.modificationDate: oldDate], ofItemAtPath: logs.appendingPathComponent("old.log").path)
         defer { try? fm.removeItem(at: home) }
 
-        let result = await CleanupScanner(homeURL: home).scan()
+        let result = await CleanupScanner(homeURL: home).scan(requestedScope: .deep, accessLevel: .full)
         #expect(result.candidates.contains { $0.category == .developerCache && $0.risk == .safe })
         #expect(result.candidates.contains { $0.category == .oldLogs && $0.risk == .review })
         #expect(result.candidates.contains { $0.category == .applicationCaches && $0.risk == .review })
@@ -737,7 +737,8 @@ struct Phase5PersistenceTests {
             scanner: CleanupScanner(homeURL: URL(fileURLWithPath: "/tmp/joeypet-fixture")),
             executor: CleanupExecutor(),
             defaults: defaults,
-            launchAtLoginManager: manager
+            launchAtLoginManager: manager,
+            permissionService: PermissionService(probe: FixedFullDiskAccessProbe(status: .granted))
         )
 
         #expect(!model.launchAtLoginEnabled)
@@ -976,7 +977,8 @@ struct QuickCleanFlowTests {
             scanner: CleanupScanner(homeURL: URL(fileURLWithPath: "/tmp/joeypet-fixture")),
             executor: CleanupExecutor(),
             defaults: defaults,
-            launchAtLoginManager: FakeLaunchAtLoginManager()
+            launchAtLoginManager: FakeLaunchAtLoginManager(),
+            permissionService: PermissionService(probe: FixedFullDiskAccessProbe(status: .granted))
         )
         var confirmationRequested = false
         model.onQuickCleanNeedsConfirmation = { confirmationRequested = true }
@@ -1136,6 +1138,149 @@ struct MacCareHomeMotionTests {
         let result = MacCareHomeMotion.lerpSamples(from: from, to: to, progress: 0)
         #expect(result.count == 2)
         #expect(result[1] == 0.1)
+    }
+}
+
+struct PermissionOnboardingGateTests {
+    @Test func limitedMacCarePresentationMentionsLimitedAnalysis() {
+        let snapshot = SystemStatusSnapshot(
+            thermal: .nominal,
+            memory: .normal,
+            storageAvailableBytes: 400,
+            storageTotalBytes: 1_000,
+            storageSeverity: .normal,
+            physicalMemoryBytes: 16_000_000_000,
+            usedMemoryBytes: 8_000_000_000,
+            swapUsedBytes: 0,
+            volumeName: "Macintosh HD",
+            updatedAt: Date()
+        )
+        let presentation = MacCareHomePresentationBuilder.make(
+            snapshot: snapshot,
+            scanResult: nil,
+            cleanupPhase: .idle,
+            memoryTrendSampleCount: 0,
+            storageCompositionState: .idle,
+            macCareAccessLevel: .limited
+        )
+        #expect(presentation.detail.contains("有限的磁盘分析"))
+        #expect(presentation.storage.limitedAnalysisBadge == "有限分析")
+        #expect(presentation.storage.showsFullScanAction)
+    }
+
+    @Test func onboardingMatrix() {
+        #expect(PermissionOnboardingGate.shouldPresentOnboarding(hasCompleted: false, fullDiskAccessStatus: .notGranted))
+        #expect(PermissionOnboardingGate.shouldPresentOnboarding(hasCompleted: false, fullDiskAccessStatus: .unknown))
+        #expect(!PermissionOnboardingGate.shouldPresentOnboarding(hasCompleted: false, fullDiskAccessStatus: .granted))
+        #expect(!PermissionOnboardingGate.shouldPresentOnboarding(hasCompleted: true, fullDiskAccessStatus: .notGranted))
+        #expect(!PermissionOnboardingGate.shouldPresentOnboarding(hasCompleted: true, fullDiskAccessStatus: .unknown))
+        #expect(!PermissionOnboardingGate.shouldPresentOnboarding(hasCompleted: true, fullDiskAccessStatus: .granted))
+        #expect(PermissionOnboardingGate.shouldAutoCompleteOnLaunch(hasCompleted: false, fullDiskAccessStatus: .granted))
+        #expect(!PermissionOnboardingGate.shouldAutoCompleteOnLaunch(hasCompleted: true, fullDiskAccessStatus: .granted))
+    }
+}
+
+struct PermissionFoundationTests {
+    @Test func accessLevelGrantedWhenFDAProbeSucceeds() {
+        #expect(MacCareCapability.accessLevel(fullDiskAccessStatus: .granted) == .full)
+        #expect(MacCareCapability.accessLevel(fullDiskAccessStatus: .notGranted) == .limited)
+        #expect(MacCareCapability.accessLevel(fullDiskAccessStatus: .unknown) == .limited)
+    }
+
+    @Test func deepScanDeferredWhenLimited() {
+        let routing = MacCareCapability.effectiveCleanupScanScope(requested: .deep, accessLevel: .limited)
+        #expect(routing.scope == .baseline)
+        #expect(routing.deepScanDeferred)
+    }
+
+    @Test func deepScanAllowedWhenFull() {
+        let routing = MacCareCapability.effectiveCleanupScanScope(requested: .deep, accessLevel: .full)
+        #expect(routing.scope == .deep)
+        #expect(!routing.deepScanDeferred)
+    }
+
+    @Test func probeMapsPermissionDeniedToNotGranted() {
+        let error = NSError(domain: NSCocoaErrorDomain, code: NSFileReadNoPermissionError, userInfo: nil)
+        #expect(FullDiskAccessProbe.classify(error) == .permissionDenied)
+        let outcome = FullDiskAccessProbe(directoryAccess: DenyListDirectoryAccess()).probe(
+            homeURL: URL(fileURLWithPath: "/tmp/joeypet-fda-deny")
+        )
+        #expect(outcome.status == .notGranted)
+    }
+
+    @Test func probeMapsMissingCanaryWithoutDenyToUnknown() {
+        let home = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("joeypet-fda-missing-\(UUID().uuidString)")
+        try? FileManager.default.createDirectory(at: home, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: home) }
+        let outcome = FullDiskAccessProbe().probe(homeURL: home)
+        #expect(outcome.status == .unknown)
+        #expect(outcome.attempts.allSatisfy { $0.failureKind == .pathMissing })
+    }
+
+    @Test func probeMapsUnexpectedErrorToUnknown() {
+        let home = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("joeypet-fda-unexpected-\(UUID().uuidString)")
+        let safari = home.appendingPathComponent("Library/Safari", isDirectory: true)
+        try? FileManager.default.createDirectory(at: safari, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: home) }
+        let outcome = FullDiskAccessProbe(directoryAccess: ThrowUnexpectedDirectoryAccess()).probe(homeURL: home)
+        #expect(outcome.status == .unknown)
+    }
+
+    @Test func posixPermissionDeniedClassification() {
+        let error = NSError(domain: NSPOSIXErrorDomain, code: Int(EPERM), userInfo: nil)
+        #expect(FullDiskAccessProbe.classify(error) == .permissionDenied)
+    }
+
+    @Test @MainActor func scannerGateDefersDeepWhenLimited() async {
+        let home = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("joeypet-gate-\(UUID().uuidString)")
+        let derived = home.appendingPathComponent("Library/Developer/Xcode/DerivedData/Fixture", isDirectory: true)
+        try? FileManager.default.createDirectory(at: derived, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: home) }
+
+        let result = await CleanupScanner(homeURL: home).scan(requestedScope: .deep, accessLevel: .limited)
+        #expect(result.appliedScope == .baseline)
+        #expect(result.deepScanDeferred)
+    }
+
+    @Test @MainActor func scannerAppliesDeepWhenFull() async {
+        let home = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("joeypet-gate-full-\(UUID().uuidString)")
+        let derived = home.appendingPathComponent("Library/Developer/Xcode/DerivedData/Fixture", isDirectory: true)
+        try? FileManager.default.createDirectory(at: derived, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: home) }
+
+        let result = await CleanupScanner(homeURL: home).scan(requestedScope: .deep, accessLevel: .full)
+        #expect(result.appliedScope == .deep)
+        #expect(!result.deepScanDeferred)
+    }
+}
+
+private struct FixedFullDiskAccessProbe: FullDiskAccessProbing {
+    let status: FullDiskAccessStatus
+    func probe(homeURL: URL) -> FullDiskAccessProbeOutcome {
+        FullDiskAccessProbeOutcome(status: status, attempts: [])
+    }
+}
+
+private struct DenyListDirectoryAccess: FullDiskAccessDirectoryAccess {
+    func directoryExists(at url: URL) -> Bool {
+        url.path.hasSuffix("Library/Safari") || url.path.hasSuffix("Library/Messages")
+    }
+
+    func listImmediateChildren(at url: URL) throws -> [URL] {
+        throw NSError(domain: NSCocoaErrorDomain, code: NSFileReadNoPermissionError, userInfo: nil)
+    }
+}
+
+private struct ThrowUnexpectedDirectoryAccess: FullDiskAccessDirectoryAccess {
+    func directoryExists(at url: URL) -> Bool {
+        url.path.hasSuffix("Library/Safari") || url.path.hasSuffix("Library/Messages")
+    }
+
+    func listImmediateChildren(at url: URL) throws -> [URL] {
+        if url.path.hasSuffix("Library/Safari") {
+            throw NSError(domain: NSCocoaErrorDomain, code: NSFileWriteUnknownError, userInfo: nil)
+        }
+        return []
     }
 }
 

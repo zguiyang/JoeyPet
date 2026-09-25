@@ -47,11 +47,13 @@ enum SettingsSection: String, CaseIterable, Hashable, Identifiable, Sendable {
 }
 
 enum AppPresentation: Equatable, Sendable {
+    case permissionOnboarding
     case main
     case settings
 }
 
 enum MainWindowIntent: Sendable {
+    case permissionOnboarding
     case `default`
     case macCareCleanup
     case macCareDetailMock
@@ -69,6 +71,8 @@ final class AppShellState: ObservableObject {
 
     func apply(intent: MainWindowIntent) {
         switch intent {
+        case .permissionOnboarding:
+            presentation = .permissionOnboarding
         case .default:
             presentation = .main
             mode = .macCare

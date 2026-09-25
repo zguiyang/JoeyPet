@@ -85,6 +85,14 @@ enum DebugStateInjector {
         #endif
     }
 
+    static func resetsPermissionOnboarding() -> Bool {
+        #if DEBUG
+        ProcessInfo.processInfo.arguments.contains("-JoeyPetResetPermissionOnboarding")
+        #else
+        return false
+        #endif
+    }
+
     /// Parses `-JoeyPetDebugBehavior <id>` / `-JoeyPetDebugBehavior=<id>`.
     static func transientBehavior(from arguments: [String]) -> PetTransientBehavior? {
         #if DEBUG

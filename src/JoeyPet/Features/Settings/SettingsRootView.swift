@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsRootView: View {
     @ObservedObject var shellState: AppShellState
+    @ObservedObject var permissionService: PermissionService
 
     var body: some View {
         HStack(spacing: 0) {
@@ -50,7 +51,7 @@ struct SettingsRootView: View {
     private var settingsDetail: some View {
         switch shellState.settingsSection {
         case .general:
-            sectionHeading("通用")
+            SettingsGeneralView(permissionService: permissionService)
         case .macStatus:
             sectionHeading("电脑状态")
         case .workStatus:

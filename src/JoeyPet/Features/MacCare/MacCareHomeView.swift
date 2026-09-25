@@ -13,7 +13,8 @@ struct MacCareHomeView: View {
             scanResult: model.scanResult,
             cleanupPhase: model.cleanupPhase,
             memoryTrendSampleCount: model.memoryTrendSamples.count,
-            storageCompositionState: model.storageCompositionState
+            storageCompositionState: model.storageCompositionState,
+            macCareAccessLevel: model.macCareAccessLevel
         )
     }
 
@@ -122,6 +123,14 @@ struct MacCareHomeView: View {
                         .foregroundStyle(Color.accentColor)
                 }
                 Spacer(minLength: 4)
+                if let badge = storage.limitedAnalysisBadge {
+                    Text(badge)
+                        .font(.system(size: 10, weight: .semibold))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Color.orange.opacity(colorScheme == .dark ? 0.22 : 0.14), in: Capsule())
+                        .foregroundStyle(Color.orange)
+                }
                 if let availableText = storage.availableText {
                     Text(availableText)
                         .font(.system(size: 10, weight: .semibold))
@@ -170,6 +179,27 @@ struct MacCareHomeView: View {
 
                 storageLegendGrid(storage)
                     .padding(.top, 4)
+
+                if let limitedFootnote = storage.limitedAnalysisFootnote {
+                    Text(limitedFootnote)
+                        .font(.system(size: 10))
+                        .foregroundStyle(.secondary)
+                        .padding(.top, 6)
+                }
+                if storage.showsFullScanAction {
+                    Button("开启完整扫描") {
+                        _ = SystemSettingsPrivacy.openFullDiskAccessSettings()
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .padding(.top, 6)
+                }
+                if let footnote = storage.footnote {
+                    Text(footnote)
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(storage.footnote == "可用空间偏少" ? Color.orange : Color.secondary)
+                        .padding(.top, 4)
+                }
             } else {
                 Spacer(minLength: 0)
                 Text(storage.footnote ?? "存储数据暂不可用")

@@ -3,12 +3,15 @@ import SwiftUI
 struct AppShellView: View {
     @ObservedObject var model: AppModel
     @ObservedObject var shellState: AppShellState
+    @ObservedObject var permissionService: PermissionService
 
     var body: some View {
         presentationContainer
             .frame(minWidth: ShellMetrics.minimumWindowWidth, minHeight: ShellMetrics.minimumWindowHeight)
             .toolbar {
-                UnifiedWindowNavigation(shellState: shellState)
+                if shellState.presentation != .permissionOnboarding {
+                    UnifiedWindowNavigation(shellState: shellState)
+                }
             }
             .removingDefaultWindowToolbarItems()
             .mainWindowChrome()
@@ -17,10 +20,12 @@ struct AppShellView: View {
     @ViewBuilder
     private var presentationContainer: some View {
         switch shellState.presentation {
+        case .permissionOnboarding:
+            PermissionOnboardingView(permissionService: permissionService, shellState: shellState)
         case .main:
             mainPresentationBody
         case .settings:
-            SettingsRootView(shellState: shellState)
+            SettingsRootView(shellState: shellState, permissionService: permissionService)
         }
     }
 

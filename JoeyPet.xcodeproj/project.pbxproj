@@ -75,6 +75,15 @@
 		D7SH013305978720070926EB /* FeaturePageNavigationHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7SH013305978720070926E /* FeaturePageNavigationHeader.swift */; };
 		D7SH014305978720070926EB /* MainWindowChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7SH014305978720070926E /* MainWindowChrome.swift */; };
 		D7SH015305978720070926EB /* SettingsGlobalToolbarControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7SH015305978720070926E /* SettingsGlobalToolbarControls.swift */; };
+		D7PER001305978720070926EB /* PermissionModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PER001305978720070926E /* PermissionModels.swift */; };
+		D7PER002305978720070926EB /* FullDiskAccessProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PER002305978720070926E /* FullDiskAccessProbe.swift */; };
+		D7PER003305978720070926EB /* MacCareCapability.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PER003305978720070926E /* MacCareCapability.swift */; };
+		D7PER004305978720070926EB /* SystemSettingsPrivacy.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PER004305978720070926E /* SystemSettingsPrivacy.swift */; };
+		D7PER005305978720070926EB /* PermissionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PER005305978720070926E /* PermissionService.swift */; };
+		D7PER006305978720070926EB /* PermissionOnboardingPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PER006305978720070926E /* PermissionOnboardingPreferences.swift */; };
+		D7PER007305978720070926EB /* FullDiskAccessStatusPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PER007305978720070926E /* FullDiskAccessStatusPresentation.swift */; };
+		D7PER008305978720070926EB /* PermissionOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PER008305978720070926E /* PermissionOnboardingView.swift */; };
+		D7PER009305978720070926EB /* SettingsGeneralView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PER009305978720070926E /* SettingsGeneralView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -158,6 +167,15 @@
 		D7SH013305978720070926E /* FeaturePageNavigationHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeaturePageNavigationHeader.swift; sourceTree = "<group>"; };
 		D7SH014305978720070926E /* MainWindowChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowChrome.swift; sourceTree = "<group>"; };
 		D7SH015305978720070926E /* SettingsGlobalToolbarControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsGlobalToolbarControls.swift; sourceTree = "<group>"; };
+		D7PER001305978720070926E /* PermissionModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionModels.swift; sourceTree = "<group>"; };
+		D7PER002305978720070926E /* FullDiskAccessProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullDiskAccessProbe.swift; sourceTree = "<group>"; };
+		D7PER003305978720070926E /* MacCareCapability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacCareCapability.swift; sourceTree = "<group>"; };
+		D7PER004305978720070926E /* SystemSettingsPrivacy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemSettingsPrivacy.swift; sourceTree = "<group>"; };
+		D7PER005305978720070926E /* PermissionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionService.swift; sourceTree = "<group>"; };
+		D7PER006305978720070926E /* PermissionOnboardingPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionOnboardingPreferences.swift; sourceTree = "<group>"; };
+		D7PER007305978720070926E /* FullDiskAccessStatusPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullDiskAccessStatusPresentation.swift; sourceTree = "<group>"; };
+		D7PER008305978720070926E /* PermissionOnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionOnboardingView.swift; sourceTree = "<group>"; };
+		D7PER009305978720070926E /* SettingsGeneralView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsGeneralView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -240,6 +258,8 @@
 				D7PET027305978720070926E /* PetPreferences.swift */,
 				D7PET028305978720070926E /* PetPosition.swift */,
 				D7STO001305978720070926E /* StorageComposition.swift */,
+				D7PER001305978720070926E /* PermissionModels.swift */,
+				D7PER006305978720070926E /* PermissionOnboardingPreferences.swift */,
 			);
 			path = Domain;
 			sourceTree = "<group>";
@@ -249,8 +269,19 @@
 			children = (
 				D7PET203305978720070926E /* Sensors */,
 				D7STOGR305978720070926E /* Storage */,
+				D7PERGR305978720070926E /* Permissions */,
 			);
 			path = System;
+			sourceTree = "<group>";
+		};
+		D7PERGR305978720070926E /* Permissions */ = {
+			isa = PBXGroup;
+			children = (
+				D7PER002305978720070926E /* FullDiskAccessProbe.swift */,
+				D7PER003305978720070926E /* MacCareCapability.swift */,
+				D7PER004305978720070926E /* SystemSettingsPrivacy.swift */,
+			);
+			path = Permissions;
 			sourceTree = "<group>";
 		};
 		D7STOGR305978720070926E /* Storage */ = {
@@ -326,6 +357,7 @@
 				D7SHGRPMAC /* MacCare */,
 				D7SHGRPWR /* WorkRhythm */,
 				D7SHGRPSET /* Settings */,
+				D7PERGRP305978720070926E /* Permission */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -379,8 +411,18 @@
 				D7SH009305978720070926E /* SettingsRootView.swift */,
 				D7SH017305978720070926E /* SettingsFormComponents.swift */,
 				D7SH010305978720070926E /* LegacySettingsFormView.swift */,
+				D7PER009305978720070926E /* SettingsGeneralView.swift */,
 			);
 			path = Settings;
+			sourceTree = "<group>";
+		};
+		D7PERGRP305978720070926E /* Permission */ = {
+			isa = PBXGroup;
+			children = (
+				D7PER007305978720070926E /* FullDiskAccessStatusPresentation.swift */,
+				D7PER008305978720070926E /* PermissionOnboardingView.swift */,
+			);
+			path = Permission;
 			sourceTree = "<group>";
 		};
 		D7PET207305978720070926E /* App */ = {
@@ -391,6 +433,7 @@
 				D7PET00F305978720070926E /* PetCoordinator.swift */,
 				D7PET010305978720070926E /* SleepWakeMonitor.swift */,
 				D7PET023305978720070926E /* AppModel.swift */,
+				D7PER005305978720070926E /* PermissionService.swift */,
 				D7PET02A305978720070926E /* LaunchAtLoginManager.swift */,
 				D7SH001305978720070926E /* AppShellState.swift */,
 				D7SH002305978720070926E /* JoeyStageState.swift */,
@@ -561,6 +604,15 @@
 				D7MAC005305978720070926EB /* MacCareHomeMotion.swift in Sources */,
 				D7STO001305978720070926EB /* StorageComposition.swift in Sources */,
 				D7STO002305978720070926EB /* StorageCategoryEstimator.swift in Sources */,
+				D7PER001305978720070926EB /* PermissionModels.swift in Sources */,
+				D7PER002305978720070926EB /* FullDiskAccessProbe.swift in Sources */,
+				D7PER003305978720070926EB /* MacCareCapability.swift in Sources */,
+				D7PER004305978720070926EB /* SystemSettingsPrivacy.swift in Sources */,
+				D7PER005305978720070926EB /* PermissionService.swift in Sources */,
+				D7PER006305978720070926EB /* PermissionOnboardingPreferences.swift in Sources */,
+				D7PER007305978720070926EB /* FullDiskAccessStatusPresentation.swift in Sources */,
+				D7PER008305978720070926EB /* PermissionOnboardingView.swift in Sources */,
+				D7PER009305978720070926EB /* SettingsGeneralView.swift in Sources */,
 		D7SH007305978720070926EB /* LegacyCleanupView.swift in Sources */,
 		D7SH008305978720070926EB /* WorkRhythmRootView.swift in Sources */,
 		D7SH009305978720070926EB /* SettingsRootView.swift in Sources */,

@@ -10,6 +10,8 @@ struct UnifiedWindowNavigation: ToolbarContent {
             mainConfiguration
         case .settings:
             settingsConfiguration
+        case .permissionOnboarding:
+            ToolbarItemGroup { EmptyView() }
         }
     }
 

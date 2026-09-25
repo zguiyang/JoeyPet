@@ -8,45 +8,69 @@ enum StorageCategoryEstimator: Sendable {
 
     struct Result: Sendable {
         let categories: [StorageCategorySize]
+        let classificationDepth: StorageClassificationDepth
     }
 
-    static func estimate(homeURL: URL = URL(fileURLWithPath: NSHomeDirectory())) async -> Result {
-        await Task.detached(priority: .utility) {
-            estimateSync(homeURL: homeURL)
+    static func estimate(
+        accessLevel: MacCareAccessLevel,
+        homeURL: URL = URL(fileURLWithPath: NSHomeDirectory())
+    ) async -> Result {
+        let depth = MacCareCapability.storageClassificationDepth(accessLevel: accessLevel)
+        return await Task.detached(priority: .utility) {
+            estimateSync(homeURL: homeURL, depth: depth)
         }.value
     }
 
-    private static func estimateSync(homeURL: URL) -> Result {
+    private static func estimateSync(homeURL: URL, depth: StorageClassificationDepth) -> Result {
         let fileManager = FileManager.default
         var partial = false
 
         let applications = estimateApplications(fileManager: fileManager, homeURL: homeURL, partial: &partial)
-        let developer = estimateDirectoryRoots(
-            [
-                homeURL.appendingPathComponent("Library/Developer", isDirectory: true),
-                homeURL.appendingPathComponent("Library/Caches", isDirectory: true),
-            ],
-            fileManager: fileManager,
-            partial: &partial
-        )
-        let media = estimateDirectoryRoots(
-            [
-                homeURL.appendingPathComponent("Pictures", isDirectory: true),
-                homeURL.appendingPathComponent("Movies", isDirectory: true),
-                homeURL.appendingPathComponent("Music", isDirectory: true),
-            ],
-            fileManager: fileManager,
-            partial: &partial
-        )
 
-        let categories = [
+        let developerRoots = developerRoots(homeURL: homeURL, depth: depth)
+        let developer = estimateDirectoryRoots(developerRoots, fileManager: fileManager, partial: &partial)
+
+        var media: Int64 = 0
+        if depth == .full {
+            media = estimateDirectoryRoots(
+                [
+                    homeURL.appendingPathComponent("Pictures", isDirectory: true),
+                    homeURL.appendingPathComponent("Movies", isDirectory: true),
+                    homeURL.appendingPathComponent("Music", isDirectory: true),
+                ],
+                fileManager: fileManager,
+                partial: &partial
+            )
+        }
+
+        var categories = [
             StorageCategorySize(category: .applications, bytes: applications, isEstimatePartial: partial),
             StorageCategorySize(category: .developer, bytes: developer, isEstimatePartial: partial),
-            StorageCategorySize(category: .media, bytes: media, isEstimatePartial: partial),
-        ].filter { $0.bytes > 0 }
+        ]
+        if depth == .full {
+            categories.append(StorageCategorySize(category: .media, bytes: media, isEstimatePartial: partial))
+        }
+        categories = categories.filter { $0.bytes > 0 }
 
-        Self.logger.info("Storage category estimate finished (partial=\(partial))")
-        return Result(categories: categories)
+        Self.logger.info(
+            "Storage category estimate finished depth=\(depth.rawValue, privacy: .public) partial=\(partial)"
+        )
+        return Result(categories: categories, classificationDepth: depth)
+    }
+
+    private static func developerRoots(homeURL: URL, depth: StorageClassificationDepth) -> [URL] {
+        var roots = [
+            homeURL.appendingPathComponent("Library/Developer", isDirectory: true),
+            homeURL.appendingPathComponent("Library/Caches", isDirectory: true),
+        ]
+        if depth == .full {
+            roots.append(contentsOf: [
+                homeURL.appendingPathComponent("Library/Containers", isDirectory: true),
+                homeURL.appendingPathComponent("Library/Group Containers", isDirectory: true),
+                homeURL.appendingPathComponent("Library/Application Support", isDirectory: true),
+            ])
+        }
+        return roots
     }
 
     private static func estimateApplications(

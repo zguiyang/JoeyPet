@@ -14,13 +14,32 @@ struct CleanupScanner: Sendable {
         self.now = now
     }
 
-    func scan() async -> CleanupScanResult {
+    func scan(
+        requestedScope: CleanupScanScope = .deep,
+        accessLevel: MacCareAccessLevel
+    ) async -> CleanupScanResult {
         let homeURL = self.homeURL
         let oldLogAge = self.oldLogAge
         let now = self.now
+        let routing = MacCareCapability.effectiveCleanupScanScope(requested: requestedScope, accessLevel: accessLevel)
+        let appliedScope = routing.scope
+        let deepScanDeferred = routing.deepScanDeferred
         return await Task.detached(priority: .utility) {
-            Self.performScan(homeURL: homeURL, oldLogAge: oldLogAge, now: now)
+            Self.performScan(
+                homeURL: homeURL,
+                oldLogAge: oldLogAge,
+                now: now,
+                requestedScope: requestedScope,
+                appliedScope: appliedScope,
+                deepScanDeferred: deepScanDeferred,
+                accessLevel: accessLevel
+            )
         }.value
+    }
+
+    /// Backward-compatible entry for baseline-only scans (tests and Quick Clean allowlist).
+    func scanBaseline(accessLevel: MacCareAccessLevel = .limited) async -> CleanupScanResult {
+        await scan(requestedScope: .baseline, accessLevel: accessLevel)
     }
 
     nonisolated static func allowedRoots(homeURL: URL) -> [URL] {
@@ -41,8 +60,21 @@ struct CleanupScanner: Sendable {
         return resolved.path.hasPrefix(root.path + "/")
     }
 
-    private nonisolated static func performScan(homeURL: URL, oldLogAge: TimeInterval, now: Date) -> CleanupScanResult {
+    private nonisolated static func performScan(
+        homeURL: URL,
+        oldLogAge: TimeInterval,
+        now: Date,
+        requestedScope: CleanupScanScope,
+        appliedScope: CleanupScanScope,
+        deepScanDeferred: Bool,
+        accessLevel: MacCareAccessLevel
+    ) -> CleanupScanResult {
         logger.info("Cleanup scan started")
+        MacCareCapability.logScannerScope(
+            requested: requestedScope,
+            applied: appliedScope,
+            accessLevel: accessLevel
+        )
         let fileManager = FileManager.default
         let roots = allowedRoots(homeURL: homeURL)
         var candidates: [CleanupCandidate] = []
@@ -114,8 +146,31 @@ struct CleanupScanner: Sendable {
             }
         }
 
+        if appliedScope == .deep {
+            candidates.append(contentsOf: deepCleanupCandidates(homeURL: homeURL, fileManager: fileManager, skippedCount: &skippedCount))
+        }
+
         logger.info("Cleanup scan finished: candidates=\(candidates.count, privacy: .public), skipped=\(skippedCount, privacy: .public)")
-        return CleanupScanResult(candidates: candidates.sorted { $0.displayName.localizedStandardCompare($1.displayName) == .orderedAscending }, scannedAt: now, skippedCount: skippedCount)
+        return CleanupScanResult(
+            candidates: candidates.sorted { $0.displayName.localizedStandardCompare($1.displayName) == .orderedAscending },
+            scannedAt: now,
+            skippedCount: skippedCount,
+            requestedScope: requestedScope,
+            appliedScope: appliedScope,
+            deepScanDeferred: deepScanDeferred
+        )
+    }
+
+    /// FDA-gated deep scan roots (application leftovers, containers). Extended incrementally.
+    private nonisolated static func deepCleanupCandidates(
+        homeURL: URL,
+        fileManager: FileManager,
+        skippedCount: inout Int
+    ) -> [CleanupCandidate] {
+        _ = homeURL
+        _ = fileManager
+        _ = skippedCount
+        return []
     }
 
     private nonisolated static func contents(of url: URL, fileManager: FileManager) -> [URL] {
