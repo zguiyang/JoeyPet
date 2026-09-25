@@ -26,7 +26,8 @@
 
 - Cleanup 只扫描：Xcode DerivedData、Old User Logs、User Application Caches。
 - Safe 项目可由 Quick Clean 处理；Review 项目必须由用户查看、选择并确认。
-- 所有执行都移到 macOS Trash；不永久删除、不自动清空废纸篓、不使用 sudo，也不要求 Full Disk Access。
+- 所有执行都移到 macOS Trash；不永久删除、不自动清空废纸篓、不使用 sudo。
+- **Baseline cleanup**（三路径 allowlist）不要求 Full Disk Access；**Full Mac Care**（深度分类、Containers/残留扫描等）要求用户在系统设置中授予 **完全磁盘访问**。未授权时为 **Limited Mac Care**，见 [permissions.md](../permissions.md)。
 - Joey 的状态使用角色化表达：Thermal serious/critical → sweating；Memory warning/critical → tired；Storage low → carryingTrash。
 - `walking` 可以带来短距离桌面移动，但不能频繁移动，并且系统警告可以打断它。
 - Overview 的 System Monitoring 与 Joey 的 semantic reactions 分开：CPU Usage、Memory Usage、Network Activity 首先用于 Overview，不自动产生新的 Pet behavior。

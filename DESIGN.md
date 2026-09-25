@@ -427,6 +427,13 @@ Visual pattern only: destructive actions need clear scope, confirmation, and **�
 - Toggle immediate effect; errors adjacent to the control (e.g. login item failure).
 - Groups match Stitch: **通用**, **电脑状态**, **工作状态**.
 
+### Permissions (Full Disk Access)
+
+- **Onboarding:** First-launch **app-level page** (not alert/sheet). Explains **完全磁盘访问** for Full Mac Care; primary **打开系统设置**, secondary **稍后设置**. Completion is persisted separately from FDA grant state.
+- **Settings → 通用 → 权限与访问:** Status row + **打开系统设置** / **前往设置**—never an in-app ON/OFF toggle. States: **已开启** (green), **未开启** (neutral), **未确认** (attention + **重新检查**).
+- **Mac Care Limited:** When FDA is not verified, home keeps baseline metrics; Storage card shows **有限分析** badge + single **开启完整扫描** CTA. Do not spam per-folder permission prompts.
+- Copy: accurate local processing only—no exaggerated privacy claims.
+
 ---
 
 ## State & Feedback

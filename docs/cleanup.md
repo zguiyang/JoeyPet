@@ -13,9 +13,10 @@ follow symbolic links and each candidate is canonically checked against its
 allowlisted root.
 
 The app target does not use App Sandbox because macOS would otherwise hide the
-three allowlisted user-library roots from a normal scan. JoeyPet does not
-request Full Disk Access or sudo; read and write scope is constrained by the
-scanner allowlist and the explicit cleanup controls.
+three allowlisted user-library roots from a normal scan. Baseline cleanup does
+not require Full Disk Access or sudo; read and write scope is constrained by the
+scanner allowlist and the explicit cleanup controls. Deep Mac Care scan routes
+are gated on FDA capability—see [permissions.md](permissions.md).
 
 `CleanupCandidate` carries an id, path, display name, byte size, category,
 risk, reason, and optional modification date. `safe` candidates are eligible

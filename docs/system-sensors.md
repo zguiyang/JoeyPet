@@ -68,7 +68,7 @@ scope by itself.
 | **Apple API** | `URLResourceKey.volumeAvailableCapacityForImportantUsageKey`, `volumeAvailableCapacityKey`; `FileManager.attributesOfFileSystem(forPath:)` |
 | **Delivery** | Polling on interval (e.g. 5–15 min) or on app foreground / utility scan |
 | **Output** | `SystemSignal` when free space below configured thresholds |
-| **Permissions** | Read-only file system metadata; no full disk access unless user opts into deeper scans later |
+| **Permissions** | Read-only volume metadata; no FDA required. Deep storage classification is gated separately—see [permissions.md](permissions.md) |
 | **Limits** | Threshold-based; not a continuous byte stream |
 
 ---

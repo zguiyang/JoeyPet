@@ -7,8 +7,8 @@ Accepted for MVP
 ## Context
 
 The Cleanup MVP needs access to explicitly supported paths under the current
-user's Library. The current MVP does not request Full Disk Access and does not
-use sudo.
+user's Library. Baseline cleanup does not require Full Disk Access and does not use sudo.
+Full Mac Care requires FDA (see ADR 012).
 
 ## Decision
 
