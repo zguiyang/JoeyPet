@@ -4,11 +4,10 @@ import SpriteKit
 final class CharacterNode: SKSpriteNode {
     private var currentAnimationID: String?
 
-    init(texture: SKTexture?, displayScale: Int) {
-        let scale = max(1, displayScale)
+    init(texture: SKTexture?, displayScaleFactor: CGFloat, textureFiltering: SKTextureFilteringMode = .nearest) {
         super.init(texture: texture, color: .clear, size: texture?.size() ?? .zero)
-        setScale(CGFloat(scale))
-        texture?.filteringMode = .nearest
+        setScale(displayScaleFactor)
+        texture?.filteringMode = textureFiltering
     }
 
     @available(*, unavailable)

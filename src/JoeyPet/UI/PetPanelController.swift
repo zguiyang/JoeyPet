@@ -39,7 +39,7 @@ final class PetPanelController {
         spriteView.onDragEnded = { [weak self] origin in self?.saveUserPosition(origin: origin) }
     }
 
-    /// Loads a Debug launch-argument package when present and valid; otherwise `nil` (default JoeyRobot).
+    /// Loads a Debug launch-argument package when present and valid; otherwise `nil` (default Joey).
     private static func debugOverridePackage() -> LoadedPetPackage? {
         guard let packageID = DebugStateInjector.injectedPackageID() else {
             return nil

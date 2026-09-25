@@ -13,7 +13,7 @@ enum DebugStateInjector {
     }
 
     /// Debug-only pet package folder id under `Resources/Pets/`.
-    /// Release builds always return `nil` (default `JoeyRobot`).
+    /// Release builds always return `nil` (default `Joey`).
     static func injectedPackageID() -> String? {
         #if DEBUG
         return packageID(from: ProcessInfo.processInfo.arguments)

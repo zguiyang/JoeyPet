@@ -14,7 +14,8 @@ final class PetScene: SKScene {
         let initialTexture = package.frameTextures.first
         let character = CharacterNode(
             texture: initialTexture,
-            displayScale: package.manifest.defaultScale
+            displayScaleFactor: package.manifest.characterDisplayScaleFactor(),
+            textureFiltering: package.manifest.resolvedTextureFiltering.skFilteringMode
         )
         rootNode = PetRootNode(character: character)
 

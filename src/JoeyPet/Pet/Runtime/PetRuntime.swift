@@ -133,6 +133,8 @@ final class PetRuntime {
             columns: 1,
             rows: 1,
             defaultScale: 1,
+            displayPointSize: nil,
+            textureFiltering: nil,
             fallbackAnimation: "idle",
             animations: [
                 "idle": AnimationClip(frames: [0], fps: 1, loop: true)

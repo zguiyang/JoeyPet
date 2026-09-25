@@ -95,7 +95,7 @@ enum PetManifestValidator {
 final class PetAssetLoader {
     private static let logger = Logger(subsystem: "com.zguiyang.JoeyPet", category: "PetAssetLoader")
 
-    nonisolated static let defaultPackageID = "JoeyRobot"
+    nonisolated static let defaultPackageID = "Joey"
 
     private static var cachedPackage: LoadedPetPackage?
     private static var cachedPackageID: String?
@@ -175,8 +175,9 @@ final class PetAssetLoader {
             return .failure(validationError)
         }
 
+        let filtering = manifest.resolvedTextureFiltering.skFilteringMode
         let baseTexture = SKTexture(cgImage: cgImage)
-        baseTexture.filteringMode = .nearest
+        baseTexture.filteringMode = filtering
 
         var frameTextures: [SKTexture] = []
         frameTextures.reserveCapacity(manifest.totalFrameCount)
@@ -191,7 +192,7 @@ final class PetAssetLoader {
 
             let rect = CGRect(x: normalizedX, y: normalizedY, width: normalizedWidth, height: normalizedHeight)
             let texture = SKTexture(rect: rect, in: baseTexture)
-            texture.filteringMode = .nearest
+            texture.filteringMode = filtering
             frameTextures.append(texture)
         }
 

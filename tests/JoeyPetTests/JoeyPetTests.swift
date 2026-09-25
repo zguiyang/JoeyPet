@@ -346,9 +346,58 @@ struct PetManifestTests {
             columns: columns,
             rows: rows,
             defaultScale: defaultScale,
+            displayPointSize: nil,
+            textureFiltering: nil,
             fallbackAnimation: "idle",
             animations: animations
         )
+    }
+
+    @Test func displayPointSizeOverridesLogicalPointSize() {
+        let manifest = PetManifest(
+            id: "hd",
+            name: "HD",
+            spriteSheet: "s.png",
+            frameWidth: 256,
+            frameHeight: 256,
+            columns: 1,
+            rows: 1,
+            defaultScale: 1,
+            displayPointSize: 128,
+            textureFiltering: .smooth,
+            fallbackAnimation: "idle",
+            animations: ["idle": AnimationClip(frames: [0], fps: 1, loop: true)]
+        )
+        #expect(manifest.logicalPointSize()?.width == 128)
+        #expect(manifest.characterDisplayScaleFactor() == 0.5)
+    }
+
+    @Test func decodesTextureFilteringFromJSON() throws {
+        let json = """
+        {
+          "id": "smooth-pet",
+          "name": "Smooth",
+          "spriteSheet": "sheet.png",
+          "frameWidth": 128,
+          "frameHeight": 128,
+          "columns": 1,
+          "rows": 1,
+          "defaultScale": 1,
+          "textureFiltering": "smooth",
+          "fallbackAnimation": "idle",
+          "animations": {
+            "idle": { "frames": [0], "fps": 1, "loop": true }
+          }
+        }
+        """
+        let manifest = try JSONDecoder().decode(PetManifest.self, from: Data(json.utf8))
+        #expect(manifest.resolvedTextureFiltering == .smooth)
+        #expect(manifest.resolvedTextureFiltering.skFilteringMode == .linear)
+    }
+
+    @Test func legacyManifestDefaultsToPixelFiltering() {
+        let manifest = sampleManifest()
+        #expect(manifest.resolvedTextureFiltering == .pixel)
     }
 
     @Test func decodesManifestAndClipFromJSON() throws {
@@ -739,6 +788,8 @@ struct PetSpriteRuntimeTests {
             columns: 2,
             rows: 1,
             defaultScale: 2,
+            displayPointSize: nil,
+            textureFiltering: nil,
             fallbackAnimation: "idle",
             animations: [
                 "idle": AnimationClip(frames: [0], fps: 2, loop: true),
@@ -839,6 +890,42 @@ struct PetSpriteRuntimeTests {
         #expect(runtime.currentAnimationID == "sweating")
     }
 
+    @Test func bundledJoeyPackageLoadsFromAppBundle() {
+        PetAssetLoader.resetCacheForTesting()
+        let bundle = Bundle(for: PetRuntime.self)
+        let result = PetAssetLoader.load(packageID: "Joey", bundle: bundle)
+        #expect(result.isSuccess)
+        if case .success(let package) = result {
+            #expect(package.manifest.id == "joey-cat")
+            #expect(package.manifest.name == "Joey")
+            #expect(package.manifest.frameWidth == 256)
+            #expect(package.manifest.frameHeight == 256)
+            #expect(package.manifest.columns == 10)
+            #expect(package.manifest.rows == 1)
+            #expect(package.manifest.defaultScale == 1)
+            #expect(package.manifest.displayPointSize == 128)
+            #expect(package.manifest.resolvedTextureFiltering == .smooth)
+            #expect(package.manifest.logicalPointSize()?.width == 128)
+            #expect(package.manifest.logicalPointSize()?.height == 128)
+            #expect(package.manifest.characterDisplayScaleFactor() == 0.5)
+            #expect(package.frameTextures.count == 10)
+            #expect(package.clipsByID["idle"]?.frames == [0])
+            let expectedIDs = [
+                "idle", "blink", "walking", "sleeping", "sweating",
+                "tired", "carryingTrash", "cleaning", "celebrating", "notifying"
+            ]
+            #expect(package.clipsByID.keys.sorted() == expectedIDs.sorted())
+            #expect(
+                PetManifestValidator.validate(
+                    package.manifest,
+                    sheetPixelWidth: 2560,
+                    sheetPixelHeight: 256
+                ) == nil
+            )
+            #expect(package.frameTextures.first?.filteringMode == .linear)
+        }
+    }
+
     @Test func bundledJoeyRobotPackageLoadsFromAppBundle() {
         PetAssetLoader.resetCacheForTesting()
         let bundle = Bundle(for: PetRuntime.self)
@@ -875,6 +962,7 @@ struct PetSpriteRuntimeTests {
                     sheetPixelHeight: 96
                 ) == nil
             )
+            #expect(package.frameTextures.first?.filteringMode == .nearest)
         }
     }
 }
