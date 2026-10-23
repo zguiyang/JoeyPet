@@ -16,7 +16,7 @@ FDA is **not** requested via an in-app modal; the system requires the user to ad
 
 ## Detection
 
-`FullDiskAccessProbe` performs a **read-only** directory listing on FDA-protected canaries (`~/Library/Safari`, `~/Library/Messages`). Outcomes:
+`FullDiskAccessProbe` performs a **read-only** directory listing on a minimal FDA canary (`~/Library/Safari` only — not Desktop/Documents/Downloads/Music/Pictures/Photos). Outcomes:
 
 | Probe result | `FullDiskAccessStatus` |
 |--------------|------------------------|
@@ -38,6 +38,17 @@ Refresh triggers: app launch, `applicationDidBecomeActive`, Settings **重新检
 First launch with FDA already granted auto-completes onboarding without blocking. **稍后设置** completes onboarding and enters Limited Mac Care; onboarding does not reappear on every launch.
 
 DEBUG: `-JoeyPetResetPermissionOnboarding` clears onboarding completion for testing.
+
+## Debug vs Release identity
+
+| Build | Bundle ID | FDA grant target |
+|-------|-----------|------------------|
+| Debug | `com.zguiyang.JoeyPet.dev` (product **JoeyPet Dev**) | Add **JoeyPet Dev** in Full Disk Access |
+| Release | `com.zguiyang.JoeyPet` | Add **JoeyPet** |
+
+Debug signing uses `JOEYPET_DEVELOPMENT_TEAM` (Xcode build setting). See [development-fda-stability-report.md](development-fda-stability-report.md) and `scripts/build_joeypet_dev.sh`.
+
+Unit tests may use the App target as an XCTest module host for `@testable import`, but permission state is injected via fakes and no test requests real FDA or scans the machine. Full-machine Storage V3 diagnostics use `scripts/run_storage_v3_diagnostic.sh` (JoeyPet Dev build/install/launch), not XCTest.
 
 ## Other capabilities (planned)
 

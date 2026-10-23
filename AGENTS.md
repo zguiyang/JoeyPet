@@ -82,3 +82,4 @@ Use `.agents/skills/joeypet-macos/SKILL.md` for implementation workflow, layerin
 2. Match existing conventions; minimal diff.
 3. Build and run tests when code changed.
 4. Do not commit unless the user asks.
+- If using MobileBuildMCP, use the installed MobileBuildMCP skill before calling MobileBuildMCP tools.

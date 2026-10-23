@@ -35,11 +35,28 @@ xcodebuild -project JoeyPet.xcodeproj -scheme JoeyPet -destination 'platform=mac
 
 Adjust scheme name if renamed in Xcode.
 
+### Debug Dev install (stable FDA identity)
+
+Debug builds use bundle ID `com.zguiyang.JoeyPet.dev` and product name **JoeyPet Dev**. Set your Team ID first:
+
+```bash
+export JOEYPET_DEVELOPMENT_TEAM=YOUR_TEAM_ID
+./scripts/build_joeypet_dev.sh
+```
+
+The script builds to `.derived-data/joeypet-dev`, merges in-place into `~/Applications/JoeyPet Dev.app` with `ditto` (no recursive delete), and opens it. It does not modify TCC, auto-grant FDA, or delete user data.
+
+Real Storage V3 / FDA integration (not XCTest): `./scripts/run_storage_v3_diagnostic.sh` runs the same Dev build/install/launch flow.
+
+See [development-fda-stability-report.md](development-fda-stability-report.md) for permission/test isolation details.
+
 ## Test
 
 ```bash
 xcodebuild -project JoeyPet.xcodeproj -scheme JoeyPet -destination 'platform=macOS' test
 ```
+
+`JoeyPetTests` uses the App target only as an XCTest module host so `@testable import JoeyPet` can compile. It must contain fakes/fixtures only: never add real FDA or full-machine integration tests to XCTest. Real FDA integration runs from the stable JoeyPet Dev app.
 
 Prefer Swift Testing (`@Test`, `#expect`) for new tests.
 
