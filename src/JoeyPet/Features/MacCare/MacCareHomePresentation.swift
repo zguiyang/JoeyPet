@@ -26,7 +26,7 @@ struct MacCareStorageSegment: Equatable, Sendable {
 
 enum StorageCompositionLoadState: Equatable, Sendable {
     case idle
-    case loading
+    case loading(progress: [StorageCategorySize])
     case loaded(StorageComposition)
     case unavailable
 }
@@ -274,15 +274,18 @@ enum MacCareHomePresentationBuilder {
         compositionState: StorageCompositionLoadState
     ) -> ([MacCareStorageSegment], [MacCareStorageSegment]) {
         if case .loaded(let composition) = compositionState {
-            let donut = composition.categories.map { item in
-                MacCareStorageSegment(
-                    category: item.category,
-                    title: item.category.displayName,
-                    byteCount: item.bytes,
-                    fractionOfTotal: StorageCompositionBuilder.fraction(of: item.bytes, in: total)
-                )
-            }
-            let legend = composition.usedCategories.map { item in
+            return segments(from: composition, total: total)
+        }
+
+        if case .loading(let progress) = compositionState,
+           let scanning = StorageCompositionBuilder.composeScanning(
+               totalBytes: total,
+               availableBytes: available,
+               estimates: progress
+           )
+        {
+            let (donut, _) = segments(from: scanning, total: total)
+            let legend = progress.map { item in
                 MacCareStorageSegment(
                     category: item.category,
                     title: item.category.displayName,
@@ -295,7 +298,7 @@ enum MacCareHomePresentationBuilder {
 
         let fallback = [
             MacCareStorageSegment(
-                category: .other,
+                category: .analyzing,
                 title: "已用",
                 byteCount: used,
                 fractionOfTotal: StorageCompositionBuilder.fraction(of: used, in: total)
@@ -307,10 +310,35 @@ enum MacCareHomePresentationBuilder {
                 fractionOfTotal: StorageCompositionBuilder.fraction(of: available, in: total)
             ),
         ]
-        let legend: [MacCareStorageSegment] = compositionState == .loading
-            ? []
-            : [fallback[0]]
+        let legend: [MacCareStorageSegment] = {
+            if case .loading = compositionState { return [] }
+            return [fallback[0]]
+        }()
         return (fallback, legend)
+    }
+
+    private static func segments(
+        from composition: StorageComposition,
+        total: Int64
+    ) -> ([MacCareStorageSegment], [MacCareStorageSegment]) {
+        let donut = composition.categories.map { item in
+            MacCareStorageSegment(
+                category: item.category,
+                title: item.category.displayName,
+                byteCount: item.bytes,
+                fractionOfTotal: StorageCompositionBuilder.fraction(of: item.bytes, in: total)
+            )
+        }
+        let legendItems = StorageCompositionBuilder.legendCategories(from: composition, maxItems: 6)
+        let legend = legendItems.map { item in
+            MacCareStorageSegment(
+                category: item.category,
+                title: item.category.displayName,
+                byteCount: item.bytes,
+                fractionOfTotal: StorageCompositionBuilder.fraction(of: item.bytes, in: total)
+            )
+        }
+        return (donut, legend)
     }
 
     private static func makeMemory(from snapshot: SystemStatusSnapshot) -> MemoryPresentation {

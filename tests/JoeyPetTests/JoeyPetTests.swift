@@ -1118,6 +1118,35 @@ struct MacCareHomePresentationTests {
         #expect(presentation.storage.usedFraction == nil)
         #expect(presentation.storage.footnote?.contains("无法") == true)
     }
+
+    @Test func v3PresentationKeepsOtherFilesAndAccountingGapSeparate() {
+        let composition = StorageCompositionBuilder.composeFromFilesystemAnalysis(
+            totalBytes: 1_000,
+            availableBytes: 100,
+            categoryBytes: [
+                .applications: 250,
+                .applicationData: 100,
+                .otherFiles: 50,
+            ],
+            scannedAllocatedBytes: 400,
+            accountingGap: 500,
+            scanOverrunBytes: 0,
+            scanState: .complete
+        )!
+        let presentation = MacCareHomePresentationBuilder.make(
+            snapshot: snapshot(available: 100, total: 1_000),
+            scanResult: nil,
+            cleanupPhase: .idle,
+            memoryTrendSampleCount: 0,
+            storageCompositionState: .loaded(composition),
+            macCareAccessLevel: .full
+        )
+        let segments = Dictionary(uniqueKeysWithValues: presentation.storage.segments.map { ($0.category, $0.byteCount) })
+        #expect(segments[.otherFiles] == 50)
+        #expect(segments[.systemReserved] == 500)
+        #expect(segments[.other] == nil)
+        #expect(segments[.applications] == 250)
+    }
 }
 
 struct MacCareHomeMotionTests {
@@ -1185,6 +1214,48 @@ struct PermissionFoundationTests {
         #expect(MacCareCapability.accessLevel(fullDiskAccessStatus: .granted) == .full)
         #expect(MacCareCapability.accessLevel(fullDiskAccessStatus: .notGranted) == .limited)
         #expect(MacCareCapability.accessLevel(fullDiskAccessStatus: .unknown) == .limited)
+    }
+
+    @Test func protectedStorageWorkRequiresExplicitFDAGrant() {
+        #expect(MacCareCapability.allowsProtectedStorageWork(fullDiskAccessStatus: .granted))
+        #expect(!MacCareCapability.allowsProtectedStorageWork(fullDiskAccessStatus: .notGranted))
+        #expect(!MacCareCapability.allowsProtectedStorageWork(fullDiskAccessStatus: .unknown))
+        #expect(MacCareCapability.storageClassificationDepth(accessLevel: .limited) == .limited)
+        #expect(MacCareCapability.storageClassificationDepth(accessLevel: .full) == .full)
+    }
+
+    @Test func fdaCanaryAvoidsFilesAndFoldersPromptRoots() {
+        let forbidden = [
+            "Desktop", "Documents", "Downloads", "Music", "Pictures", "Photos", "Movies",
+        ]
+        for canary in FullDiskAccessProbe.canaryRelativePaths {
+            for segment in forbidden {
+                #expect(!canary.path.contains(segment))
+            }
+        }
+    }
+
+    @Test func probeTouchesOnlyConfiguredCanaries() {
+        let home = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("joeypet-fda-recorder-\(UUID().uuidString)")
+        let safari = home.appendingPathComponent("Library/Safari", isDirectory: true)
+        try? FileManager.default.createDirectory(at: safari, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: home) }
+
+        let recorder = RecordingDirectoryAccess()
+        let outcome = FullDiskAccessProbe(directoryAccess: recorder).probe(homeURL: home)
+        #expect(outcome.status == .granted)
+        #expect(recorder.accessedPaths.allSatisfy { path in
+            FullDiskAccessProbe.canaryRelativePaths.contains { canary in
+                path.hasSuffix(canary.path)
+            }
+        })
+        let forbiddenSuffixes = [
+            "/Music", "/Pictures", "/Documents", "/Desktop", "/Downloads", "/Photos",
+        ]
+        #expect(recorder.accessedPaths.allSatisfy { path in
+            !forbiddenSuffixes.contains { path.hasSuffix($0) }
+        })
     }
 
     @Test func deepScanDeferredWhenLimited() {
@@ -1263,7 +1334,9 @@ private struct FixedFullDiskAccessProbe: FullDiskAccessProbing {
 
 private struct DenyListDirectoryAccess: FullDiskAccessDirectoryAccess {
     func directoryExists(at url: URL) -> Bool {
-        url.path.hasSuffix("Library/Safari") || url.path.hasSuffix("Library/Messages")
+        FullDiskAccessProbe.canaryRelativePaths.contains { canary in
+            url.path.hasSuffix(canary.path)
+        }
     }
 
     func listImmediateChildren(at url: URL) throws -> [URL] {
@@ -1271,9 +1344,27 @@ private struct DenyListDirectoryAccess: FullDiskAccessDirectoryAccess {
     }
 }
 
+private final class RecordingDirectoryAccess: FullDiskAccessDirectoryAccess, @unchecked Sendable {
+    private(set) var accessedPaths: [String] = []
+
+    func directoryExists(at url: URL) -> Bool {
+        accessedPaths.append(url.path)
+        return FullDiskAccessProbe.canaryRelativePaths.contains { canary in
+            url.path.hasSuffix(canary.path)
+        }
+    }
+
+    func listImmediateChildren(at url: URL) throws -> [URL] {
+        accessedPaths.append(url.path)
+        return []
+    }
+}
+
 private struct ThrowUnexpectedDirectoryAccess: FullDiskAccessDirectoryAccess {
     func directoryExists(at url: URL) -> Bool {
-        url.path.hasSuffix("Library/Safari") || url.path.hasSuffix("Library/Messages")
+        FullDiskAccessProbe.canaryRelativePaths.contains { canary in
+            url.path.hasSuffix(canary.path)
+        }
     }
 
     func listImmediateChildren(at url: URL) throws -> [URL] {
@@ -1289,30 +1380,62 @@ struct StorageCompositionBuilderTests {
         let estimates = [
             StorageCategorySize(category: .applications, bytes: 200, isEstimatePartial: false),
             StorageCategorySize(category: .developer, bytes: 150, isEstimatePartial: false),
-            StorageCategorySize(category: .media, bytes: 100, isEstimatePartial: false),
+            StorageCategorySize(category: .photos, bytes: 100, isEstimatePartial: false),
         ]
         let composition = StorageCompositionBuilder.compose(
             totalBytes: 1_000,
             availableBytes: 400,
-            estimates: estimates
+            estimates: estimates,
+            includeSystemRemainder: true
         )
         #expect(composition != nil)
         let usedSum = composition!.usedCategories.reduce(Int64(0)) { $0 + $1.bytes }
         #expect(usedSum <= composition!.usedBytes)
     }
 
-    @Test func otherAbsorbsRemainder() {
+    @Test func otherAbsorbsRemainderOnlyWhenIncluded() {
         let estimates = [
             StorageCategorySize(category: .applications, bytes: 50, isEstimatePartial: false),
         ]
         let composition = StorageCompositionBuilder.compose(
             totalBytes: 1_000,
             availableBytes: 800,
-            estimates: estimates
+            estimates: estimates,
+            includeSystemRemainder: true
         )
         #expect(composition?.usedBytes == 200)
         let other = composition?.usedCategories.first { $0.category == .other }
         #expect(other?.bytes == 150)
+    }
+
+    @Test func scanningCompositionUsesAnalyzingNotOther() {
+        let estimates = [
+            StorageCategorySize(category: .applications, bytes: 50, isEstimatePartial: false),
+        ]
+        let composition = StorageCompositionBuilder.composeScanning(
+            totalBytes: 1_000,
+            availableBytes: 800,
+            estimates: estimates
+        )
+        #expect(composition?.usedCategories.contains { $0.category == .other } == false)
+        let analyzing = composition?.categories.first { $0.category == .analyzing }
+        #expect(analyzing?.bytes == 150)
+    }
+
+    @Test func partialEstimateKeepsUnscannedRemainderOutOfOther() {
+        let estimates = [
+            StorageCategorySize(category: .applications, bytes: 50, isEstimatePartial: true),
+        ]
+        let composition = StorageCompositionBuilder.compose(
+            totalBytes: 1_000,
+            availableBytes: 800,
+            estimates: estimates,
+            includeSystemRemainder: true,
+            classificationStatus: .partial
+        )
+        #expect(composition?.categories.first { $0.category == .other } == nil)
+        #expect(composition?.usedCategories.first { $0.category == .analyzing }?.bytes == 150)
+        #expect(composition?.classificationCoverage == 0.25)
     }
 
     @Test func scalesDownWhenEstimateExceedsUsed() {
@@ -1323,10 +1446,287 @@ struct StorageCompositionBuilderTests {
         let composition = StorageCompositionBuilder.compose(
             totalBytes: 1_000,
             availableBytes: 900,
-            estimates: estimates
+            estimates: estimates,
+            includeSystemRemainder: true
         )
         let usedSum = composition!.usedCategories.reduce(Int64(0)) { $0 + $1.bytes }
         #expect(usedSum <= composition!.usedBytes)
+    }
+
+    @Test func legendPrefersLargestCategories() {
+        let estimates = [
+            StorageCategorySize(category: .applications, bytes: 500, isEstimatePartial: false),
+            StorageCategorySize(category: .developer, bytes: 400, isEstimatePartial: false),
+            StorageCategorySize(category: .photos, bytes: 300, isEstimatePartial: false),
+            StorageCategorySize(category: .documents, bytes: 200, isEstimatePartial: false),
+            StorageCategorySize(category: .caches, bytes: 100, isEstimatePartial: false),
+            StorageCategorySize(category: .audio, bytes: 50, isEstimatePartial: false),
+        ]
+        let composition = StorageCompositionBuilder.compose(
+            totalBytes: 10_000,
+            availableBytes: 8_000,
+            estimates: estimates,
+            includeSystemRemainder: true
+        )!
+        let legend = StorageCompositionBuilder.legendCategories(from: composition, maxItems: 4)
+        #expect(legend.count == 4)
+        #expect(legend.first?.category == .applications)
+    }
+
+    @Test func stableCategorySortUsesSizeThenSemanticRank() {
+        let a = StorageCategorySize(category: .photos, bytes: 100, isEstimatePartial: false)
+        let b = StorageCategorySize(category: .videos, bytes: 100, isEstimatePartial: false)
+        let sorted = StorageCompositionBuilder.sortForPresentation([b, a])
+        #expect(sorted.map(\.category) == [.photos, .videos])
+    }
+}
+
+struct StorageAnalyzerV3Tests {
+    private static func locateRepoRoot() -> URL? {
+        var url = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+        while url.path != "/" {
+            let marker = url.appendingPathComponent("JoeyPet.xcodeproj")
+            if FileManager.default.fileExists(atPath: marker.path) { return url }
+            url.deleteLastPathComponent()
+        }
+        return nil
+    }
+
+    private func scanFixture(
+        _ configure: (_ root: URL, _ home: URL) throws -> Void
+    ) throws -> DiskScanSnapshot {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("joey-v3-\(UUID().uuidString)", isDirectory: true)
+        let home = root.appendingPathComponent("Users/test", isDirectory: true)
+        try FileManager.default.createDirectory(at: home, withIntermediateDirectories: true)
+        try configure(root, home)
+        let deviceID = ScanRootResolver.deviceID(for: home)
+        let scope = ScanRootResolver.Scope(
+            scanRoot: root,
+            bootDeviceID: deviceID,
+            excludedAbsolutePathPrefixes: []
+        )
+        let config = DiskTreeScanner.Configuration(
+            scope: scope,
+            firmlinkSources: [],
+            homeURL: home,
+            retainRecords: true
+        )
+        return DiskTreeScanner.scan(configuration: config)
+    }
+
+    @Test func nestedDirectoryAggregation() throws {
+        let snapshot = try scanFixture { root, home in
+            let nested = home.appendingPathComponent("Documents/a/b", isDirectory: true)
+            try FileManager.default.createDirectory(at: nested, withIntermediateDirectories: true)
+            try Data(repeating: 1, count: 2048).write(to: nested.appendingPathComponent("f.bin"))
+        }
+        #expect(snapshot.scannedAllocatedBytes > 0)
+        #expect(snapshot.stats.visitedFiles == 1)
+    }
+
+    @Test func hiddenFilesIncluded() throws {
+        let snapshot = try scanFixture { _, home in
+            let hidden = home.appendingPathComponent(".cache_big")
+            try Data(repeating: 2, count: 1024).write(to: hidden)
+        }
+        #expect(snapshot.stats.visitedFiles == 1)
+        #expect(snapshot.scannedAllocatedBytes > 0)
+    }
+
+    @Test func normalSymlinkSkipped() throws {
+        let snapshot = try scanFixture { _, home in
+            let target = home.appendingPathComponent("target.bin")
+            try Data(repeating: 3, count: 4096).write(to: target)
+            let link = home.appendingPathComponent("link.bin")
+            try FileManager.default.createSymbolicLink(at: link, withDestinationURL: target)
+        }
+        #expect(snapshot.stats.skippedSymlinks >= 1)
+        #expect(snapshot.stats.visitedFiles == 1)
+    }
+
+    @Test func hardLinkDedup() throws {
+        let snapshot = try scanFixture { _, home in
+            let original = home.appendingPathComponent("original.bin")
+            try Data(repeating: 4, count: 8192).write(to: original)
+            let link = home.appendingPathComponent("hardlink.bin")
+            try FileManager.default.linkItem(at: original, to: link)
+        }
+        #expect(snapshot.stats.deduplicatedHardLinks == 1)
+        #expect(snapshot.stats.visitedFiles == 1)
+    }
+
+    @Test func packageApplicationAggregatesInternalFiles() throws {
+        var homeURL: URL!
+        let snapshot = try scanFixture { root, home in
+            homeURL = home
+            let apps = root.appendingPathComponent("Applications", isDirectory: true)
+            try FileManager.default.createDirectory(at: apps, withIntermediateDirectories: true)
+            let app = apps.appendingPathComponent("Sample.app", isDirectory: true)
+            try FileManager.default.createDirectory(at: app, withIntermediateDirectories: true)
+            try Data(repeating: 5, count: 6000).write(to: app.appendingPathComponent("payload.bin"))
+        }
+        #expect(snapshot.scannedAllocatedBytes > 0)
+        let categories = StorageClassifier.classify(records: snapshot.records, homeURL: homeURL)
+        #expect(categories[.applications, default: 0] > 0)
+    }
+
+    @Test func classifiesDownloadsMovieAsVideos() throws {
+        var homeURL: URL!
+        let snapshot = try scanFixture { _, home in
+            homeURL = home
+            let downloads = home.appendingPathComponent("Downloads", isDirectory: true)
+            try FileManager.default.createDirectory(at: downloads, withIntermediateDirectories: true)
+            try Data(count: 10).write(to: downloads.appendingPathComponent("clip.mp4"))
+        }
+        let categories = StorageClassifier.classify(records: snapshot.records, homeURL: homeURL)
+        #expect(categories[.videos, default: 0] > 0)
+    }
+
+    @Test func appInternalMediaStaysApplications() throws {
+        var homeURL: URL!
+        let snapshot = try scanFixture { root, home in
+            homeURL = home
+            let apps = root.appendingPathComponent("Applications/X.app/Contents/Resources", isDirectory: true)
+            try FileManager.default.createDirectory(at: apps, withIntermediateDirectories: true)
+            try Data(count: 10).write(to: apps.appendingPathComponent("demo.png"))
+        }
+        let categories = StorageClassifier.classify(records: snapshot.records, homeURL: homeURL)
+        #expect(categories[.applications, default: 0] > 0)
+        #expect(categories[.photos, default: 0] == 0)
+    }
+
+    @Test func accountingSeparatesOtherFilesAndGap() {
+        let volume = VolumeCapacitySnapshot(totalBytes: 1_000, availableBytes: 400)
+        let categories: [StorageCompositionCategory: Int64] = [
+            .applications: 100,
+            .otherFiles: 50,
+        ]
+        let breakdown = StorageAccounting.breakdown(
+            volume: volume,
+            categoryBytes: categories,
+            scannedAllocatedBytes: 150
+        )
+        #expect(breakdown.otherFilesBytes == 50)
+        #expect(breakdown.classifiedBytes == 100)
+        #expect(breakdown.accountingGap == 450)
+        #expect(StorageAccounting.validateCategorySum(categoryBytes: categories, scannedAllocatedBytes: 150))
+    }
+
+    @Test func fullFDASelectsV3ForProductionAndLimitedSelectsV2() {
+        #expect(StorageAnalysisPipeline.selected(for: .full) == .v3)
+        #expect(StorageAnalysisPipeline.selected(for: .limited) == .v2)
+    }
+
+    @Test func storageAnalyzerSkipsProtectedTraversalWithoutFDA() async {
+        for status in [FullDiskAccessStatus.notGranted, FullDiskAccessStatus.unknown] {
+            let denied = await StorageAnalyzer.analyze(fullDiskAccessStatus: status)
+            #expect(denied.scanState == .failed)
+            #expect(denied.snapshot.stats.visitedFiles == 0)
+            #expect(denied.snapshot.stats.visitedDirectories == 0)
+            #expect(denied.composition == nil)
+        }
+    }
+
+    @Test func storageAnalyzerEntryGateAllowsOnlyExplicitFDAGrant() {
+        #expect(MacCareCapability.allowsProtectedStorageWork(fullDiskAccessStatus: .granted))
+        #expect(!MacCareCapability.allowsProtectedStorageWork(fullDiskAccessStatus: .notGranted))
+        #expect(!MacCareCapability.allowsProtectedStorageWork(fullDiskAccessStatus: .unknown))
+    }
+
+    @Test func scanAndClassificationCoverageAreIndependent() {
+        let composition = StorageCompositionBuilder.composeFromFilesystemAnalysis(
+            totalBytes: 1_000,
+            availableBytes: 500,
+            categoryBytes: [
+                .applications: 300,
+                .otherFiles: 100,
+            ],
+            scannedAllocatedBytes: 400,
+            accountingGap: 100,
+            scanOverrunBytes: 0,
+            scanState: .complete
+        )!
+        #expect(composition.scanCoverage == 0.8)
+        #expect(composition.classificationCoverage == 0.75)
+        #expect(composition.categories.first { $0.category == .otherFiles }?.bytes == 100)
+        #expect(composition.categories.first { $0.category == .systemReserved }?.bytes == 100)
+    }
+
+    @Test func incompleteScanDoesNotComposeCompleteComposition() {
+        let composition = StorageCompositionBuilder.composeFromFilesystemAnalysis(
+            totalBytes: 1_000,
+            availableBytes: 500,
+            categoryBytes: [.applications: 100],
+            scannedAllocatedBytes: 100,
+            accountingGap: 400,
+            scanOverrunBytes: 0,
+            scanState: .partial
+        )
+        #expect(composition?.classificationStatus == .partial)
+    }
+
+    @Test func firmlinkPathNormalization() {
+        #expect(APFSFirmlinkCatalog.normalizeFirmlinkPath("Users") == "/Users")
+        #expect(APFSFirmlinkCatalog.isFirmlink(path: "/Users", catalog: ["/Users"]))
+    }
+
+}
+
+struct StorageCategoryEstimatorTests {
+    @Test func applicationBundleUsesAllocatedBlocks() async throws {
+        let home = FileManager.default.temporaryDirectory
+            .appendingPathComponent("joey-storage-test-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: home, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: home) }
+
+        let app = home
+            .appendingPathComponent("Applications", isDirectory: true)
+            .appendingPathComponent("Sample.app", isDirectory: true)
+        try FileManager.default.createDirectory(at: app, withIntermediateDirectories: true)
+        let payload = app.appendingPathComponent("payload.bin")
+        let data = Data(repeating: 0xAB, count: 4096)
+        try data.write(to: payload)
+
+        let result = await StorageCategoryEstimator.estimate(
+            fullDiskAccessStatus: .notGranted,
+            homeURL: home
+        )
+        let apps = result.categories.first { $0.category == .applications }
+        #expect(apps != nil)
+        #expect(apps!.bytes > 0)
+    }
+
+    @Test func limitedFDAStatusUsesLimitedClassificationDepth() async throws {
+        let home = FileManager.default.temporaryDirectory
+            .appendingPathComponent("joey-storage-depth-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: home, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: home) }
+
+        let documents = home.appendingPathComponent("Documents", isDirectory: true)
+        try FileManager.default.createDirectory(at: documents, withIntermediateDirectories: true)
+        try Data(repeating: 0xCD, count: 2048).write(to: documents.appendingPathComponent("note.txt"))
+
+        for status in [FullDiskAccessStatus.unknown, FullDiskAccessStatus.notGranted] {
+            let result = await StorageCategoryEstimator.estimate(fullDiskAccessStatus: status, homeURL: home)
+            #expect(result.classificationDepth == .limited)
+            #expect(result.categories.first { $0.category == .documents } == nil)
+        }
+    }
+
+    @Test func grantedFDAStatusUsesFullClassificationDepthInFixture() async throws {
+        let home = FileManager.default.temporaryDirectory
+            .appendingPathComponent("joey-storage-depth-full-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: home, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: home) }
+
+        let documents = home.appendingPathComponent("Documents", isDirectory: true)
+        try FileManager.default.createDirectory(at: documents, withIntermediateDirectories: true)
+        try Data(repeating: 0xEF, count: 2048).write(to: documents.appendingPathComponent("note.txt"))
+
+        let result = await StorageCategoryEstimator.estimate(fullDiskAccessStatus: .granted, homeURL: home)
+        #expect(result.classificationDepth == .full)
+        #expect(result.categories.first { $0.category == .documents }?.bytes ?? 0 > 0)
     }
 }
 

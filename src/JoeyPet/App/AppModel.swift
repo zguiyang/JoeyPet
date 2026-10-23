@@ -53,6 +53,17 @@ final class AppModel: ObservableObject {
     private let permissionService: PermissionService
     private var task: Task<Void, Never>?
     private var storageCompositionTask: Task<Void, Never>?
+    private var storageCompositionGeneration = UUID()
+    private var storageCompositionCache: StorageCompositionCacheEntry?
+    private let storageCompositionCacheTTL: TimeInterval = 6 * 3600
+
+    private struct StorageCompositionCacheEntry {
+        let accessLevel: MacCareAccessLevel
+        let totalBytes: Int64
+        let availableBytes: Int64
+        let composition: StorageComposition
+        let cachedAt: Date
+    }
     private var permissionObservation: AnyCancellable?
     private let maxMemoryTrendSamples = 48
 
@@ -110,11 +121,25 @@ final class AppModel: ObservableObject {
         refreshStorageCompositionIfNeeded()
     }
 
-    func refreshStorageCompositionIfNeeded() {
+    func refreshStorageCompositionIfNeeded(force: Bool = false) {
         guard let total = systemStatus.storageTotalBytes,
               let available = systemStatus.storageAvailableBytes,
               total > 0
         else { return }
+
+        let accessLevel = permissionService.macCareAccessLevel
+
+        if !force,
+           let cache = storageCompositionCache,
+           cache.accessLevel == accessLevel,
+           cache.totalBytes == total,
+           cache.availableBytes == available,
+           Date().timeIntervalSince(cache.cachedAt) < storageCompositionCacheTTL
+        {
+            if case .loaded = storageCompositionState { return }
+            storageCompositionState = .loaded(cache.composition)
+            return
+        }
 
         switch storageCompositionState {
         case .idle, .unavailable:
@@ -122,29 +147,81 @@ final class AppModel: ObservableObject {
         case .loading:
             return
         case .loaded(let existing):
-            if existing.totalBytes == total, existing.availableBytes == available {
+            if !force, existing.totalBytes == total, existing.availableBytes == available {
                 return
             }
             storageCompositionState = .idle
         }
 
-        storageCompositionState = .loading
+        storageCompositionState = .loading(progress: [])
         storageCompositionTask?.cancel()
+        let generation = UUID()
+        storageCompositionGeneration = generation
         storageCompositionTask = Task { [weak self] in
             guard let self else { return }
-            let accessLevel = permissionService.macCareAccessLevel
-            let estimate = await StorageCategoryEstimator.estimate(accessLevel: accessLevel)
-            guard !Task.isCancelled else { return }
-            let composed = StorageCompositionBuilder.compose(
-                totalBytes: total,
-                availableBytes: available,
-                estimates: estimate.categories
-            )
-            await MainActor.run {
+            let composed: StorageComposition?
+            let pipeline = StorageAnalysisPipeline.selected(for: accessLevel)
+            if pipeline == .v3 {
+                let result = await StorageAnalyzer.analyze(
+                    fullDiskAccessStatus: permissionService.fullDiskAccessStatus,
+                    volumeURL: URL(fileURLWithPath: NSHomeDirectory()),
+                    onProgress: { [weak self] progress in
+                        Task { @MainActor [weak self] in
+                            guard let self,
+                                  self.storageCompositionGeneration == generation
+                            else { return }
+                            self.storageCompositionState = .loading(progress: progress.categories)
+                        }
+                    }
+                )
                 guard !Task.isCancelled else { return }
+                composed = result.composition
+                #if DEBUG
+                let diagnosticReport = StorageAnalyzer.formatDiagnosticReport(
+                    result,
+                    fullDiskAccessStatus: permissionService.fullDiskAccessStatus
+                )
+                print("[StorageV3]\n\(diagnosticReport)")
+                #endif
+            } else {
+                let estimate = await StorageCategoryEstimator.estimate(
+                    fullDiskAccessStatus: permissionService.fullDiskAccessStatus
+                ) { [weak self] item in
+                    Task { @MainActor [weak self] in
+                        guard let self,
+                              self.storageCompositionGeneration == generation,
+                              case .loading(let currentProgress) = self.storageCompositionState
+                        else { return }
+                        self.storageCompositionState = .loading(progress: currentProgress + [item])
+                    }
+                }
+                guard !Task.isCancelled else { return }
+                composed = StorageCompositionBuilder.compose(
+                    totalBytes: total,
+                    availableBytes: available,
+                    estimates: estimate.categories,
+                    includeSystemRemainder: true,
+                    classificationStatus: estimate.status
+                )
+            }
+            await MainActor.run {
+                guard !Task.isCancelled,
+                      self.storageCompositionGeneration == generation
+                else { return }
                 if let composed {
+                    Self.logger.info(
+                        "Storage pipeline=\(pipeline.rawValue.uppercased(), privacy: .public) scanCoverage=\(String(format: "%.1f", composed.scanCoverage * 100), privacy: .public)% classificationCoverage=\(String(format: "%.1f", composed.classificationCoverage * 100), privacy: .public)% status=\(composed.classificationStatus.rawValue, privacy: .public)"
+                    )
+                    self.storageCompositionCache = StorageCompositionCacheEntry(
+                        accessLevel: accessLevel,
+                        totalBytes: total,
+                        availableBytes: available,
+                        composition: composed,
+                        cachedAt: Date()
+                    )
                     self.storageCompositionState = .loaded(composed)
                 } else {
+                    Self.logger.error("Storage analysis produced no composition; no legacy fallback was applied")
                     self.storageCompositionState = .unavailable
                 }
             }
@@ -152,7 +229,9 @@ final class AppModel: ObservableObject {
     }
 
     func invalidateStorageComposition() {
+        storageCompositionGeneration = UUID()
         storageCompositionTask?.cancel()
+        storageCompositionCache = nil
         storageCompositionState = .idle
     }
 

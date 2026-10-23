@@ -14,6 +14,12 @@ enum MacCareCapability {
         }
     }
 
+    /// Deep/protected storage scan and V3 boot-data traversal require an explicit FDA grant.
+    /// `unknown` and `notGranted` are treated as limited with no protected work.
+    static func allowsProtectedStorageWork(fullDiskAccessStatus: FullDiskAccessStatus) -> Bool {
+        fullDiskAccessStatus == .granted
+    }
+
     static func effectiveCleanupScanScope(
         requested: CleanupScanScope,
         accessLevel: MacCareAccessLevel

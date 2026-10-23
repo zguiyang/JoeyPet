@@ -216,11 +216,11 @@ struct MacCareHomeView: View {
 
     private func storageLegendGrid(_ storage: StoragePresentation) -> some View {
         Group {
-            if storage.compositionState == .loading {
+            if case .loading = storage.compositionState {
                 HStack(spacing: 6) {
                     ProgressView()
                         .controlSize(.small)
-                    Text("正在估算分类…")
+                    Text("正在分析存储空间…")
                         .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
@@ -247,7 +247,7 @@ struct MacCareHomeView: View {
         let isHighlighted = hoveredStorageCategory == segment.category
         return HStack(spacing: 6) {
             Circle()
-                .fill(StorageCompositionDonutView.color(for: segment.category))
+                .fill(StorageCompositionDonutView.color(for: segment.category, colorScheme: colorScheme))
                 .frame(width: 8, height: 8)
             Text(segmentLegendTitle(segment))
                 .font(.system(size: 10, weight: .semibold))

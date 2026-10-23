@@ -63,8 +63,17 @@
 		D7MAC003305978720070926EB /* MacCareHomeMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7MAC003305978720070926E /* MacCareHomeMetrics.swift */; };
 		D7MAC004305978720070926EB /* StorageCompositionDonutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7MAC004305978720070926E /* StorageCompositionDonutView.swift */; };
 		D7MAC005305978720070926EB /* MacCareHomeMotion.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7MAC005305978720070926E /* MacCareHomeMotion.swift */; };
+		D7MAC006305978720070926EB /* StorageCategoryPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7MAC006305978720070926E /* StorageCategoryPresentation.swift */; };
 		D7STO001305978720070926EB /* StorageComposition.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7STO001305978720070926E /* StorageComposition.swift */; };
 		D7STO002305978720070926EB /* StorageCategoryEstimator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7STO002305978720070926E /* StorageCategoryEstimator.swift */; };
+		D7STO003305978720070926EB /* StorageFileSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7STO003305978720070926E /* StorageFileSize.swift */; };
+		D7STO004305978720070926EB /* FilesystemIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7STO004305978720070926E /* FilesystemIdentity.swift */; };
+		D7STO005305978720070926EB /* ScanRootResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7STO005305978720070926E /* ScanRootResolver.swift */; };
+		D7STO006305978720070926EB /* DiskTreeModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7STO006305978720070926E /* DiskTreeModels.swift */; };
+		D7STO007305978720070926EB /* DiskTreeScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7STO007305978720070926E /* DiskTreeScanner.swift */; };
+		D7STO008305978720070926EB /* StorageClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7STO008305978720070926E /* StorageClassifier.swift */; };
+		D7STO009305978720070926EB /* StorageAccounting.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7STO009305978720070926E /* StorageAccounting.swift */; };
+		D7STO010305978720070926EB /* StorageAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7STO010305978720070926E /* StorageAnalyzer.swift */; };
 		D7MEM002305978720070926EB /* MemoryMetricsReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7MEM001305978720070926E /* MemoryMetricsReader.swift */; };
 		D7SH007305978720070926EB /* LegacyCleanupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7SH007305978720070926E /* LegacyCleanupView.swift */; };
 		D7SH008305978720070926EB /* WorkRhythmRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7SH008305978720070926E /* WorkRhythmRootView.swift */; };
@@ -155,8 +164,17 @@
 		D7MAC003305978720070926E /* MacCareHomeMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacCareHomeMetrics.swift; sourceTree = "<group>"; };
 		D7MAC004305978720070926E /* StorageCompositionDonutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageCompositionDonutView.swift; sourceTree = "<group>"; };
 		D7MAC005305978720070926E /* MacCareHomeMotion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacCareHomeMotion.swift; sourceTree = "<group>"; };
+		D7MAC006305978720070926E /* StorageCategoryPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageCategoryPresentation.swift; sourceTree = "<group>"; };
 		D7STO001305978720070926E /* StorageComposition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageComposition.swift; sourceTree = "<group>"; };
 		D7STO002305978720070926E /* StorageCategoryEstimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageCategoryEstimator.swift; sourceTree = "<group>"; };
+		D7STO003305978720070926E /* StorageFileSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageFileSize.swift; sourceTree = "<group>"; };
+		D7STO004305978720070926E /* FilesystemIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilesystemIdentity.swift; sourceTree = "<group>"; };
+		D7STO005305978720070926E /* ScanRootResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanRootResolver.swift; sourceTree = "<group>"; };
+		D7STO006305978720070926E /* DiskTreeModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiskTreeModels.swift; sourceTree = "<group>"; };
+		D7STO007305978720070926E /* DiskTreeScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiskTreeScanner.swift; sourceTree = "<group>"; };
+		D7STO008305978720070926E /* StorageClassifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageClassifier.swift; sourceTree = "<group>"; };
+		D7STO009305978720070926E /* StorageAccounting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageAccounting.swift; sourceTree = "<group>"; };
+		D7STO010305978720070926E /* StorageAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageAnalyzer.swift; sourceTree = "<group>"; };
 		D7MEM001305978720070926E /* MemoryMetricsReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryMetricsReader.swift; sourceTree = "<group>"; };
 		D7SH007305978720070926E /* LegacyCleanupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyCleanupView.swift; sourceTree = "<group>"; };
 		D7SH008305978720070926E /* WorkRhythmRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkRhythmRootView.swift; sourceTree = "<group>"; };
@@ -287,6 +305,14 @@
 		D7STOGR305978720070926E /* Storage */ = {
 			isa = PBXGroup;
 			children = (
+				D7STO010305978720070926E /* StorageAnalyzer.swift */,
+				D7STO009305978720070926E /* StorageAccounting.swift */,
+				D7STO008305978720070926E /* StorageClassifier.swift */,
+				D7STO007305978720070926E /* DiskTreeScanner.swift */,
+				D7STO006305978720070926E /* DiskTreeModels.swift */,
+				D7STO005305978720070926E /* ScanRootResolver.swift */,
+				D7STO004305978720070926E /* FilesystemIdentity.swift */,
+				D7STO003305978720070926E /* StorageFileSize.swift */,
 				D7STO002305978720070926E /* StorageCategoryEstimator.swift */,
 			);
 			path = Storage;
@@ -392,6 +418,7 @@
 				D7MAC003305978720070926E /* MacCareHomeMetrics.swift */,
 				D7MAC004305978720070926E /* StorageCompositionDonutView.swift */,
 				D7MAC005305978720070926E /* MacCareHomeMotion.swift */,
+				D7MAC006305978720070926E /* StorageCategoryPresentation.swift */,
 				D7SH007305978720070926E /* LegacyCleanupView.swift */,
 			);
 			path = MacCare;
@@ -602,8 +629,17 @@
 				D7MAC003305978720070926EB /* MacCareHomeMetrics.swift in Sources */,
 				D7MAC004305978720070926EB /* StorageCompositionDonutView.swift in Sources */,
 				D7MAC005305978720070926EB /* MacCareHomeMotion.swift in Sources */,
+				D7MAC006305978720070926EB /* StorageCategoryPresentation.swift in Sources */,
 				D7STO001305978720070926EB /* StorageComposition.swift in Sources */,
 				D7STO002305978720070926EB /* StorageCategoryEstimator.swift in Sources */,
+				D7STO003305978720070926EB /* StorageFileSize.swift in Sources */,
+				D7STO004305978720070926EB /* FilesystemIdentity.swift in Sources */,
+				D7STO005305978720070926EB /* ScanRootResolver.swift in Sources */,
+				D7STO006305978720070926EB /* DiskTreeModels.swift in Sources */,
+				D7STO007305978720070926EB /* DiskTreeScanner.swift in Sources */,
+				D7STO008305978720070926EB /* StorageClassifier.swift in Sources */,
+				D7STO009305978720070926EB /* StorageAccounting.swift in Sources */,
+				D7STO010305978720070926EB /* StorageAnalyzer.swift in Sources */,
 				D7PER001305978720070926EB /* PermissionModels.swift in Sources */,
 				D7PER002305978720070926EB /* FullDiskAccessProbe.swift in Sources */,
 				D7PER003305978720070926EB /* MacCareCapability.swift in Sources */,
@@ -799,9 +835,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "$(JOEYPET_DEVELOPMENT_TEAM)";
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
@@ -813,13 +851,14 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.zguiyang.JoeyPet;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.zguiyang.JoeyPet.dev;
+				PRODUCT_NAME = "JoeyPet Dev";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_MODULE_NAME = JoeyPet;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -872,7 +911,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/JoeyPet.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/JoeyPet";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/JoeyPet Dev.app/Contents/MacOS/JoeyPet Dev";
 			};
 			name = Debug;
 		};
@@ -892,7 +931,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/JoeyPet.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/JoeyPet";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/JoeyPet.app/Contents/MacOS/JoeyPet";
 			};
 			name = Release;
 		};

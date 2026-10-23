@@ -11,6 +11,8 @@ struct DonutSegmentLayout: Identifiable, Equatable {
 }
 
 struct StorageCompositionDonutView: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     let segments: [DonutSegmentLayout]
     let diameter: CGFloat
     let strokeWidth: CGFloat
@@ -90,18 +92,12 @@ struct StorageCompositionDonutView: View {
         return layouts
     }
 
-    static func color(for category: StorageCompositionCategory) -> Color {
-        switch category {
-        case .applications: return Color.accentColor
-        case .developer: return Color.orange
-        case .media: return Color.green
-        case .other: return Color.secondary
-        case .available: return Color.secondary.opacity(0.28)
-        }
+    static func color(for category: StorageCompositionCategory, colorScheme: ColorScheme) -> Color {
+        StorageCategoryPresentation.color(for: category, colorScheme: colorScheme)
     }
 
     private func color(for category: StorageCompositionCategory) -> Color {
-        Self.color(for: category)
+        Self.color(for: category, colorScheme: colorScheme)
     }
 }
 
@@ -117,9 +113,16 @@ struct StorageSegmentTooltip: View {
             Text(tooltipLine)
                 .font(.system(size: 11).monospacedDigit())
                 .foregroundStyle(.secondary)
+            if segment.category == .other {
+                Text(StorageCategoryPresentation.systemAndOtherTooltipFootnote())
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
+        .frame(maxWidth: 220)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 6, style: .continuous)
@@ -131,9 +134,9 @@ struct StorageSegmentTooltip: View {
         let size = JoeyByteFormat.string(fromByteCount: segment.byteCount)
         let ofTotal = StorageCompositionBuilder.fraction(of: segment.byteCount, in: totalBytes) * 100
         if segment.category == .available {
-            return "\(size) · \(String(format: "%.1f", ofTotal))%"
+            return "\(size) · 占磁盘容量 \(String(format: "%.1f", ofTotal))%"
         }
         let ofUsed = StorageCompositionBuilder.fractionOfUsed(segment.byteCount, usedBytes: usedBytes) * 100
-        return "\(size) · \(String(format: "%.1f", ofUsed))% 已用 · \(String(format: "%.1f", ofTotal))% 总计"
+        return "\(size) · 占已用空间 \(String(format: "%.1f", ofUsed))%"
     }
 }

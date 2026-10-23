@@ -35,10 +35,9 @@ struct FileManagerDirectoryAccess: FullDiskAccessDirectoryAccess, Sendable {
 struct FullDiskAccessProbe: FullDiskAccessProbing, Sendable {
     private static let logger = Logger(subsystem: "com.zguiyang.JoeyPet", category: "FullDiskAccessProbe")
 
-    /// FDA-protected subtrees; avoids Desktop/Documents/Downloads/Music-only prompts.
+    /// Minimal FDA canary under `~/Library` (not Desktop/Documents/Downloads/Music/Pictures/Photos).
     static let canaryRelativePaths: [(label: String, path: String)] = [
         (label: "Library/Safari", path: "Library/Safari"),
-        (label: "Library/Messages", path: "Library/Messages"),
     ]
 
     private let directoryAccess: any FullDiskAccessDirectoryAccess
