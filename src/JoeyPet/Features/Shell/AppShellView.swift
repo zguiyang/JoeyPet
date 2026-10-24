@@ -25,7 +25,7 @@ struct AppShellView: View {
         case .main:
             mainPresentationBody
         case .settings:
-            SettingsRootView(shellState: shellState, permissionService: permissionService)
+            SettingsRootView(model: model, shellState: shellState, permissionService: permissionService)
         }
     }
 

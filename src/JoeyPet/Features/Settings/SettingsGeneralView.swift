@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct SettingsGeneralView: View {
+    @ObservedObject var model: AppModel
     @ObservedObject var permissionService: PermissionService
 
     var body: some View {
@@ -10,6 +11,23 @@ struct SettingsGeneralView: View {
                     title: "通用",
                     description: "启动、权限与其他常用偏好。"
                 )
+
+                SettingsSectionTitle(title: "桌面宠物")
+
+                SettingsFormRow(
+                    title: "显示桌宠",
+                    description: "在桌面显示 Joey。关闭后只保留菜单栏图标和主窗口，随时可以重新打开。"
+                ) {
+                    Toggle("", isOn: Binding(
+                        get: { model.showsDesktopPet },
+                        set: { model.setShowsDesktopPet($0) }
+                    ))
+                    .toggleStyle(.switch)
+                    .labelsHidden()
+                    .accessibilityLabel("显示桌宠")
+                }
+
+                SettingsRowDivider()
 
                 SettingsSectionTitle(title: "权限与访问")
 
@@ -43,7 +61,10 @@ struct SettingsGeneralView: View {
 
                 SettingsRowDivider()
 
-                SettingsDetailFooter(resetTitle: "重置 Joey 位置", onReset: nil)
+                SettingsDetailFooter(
+                    resetTitle: "重置 Joey 位置",
+                    onReset: { model.resetPetPosition() }
+                )
             }
             .frame(maxWidth: SettingsMetrics.detailMaxContentWidth, alignment: .leading)
         }

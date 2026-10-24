@@ -44,6 +44,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         appModel.onPreferencesChanged = { [weak coordinator] in coordinator?.refreshPreferences() }
         appModel.onResetPetPosition = { [weak panelController] in panelController?.resetPosition() }
+        appModel.onShowsDesktopPetChanged = { [weak panelController] visible in
+            panelController?.setVisible(visible)
+        }
         appModel.onCleanupStarted = { [weak panelController, weak coordinator] in
             _ = panelController?.petRuntime.perform(.cleaning)
             coordinator?.publishStageSnapshot()
@@ -72,7 +75,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             )
         }
 
-        panelController.show()
+        #if DEBUG
+        let showsDesktopPet = !DebugStateInjector.qaHidesPet() && appModel.showsDesktopPet
+        #else
+        let showsDesktopPet = appModel.showsDesktopPet
+        #endif
+        panelController.setVisible(showsDesktopPet)
         coordinator.start()
 
         #if DEBUG
@@ -133,6 +141,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         ) else { return }
 
         #if DEBUG
+        if DebugStateInjector.qaSuppressesMainWindow() { return }
         if DebugStateInjector.qaMainWindowIntent() != nil { return }
         #endif
 

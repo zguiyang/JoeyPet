@@ -52,15 +52,30 @@ final class PetPanelController {
         return nil
     }
 
-    func show() {
-        panel.makeKeyAndOrderFront(nil)
-        Self.logger.info("Pet panel shown")
+    private(set) var isVisible = false
+
+    /// Shows or hides the desktop pet. Hidden mode also pauses SpriteKit so a hidden pet costs no CPU.
+    func setVisible(_ visible: Bool) {
+        isVisible = visible
+        if visible {
+            spriteView.isPaused = false
+            petRuntime.scene.isPaused = false
+            panel.makeKeyAndOrderFront(nil)
+            Self.logger.info("Pet panel shown")
+        } else {
+            stopMovement()
+            panel.orderOut(nil)
+            spriteView.isPaused = true
+            petRuntime.scene.isPaused = true
+            Self.logger.info("Pet panel hidden")
+        }
     }
 
     func currentFrame() -> NSRect { panel.frame }
 
     func moveShortDistance() {
-        guard movementTask == nil,
+        guard isVisible,
+              movementTask == nil,
               petRuntime.currentState == .idle,
               petRuntime.currentTransientBehavior == nil,
               petRuntime.perform(.walking) else { return }
