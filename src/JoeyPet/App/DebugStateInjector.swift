@@ -93,6 +93,33 @@ enum DebugStateInjector {
         #endif
     }
 
+    /// DEBUG-only isolation hook: hide the desktop pet panel to measure the main window in isolation.
+    static func qaHidesPet() -> Bool {
+        #if DEBUG
+        ProcessInfo.processInfo.arguments.contains("-JoeyPetQAHidePet")
+        #else
+        return false
+        #endif
+    }
+
+    /// DEBUG-only isolation hook: suppress every main window (including onboarding) to measure the pet alone.
+    static func qaSuppressesMainWindow() -> Bool {
+        #if DEBUG
+        ProcessInfo.processInfo.arguments.contains("-JoeyPetQASuppressMainWindow")
+        #else
+        return false
+        #endif
+    }
+
+    /// DEBUG-only isolation hook: render the main window as if Reduce Motion were enabled (no looping UI motion).
+    static func qaForcesReduceMotion() -> Bool {
+        #if DEBUG
+        ProcessInfo.processInfo.arguments.contains("-JoeyPetQAStaticUI")
+        #else
+        return false
+        #endif
+    }
+
     /// Parses `-JoeyPetDebugBehavior <id>` / `-JoeyPetDebugBehavior=<id>`.
     static func transientBehavior(from arguments: [String]) -> PetTransientBehavior? {
         #if DEBUG

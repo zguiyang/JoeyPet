@@ -3,6 +3,9 @@ import OSLog
 import SpriteKit
 
 final class PetSpriteView: SKView {
+    /// Pet clips are single-frame animations at 1–6 fps; 30 fps rendering burned ~15% CPU.
+    private static let renderFramesPerSecond = 10
+
     var interactiveRadius: CGFloat = PetScene.interactiveRadius
     var onLeftClick: (() -> Void)?
     var onDragEnded: ((NSPoint) -> Void)?
@@ -19,12 +22,12 @@ final class PetSpriteView: SKView {
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        preferredFramesPerSecond = 30
+        preferredFramesPerSecond = Self.renderFramesPerSecond
     }
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
-        preferredFramesPerSecond = 30
+        preferredFramesPerSecond = Self.renderFramesPerSecond
     }
 
     override func hitTest(_ point: NSPoint) -> NSView? {

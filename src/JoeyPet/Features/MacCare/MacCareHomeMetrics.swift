@@ -21,6 +21,9 @@ enum MacCareHomeMetrics {
     static let donutDiameter: CGFloat = 112
     static let donutStroke: CGFloat = 8
 
+    /// Fixed legend well height (two rows) so progress updates never shift the donut.
+    static let storageLegendHeight: CGFloat = 48
+
     static let memoryTrendHeight: CGFloat = 32
 
     static let cleanupIconSize: CGFloat = 36

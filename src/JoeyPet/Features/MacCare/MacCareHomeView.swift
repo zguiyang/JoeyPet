@@ -7,6 +7,10 @@ struct MacCareHomeView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var hoveredStorageCategory: StorageCompositionCategory?
 
+    private var motionReduced: Bool {
+        reduceMotion || DebugStateInjector.qaForcesReduceMotion()
+    }
+
     private var presentation: MacCareHomePresentation {
         MacCareHomePresentationBuilder.make(
             snapshot: model.systemStatus,
@@ -45,7 +49,7 @@ struct MacCareHomeView: View {
                         .fill(presentation.tone == .normal ? Color.green : Color.orange)
                         .frame(width: MacCareHomeMetrics.statusDotSize, height: MacCareHomeMetrics.statusDotSize)
                         .shadow(color: (presentation.tone == .normal ? Color.green : Color.orange).opacity(0.35), radius: 4)
-                        .opacity(reduceMotion ? 1 : 0.95)
+                        .opacity(motionReduced ? 1 : 0.95)
                         .accessibilityHidden(true)
                     Text(presentation.headline)
                         .font(.system(size: MacCareHomeMetrics.headlineFontSize, weight: .semibold))
@@ -224,8 +228,14 @@ struct MacCareHomeView: View {
                         .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(8)
+                // Keep the well height identical to the loaded two-row legend; otherwise every
+                // progress tick grows the card content and nudges the donut around.
+                .frame(
+                    maxWidth: .infinity,
+                    minHeight: MacCareHomeMetrics.storageLegendHeight,
+                    alignment: .leading
+                )
+                .padding(.horizontal, 8)
             } else {
                 LazyVGrid(
                     columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)],
@@ -236,6 +246,11 @@ struct MacCareHomeView: View {
                         legendRow(segment, storage: storage)
                     }
                 }
+                .frame(
+                    maxWidth: .infinity,
+                    minHeight: MacCareHomeMetrics.storageLegendHeight,
+                    alignment: .leading
+                )
                 .padding(6)
             }
         }
@@ -294,7 +309,7 @@ struct MacCareHomeView: View {
             MemoryTrendChart(
                 samples: model.memoryTrendSamples,
                 accent: memoryChartColor(memory.level),
-                reduceMotion: reduceMotion
+                reduceMotion: motionReduced
             )
             .animation(MacCareHomeMotion.stateColorTransition, value: memory.level)
             .frame(height: MacCareHomeMetrics.memoryTrendHeight)
@@ -356,7 +371,7 @@ struct MacCareHomeView: View {
             Spacer(minLength: 8)
             MacCareThermalFanIndicator(
                 level: thermal.level,
-                reduceMotion: reduceMotion
+                reduceMotion: motionReduced
             )
             .accessibilityHidden(true)
         }
@@ -607,18 +622,10 @@ private struct MemoryTrendChart: View {
                     .frame(width: 4, height: 4)
                     .position(last)
             } else {
-                TimelineView(.animation(minimumInterval: 1 / 20, paused: false)) { timeline in
-                    let phase = timeline.date.timeIntervalSinceReferenceDate
-                    let pulse = 0.5 + 0.5 * sin(phase * (2 * .pi / 1.85))
-                    let scale = 0.96 + 0.04 * pulse
-                    let opacity = 0.72 + 0.28 * pulse
-                    Circle()
-                        .fill(accent)
-                        .frame(width: 4, height: 4)
-                        .scaleEffect(scale)
-                        .opacity(opacity)
-                        .position(last)
-                }
+                PulsingDotLayer(color: NSColor(accent))
+                    .frame(width: 8, height: 8)
+                    .position(last)
+                    .accessibilityHidden(true)
             }
         }
     }

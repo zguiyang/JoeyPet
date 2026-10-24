@@ -107,7 +107,8 @@ final class PetCoordinator {
         let behavior = behaviorEngine.ingest(signal, now: signal.timestamp)
         panelController.petRuntime.apply(behavior: behavior)
         panelController.petRuntime.updateStatusSeverity(sensorHub.currentSnapshot.overallSeverity)
-        onSystemSnapshot?(sensorHub.currentSnapshot)
+        // Snapshot delivery is owned by `SensorHub.onSnapshot`; pushing a second copy here
+        // doubled AppModel updates and memory-trend samples for every sensor signal.
         ambientScheduler.update(sustainedState: behavior.state)
 
         let status = sensorHub.currentSnapshot.overallSeverity
