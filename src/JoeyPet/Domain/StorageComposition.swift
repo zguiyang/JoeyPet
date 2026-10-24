@@ -92,8 +92,15 @@ enum StorageAnalysisPipeline: String, Sendable, Equatable {
     case v2
     case v3
 
+    /// Mac Care Home always uses the targeted known-root pipeline (V2).
+    ///
+    /// V3 walks the entire boot data volume. That is a multi-minute, I/O-heavy operation and
+    /// must never run automatically on launch or on FDA grant — it belongs to an explicit
+    /// "deep analysis" action (or remains a developer diagnostic) until a bulk, parallel
+    /// scanner is in place.
     static func selected(for accessLevel: MacCareAccessLevel) -> StorageAnalysisPipeline {
-        accessLevel == .full ? .v3 : .v2
+        _ = accessLevel
+        return .v2
     }
 }
 
@@ -127,8 +134,75 @@ struct StorageComposition: Equatable, Sendable {
     }
 }
 
+/// Codable snapshot of the last completed classification, persisted across launches.
+/// Mac Care should show warm results immediately instead of re-walking known roots on every start.
+struct PersistedStorageComposition: Codable, Sendable, Equatable {
+    struct Category: Codable, Sendable, Equatable {
+        let category: String
+        let bytes: Int64
+        let isEstimatePartial: Bool
+    }
+
+    let accessLevel: String
+    let totalBytes: Int64
+    let availableBytes: Int64
+    let categories: [Category]
+    let computedAt: Date
+    let classificationStatus: String
+    let scanCoverage: Double
+    let classificationCoverage: Double
+
+    init(accessLevel: MacCareAccessLevel, composition: StorageComposition) {
+        self.accessLevel = accessLevel.rawValue
+        self.totalBytes = composition.totalBytes
+        self.availableBytes = composition.availableBytes
+        self.categories = composition.categories.map {
+            Category(
+                category: $0.category.rawValue,
+                bytes: $0.bytes,
+                isEstimatePartial: $0.isEstimatePartial
+            )
+        }
+        self.computedAt = composition.computedAt
+        self.classificationStatus = composition.classificationStatus.rawValue
+        self.scanCoverage = composition.scanCoverage
+        self.classificationCoverage = composition.classificationCoverage
+    }
+
+    var macCareAccessLevel: MacCareAccessLevel? {
+        MacCareAccessLevel(rawValue: accessLevel)
+    }
+
+    var composition: StorageComposition? {
+        let sizes = categories.compactMap { item -> StorageCategorySize? in
+            guard let category = StorageCompositionCategory(rawValue: item.category) else { return nil }
+            return StorageCategorySize(
+                category: category,
+                bytes: item.bytes,
+                isEstimatePartial: item.isEstimatePartial
+            )
+        }
+        guard sizes.count == categories.count,
+              let status = StorageClassificationStatus(rawValue: classificationStatus)
+        else { return nil }
+
+        return StorageComposition(
+            totalBytes: totalBytes,
+            availableBytes: availableBytes,
+            usedBytes: max(totalBytes - availableBytes, 0),
+            categories: sizes,
+            computedAt: computedAt,
+            classificationStatus: status,
+            scanCoverage: scanCoverage,
+            classificationCoverage: classificationCoverage
+        )
+    }
+}
+
 enum StorageCompositionBuilder {
-    /// Merges volume totals with category estimates. Partial estimates keep the remainder as `.analyzing`.
+    /// Merges volume totals with category estimates.
+    /// The remainder after a finished pass is "system & other"; `.analyzing` is reserved for
+    /// `composeScanning` while a scan is still in flight.
     static func compose(
         totalBytes: Int64,
         availableBytes: Int64,
@@ -150,9 +224,7 @@ enum StorageCompositionBuilder {
         if includeSystemRemainder {
             let otherBytes = max(usedBytes - summed, 0)
             if otherBytes > 0 {
-                let unresolvedCategory: StorageCompositionCategory = classificationStatus == .complete
-                    ? .other
-                    : .analyzing
+                let unresolvedCategory: StorageCompositionCategory = .other
                 if let index = usedBuckets.firstIndex(where: { $0.category == unresolvedCategory }) {
                     let existing = usedBuckets[index]
                     usedBuckets[index] = StorageCategorySize(
@@ -286,6 +358,27 @@ enum StorageCompositionBuilder {
     static func fraction(of bytes: Int64, in total: Int64) -> Double {
         guard total > 0, bytes > 0 else { return 0 }
         return min(max(Double(bytes) / Double(total), 0), 1)
+    }
+
+    /// Rebuilds a cached classification against the current volume capacity.
+    ///
+    /// Category bytes are independent of free-space drift; only the remainder and available
+    /// buckets change. This is what lets a persistent cache survive an 18 GB capacity swing.
+    static func recompose(
+        cached: StorageComposition,
+        totalBytes: Int64,
+        availableBytes: Int64
+    ) -> StorageComposition? {
+        let estimates = cached.categories.filter {
+            $0.category.isUsedBucket && $0.category != .other && $0.category != .analyzing
+        }
+        return compose(
+            totalBytes: totalBytes,
+            availableBytes: availableBytes,
+            estimates: estimates,
+            includeSystemRemainder: true,
+            classificationStatus: cached.classificationStatus
+        )
     }
 
     static func fractionOfUsed(_ bytes: Int64, usedBytes: Int64) -> Double {

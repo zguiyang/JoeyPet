@@ -106,39 +106,41 @@ enum StorageAnalyzer: Sendable {
         var lastPublishedFiles = 0
         var lastProgressAt = Date()
         let classifierContext = StorageClassifier.makeContext(homeURL: homeURL)
+        let canonicalHome = canonicalDataPath(homeURL.standardizedFileURL.path)
         let snapshot = DiskTreeScanner.scan(configuration: config, isCancelled: isCancelled) { record in
-            let category = StorageClassifier.category(for: record, context: classifierContext)
-            categoryBytes[category, default: 0] += record.allocatedBytes
-            let canonicalPath = canonicalDataPath(record.absolutePath)
-            let topLevel = canonicalPath.split(separator: "/").first.map(String.init) ?? "(root)"
-            topLevelBytes["/\(topLevel)", default: 0] += record.allocatedBytes
-            let canonicalHome = canonicalDataPath(homeURL.standardizedFileURL.path)
-            if canonicalPath == canonicalHome || canonicalPath.hasPrefix(canonicalHome + "/") {
-                topLevelBytes["/Users/Current User Home", default: 0] += record.allocatedBytes
-            }
-            if category == .otherFiles {
-                let source = privacySafeSourceGroup(
-                    for: canonicalPath,
-                    homePath: homeURL.standardizedFileURL.path
-                )
-                otherFilesBySource[source, default: 0] += record.allocatedBytes
-            }
+            autoreleasepool {
+                let category = StorageClassifier.category(for: record, context: classifierContext)
+                categoryBytes[category, default: 0] += record.allocatedBytes
+                let canonicalPath = canonicalDataPath(record.absolutePath)
+                let topLevel = canonicalPath.split(separator: "/").first.map(String.init) ?? "(root)"
+                topLevelBytes["/\(topLevel)", default: 0] += record.allocatedBytes
+                if canonicalPath == canonicalHome || canonicalPath.hasPrefix(canonicalHome + "/") {
+                    topLevelBytes["/Users/Current User Home", default: 0] += record.allocatedBytes
+                }
+                if category == .otherFiles {
+                    let source = privacySafeSourceGroup(
+                        for: canonicalPath,
+                        homePath: homeURL.standardizedFileURL.path
+                    )
+                    otherFilesBySource[source, default: 0] += record.allocatedBytes
+                }
 
-            processedFiles += 1
-            if processedFiles % 4_096 == 0 {
-                let now = Date()
-                if processedFiles - lastPublishedFiles >= 10_000
-                    || now.timeIntervalSince(lastProgressAt) >= 2
-                {
-                    let readyCategories = categoryBytes
-                        .filter { $0.key != .otherFiles && $0.value > 0 }
-                        .map { StorageCategorySize(category: $0.key, bytes: $0.value, isEstimatePartial: true) }
-                    onProgress?(Progress(
-                        categories: StorageCompositionBuilder.sortForPresentation(readyCategories),
-                        filesScanned: processedFiles
-                    ))
-                    lastPublishedFiles = processedFiles
-                    lastProgressAt = now
+                processedFiles += 1
+                if processedFiles % 4_096 == 0 {
+                    let now = Date()
+                    if processedFiles - lastPublishedFiles >= 10_000
+                        || now.timeIntervalSince(lastProgressAt) >= 2
+                    {
+                        let readyCategories = categoryBytes
+                            .filter { $0.key != .otherFiles && $0.value > 0 }
+                            .map { StorageCategorySize(category: $0.key, bytes: $0.value, isEstimatePartial: true) }
+                        onProgress?(Progress(
+                            categories: StorageCompositionBuilder.sortForPresentation(readyCategories),
+                            filesScanned: processedFiles
+                        ))
+                        lastPublishedFiles = processedFiles
+                        lastProgressAt = now
+                    }
                 }
             }
         }

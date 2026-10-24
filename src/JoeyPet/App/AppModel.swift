@@ -44,6 +44,7 @@ final class AppModel: ObservableObject {
     @Published private(set) var lastCleanupSummary: CleanupExecutionSummary?
     @Published private(set) var launchAtLoginEnabled: Bool
     @Published private(set) var launchAtLoginError: String?
+    @Published private(set) var showsDesktopPet: Bool
     @Published var selectedCandidateIDs: Set<String> = []
 
     private let scanner: CleanupScanner
@@ -65,6 +66,7 @@ final class AppModel: ObservableObject {
         let cachedAt: Date
     }
     private var permissionObservation: AnyCancellable?
+    private var lastKnownAccessLevel: MacCareAccessLevel
     private let maxMemoryTrendSamples = 48
 
     var onCleanupStarted: (() -> Void)?
@@ -73,6 +75,7 @@ final class AppModel: ObservableObject {
     var onQuickCleanNothingToProcess: (() -> Void)?
     var onPreferencesChanged: (() -> Void)?
     var onResetPetPosition: (() -> Void)?
+    var onShowsDesktopPetChanged: ((Bool) -> Void)?
 
     convenience init() {
         self.init(
@@ -99,13 +102,25 @@ final class AppModel: ObservableObject {
         self.lastCleanupSummary = Self.loadSummary(from: defaults)
         self.launchAtLoginEnabled = launchAtLoginManager.isRegistered
         self.launchAtLoginError = nil
+        self.showsDesktopPet = PetPreferences.showsDesktopPet(defaults: defaults)
+        self.lastKnownAccessLevel = permissionService.macCareAccessLevel
 
         permissionObservation = permissionService.$fullDiskAccessStatus
             .removeDuplicates()
-            .sink { [weak self] _ in
-                self?.objectWillChange.send()
-                self?.invalidateStorageComposition()
-                self?.refreshStorageCompositionIfNeeded()
+            .sink { [weak self] status in
+                guard let self else { return }
+                self.objectWillChange.send()
+                // `@Published` publishes from `willSet`, so the service property still holds the
+                // old value inside this closure. Use the emitted status for the capability check
+                // and defer the refresh until the new value is installed.
+                let accessLevel = MacCareCapability.accessLevel(fullDiskAccessStatus: status)
+                if accessLevel != self.lastKnownAccessLevel {
+                    self.lastKnownAccessLevel = accessLevel
+                    self.invalidateStorageComposition()
+                }
+                Task { @MainActor [weak self] in
+                    self?.refreshStorageCompositionIfNeeded()
+                }
             }
     }
 
@@ -129,28 +144,57 @@ final class AppModel: ObservableObject {
 
         let accessLevel = permissionService.macCareAccessLevel
 
+        if storageCompositionCache == nil,
+           restorePersistedStorageComposition(accessLevel: accessLevel, total: total, available: available) {
+            return
+        }
+
+        // The read-only FDA probe resolves shortly after launch. Starting a Limited scan
+        // first and throwing it away when Fuller access arrives is wasted disk I/O.
+        if !force,
+           permissionService.fullDiskAccessStatus == .unknown,
+           storageCompositionCache == nil {
+            return
+        }
+
         if !force,
            let cache = storageCompositionCache,
            cache.accessLevel == accessLevel,
            cache.totalBytes == total,
-           cache.availableBytes == available,
            Date().timeIntervalSince(cache.cachedAt) < storageCompositionCacheTTL
         {
-            if case .loaded = storageCompositionState { return }
-            storageCompositionState = .loaded(cache.composition)
+            if cache.availableBytes == available {
+                if case .loaded = storageCompositionState { return }
+                storageCompositionState = .loaded(cache.composition)
+                return
+            }
+            // Classification bytes are capacity-independent. Re-compose the remainder and
+            // available buckets against the live capacity instead of re-walking the disk.
+            if case .loading = storageCompositionState { return }
+            if let recomposed = StorageCompositionBuilder.recompose(
+                cached: cache.composition,
+                totalBytes: total,
+                availableBytes: available
+            ) {
+                storageCompositionCache = StorageCompositionCacheEntry(
+                    accessLevel: accessLevel,
+                    totalBytes: total,
+                    availableBytes: available,
+                    composition: recomposed,
+                    cachedAt: cache.cachedAt
+                )
+                storageCompositionState = .loaded(recomposed)
+            }
             return
         }
 
         switch storageCompositionState {
-        case .idle, .unavailable:
+        case .idle, .unavailable, .loaded:
+            // Cache is missing, expired, or the access level / capacity taxonomy changed.
+            // Fall through and rebuild once; a loaded state alone must not block a refresh.
             break
         case .loading:
             return
-        case .loaded(let existing):
-            if !force, existing.totalBytes == total, existing.availableBytes == available {
-                return
-            }
-            storageCompositionState = .idle
         }
 
         storageCompositionState = .loading(progress: [])
@@ -220,6 +264,7 @@ final class AppModel: ObservableObject {
                         cachedAt: Date()
                     )
                     self.storageCompositionState = .loaded(composed)
+                    self.persistStorageComposition(accessLevel: accessLevel, composition: composed)
                 } else {
                     Self.logger.error("Storage analysis produced no composition; no legacy fallback was applied")
                     self.storageCompositionState = .unavailable
@@ -233,6 +278,55 @@ final class AppModel: ObservableObject {
         storageCompositionTask?.cancel()
         storageCompositionCache = nil
         storageCompositionState = .idle
+        // Keep the persisted snapshot: it is keyed by access level and revalidated by
+        // TTL/capacity on restore, so a launch-time FDA probe transition (`unknown` → `granted`)
+        // does not throw away a perfectly warm classification.
+    }
+
+    private static let storageCompositionPersistenceKey = "storageCompositionCacheV1"
+
+    /// Restores a warm classification from the last launch. Category bytes are reused and
+    /// re-composed against the live capacity; only access level, volume size, and TTL gate it.
+    @discardableResult
+    private func restorePersistedStorageComposition(
+        accessLevel: MacCareAccessLevel,
+        total: Int64,
+        available: Int64
+    ) -> Bool {
+        guard let data = defaults.data(forKey: Self.storageCompositionPersistenceKey),
+              let persisted = try? JSONDecoder().decode(PersistedStorageComposition.self, from: data),
+              persisted.macCareAccessLevel == accessLevel,
+              persisted.totalBytes == total,
+              Date().timeIntervalSince(persisted.computedAt) < storageCompositionCacheTTL,
+              let cached = persisted.composition,
+              let recomposed = StorageCompositionBuilder.recompose(
+                  cached: cached,
+                  totalBytes: total,
+                  availableBytes: available
+              )
+        else { return false }
+
+        storageCompositionCache = StorageCompositionCacheEntry(
+            accessLevel: accessLevel,
+            totalBytes: total,
+            availableBytes: available,
+            composition: recomposed,
+            cachedAt: persisted.computedAt
+        )
+        storageCompositionState = .loaded(recomposed)
+        Self.logger.info(
+            "Storage composition restored from disk cache ageSeconds=\(Int(Date().timeIntervalSince(persisted.computedAt)), privacy: .public) categories=\(recomposed.categories.count, privacy: .public)"
+        )
+        return true
+    }
+
+    private func persistStorageComposition(
+        accessLevel: MacCareAccessLevel,
+        composition: StorageComposition
+    ) {
+        let persisted = PersistedStorageComposition(accessLevel: accessLevel, composition: composition)
+        guard let data = try? JSONEncoder().encode(persisted) else { return }
+        defaults.set(data, forKey: Self.storageCompositionPersistenceKey)
     }
 
     private func appendMemoryTrendSample(from snapshot: SystemStatusSnapshot) {
@@ -335,6 +429,13 @@ final class AppModel: ObservableObject {
 
     func notifyPreferencesChanged() {
         onPreferencesChanged?()
+    }
+
+    func setShowsDesktopPet(_ enabled: Bool) {
+        guard enabled != showsDesktopPet else { return }
+        showsDesktopPet = enabled
+        PetPreferences.setShowsDesktopPet(enabled, defaults: defaults)
+        onShowsDesktopPetChanged?(enabled)
     }
 
     func resetPetPosition() {

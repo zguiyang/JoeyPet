@@ -22,33 +22,64 @@ enum StorageCategoryEstimator: Sendable {
     ) async -> Result {
         let accessLevel = MacCareCapability.accessLevel(fullDiskAccessStatus: fullDiskAccessStatus)
         let depth = MacCareCapability.storageClassificationDepth(accessLevel: accessLevel)
-        return await Task.detached(priority: .utility) {
-            estimateSync(homeURL: homeURL, depth: depth, onProgress: onProgress)
-        }.value
-    }
+        let plans = classificationPlans(homeURL: homeURL, depth: depth)
+        let estimateStartedAt = Date()
+        Self.logger.info(
+            "Storage classification started depth=\(depth.rawValue, privacy: .public) plans=\(plans.count, privacy: .public)"
+        )
 
-    private static func estimateSync(
-        homeURL: URL,
-        depth: StorageClassificationDepth,
-        onProgress: ProgressHandler?
-    ) -> Result {
-        let fileManager = FileManager.default
         var anyPartial = false
         var categories: [StorageCategorySize] = []
 
-        let plans = classificationPlans(homeURL: homeURL, depth: depth)
-        for plan in plans {
-            var partial = false
-            let bytes = scan(plan: plan, fileManager: fileManager, partial: &partial)
-            if partial { anyPartial = true }
-            guard bytes > 0 else { continue }
-            let item = StorageCategorySize(
-                category: plan.category,
-                bytes: bytes,
-                isEstimatePartial: partial
-            )
-            categories.append(item)
-            onProgress?(item)
+        // Each plan walks a disjoint known root, so the whole set can run concurrently.
+        // Budgets are global per plan; parallelism is bounded by the task group executor.
+        let batchSize = 8
+        var index = 0
+        while index < plans.count {
+            let end = min(index + batchSize, plans.count)
+            let batch = Array(plans[index..<end])
+            let outcomes = await withTaskGroup(of: PlanOutcome.self, returning: [PlanOutcome].self) { group in
+                for plan in batch {
+                    group.addTask(priority: .utility) {
+                        let fileManager = FileManager()
+                        var partial = false
+                        let startedAt = Date()
+                        let bytes = scan(plan: plan, fileManager: fileManager, partial: &partial)
+                        return PlanOutcome(
+                            category: plan.category,
+                            bytes: bytes,
+                            partial: partial,
+                            seconds: Date().timeIntervalSince(startedAt)
+                        )
+                    }
+                }
+                var results: [PlanOutcome] = []
+                for await outcome in group {
+                    results.append(outcome)
+                    if outcome.bytes > 0 {
+                        onProgress?(StorageCategorySize(
+                            category: outcome.category,
+                            bytes: outcome.bytes,
+                            isEstimatePartial: outcome.partial
+                        ))
+                    }
+                }
+                return results
+            }
+
+            for outcome in outcomes {
+                if outcome.partial { anyPartial = true }
+                Self.logger.info(
+                    "Storage plan category=\(outcome.category.rawValue, privacy: .public) bytes=\(outcome.bytes, privacy: .public) partial=\(outcome.partial, privacy: .public) seconds=\(String(format: "%.1f", outcome.seconds), privacy: .public)"
+                )
+                guard outcome.bytes > 0 else { continue }
+                categories.append(StorageCategorySize(
+                    category: outcome.category,
+                    bytes: outcome.bytes,
+                    isEstimatePartial: outcome.partial
+                ))
+            }
+            index = end
         }
 
         categories = StorageCompositionBuilder.sortForPresentation(categories)
@@ -56,7 +87,7 @@ enum StorageCategoryEstimator: Sendable {
         let status: StorageClassificationStatus = anyPartial ? .partial : .complete
 
         Self.logger.info(
-            "Storage classification finished depth=\(depth.rawValue, privacy: .public) status=\(status.rawValue, privacy: .public) categories=\(categories.count, privacy: .public) classifiedBytes=\(classified, privacy: .public)"
+            "Storage classification finished depth=\(depth.rawValue, privacy: .public) status=\(status.rawValue, privacy: .public) categories=\(categories.count, privacy: .public) classifiedBytes=\(classified, privacy: .public) seconds=\(String(format: "%.1f", Date().timeIntervalSince(estimateStartedAt)), privacy: .public)"
         )
 
         return Result(
@@ -65,6 +96,13 @@ enum StorageCategoryEstimator: Sendable {
             status: status,
             coverage: 0
         )
+    }
+
+    private struct PlanOutcome: Sendable {
+        let category: StorageCompositionCategory
+        let bytes: Int64
+        let partial: Bool
+        let seconds: TimeInterval
     }
 
     // MARK: - Plans (mutually exclusive roots)
@@ -100,12 +138,12 @@ enum StorageCategoryEstimator: Sendable {
                 Plan(
                     category: .developer,
                     roots: [library.appendingPathComponent("Developer", isDirectory: true)],
-                    budget: WalkBudget(maxEntries: 80_000, maxDepth: 14, descendIntoPackages: true)
+                    budget: WalkBudget(maxEntries: 25_000, maxDepth: 14, descendIntoPackages: true)
                 ),
                 Plan(
                     category: .caches,
                     roots: [library.appendingPathComponent("Caches", isDirectory: true)],
-                    budget: WalkBudget(maxEntries: 80_000, maxDepth: 12, descendIntoPackages: true)
+                    budget: WalkBudget(maxEntries: 30_000, maxDepth: 12, descendIntoPackages: true)
                 ),
             ]
         case .full:
@@ -116,7 +154,7 @@ enum StorageCategoryEstimator: Sendable {
                         URL(fileURLWithPath: "/Applications", isDirectory: true),
                         homeURL.appendingPathComponent("Applications", isDirectory: true),
                     ],
-                    budget: WalkBudget(maxEntries: 50_000, maxDepth: 16, descendIntoPackages: true)
+                    budget: WalkBudget(maxEntries: 100_000, maxDepth: 16, descendIntoPackages: true)
                 ),
                 Plan(
                     category: .documents,
@@ -125,32 +163,32 @@ enum StorageCategoryEstimator: Sendable {
                         homeURL.appendingPathComponent("Desktop", isDirectory: true),
                         homeURL.appendingPathComponent("Downloads", isDirectory: true),
                     ],
-                    budget: WalkBudget(maxEntries: 120_000, maxDepth: 14, descendIntoPackages: true)
+                    budget: WalkBudget(maxEntries: 30_000, maxDepth: 14, descendIntoPackages: true)
                 ),
                 Plan(
                     category: .photos,
                     roots: [homeURL.appendingPathComponent("Pictures", isDirectory: true)],
-                    budget: WalkBudget(maxEntries: 120_000, maxDepth: 14, descendIntoPackages: true)
+                    budget: WalkBudget(maxEntries: 30_000, maxDepth: 14, descendIntoPackages: true)
                 ),
                 Plan(
                     category: .videos,
                     roots: [homeURL.appendingPathComponent("Movies", isDirectory: true)],
-                    budget: WalkBudget(maxEntries: 120_000, maxDepth: 14, descendIntoPackages: true)
+                    budget: WalkBudget(maxEntries: 10_000, maxDepth: 14, descendIntoPackages: true)
                 ),
                 Plan(
                     category: .audio,
                     roots: [homeURL.appendingPathComponent("Music", isDirectory: true)],
-                    budget: WalkBudget(maxEntries: 120_000, maxDepth: 14, descendIntoPackages: true)
+                    budget: WalkBudget(maxEntries: 5_000, maxDepth: 14, descendIntoPackages: true)
                 ),
                 Plan(
                     category: .developer,
                     roots: [library.appendingPathComponent("Developer", isDirectory: true)],
-                    budget: WalkBudget(maxEntries: 120_000, maxDepth: 14, descendIntoPackages: true)
+                    budget: WalkBudget(maxEntries: 30_000, maxDepth: 14, descendIntoPackages: true)
                 ),
                 Plan(
                     category: .caches,
                     roots: [library.appendingPathComponent("Caches", isDirectory: true)],
-                    budget: WalkBudget(maxEntries: 120_000, maxDepth: 12, descendIntoPackages: true)
+                    budget: WalkBudget(maxEntries: 60_000, maxDepth: 12, descendIntoPackages: true)
                 ),
                 Plan(
                     category: .applicationData,
@@ -159,7 +197,7 @@ enum StorageCategoryEstimator: Sendable {
                         library.appendingPathComponent("Containers", isDirectory: true),
                         library.appendingPathComponent("Group Containers", isDirectory: true),
                     ],
-                    budget: WalkBudget(maxEntries: 150_000, maxDepth: 14, descendIntoPackages: true)
+                    budget: WalkBudget(maxEntries: 60_000, maxDepth: 14, descendIntoPackages: true)
                 ),
             ]
         }
@@ -183,39 +221,43 @@ enum StorageCategoryEstimator: Sendable {
         partial: inout Bool
     ) -> Int64 {
         var total: Int64 = 0
-        let appBudget = WalkBudget(
-            maxEntries: min(budget.maxEntries, 35_000),
+        var visited = 0
+        let appLimit = 200
+        // Per-bundle cap so a single huge app cannot consume the whole plan budget.
+        let perAppBudget = WalkBudget(
+            maxEntries: min(6_000, budget.maxEntries),
             maxDepth: min(budget.maxDepth, 18),
             descendIntoPackages: true
         )
+
         for root in roots where fileManager.fileExists(atPath: root.path) {
-            total += sumApplicationBundles(in: root, fileManager: fileManager, budget: appBudget, partial: &partial)
-        }
-        return total
-    }
+            guard let children = try? fileManager.contentsOfDirectory(
+                at: root,
+                includingPropertiesForKeys: [.isDirectoryKey],
+                options: [.skipsHiddenFiles]
+            ) else {
+                partial = true
+                continue
+            }
 
-    private static func sumApplicationBundles(
-        in directory: URL,
-        fileManager: FileManager,
-        budget: WalkBudget,
-        partial: inout Bool
-    ) -> Int64 {
-        guard let children = try? fileManager.contentsOfDirectory(
-            at: directory,
-            includingPropertiesForKeys: [.isDirectoryKey],
-            options: [.skipsHiddenFiles]
-        ) else {
-            partial = true
-            return 0
-        }
+            let apps = children.filter { $0.pathExtension == "app" }
+            if apps.count > appLimit { partial = true }
 
-        var total: Int64 = 0
-        let limit = 600
-        let apps = children.filter { $0.pathExtension == "app" }
-        for child in apps.prefix(limit) {
-            total += directorySize(root: child, fileManager: fileManager, budget: budget, partial: &partial)
+            for child in apps.prefix(appLimit) {
+                if visited >= budget.maxEntries {
+                    partial = true
+                    break
+                }
+                let result = directorySize(
+                    root: child,
+                    fileManager: fileManager,
+                    budget: perAppBudget,
+                    partial: &partial
+                )
+                total += result.bytes
+                visited += result.visited
+            }
         }
-        if apps.count > limit { partial = true }
         return total
     }
 
@@ -228,10 +270,27 @@ enum StorageCategoryEstimator: Sendable {
         partial: inout Bool
     ) -> Int64 {
         var total: Int64 = 0
+        var visited = 0
         for root in roots where fileManager.fileExists(atPath: root.path) {
-            total += directorySize(root: root, fileManager: fileManager, budget: budget, partial: &partial)
+            if visited >= budget.maxEntries {
+                partial = true
+                break
+            }
+            let result = directorySize(
+                root: root,
+                fileManager: fileManager,
+                budget: budget,
+                partial: &partial
+            )
+            total += result.bytes
+            visited += result.visited
         }
         return total
+    }
+
+    private struct DirectorySizeResult {
+        let bytes: Int64
+        let visited: Int
     }
 
     private static func directorySize(
@@ -239,7 +298,7 @@ enum StorageCategoryEstimator: Sendable {
         fileManager: FileManager,
         budget: WalkBudget,
         partial: inout Bool
-    ) -> Int64 {
+    ) -> DirectorySizeResult {
         var total: Int64 = 0
         var visited = 0
 
@@ -248,7 +307,9 @@ enum StorageCategoryEstimator: Sendable {
             options.insert(.skipsPackageDescendants)
         }
 
-        guard fileManager.fileExists(atPath: root.path) else { return 0 }
+        guard fileManager.fileExists(atPath: root.path) else {
+            return DirectorySizeResult(bytes: 0, visited: 0)
+        }
 
         func walk(_ url: URL, depth: Int) {
             guard depth <= budget.maxDepth, visited < budget.maxEntries else {
@@ -269,46 +330,43 @@ enum StorageCategoryEstimator: Sendable {
                 partial = true
                 return
             }
-            for case let fileURL as URL in enumerator {
-                visited += 1
-                if visited >= budget.maxEntries {
-                    partial = true
-                    break
-                }
-                if let values = try? fileURL.resourceValues(forKeys: [.isSymbolicLinkKey]),
-                   values.isSymbolicLink == true
-                {
-                    enumerator.skipDescendants()
-                    continue
-                }
-                guard let values = try? fileURL.resourceValues(forKeys: [.isRegularFileKey, .isDirectoryKey]) else {
-                    partial = true
-                    continue
-                }
-                if values.isDirectory == true { continue }
-                if values.isRegularFile == true {
-                    total += allocatedSize(of: fileURL, partial: &partial)
+            var stop = false
+            while !stop, let fileURL = autoreleasepool(invoking: { enumerator.nextObject() as? URL }) {
+                autoreleasepool {
+                    visited += 1
+                    if visited >= budget.maxEntries {
+                        partial = true
+                        stop = true
+                        return
+                    }
+                    guard let values = try? fileURL.resourceValues(forKeys: Set<URLResourceKey>([
+                        .isSymbolicLinkKey,
+                        .isRegularFileKey,
+                        .isDirectoryKey,
+                        .totalFileAllocatedSizeKey,
+                        .fileSizeKey,
+                    ])) else {
+                        partial = true
+                        return
+                    }
+                    if values.isSymbolicLink == true {
+                        enumerator.skipDescendants()
+                        return
+                    }
+                    if values.isDirectory == true { return }
+                    guard values.isRegularFile == true else { return }
+                    if let allocated = values.totalFileAllocatedSize {
+                        total += Int64(allocated)
+                    } else if let size = values.fileSize {
+                        total += Int64(size)
+                    } else {
+                        partial = true
+                    }
                 }
             }
         }
 
         walk(root, depth: 0)
-        return total
-    }
-
-    /// Disk footprint: `URLResourceKey.totalFileAllocatedSize` (APFS allocated blocks), falling back to logical `fileSize`.
-    private static func allocatedSize(of url: URL, partial: inout Bool) -> Int64 {
-        guard let values = try? url.resourceValues(forKeys: [.totalFileAllocatedSizeKey, .fileSizeKey]) else {
-            partial = true
-            return 0
-        }
-        if let allocated = values.totalFileAllocatedSize {
-            return Int64(allocated)
-        }
-        if let size = values.fileSize {
-            return Int64(size)
-        }
-        partial = true
-        return 0
+        return DirectorySizeResult(bytes: total, visited: visited)
     }
 }

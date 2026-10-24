@@ -1422,7 +1422,7 @@ struct StorageCompositionBuilderTests {
         #expect(analyzing?.bytes == 150)
     }
 
-    @Test func partialEstimateKeepsUnscannedRemainderOutOfOther() {
+    @Test func finishedPartialEstimateShowsRemainderAsSystemAndOther() {
         let estimates = [
             StorageCategorySize(category: .applications, bytes: 50, isEstimatePartial: true),
         ]
@@ -1433,8 +1433,10 @@ struct StorageCompositionBuilderTests {
             includeSystemRemainder: true,
             classificationStatus: .partial
         )
-        #expect(composition?.categories.first { $0.category == .other } == nil)
-        #expect(composition?.usedCategories.first { $0.category == .analyzing }?.bytes == 150)
+        // `analyzing` is reserved for an in-flight scan; a finished pass labels the
+        // unclassified bytes as system & other, even when category budgets were partial.
+        #expect(composition?.categories.first { $0.category == .analyzing } == nil)
+        #expect(composition?.usedCategories.first { $0.category == .other }?.bytes == 150)
         #expect(composition?.classificationCoverage == 0.25)
     }
 
@@ -1613,8 +1615,9 @@ struct StorageAnalyzerV3Tests {
         #expect(StorageAccounting.validateCategorySum(categoryBytes: categories, scannedAllocatedBytes: 150))
     }
 
-    @Test func fullFDASelectsV3ForProductionAndLimitedSelectsV2() {
-        #expect(StorageAnalysisPipeline.selected(for: .full) == .v3)
+    @Test func homePipelineStaysTargetedForBothAccessLevels() {
+        // V3 walks the whole data volume and must never be selected automatically for the home UI.
+        #expect(StorageAnalysisPipeline.selected(for: .full) == .v2)
         #expect(StorageAnalysisPipeline.selected(for: .limited) == .v2)
     }
 
@@ -1748,6 +1751,91 @@ struct AppShellStateTests {
         state.openSettings()
         state.closeSettings()
         #expect(state.macCareRoute == .featureDetailMock)
+    }
+}
+
+@MainActor
+struct StorageRefreshCacheTests {
+    @Test func finishedScanUsesSystemAndOtherRemainder() {
+        let composition = StorageCompositionBuilder.compose(
+            totalBytes: 1_000,
+            availableBytes: 400,
+            estimates: [
+                StorageCategorySize(category: .applications, bytes: 300, isEstimatePartial: true),
+            ],
+            includeSystemRemainder: true,
+            classificationStatus: .partial
+        )
+        #expect(composition?.categories.first { $0.category == .analyzing } == nil)
+        #expect(composition?.categories.first { $0.category == .other }?.bytes == 300)
+    }
+
+    @Test func cachedClassificationSurvivesCapacityDrift() {
+        let cached = StorageComposition(
+            totalBytes: 1_000,
+            availableBytes: 400,
+            usedBytes: 600,
+            categories: [
+                StorageCategorySize(category: .applications, bytes: 300, isEstimatePartial: false),
+                StorageCategorySize(category: .other, bytes: 300, isEstimatePartial: true),
+                StorageCategorySize(category: .available, bytes: 400, isEstimatePartial: false),
+            ],
+            computedAt: Date(timeIntervalSinceReferenceDate: 100),
+            classificationStatus: .partial,
+            scanCoverage: 0,
+            classificationCoverage: 0.5
+        )
+
+        let recomposed = StorageCompositionBuilder.recompose(
+            cached: cached,
+            totalBytes: 1_000,
+            availableBytes: 250
+        )
+
+        #expect(recomposed?.usedBytes == 750)
+        #expect(recomposed?.categories.first { $0.category == .applications }?.bytes == 300)
+        #expect(recomposed?.categories.first { $0.category == .other }?.bytes == 450)
+        #expect(recomposed?.categories.first { $0.category == .available }?.bytes == 250)
+    }
+
+    @Test func persistedStorageCompositionRoundTrips() throws {
+        let composition = StorageComposition(
+            totalBytes: 1_000,
+            availableBytes: 400,
+            usedBytes: 600,
+            categories: [
+                StorageCategorySize(category: .applications, bytes: 300, isEstimatePartial: false),
+                StorageCategorySize(category: .other, bytes: 300, isEstimatePartial: true),
+                StorageCategorySize(category: .available, bytes: 400, isEstimatePartial: false),
+            ],
+            computedAt: Date(timeIntervalSinceReferenceDate: 100),
+            classificationStatus: .partial,
+            scanCoverage: 0,
+            classificationCoverage: 0.5
+        )
+        let persisted = PersistedStorageComposition(accessLevel: .full, composition: composition)
+        let data = try JSONEncoder().encode(persisted)
+        let decoded = try JSONDecoder().decode(PersistedStorageComposition.self, from: data)
+
+        #expect(decoded.macCareAccessLevel == .full)
+        #expect(decoded.composition == composition)
+    }
+}
+
+@MainActor
+struct DesktopPetVisibilityTests {
+    @Test func desktopPetIsHiddenByDefaultAndPersistsToggle() {
+        let suiteName = "JoeyPetTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        #expect(PetPreferences.showsDesktopPet(defaults: defaults) == false)
+
+        PetPreferences.setShowsDesktopPet(true, defaults: defaults)
+        #expect(PetPreferences.showsDesktopPet(defaults: defaults) == true)
+
+        PetPreferences.setShowsDesktopPet(false, defaults: defaults)
+        #expect(PetPreferences.showsDesktopPet(defaults: defaults) == false)
     }
 }
 

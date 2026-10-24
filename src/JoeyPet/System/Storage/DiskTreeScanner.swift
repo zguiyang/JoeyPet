@@ -73,6 +73,11 @@ enum DiskTreeScanner: Sendable {
                         .isSymbolicLinkKey,
                         .isPackageKey,
                         .volumeIdentifierKey,
+                        .totalFileAllocatedSizeKey,
+                        .fileSizeKey,
+                        .linkCountKey,
+                        .isUbiquitousItemKey,
+                        .ubiquitousItemDownloadingStatusKey,
                     ],
                     options: []
                 )
@@ -81,75 +86,86 @@ enum DiskTreeScanner: Sendable {
                 return
             }
 
-            for child in children {
-                if isCancelled() { return }
-                let childPath = child.path
-                if shouldSkipPath(childPath) {
-                    stats.skippedCrossVolume += 1
-                    continue
-                }
-
-                let values: URLResourceValues
-                do {
-                    values = try child.resourceValues(forKeys: [
-                        .isDirectoryKey,
-                        .isRegularFileKey,
-                        .isSymbolicLinkKey,
-                        .isPackageKey,
-                    ])
-                } catch {
-                    continue
-                }
-
-                if values.isSymbolicLink == true {
-                    if APFSFirmlinkCatalog.isFirmlink(path: childPath, catalog: configuration.firmlinkSources) {
-                        let resolved = child.resolvingSymlinksInPath()
-                        if fileManager.fileExists(atPath: resolved.path) {
-                            var isDir: ObjCBool = false
-                            if fileManager.fileExists(atPath: resolved.path, isDirectory: &isDir), isDir.boolValue {
-                                walkDirectory(resolved)
-                            }
-                        }
-                    } else {
-                        stats.skippedSymlinks += 1
-                    }
-                    continue
-                }
-
-                if values.isDirectory == true {
-                    walkDirectory(child)
-                    continue
-                }
-
-                guard values.isRegularFile == true else { continue }
-                let fileID = FilesystemIdentity(hardLinkedFileAt: child)
-                if let fileID {
-                    if countedFileIDs.contains(fileID) {
-                        stats.deduplicatedHardLinks += 1
+            autoreleasepool {
+                for child in children {
+                    if isCancelled() { return }
+                    let childPath = child.path
+                    if shouldSkipPath(childPath) {
+                        stats.skippedCrossVolume += 1
                         continue
                     }
-                    countedFileIDs.insert(fileID)
-                }
 
-                guard let bytes = StorageFileSize.allocatedBytes(of: child, isDirectory: false) else { continue }
-                scannedBytes += bytes
-                stats.visitedFiles += 1
+                    let values: URLResourceValues
+                    do {
+                        values = try child.resourceValues(forKeys: [
+                            .isDirectoryKey,
+                            .isRegularFileKey,
+                            .isSymbolicLinkKey,
+                            .isPackageKey,
+                            .totalFileAllocatedSizeKey,
+                            .fileSizeKey,
+                            .linkCountKey,
+                            .isUbiquitousItemKey,
+                            .ubiquitousItemDownloadingStatusKey,
+                        ])
+                    } catch {
+                        continue
+                    }
 
-                let parentPath = directoryURL.path
-                let ext = child.pathExtension.isEmpty ? nil : child.pathExtension
-                let record = DiskScanFileRecord(
-                    absolutePath: childPath,
-                    name: child.lastPathComponent,
-                    parentAbsolutePath: parentPath,
-                    fileExtension: ext,
-                    allocatedBytes: bytes,
-                    isDirectory: false,
-                    isPackage: false,
-                    identity: fileID
-                )
-                onFile?(record)
-                if configuration.retainRecords {
-                    records.append(record)
+                    if values.isSymbolicLink == true {
+                        if APFSFirmlinkCatalog.isFirmlink(path: childPath, catalog: configuration.firmlinkSources) {
+                            let resolved = child.resolvingSymlinksInPath()
+                            if fileManager.fileExists(atPath: resolved.path) {
+                                var isDir: ObjCBool = false
+                                if fileManager.fileExists(atPath: resolved.path, isDirectory: &isDir), isDir.boolValue {
+                                    walkDirectory(resolved)
+                                }
+                            }
+                        } else {
+                            stats.skippedSymlinks += 1
+                        }
+                        continue
+                    }
+
+                    if values.isDirectory == true {
+                        walkDirectory(child)
+                        continue
+                    }
+
+                    guard values.isRegularFile == true else { continue }
+
+                    // Only multiply-linked files need an inode lookup; unique files skip `lstat`.
+                    var fileID: FilesystemIdentity?
+                    if (values.linkCount ?? 1) > 1,
+                       let linkedID = FilesystemIdentity(hardLinkedFileAt: child) {
+                        if countedFileIDs.contains(linkedID) {
+                            stats.deduplicatedHardLinks += 1
+                            continue
+                        }
+                        countedFileIDs.insert(linkedID)
+                        fileID = linkedID
+                    }
+
+                    guard let bytes = Self.allocatedBytes(from: values, url: child) else { continue }
+                    scannedBytes += bytes
+                    stats.visitedFiles += 1
+
+                    let parentPath = directoryURL.path
+                    let ext = child.pathExtension.isEmpty ? nil : child.pathExtension
+                    let record = DiskScanFileRecord(
+                        absolutePath: childPath,
+                        name: child.lastPathComponent,
+                        parentAbsolutePath: parentPath,
+                        fileExtension: ext,
+                        allocatedBytes: bytes,
+                        isDirectory: false,
+                        isPackage: false,
+                        identity: fileID
+                    )
+                    onFile?(record)
+                    if configuration.retainRecords {
+                        records.append(record)
+                    }
                 }
             }
         }
@@ -169,5 +185,20 @@ enum DiskTreeScanner: Sendable {
             duration: duration,
             hadAccessDenied: stats.deniedDirectories > 0
         )
+    }
+
+    private static func allocatedBytes(from values: URLResourceValues, url: URL) -> Int64? {
+        if values.isUbiquitousItem == true,
+           values.ubiquitousItemDownloadingStatus == .notDownloaded {
+            return Int64(values.totalFileAllocatedSize ?? 0)
+        }
+        if let allocated = values.totalFileAllocatedSize {
+            return Int64(allocated)
+        }
+        if let logical = values.fileSize {
+            return Int64(logical)
+        }
+        // Fallback for unusual filesystems where resource values are unavailable.
+        return StorageFileSize.allocatedBytes(of: url, isDirectory: false)
     }
 }
