@@ -1845,3 +1845,226 @@ private extension Result {
         return false
     }
 }
+
+// MARK: - Calm Space
+
+struct CalmSpaceHealthTests {
+    private let referenceDate = Date(timeIntervalSince1970: 1_700_000_000)
+
+    private func snapshot(
+        memory: MemoryPressureLevel = .normal,
+        thermal: ThermalPressureLevel = .nominal,
+        storageSeverity: SignalSeverity = .normal,
+        updatedAt: Date? = Date(timeIntervalSince1970: 1_700_000_000),
+        usedMemoryBytes: Int64 = 18_000_000_000,
+        swapUsedBytes: Int64 = 0
+    ) -> SystemStatusSnapshot {
+        SystemStatusSnapshot(
+            thermal: thermal,
+            memory: memory,
+            storageAvailableBytes: 500_000_000_000,
+            storageTotalBytes: 1_000_000_000_000,
+            storageSeverity: storageSeverity,
+            physicalMemoryBytes: 36_000_000_000,
+            usedMemoryBytes: usedMemoryBytes,
+            swapUsedBytes: swapUsedBytes,
+            volumeName: "Macintosh HD",
+            updatedAt: updatedAt
+        )
+    }
+
+    @Test func noSnapshotIsUnknownNotNormal() {
+        let health = CalmSpaceHealthBuilder.make(
+            snapshot: snapshot(updatedAt: nil),
+            accessLevel: .full,
+            now: referenceDate
+        )
+        #expect(health.level == .unknown)
+        #expect(health.headline == "正在检查 Mac")
+        #expect(!health.detail.contains("正常"))
+    }
+
+    @Test func healthySnapshotIsNormal() {
+        let health = CalmSpaceHealthBuilder.make(
+            snapshot: snapshot(),
+            accessLevel: .full,
+            now: referenceDate.addingTimeInterval(9)
+        )
+        #expect(health.level == .normal)
+        #expect(health.headline == "Mac 一切正常")
+        #expect(health.metaLine.contains("内存正常"))
+        #expect(health.lastCheckedText != nil)
+    }
+
+    @Test func memoryWarningIsAttention() {
+        let health = CalmSpaceHealthBuilder.make(
+            snapshot: snapshot(memory: .warning),
+            accessLevel: .full,
+            now: referenceDate
+        )
+        #expect(health.level == .attention)
+        #expect(health.detail.contains("内存压力"))
+    }
+
+    @Test func storageCriticalIsCritical() {
+        let health = CalmSpaceHealthBuilder.make(
+            snapshot: snapshot(storageSeverity: .critical),
+            accessLevel: .full,
+            now: referenceDate
+        )
+        #expect(health.level == .critical)
+        #expect(health.headline == "Mac 需要处理")
+        #expect(health.detail.contains("存储空间不足"))
+    }
+
+    @Test func highUsageAloneDoesNotCreateAttention() {
+        let health = CalmSpaceHealthBuilder.make(
+            snapshot: snapshot(
+                usedMemoryBytes: 35_000_000_000,
+                swapUsedBytes: 24_000_000_000
+            ),
+            accessLevel: .full,
+            now: referenceDate
+        )
+        #expect(health.level == .normal)
+    }
+
+    @Test func limitedAccessIsCalledOutInMetaLine() {
+        let health = CalmSpaceHealthBuilder.make(
+            snapshot: snapshot(),
+            accessLevel: .limited,
+            now: referenceDate
+        )
+        #expect(health.level == .normal)
+        #expect(health.metaLine.contains("有限磁盘分析"))
+    }
+}
+
+struct CalmSpaceLayoutTests {
+    private let sizes: [CGSize] = [
+        CGSize(width: 680, height: 480),
+        CGSize(width: 720, height: 500),
+        CGSize(width: 800, height: 560),
+        CGSize(width: 1024, height: 680),
+        CGSize(width: 1280, height: 800),
+        CGSize(width: 1280, height: 480),
+        CGSize(width: 720, height: 800),
+    ]
+
+    @Test func orbStaysASquareWithinClampRange() {
+        for size in sizes {
+            let layout = CalmSpaceLayout(size: size)
+            #expect(layout.orbDiameter > 0)
+            #expect(layout.orbDiameter >= 140)
+            #expect(layout.orbDiameter <= 340)
+            #expect(layout.orbCenter.x == size.width / 2)
+            #expect(layout.orbCenter.y > layout.orbDiameter / 2)
+            #expect(layout.orbDiameter <= size.width - 2 * layout.horizontalMargin)
+        }
+    }
+
+    @Test func statusBlockNeverCollidesWithBottomControls() {
+        for size in sizes {
+            let layout = CalmSpaceLayout(size: size)
+            #expect(layout.controlsDoNotOverlap, "overlap at \(size.width)x\(size.height)")
+            #expect(layout.statusBottom <= size.height)
+            #expect(layout.bottomControlsTop + layout.bottomControlsHeight <= size.height)
+        }
+    }
+
+    @Test func compactLayoutForSmallerWindows() {
+        #expect(CalmSpaceLayout(size: CGSize(width: 720, height: 500)).compact)
+        #expect(CalmSpaceLayout(size: CGSize(width: 680, height: 480)).compact)
+        #expect(!CalmSpaceLayout(size: CGSize(width: 800, height: 560)).compact)
+        #expect(!CalmSpaceLayout(size: CGSize(width: 1280, height: 800)).compact)
+    }
+
+    @Test func largeWindowsStopGrowingTheOrb() {
+        let huge = CalmSpaceLayout(size: CGSize(width: 2560, height: 1600))
+        #expect(huge.orbDiameter <= 340)
+        #expect(huge.statusWidth <= 560)
+    }
+}
+
+struct CalmSpacePageTransitionTests {
+    private let widths: [CGFloat] = [680, 1024, 2560]
+
+    @Test func transitionDurationIsReasonable() {
+        #expect(CalmSpacePageTransition.duration >= 0.40)
+        #expect(CalmSpacePageTransition.duration <= 0.55)
+    }
+
+    @Test func macCareCurrentParksMacCareAndOffloadsWorkRhythm() {
+        for width in widths {
+            #expect(CalmSpacePageTransition.offsetX(for: .macCare, currentMode: .macCare, width: width, reduceMotion: false) == 0)
+            #expect(CalmSpacePageTransition.offsetX(for: .workRhythm, currentMode: .macCare, width: width, reduceMotion: false) == width)
+        }
+    }
+
+    @Test func workRhythmCurrentParksWorkRhythmAndOffloadsMacCare() {
+        for width in widths {
+            #expect(CalmSpacePageTransition.offsetX(for: .workRhythm, currentMode: .workRhythm, width: width, reduceMotion: false) == 0)
+            #expect(CalmSpacePageTransition.offsetX(for: .macCare, currentMode: .workRhythm, width: width, reduceMotion: false) == -width)
+        }
+    }
+
+    @Test func offsetsScaleLinearlyWithWidth() {
+        for mode in AppMode.allCases {
+            let half = CalmSpacePageTransition.offsetX(for: mode, currentMode: .macCare, width: 512, reduceMotion: false)
+            let full = CalmSpacePageTransition.offsetX(for: mode, currentMode: .macCare, width: 1024, reduceMotion: false)
+            #expect(full == half * 2)
+        }
+    }
+
+    @Test func reduceMotionParksBothPagesAtZeroAndCrossFades() {
+        for mode in AppMode.allCases {
+            #expect(CalmSpacePageTransition.offsetX(for: mode, currentMode: .macCare, width: 1024, reduceMotion: true) == 0)
+        }
+        // Exactly one page visible in either direction.
+        #expect(CalmSpacePageTransition.opacity(for: .macCare, currentMode: .macCare, reduceMotion: true) == 1)
+        #expect(CalmSpacePageTransition.opacity(for: .workRhythm, currentMode: .macCare, reduceMotion: true) == 0)
+        #expect(CalmSpacePageTransition.opacity(for: .macCare, currentMode: .workRhythm, reduceMotion: true) == 0)
+        #expect(CalmSpacePageTransition.opacity(for: .workRhythm, currentMode: .workRhythm, reduceMotion: true) == 1)
+    }
+
+    @Test func fullMotionKeepsBothPagesOpaque() {
+        for mode in AppMode.allCases {
+            #expect(CalmSpacePageTransition.opacity(for: mode, currentMode: .macCare, reduceMotion: false) == 1)
+            #expect(CalmSpacePageTransition.opacity(for: mode, currentMode: .workRhythm, reduceMotion: false) == 1)
+        }
+    }
+
+    @Test func currentSceneIsActiveAndOffSceneOnlyDuringTransition() {
+        // At rest: only the current scene renders.
+        #expect(CalmSpacePageTransition.isSceneActive(for: .macCare, currentMode: .macCare, isTransitioning: false))
+        #expect(!CalmSpacePageTransition.isSceneActive(for: .workRhythm, currentMode: .macCare, isTransitioning: false))
+        #expect(CalmSpacePageTransition.isSceneActive(for: .workRhythm, currentMode: .workRhythm, isTransitioning: false))
+        #expect(!CalmSpacePageTransition.isSceneActive(for: .macCare, currentMode: .workRhythm, isTransitioning: false))
+        // In flight: both scenes may render so neither page shows a frozen frame.
+        #expect(CalmSpacePageTransition.isSceneActive(for: .macCare, currentMode: .macCare, isTransitioning: true))
+        #expect(CalmSpacePageTransition.isSceneActive(for: .workRhythm, currentMode: .macCare, isTransitioning: true))
+    }
+
+    @Test func landingModeIsStrictToggle() {
+        for mode in AppMode.allCases {
+            let landed = CalmSpacePageTransition.landingMode(from: mode)
+            #expect(landed != mode)
+            #expect(CalmSpacePageTransition.landingMode(from: landed) == mode)
+        }
+    }
+
+    @Test func nonPositiveWidthNeverProducesNaN() {
+        for mode in AppMode.allCases {
+            for width: CGFloat in [0, -680, -1024] {
+                let offset = CalmSpacePageTransition.offsetX(
+                    for: mode,
+                    currentMode: .macCare,
+                    width: width,
+                    reduceMotion: false
+                )
+                #expect(offset.isFinite)
+                #expect(offset == 0, "clamped width must park the page at 0")
+            }
+        }
+    }
+}

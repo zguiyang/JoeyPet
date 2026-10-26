@@ -21,6 +21,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)
 
+        #if DEBUG
+        if let qaAppearance = DebugStateInjector.qaAppearance() {
+            NSApp.appearance = qaAppearance
+        }
+        #endif
+
         let panelController = PetPanelController()
         let coordinator = PetCoordinator(panelController: panelController)
         let appModel = AppModel()

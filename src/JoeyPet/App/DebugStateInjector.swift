@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 
 enum DebugStateInjector {
@@ -77,6 +78,91 @@ enum DebugStateInjector {
         #endif
     }
 
+    /// DEBUG GUI capture: overlay live layout metrics for adaptive verification.
+    static func qaShowsLayoutDebug() -> Bool {
+        #if DEBUG
+        ProcessInfo.processInfo.arguments.contains("-JoeyPetQAShowLayoutDebug")
+        #else
+        false
+        #endif
+    }
+
+    /// DEBUG GUI capture: `-JoeyPetQAWindowSize 1024x680` (points).
+    static func qaWindowSize() -> CGSize? {
+        #if DEBUG
+        guard let raw = debugArgumentValue(prefix: "-JoeyPetQAWindowSize") else { return nil }
+        let parts = raw.lowercased().split(separator: "x")
+        guard parts.count == 2,
+              let width = Double(parts[0]),
+              let height = Double(parts[1]),
+              width > 0,
+              height > 0
+        else { return nil }
+        return CGSize(width: width, height: height)
+        #else
+        return nil
+        #endif
+    }
+
+    /// DEBUG GUI capture: `-JoeyPetQATheme dark|light` overrides the app appearance.
+    static func qaAppearance() -> NSAppearance? {
+        #if DEBUG
+        guard let raw = debugArgumentValue(prefix: "-JoeyPetQATheme")?.lowercased() else { return nil }
+        switch raw {
+        case "dark": return NSAppearance(named: .darkAqua)
+        case "light": return NSAppearance(named: .aqua)
+        default: return nil
+        }
+        #else
+        return nil
+        #endif
+    }
+
+    /// DEBUG GUI capture: `-JoeyPetDebugHealth normal|attention|critical|unknown`.
+    static func qaForcedHealthLevel() -> CalmSpaceHealthLevel? {
+        #if DEBUG
+        guard let raw = debugArgumentValue(prefix: "-JoeyPetDebugHealth") else { return nil }
+        return CalmSpaceHealthLevel(rawValue: raw)
+        #else
+        return nil
+        #endif
+    }
+
+    /// DEBUG QA driver: `-JoeyPetQAAutoSwitch <seconds>` alternates the Calm Space
+    /// mode every N seconds (for screen recordings). Accepts 0.5...10 s.
+    static func qaModeAutoSwitchInterval() -> TimeInterval? {
+        #if DEBUG
+        guard let raw = debugArgumentValue(prefix: "-JoeyPetQAAutoSwitch"),
+              let seconds = TimeInterval(raw),
+              (0.5...10).contains(seconds)
+        else { return nil }
+        return seconds
+        #else
+        return nil
+        #endif
+    }
+
+    /// DEBUG QA driver: `-JoeyPetQARapidSwitch` fires a rapid burst of mode-switch
+    /// requests through the same entry point the button uses; the guard must accept
+    /// exactly one. Returns the fixed burst count.
+    static func qaModeRapidSwitchBurst() -> Int? {
+        #if DEBUG
+        ProcessInfo.processInfo.arguments.contains("-JoeyPetQARapidSwitch") ? 6 : nil
+        #else
+        return nil
+        #endif
+    }
+
+    /// DEBUG QA observability: `-JoeyPetQADebugRenderState` logs Calm Space transition
+    /// and per-scene pause state changes via `OSLog`.
+    static func qaLogsCalmSpaceRenderState() -> Bool {
+        #if DEBUG
+        ProcessInfo.processInfo.arguments.contains("-JoeyPetQADebugRenderState")
+        #else
+        return false
+        #endif
+    }
+
     static func qaTriggersScan() -> Bool {
         #if DEBUG
         ProcessInfo.processInfo.arguments.contains("-JoeyPetQATriggerScan")
@@ -117,6 +203,65 @@ enum DebugStateInjector {
         ProcessInfo.processInfo.arguments.contains("-JoeyPetQAStaticUI")
         #else
         return false
+        #endif
+    }
+
+    // MARK: - Calm Space Stage prototype (DEBUG-only, Unit 1)
+
+    /// `-JoeyPetQAStagePrototype macCare|workRhythm` — enter the isolated Stage prototype.
+    static func qaStagePrototypeMode() -> String? {
+        #if DEBUG
+        return debugArgumentValue(prefix: "-JoeyPetQAStagePrototype")
+        #else
+        return nil
+        #endif
+    }
+
+    /// `-JoeyPetQAStageState normal|attention|critical|unknown|...[+activity]` — prototype
+    /// state, optionally with an orthogonal activity overlay (`normal+scanning`).
+    static func qaStageStateRaw() -> String? {
+        #if DEBUG
+        return debugArgumentValue(prefix: "-JoeyPetQAStageState")
+        #else
+        return nil
+        #endif
+    }
+
+    /// `-JoeyPetQAStageFreeze` — freeze every prototype loop at a deterministic phase.
+    static func qaStageFreezesAnimation() -> Bool {
+        #if DEBUG
+        ProcessInfo.processInfo.arguments.contains("-JoeyPetQAStageFreeze")
+        #else
+        return false
+        #endif
+    }
+
+    /// `-JoeyPetQAStageLongCopy` — use stress-test long copy fixtures.
+    static func qaStageUsesLongCopy() -> Bool {
+        #if DEBUG
+        ProcessInfo.processInfo.arguments.contains("-JoeyPetQAStageLongCopy")
+        #else
+        return false
+        #endif
+    }
+
+    /// `-JoeyPetQAStageVariant a|b` — A/B exploration composition (default `a`).
+    static func qaStageVariantRaw() -> String? {
+        #if DEBUG
+        return debugArgumentValue(prefix: "-JoeyPetQAStageVariant")
+        #else
+        return nil
+        #endif
+    }
+
+    /// `-JoeyPetQASnapshotOut <abs path.png>` — render the prototype window offscreen to a
+    /// PNG and exit. Used for QA capture on a locked display; the app renders its own
+    /// window (no Screen Recording / TCC required). DEBUG-only.
+    static func qaSnapshotOutputPath() -> String? {
+        #if DEBUG
+        return debugArgumentValue(prefix: "-JoeyPetQASnapshotOut")
+        #else
+        return nil
         #endif
     }
 

@@ -4,7 +4,12 @@ enum ShellMetrics {
     static let defaultWindowWidth: CGFloat = 800
     static let defaultWindowHeight: CGFloat = 560
     static let minimumWindowWidth: CGFloat = 680
-    static let minimumWindowHeight: CGFloat = 480
+    /// Window frame minimum. macOS adds the native titlebar/traffic-light area on top of
+    /// the content minimum below (32 pt on macOS 14+).
+    static let minimumWindowHeight: CGFloat = 512
+    /// SwiftUI content minimum below the titlebar. The full-bleed canvas ignores the safe
+    /// area, so it is laid out at the frame size (>= 512 pt high).
+    static let minimumWindowContentHeight: CGFloat = 480
 
     /// Joey Stage pattern width (Work Rhythm and other feature-local layouts—not a global shell column).
     static let stageIdealWidth: CGFloat = 320

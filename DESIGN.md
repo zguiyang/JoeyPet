@@ -117,6 +117,16 @@ Stitch describes `NSVisualEffectView` sidebar/window vibrancy. Use SwiftUI `back
 
 ## Global Window Shell
 
+> **Phase update — Calm Space main window.** The main presentation now uses the
+> immersive **Calm Space** canvas documented in
+> [ADR 011](docs/decisions/011-calm-space-main-window.md): full-bleed background, central
+> orb, status block, floating dock and a hover-expanding mode switch. The toolbar-based
+> main navigation described below is superseded for the main window; it still describes
+> Settings and the general native patterns where it does not conflict with Calm Space.
+> Work Rhythm has no timer/focus implementation yet and is shown honestly as a
+> not-yet-available mode.
+
+
 ### Window geometry (global)
 
 | Attribute | Rule |

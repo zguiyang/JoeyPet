@@ -23,19 +23,40 @@ final class MainWindowController {
                 permissionService: PermissionService.shared
             )
             let hosting = NSHostingController(rootView: root)
+            let initialSize = DebugStateInjector.qaWindowSize()
+                ?? CGSize(width: ShellMetrics.defaultWindowWidth, height: ShellMetrics.defaultWindowHeight)
+            let minimumSize = CGSize(
+                width: ShellMetrics.minimumWindowWidth,
+                height: ShellMetrics.minimumWindowHeight
+            )
             let window = JoeyPetMainWindow(
-                contentRect: NSRect(x: 0, y: 0, width: ShellMetrics.defaultWindowWidth, height: ShellMetrics.defaultWindowHeight),
-                styleMask: [.titled, .closable, .miniaturizable, .resizable],
+                contentRect: NSRect(origin: .zero, size: initialSize),
+                styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
                 backing: .buffered,
                 defer: false
             )
             window.title = "JoeyPet"
             window.titleVisibility = .hidden
-            window.toolbarStyle = .unified
-            window.titlebarSeparatorStyle = .line
-            window.minSize = NSSize(width: ShellMetrics.minimumWindowWidth, height: ShellMetrics.minimumWindowHeight)
+            window.titlebarAppearsTransparent = true
+            window.titlebarSeparatorStyle = .none
+            window.isMovableByWindowBackground = true
+            window.toolbar = nil
+            window.backgroundColor = .windowBackgroundColor
+            window.contentMinSize = NSSize(
+                width: minimumSize.width,
+                height: ShellMetrics.minimumWindowContentHeight
+            )
+            window.minSize = NSSize(width: minimumSize.width, height: minimumSize.height)
             window.contentViewController = hosting
-            window.setContentSize(NSSize(width: ShellMetrics.defaultWindowWidth, height: ShellMetrics.defaultWindowHeight))
+            window.setContentSize(initialSize)
+            #if DEBUG
+            if let qaSize = DebugStateInjector.qaWindowSize() {
+                window.setFrame(
+                    NSRect(x: 0, y: 0, width: qaSize.width, height: qaSize.height),
+                    display: false
+                )
+            }
+            #endif
             window.center()
             window.isReleasedWhenClosed = false
             self.window = window

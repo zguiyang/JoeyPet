@@ -7,13 +7,7 @@ struct AppShellView: View {
 
     var body: some View {
         presentationContainer
-            .frame(minWidth: ShellMetrics.minimumWindowWidth, minHeight: ShellMetrics.minimumWindowHeight)
-            .toolbar {
-                if shellState.presentation != .permissionOnboarding {
-                    UnifiedWindowNavigation(shellState: shellState)
-                }
-            }
-            .removingDefaultWindowToolbarItems()
+            .frame(minWidth: ShellMetrics.minimumWindowWidth, minHeight: ShellMetrics.minimumWindowContentHeight)
             .mainWindowChrome()
     }
 
@@ -23,19 +17,13 @@ struct AppShellView: View {
         case .permissionOnboarding:
             PermissionOnboardingView(permissionService: permissionService, shellState: shellState)
         case .main:
-            mainPresentationBody
+            if shellState.mode == .macCare, shellState.macCareRoute != .home {
+                CalmSpaceFeaturePageView(model: model, shellState: shellState)
+            } else {
+                CalmSpaceRootView(model: model, shellState: shellState)
+            }
         case .settings:
             SettingsRootView(model: model, shellState: shellState, permissionService: permissionService)
-        }
-    }
-
-    @ViewBuilder
-    private var mainPresentationBody: some View {
-        switch shellState.mode {
-        case .macCare:
-            MacCareRootView(model: model, shellState: shellState)
-        case .workRhythm:
-            WorkRhythmRootView()
         }
     }
 }
