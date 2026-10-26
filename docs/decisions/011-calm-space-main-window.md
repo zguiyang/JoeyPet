@@ -48,5 +48,9 @@ canvas:
 - Minimum window size is 680 × 512 pt. The 512 pt frame minimum comes from the native
   titlebar chrome above a 480 pt content minimum; 680 × 480 and 720 × 500 test samples
   are therefore clamped by AppKit.
+- Launch behavior: the app now presents the main window automatically on launch (Finder /
+  Dock / Xcode run) instead of staying menu-bar-only. The status-bar item, its
+  “打开 JoeyPet” action, and Dock reopen keep working as additional entry points. A
+  first-run launch still shows the permission onboarding page in that same window.
 - Business logic for cleanup, disk scanning, application management and settings was not
   changed in this phase.

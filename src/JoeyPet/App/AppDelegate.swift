@@ -106,22 +106,48 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         configureMenuBarStatusItem()
 
         #if DEBUG
-        applyQALaunchOverrides()
+        applyQALaunchSideEffects()
         #endif
+
+        // Every launch must be visible: open the main window instead of staying
+        // menu-bar-only. (Previously the window only appeared when the user found the
+        // status-bar item, which was easy to miss.)
+        presentMainWindowOnLaunch()
 
         Self.logger.info("JoeyPet desktop MVP launched")
     }
 
     #if DEBUG
-    private func applyQALaunchOverrides() {
-        if let intent = DebugStateInjector.qaMainWindowIntent() {
-            mainWindowController?.present(intent: intent)
-            if DebugStateInjector.qaTriggersScan() {
-                appModel?.scan()
-            }
-        }
+    /// DEBUG-only launch side effects that are not window presentation (e.g. auto scan).
+    private func applyQALaunchSideEffects() {
+        guard DebugStateInjector.qaMainWindowIntent() != nil,
+              DebugStateInjector.qaTriggersScan()
+        else { return }
+        appModel?.scan()
     }
     #endif
+
+    /// Presents the main window on launch.
+    ///
+    /// Product behavior: launching the app (Finder, Dock, Xcode run) opens the main window.
+    /// First-run onboarding still wins; QA flags can suppress or redirect the launch window.
+    private func presentMainWindowOnLaunch() {
+        #if DEBUG
+        if DebugStateInjector.qaSuppressesMainWindow() { return }
+        if let intent = DebugStateInjector.qaMainWindowIntent() {
+            mainWindowController?.present(intent: intent)
+            return
+        }
+        #endif
+
+        let hasCompletedOnboarding = PermissionOnboardingPreferences.hasCompleted()
+        let status = PermissionService.shared.fullDiskAccessStatus
+        let intent: MainWindowIntent = PermissionOnboardingGate.shouldPresentOnboarding(
+            hasCompleted: hasCompletedOnboarding,
+            fullDiskAccessStatus: status
+        ) ? .permissionOnboarding : .default
+        mainWindowController?.present(intent: intent)
+    }
 
     func applicationDidBecomeActive(_ notification: Notification) {
         PermissionService.shared.refresh()
@@ -163,6 +189,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+
+    /// Dock icon click / Finder reopen: bring the main window back when it is closed.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if !flag {
+            mainWindowController?.present(intent: .default)
+        }
+        return true
+    }
 
     @objc private func openMainWindow() { mainWindowController?.present(intent: .default) }
 
