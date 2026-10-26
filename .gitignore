@@ -48,3 +48,16 @@ skills-lock.json
 
 # One-off analyzer reports (design notes under docs/ stay tracked when added intentionally)
 docs/storage-analyzer-*-report.md
+
+# Local workspace build data (QA scripts use workspace-relative DerivedData)
+.derived-data/
+
+# Machine-local QA evidence and agent scratch space (kept on disk, not in git)
+calm-space-qa/
+.orca-backup/
+
+# Generated 2x Calm Space Stage previews (tracked review sheets live in previews/sheets/)
+calm-space-stage/previews/mac-care/
+calm-space-stage/previews/work-rhythm/
+calm-space-stage/previews/layout/
+
