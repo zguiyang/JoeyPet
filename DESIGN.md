@@ -296,8 +296,9 @@ Resizing re-derives this layout; the SpriteKit layer only forwards the new size 
 
 ### Calm Space canvas (Current)
 
-- One palette shape, **26 roles**, with **two hardcoded, independently tuned tables** (dark / light) selected by the system appearance.
-- Role groups: background (3), ambient (2) + stars (1); orb (7) + orbit (2); severity accents (4); text (3); control fill/stroke and hover variants (4).
+- One palette shape, **27 roles**, with **two hardcoded, independently tuned tables** (dark / light) selected by the system appearance.
+- Role groups: background (3), ambient (2) + stars (1); orb (7) + orbit (2); severity accents (4); text (4); control fill/stroke and hover variants (4).
+- The status block's third line uses the dedicated `statusMetaText` role; measured on-screen contrast is **dark 5.5–5.7:1, light 4.6–4.8:1** (both ≥4.5:1). All other roles stay **Pending** — not yet measured.
 - Severity accents: `normal` teal-green, `attention` amber, `critical` coral, `unknown` grey-blue. Orb materials change per state by blending, not by a global hue rotation.
 - Work Rhythm blends its dial toward indigo and uses a separate small dial palette.
 - Values live in `CalmSpaceTheme.swift` as literal colours. **There is no asset-catalog or shared colour-token layer for the canvas** — do not describe it as one.

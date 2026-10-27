@@ -34,6 +34,9 @@ struct CalmSpacePalette {
     let primaryText: Color
     let secondaryText: Color
     let tertiaryText: Color
+    /// Status block meta line only (11 pt). Tuned to stay ≥ 4.5:1 on the composited
+    /// page background without lifting the shared `tertiaryText` used elsewhere.
+    let statusMetaText: Color
 
     let controlFill: Color
     let controlHoverFill: Color
@@ -79,6 +82,7 @@ extension CalmSpacePalette {
         primaryText: Color(red: 0.95, green: 0.97, blue: 1.0),
         secondaryText: Color(red: 0.84, green: 0.90, blue: 0.98).opacity(0.68),
         tertiaryText: Color(red: 0.80, green: 0.87, blue: 0.96).opacity(0.44),
+        statusMetaText: Color(red: 0.80, green: 0.87, blue: 0.96).opacity(0.60),
         controlFill: Color.white.opacity(0.055),
         controlHoverFill: Color.white.opacity(0.11),
         controlStroke: Color.white.opacity(0.10),
@@ -109,6 +113,7 @@ extension CalmSpacePalette {
         primaryText: Color(red: 0.075, green: 0.125, blue: 0.180),
         secondaryText: Color(red: 0.075, green: 0.125, blue: 0.180).opacity(0.64),
         tertiaryText: Color(red: 0.075, green: 0.125, blue: 0.180).opacity(0.42),
+        statusMetaText: Color(red: 0.075, green: 0.125, blue: 0.180).opacity(0.65),
         controlFill: Color.white.opacity(0.58),
         controlHoverFill: Color.white.opacity(0.84),
         controlStroke: Color.black.opacity(0.06),

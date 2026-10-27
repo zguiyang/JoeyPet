@@ -93,7 +93,7 @@ private struct CalmSpaceStatusScaffold: View {
                 }
             }
             .font(.system(size: metaSize, weight: .medium))
-            .foregroundStyle(palette.tertiaryText)
+            .foregroundStyle(palette.statusMetaText)
             .lineLimit(1)
             .minimumScaleFactor(0.9)
             .padding(.top, layout.compact ? 9 : 12)
