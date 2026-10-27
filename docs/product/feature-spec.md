@@ -2,6 +2,10 @@
 
 本文件描述产品行为，不描述 Swift 类型、文件名、函数或工程结构。每个开发任务必须引用一个或多个 Feature ID。
 
+状态标注：**已实现** = 当前分支已交付；**待实现** = 已确认的产品需求但尚未交付；**已废弃** = 已被 ADR 取代。未标注的条目是产品要求，不代表已实现。主窗口 IA 以 [ADR 011](../decisions/011-calm-space-main-window.md) 的 Calm Space 决定为准。
+
+已知未决冲突（本阶段未改写）：F01/F14/F15 中“应用启动后 Joey 可见、Main Window 不自动打开”的历史描述，与 ADR 011 的启动行为（主窗口启动时自动呈现）及当前默认隐藏桌宠的实现不一致；需产品确认后再统一，避免据此推断当前行为。
+
 ## F01 — Desktop Joey
 
 ### Purpose
@@ -93,7 +97,7 @@ Joey 回到 idle → 等待一个低频间隔 → 触发 blink、sleeping 或 wa
 
 ### User Entry
 
-由系统状态变化自动触发；Overview 和 Bubble 是辅助查看入口。
+由系统状态变化自动触发；Mac Care 主窗口与 Bubble 是辅助查看入口。
 
 ### User Flow
 
@@ -109,12 +113,12 @@ Joey 回到 idle → 等待一个低频间隔 → 触发 blink、sleeping 或 wa
 
 ### Product Rules
 
-- F03 只定义 Semantic System State → Joey Behavior，不负责把所有 Overview raw metrics 映射成宠物行为。
+- F03 只定义 Semantic System State → Joey Behavior，不负责把所有 Mac Care 系统状态 raw metrics 映射成宠物行为。
 - V1 的正式 Joey reaction signals 是 Thermal、Memory Pressure、Storage。
 - Thermal serious/critical → `sweating`。
 - Memory warning/critical → `tired`。
 - Storage low → `carryingTrash`。
-- CPU Usage、Memory Usage、Network Activity 首先属于 Overview monitoring；本 Feature 不为它们新增 Pet behavior。
+- CPU Usage、Memory Usage、Network Activity 首先属于 Mac Care 的系统状态呈现；本 Feature 不为它们新增 Pet behavior。
 - UI severity 与 Joey severity 使用同一套 normal/notice/warning/critical 语义。
 - 只表达压力等级或阈值状态，不把 CPU Usage 当作 CPU 温度，也不从 Thermal State 猜测温度。
 - 更高严重程度和更高优先级状态可打断较低优先级反应；状态相同时不重启动画。
@@ -173,7 +177,7 @@ Bubble 出现 → 用户阅读短消息 → 可选地点击一个动作 → 打�
 - Given Proactive Bubbles 关闭，When 系统状态变化，Then 不出现主动状态 Bubble。
 - Given 用户左键 Joey，When 当前状态可用，Then 出现一条短信息；严重状态提供查看入口。
 - Given 同一 warning 尚未解除，When 传感重复报告该 warning，Then 不重复弹出相同主动 Bubble。
-- Given Cleanup 完成，When Bubble 出现，Then 明确说明已移入废纸篓的结果，并可打开 Cleanup 查看详情。
+- Given Cleanup 完成，When Bubble 出现，Then 明确说明已移入废纸篓的结果，并可打开磁盘管理查看详情。
 
 ## F05 — Joey Context Menu
 
@@ -183,7 +187,7 @@ Bubble 出现 → 用户阅读短消息 → 可选地点击一个动作 → 打�
 
 ### User Entry
 
-用户右键 Joey。
+用户右键 Joey。（待实现：当前版本只有状态栏菜单，Joey 本体尚未实现右键菜单处理）
 
 ### User Flow
 
@@ -228,11 +232,11 @@ Quick Clean 和 Scan and View 在对应操作忙碌时禁用，不能制造并�
 
 ### User Entry
 
-右键菜单、Bubble 动作、Dock 或应用激活。
+状态栏菜单、Dock、Bubble 动作或应用激活；右键菜单入口见 F05（待实现）。
 
 ### User Flow
 
-打开 Main Window → 默认进入 **Mac Care** 正常态或指定深度链接（扫描、设置等）→ 通过工具栏在 **Mac Care** 与 **Work Rhythm** 间切换 → 左侧 **Joey Stage** 始终可见 → 完成查看或操作 → 关闭窗口，Joey 仍在桌面运行。
+打开 Main Window → 首次运行先显示权限引导，之后进入默认 **Mac Care** 的 Calm Space 画布或指定深度链接（磁盘管理、设置等）→ 通过画布内左下 dock 进入磁盘管理 / 应用管理 / 系统设置，或通过右下角悬停展开的模式切换在 **Mac Care** 与 **工作节奏** 间整页切换 → 完成查看或操作 → 关闭窗口，应用与桌宠继续运行。
 
 ### States
 
@@ -243,9 +247,16 @@ Quick Clean 和 Scan and View 在对应操作忙碌时禁用，不能制造并�
 
 ### Product Rules
 
-正式主窗口 IA（见 [Design.md](../../Design.md)）：工具栏 **Mac Care | Work Rhythm**、持久 **Joey Stage**、右侧 Inspector；**Settings** 为独立设置界面（内含 通用 / 电脑状态 / 工作状态），不是第三个并列 sidebar 项。
+主窗口 IA 以 [ADR 011](../decisions/011-calm-space-main-window.md) 的 **Calm Space** 为准，取代旧的工具栏 / 持久 Joey Stage / 右侧 Inspector 主窗口 IA。
 
-不增加 Dashboard、Activity、History、Pet、Tools、Monitor 或 About 作为与 Mac Care 并列的顶层模式。主窗口承载理解和操作，不承载高密度监控。
+- 主窗口是单个全窗口 Calm Space 画布：背景、中央动画、状态文案与浮动控件在同一画布内，不显示系统工具栏。（已实现）
+- **Mac Care** 与 **工作节奏** 是同一窗口内的两个整页画布；通过画布内左下 dock（磁盘管理 / 应用管理 / 系统设置）和右下角悬停展开的模式切换进入，切换以整页滑动完成（Reduce Motion 时改为淡入），不关闭窗口。（已实现）
+- 不设持久 **Joey Stage** 栏、右侧 **Inspector**、三栏布局或工具栏分段选择器；磁盘管理、应用管理、Settings 等功能页使用常规页面，不渲染沉浸场景。（已实现）
+- **Settings** 是完整应用级页面：页内自定义侧边栏以「返回」行开始，后接 工作状态 / 电脑状态 / 通用 分组，不是 sheet、popover，也不是第三个顶层模式。（已实现；工作状态与电脑状态内容待实现）
+- 桌宠 Joey 是独立浮动面板，不嵌入主窗口；默认隐藏，可通过 Settings > 通用 的「显示桌宠」开关显示或隐藏。（已实现）
+- 窗口默认 800 × 560 pt，最小 frame 680 × 512 pt（内容最小 480 pt）；宽 < 760 或高 < 520 时使用紧凑布局。窗口保留原生 traffic lights、隐藏标题并支持背景拖动。（已实现）
+- 不增加 Dashboard、Activity、History、Pet、Tools、Monitor 或 About 作为与 Mac Care 并列的顶层模式。主窗口承载理解和操作，不承载高密度监控。
+- 旧的「工具栏 Mac Care | Work Rhythm + 持久 Joey Stage + 右侧 Inspector + 分段模式切换」IA 已由 ADR 011 取代，不再实现。（已废弃）
 
 ### Edge Cases
 
@@ -255,15 +266,19 @@ Quick Clean 和 Scan and View 在对应操作忙碌时禁用，不能制造并�
 
 ### Acceptance Criteria
 
-- Given 用户打开 JoeyPet，When Main Window 显示，Then 看到 Joey Stage、Mac Care / Work Rhythm 分段切换，且可通过入口打开 Settings。
-- Given Main Window 已打开，When 用户再次从菜单打开某页面，Then 复用窗口并显示目标页面。
-- Given 用户关闭 Main Window，When 关闭完成，Then Joey 仍可见且继续运行。
+- Given 用户打开 JoeyPet，When Main Window 显示（非首次权限引导），Then 看到全窗口 Calm Space 画布与画布内 dock，且没有系统工具栏、持久 Joey Stage 栏或右侧 Inspector。（已实现）
+- Given Main Window 已打开，When 用户通过画布内模式切换选择另一模式，Then 窗口保持打开并以整页滑动/淡入完成切换。（已实现）
+- Given Main Window 已打开，When 用户再次从菜单、状态栏或 Dock 打开 JoeyPet 或打开指定深度链接，Then 复用现有窗口并显示目标页面。（已实现）
+- Given 用户关闭 Main Window，When 关闭完成，Then 应用继续运行、桌宠面板维持用户设置的可见状态，并可从菜单栏、Dock 或 Joey 入口重新打开。（已实现）
+- Given 用户打开 Settings，When 页面显示，Then 它是带自定义侧边栏和「返回」行的应用级完整页面，返回后回到之前的主窗口模式。（已实现）
+- Given 桌宠已关闭，When 用户在 Settings > 通用 打开「显示桌宠」，Then 桌宠作为独立浮动面板出现，且不改变主窗口布局。（已实现）
+- Given 用户打开「应用管理」，When 页面显示，Then 显示「应用卸载尚未开放」占位且不提供占位操作；真实应用列表、卸载流程与关联残留清理待实现。（待实现）
 
 ## F07 — Mac Care System Status
 
 ### Purpose
 
-让用户在几秒内知道“我的 Mac 现在运行得怎么样”，同时保留 JoeyPet 的轻量、安静和非管理定位。本能力呈现在主窗口 **Mac Care** 模式的 Inspector 中（Stitch：正常态 / 注意态等），不再使用独立的 Overview 一级页面。
+让用户在几秒内知道“我的 Mac 现在运行得怎么样”，同时保留 JoeyPet 的轻量、安静和非管理定位。本能力呈现在主窗口 **Mac Care** 的 Calm Space 状态区（Overall 状态与内存/存储/散热摘要），不再使用独立的 Overview 一级页面或右侧 Inspector（见 [ADR 011](../decisions/011-calm-space-main-window.md)）。
 
 ### User Entry
 
@@ -271,7 +286,7 @@ Main Window 默认 **Mac Care**、Bubble 的查看动作、Context Menu 的打�
 
 ### User Flow
 
-打开 Mac Care → 先看 Overall Mac Status → 查看 CPU、Memory、Network、Storage、Thermal 的当前状态 → 在 CPU/Memory/Network 上查看短时趋势（适用时）→ 查看清理摘要或进入扫描/清理流程 → 需要时进入 Applications 等 Mac Care 子流程。
+打开 Mac Care → 先看 Overall Mac Status → 查看 CPU、Memory、Network、Storage、Thermal 的当前状态 → 在 CPU/Memory/Network 上查看短时趋势（适用时）→ 查看清理摘要或进入扫描/清理流程 → 需要时进入 Applications 等 Mac Care 子流程（当前为占位页，待实现）。
 
 ### Metrics
 
@@ -285,6 +300,8 @@ Main Window 默认 **Mac Care**、Bubble 的查看动作、Context Menu 的打�
 | Thermal State | Required | nominal/fair/serious/critical；不是 CPU 温度 |
 | Fan RPM | Conditional | 可靠、稳定、权限合理时显示，否则不占用主层级 |
 | Exact Temperature | Conditional | 可靠时显示明确温度，否则显示 Thermal State；绝不猜测 |
+
+实现状态：Calm Space 的 Mac Care 状态区已呈现 Overall 状态与内存压力 / 存储 / 散热摘要（已实现）；表中 CPU、Memory Usage、Network 的逐项数值与短时趋势尚未在主窗口呈现（待实现），Fan RPM 与 Exact Temperature 仍待技术验证。
 
 ### Recent Trends
 
@@ -321,7 +338,8 @@ Overall Mac Status 是首要信息，使用与 Joey 共享的 `normal`、`notice
 
 ### Acceptance Criteria
 
-- Given 用户打开 Mac Care，When 核心数据可用，Then 第一眼能看到 Overall Mac Status，并能找到 CPU、Memory、Memory Pressure、Storage、Network 和 Thermal。
+- Given 用户打开 Mac Care，When 核心数据可用，Then 第一眼能看到 Overall Mac Status 与内存压力 / 存储 / 散热摘要。（已实现）
+- Given 用户需要查看逐项指标，When Mac Care 显示，Then CPU、Memory、Network、Storage、Thermal 的逐项数值与短时趋势在主窗口呈现。（待实现）
 - Given CPU Usage 可用，When Mac Care 显示，Then 用户能看到当前 CPU 使用情况，并在数据足够时看到短时趋势。
 - Given Memory Usage 可用，When Mac Care 显示，Then 当前使用情况与 Memory Pressure 分开呈现。
 - Given Storage 数据可用，When Mac Care 显示，Then 用户能看到 used、free、total 和存储健康状态。
@@ -338,7 +356,7 @@ Overall Mac Status 是首要信息，使用与 Joey 共享的 `normal`、`notice
 
 ### User Entry
 
-Cleanup 页面 Scan、Overview 的 Scan and View、右键菜单的 Scan and View。
+磁盘管理页面的 Scan、状态栏菜单的「扫描并查看…」、右键菜单的 Scan and View（见 F05）。
 
 ### User Flow
 
@@ -381,7 +399,7 @@ Cleanup 页面 Scan、Overview 的 Scan and View、右键菜单的 Scan and View
 
 ### User Entry
 
-Cleanup 页面 Quick Clean、Context Menu、Storage Bubble 的主要动作。
+磁盘管理页面 Quick Clean、Context Menu、Storage Bubble 的主要动作。
 
 ### User Flow
 
@@ -466,7 +484,7 @@ Cleanup 结果中的 Review 区域。
 
 ### User Entry
 
-Quick Clean 或 Review Cleanup 执行结束后；Cleanup 页面重新打开时可看到最近摘要。
+Quick Clean 或 Review Cleanup 执行结束后；磁盘管理页面重新打开时可看到最近摘要。
 
 ### User Flow
 
@@ -495,9 +513,9 @@ Quick Clean 或 Review Cleanup 执行结束后；Cleanup 页面重新打开时�
 
 ### Acceptance Criteria
 
-- Given 全部项目成功，When 执行结束，Then 显示全部已移到 Trash，并能回到 Cleanup 或 ambient。
+- Given 全部项目成功，When 执行结束，Then 显示全部已移到 Trash，并能回到磁盘管理或 ambient。
 - Given 部分项目失败，When 执行结束，Then 同时显示成功与失败数量，并允许重新扫描。
-- Given 应用重启，When Cleanup 页面打开，Then 最多显示最近摘要，不显示过期候选路径作为待执行项目。
+- Given 应用重启，When 磁盘管理页面打开，Then 最多显示最近摘要，不显示过期候选路径作为待执行项目。
 
 ## F12 — Settings
 
@@ -507,11 +525,11 @@ Quick Clean 或 Review Cleanup 执行结束后；Cleanup 页面重新打开时�
 
 ### User Entry
 
-Main Window 的 Settings 或 Context Menu。
+Main Window 画布 dock 的「系统设置」、状态栏菜单的「设置…」，或 Context Menu。
 
 ### User Flow
 
-打开 Settings → 查看 General 与 Joey 两组 → 切换设置或重置位置 → 设置立即生效并在下次启动保持。
+打开 Settings → 通过页内侧边栏在 工作状态 / 电脑状态 / 通用 间切换 → 修改设置、查看完全磁盘访问状态或重置 Joey 位置 → 设置立即生效并在下次启动保持。（工作状态与电脑状态当前为占位页，待实现）
 
 ### States
 
@@ -521,10 +539,17 @@ Main Window 的 Settings 或 Context Menu。
 
 ### Product Rules
 
-V1 只支持：
+Settings 是应用级完整页面：页内自定义侧边栏（「返回」行 + 工作状态 / 电脑状态 / 通用）+ 详情区；不是 sheet、popover，也不是与 Mac Care 并列的第三个顶层模式。
 
-- General：Launch at Login。
-- Joey：Ambient Behaviors、Proactive Bubbles、Reset Joey Position。
+当前已交付（Settings 页面已呈现）：
+
+- 通用：显示桌宠、完全磁盘访问状态与跳转、重置 Joey 位置。
+- 工作状态、电脑状态：分组当前只有占位标题，内容待实现。
+
+V1 仍要求但尚未在设置页呈现（待实现）：
+
+- 开机自启动。
+- 呼吸与微动效（Ambient Behaviors）、主动提示气泡（Proactive Bubbles）；对应运行时偏好已存在并生效。
 
 不加入 quiet hours、sensor selection、utility opt-in、animation speed、theme、account、AI provider 或 advanced cleanup rules。
 
@@ -536,10 +561,10 @@ V1 只支持：
 
 ### Acceptance Criteria
 
-- Given 用户关闭 Ambient Behaviors，When 返回桌面，Then Joey 不再触发新的 ambient 行为。
-- Given 用户关闭 Proactive Bubbles，When 系统状态变化，Then 不出现主动 Bubble。
-- Given 用户点击 Reset Joey Position，When 操作完成，Then Joey 位于安全默认位置且旧位置不再恢复。
-- Given 用户切换 Launch at Login，When macOS 接受或拒绝请求，Then 开关与真实注册状态一致。
+- Given 用户关闭「显示桌宠」，When 返回桌面，Then 桌宠面板隐藏且主窗口不受影响；重新打开后桌宠恢复显示。（已实现）
+- Given 用户点击 Reset Joey Position，When 操作完成，Then Joey 位于安全默认位置且旧位置不再恢复。（已实现）
+- Given 用户切换 Launch at Login，When macOS 接受或拒绝请求，Then 开关与真实注册状态一致。（待实现：当前设置页未呈现该开关）
+- Given 用户关闭 Ambient Behaviors 或 Proactive Bubbles，When 返回桌面或系统状态变化，Then 新行为立即停止或不出现主动 Bubble。（待实现：当前设置页未呈现这两个开关）
 
 ## F13 — Pet Position Persistence
 
@@ -589,7 +614,7 @@ V1 只支持：
 
 ### User Entry
 
-Settings → General → Launch at Login。
+Settings → 通用 → 开机自启动。（待实现：当前设置页尚未呈现该开关）
 
 ### User Flow
 
@@ -672,21 +697,32 @@ Settings → General → Launch at Login。
 
 ### User Entry
 
-Main Window 工具栏切换到 **Work Rhythm**；Settings 中 **工作状态** 相关偏好。
+Main Window 画布内右下角的模式切换（悬停展开）切到 **工作节奏**；Settings 中 **工作状态** 相关偏好。（入口已实现；工作状态设置与计时能力待实现）
 
 ### User Flow
 
-选择 Work Rhythm → 查看当前专注/休息状态 → 在临近休息时收到温和提醒 → 进入休息态 → 查看 Statistics 摘要 → 返回 Mac Care 或继续节奏。
+当前（已交付）：切换模式 → 看到工作节奏画布（节奏表盘、状态文案与 dock）→ 确认功能尚未开放 → 切回 Mac Care；整个过程不关闭窗口。
+
+目标（待实现）：选择工作节奏 → 查看当前专注/休息状态 → 在临近休息时收到温和提醒 → 进入休息态 → 查看 Statistics 摘要 → 返回 Mac Care 或继续节奏。
 
 ### Product Rules
 
-- 与 Mac Care 共享 Joey Stage；分段切换不关闭主窗口。
-- 提醒应温和、可关闭，遵守 Proactive Bubbles 等全局设置（见 F04、F12）。
-- Statistics 仅覆盖当前会话或产品定义的短时窗口，不做跨重启历史库。
-- UI 呈现遵循 [Design.md](../../Design.md) 与 Stitch Work Rhythm 冻结稿；不在此 Feature 中定义视觉 token。
+- 与 Mac Care 共享同一主窗口与 Calm Space 画布；模式切换不关闭窗口、不重置 Mac Care 的运行状态。（已实现）
+- 当前没有专注/休息计时器或会话状态：状态区如实显示「功能尚未开放」，dock 的「专注」「休息」入口不可用，不伪造计时或业务状态。（已实现）
+- 专注/休息计时、临近休息的温和提醒、会话 Statistics 摘要均为已确认的产品需求，当前未交付。（待实现）
+- 提醒应温和、可关闭，遵守 Proactive Bubbles 等全局设置（见 F04、F12）。（待实现）
+- Statistics 仅覆盖当前会话或产品定义的短时窗口，不做跨重启历史库。（待实现）
+- UI 呈现遵循 [Design.md](../../DESIGN.md)；Stitch Work Rhythm 冻结稿仅在可复核时作为设计输入；不在此 Feature 中定义视觉 token。
 
 ### Acceptance Criteria
 
-- Given 用户在主窗口，When 切换到 Work Rhythm，Then Joey Stage 仍可见且 Inspector 显示节奏相关内容。
+已交付：
+
+- Given 用户在主窗口，When 通过画布内模式切换切到工作节奏，Then 主窗口保持打开并显示工作节奏画布，Mac Care 的运行状态不被重置。
+- Given 工作节奏的计时能力尚未交付，When 页面显示，Then 状态区明确显示「功能尚未开放」，专注/休息入口不可用且被辅助技术识别为不可用。
+- Given 用户切回 Mac Care，When 切换完成，Then 回到 Mac Care 画布，窗口与桌宠状态不受影响。
+
+待实现：
+
 - Given 用户处于专注区间，When 临近休息时间，Then 可出现温和提醒且不打断 Mac Care 安全操作。
 - Given 用户查看 Statistics，When 数据可用，Then 以紧凑摘要呈现，不呈现 SaaS 式分析墙。

@@ -1,17 +1,18 @@
 ---
 name: joeypet-macos
-description: Implement and review JoeyPet on macOS — native Swift desktop pet, system sensors, behavior runtime, SpriteKit, and safety-gated utilities. Use when editing JoeyPet Swift code, adding sensors or pet behaviors, validating architecture boundaries, or running build/test for this repo.
+description: Implement and review JoeyPet on macOS — native Swift desktop pet, system sensors, behavior runtime, SpriteKit, and safety-gated utilities. Use when editing JoeyPet Swift code, adding sensors or pet behaviors, validating architecture boundaries, changing UI/UX (including plain-language interface requests), or running build/test for this repo.
 ---
 
 # JoeyPet macOS Skill
 
 Use when working on JoeyPet implementation or review. **Do not duplicate [AGENTS.md](../../../AGENTS.md)** — follow it; this skill adds workflow and layering.
 
-**UI/UX:** Stitch JoeyPet freeze screens + design system → [Design.md](../../../Design.md) → Apple HIG. Do not follow legacy `Overview / Cleanup / Settings` sidebar IA or deleted `ui-spec.md`.
+**UI/UX:** [DESIGN.md](../../../DESIGN.md) is the reviewable design contract; Apple HIG governs platform behavior and accessibility; ADRs record narrow exceptions; Stitch is an input only when a retrievable artifact exists. Do not follow legacy `Overview / Cleanup / Settings` sidebar IA or deleted `ui-spec.md`.
 
 ## When to use
 
 - Adding or changing Swift code under `src/JoeyPet/`
+- UI/UX request described in plain language (layout, navigation, motion, component state, platform behaviour visible in the interface)
 - New sensor, behavior rule, pet state, or animation clip
 - Utility that touches files, processes, or settings
 - Build/test/runtime verification before marking a task done
@@ -29,6 +30,27 @@ Use when working on JoeyPet implementation or review. **Do not duplicate [AGENTS
 | Utilities | `Utilities/` | Run without approval gate |
 
 Pipeline: `SystemSensor → SystemSignal → BehaviorEngine → PetBehavior/PetState → PetRuntime → AnimationClip → SpriteKit`
+
+## UI work (intent → ambiguity → implementation)
+
+For any interface request, read [references/ui-intent.md](references/ui-intent.md) first, then follow this order.
+
+1. **Extract intent, not words.** Map the description to UI concepts and verify the actual behaviour: layout/hierarchy, navigation/page transition, animation/motion, component state/feedback, platform/accessibility. “整张屏幕从右边滑进来” is a page transition with spatial continuity and navigation state — not a carousel or a scroll view. Use the precise term internally; do not make the user learn it.
+2. **Triage ambiguity.** Act when intent is clear and the existing structure answers “how”. Assume and state the assumption in one sentence when it does not change the outcome. Ask only for a **decision** (product behaviour, navigation model, window architecture) with 2–3 options, or for **evidence** (which screen, screenshot, window size) when you cannot inspect the result — check code/ADR/QA captures first. Never require UI vocabulary from the user.
+3. **Choose the simplest stable implementation.** Ladder: **already shipped → reuse an existing project pattern → Apple-native API/control → light custom SwiftUI/AppKit → new dependency** (reject by default). If the behaviour already exists, verify the **actual effect** (exists ≠ meets the need): report a match, or analyse the gap and continue — never declare done on existence alone. For materially different options, weigh effect fidelity, macOS 14 compatibility, AppKit/SwiftUI/SpriteKit fit, complexity, performance/state risk, Reduce Motion/accessibility, and regression to other screens.
+4. **Respect authority and scope.** [AGENTS.md](../../../AGENTS.md) ("UI / UX implementation") decides which layer governs (HIG / Design.md / ADR), by layer rather than one ranking. Do not redesign a surface the user only asked to tweak, do not turn an unconfirmed request into a product rule or design token, do not apply web rules, and do not migrate the AppKit window architecture. Classify against DESIGN.md Current/Legacy/Pending: Current still needs effect verification; Pending is not shipped, but a direct request to build/deliver it **is** the authorization — prototype, build and deliver it (keep Pending while prototyping; update the status when actually shipped); Legacy must not return without surfacing the current ADR conflict.
+5. **Keep the interaction short.** Do the analysis privately and implement ordinary UI work. Explain only for real ambiguity, a product decision, or a material trade-off: one short paragraph, not a design report. No mandatory spec document or multi-candidate essay. Fast path: a single value/copy/spacing tweak (plus the matching doc line when the docs name it) → implement, build, verify narrowly; skip the full analysis and matrix unless interaction, focus, or motion changes.
+6. **Verify proportionally.** Always build for UI changes. Then: motion → check both directions, Reduce Motion, and input handling (e.g. clicks during the transition); layout/spacing → layout tests + 2–3 reported window sizes including compact (skip the size matrix for a single literal tweak); control state → hover/disabled/keyboard/VoiceOver; visual-only → Light/Dark capture. Run the full unit suite when shared logic changed.
+
+Platform guardrails (official pages are `https://developer.apple.com/design/human-interface-guidelines/<page>.md`; this is a short checklist, not a copy):
+
+- macOS window states (main / key / inactive) must stay recognizable; custom windows must implement the system appearances — `windows`.
+- Do not put critical information or actions in a bottom bar; people hide it when moving windows — `windows`.
+- Menu-bar extras open a **menu**, not a popover; standard menus and shortcuts are expected — `the-menu-bar`.
+- Motion is purposeful, never the only channel for information; always honor Reduce Motion — `motion`.
+- Every custom control needs a VoiceOver label and keyboard access — `accessibility`.
+
+Skills: use `swiftui-expert-skill` for SwiftUI API/availability guidance; its "prefer native SwiftUI over AppKit bridging" rule does not apply to window ownership (AppKit owns windows here). **`hallmark` is a web/HTML design skill — never use it for JoeyPet UI.**
 
 ## Add a new sensor
 
@@ -122,5 +144,6 @@ Run app for SpriteKit and panel behavior after UI/runtime changes.
 - [references/architecture.md](references/architecture.md) — boundaries checklist
 - [references/pet-runtime.md](references/pet-runtime.md) — runtime rule checklist
 - [references/safety.md](references/safety.md) — approval gate checklist
+- [references/ui-intent.md](references/ui-intent.md) — plain-language UI intent, ambiguity triage, implementation ladder
 
 Full specs live under `docs/` — link, do not copy wholesale.
