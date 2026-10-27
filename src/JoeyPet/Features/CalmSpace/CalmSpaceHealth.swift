@@ -155,7 +155,28 @@ enum CalmSpaceHealthBuilder {
         return parts.joined(separator: " · ")
     }
 
+    /// A future `updatedAt` within this many seconds is ordinary delivery
+    /// ordering or minor clock skew — it still reads as a fresh update. Beyond
+    /// it the timestamp cannot be explained by ordering and must be reported
+    /// honestly instead of as a normal (or future-tense) update.
+    static let futureSkewTolerance: TimeInterval = 5
+
     private static func lastCheckedText(from date: Date, now: Date) -> String? {
+        let age = now.timeIntervalSince(date)
+
+        // Clearly-future timestamp: honest anomaly copy, never "N 秒后更新".
+        if age < -futureSkewTolerance {
+            return "更新时间异常"
+        }
+
+        // Fresh updates and sub-second skew read as just updated. The raw
+        // formatter rounds this whole band to "0秒后" — the old "0 秒后更新" bug.
+        if age < 60 {
+            return "刚刚更新"
+        }
+
+        // ≥60 s: minute or larger units only, so a zero-valued unit can never
+        // appear ("60 秒" is already "1 分钟前").
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .short
         formatter.locale = Locale(identifier: "zh_CN")

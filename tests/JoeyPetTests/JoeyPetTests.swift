@@ -1940,6 +1940,80 @@ struct CalmSpaceHealthTests {
     }
 }
 
+/// Third-line relative update copy. `now` and `updatedAt` are always injected —
+/// no sleeping, no live clock, fully deterministic.
+struct CalmSpaceRelativeTimeTests {
+    private let now = Date(timeIntervalSince1970: 1_700_000_000)
+
+    /// `age > 0`: snapshot in the past. `age < 0`: timestamp ahead of `now`.
+    private func lastCheckedText(age: TimeInterval) -> String? {
+        let snapshot = SystemStatusSnapshot(
+            thermal: .nominal,
+            memory: .normal,
+            storageAvailableBytes: 500_000_000_000,
+            storageTotalBytes: 1_000_000_000_000,
+            storageSeverity: .normal,
+            physicalMemoryBytes: 36_000_000_000,
+            usedMemoryBytes: 18_000_000_000,
+            swapUsedBytes: 0,
+            volumeName: "Macintosh HD",
+            updatedAt: now.addingTimeInterval(-age)
+        )
+        return CalmSpaceHealthBuilder.make(
+            snapshot: snapshot,
+            accessLevel: .full,
+            now: now
+        ).lastCheckedText
+    }
+
+    @Test func subSecondAgeReadsAsJustUpdated() {
+        #expect(lastCheckedText(age: 0) == "刚刚更新")
+        #expect(lastCheckedText(age: 0.4) == "刚刚更新")
+        #expect(lastCheckedText(age: 0.9) == "刚刚更新")
+    }
+
+    @Test func fiftyNineSecondsStillReadsAsJustUpdated() {
+        #expect(lastCheckedText(age: 59) == "刚刚更新")
+    }
+
+    @Test func sixtySecondsSwitchesToOneMinuteAgo() {
+        #expect(lastCheckedText(age: 60) == "1分钟前更新")
+    }
+
+    @Test func ninetySecondsRoundsToWholeMinutes() {
+        #expect(lastCheckedText(age: 90) == "1分钟前更新")
+    }
+
+    @Test func minutesHoursAndDaysUseBiggerUnits() {
+        #expect(lastCheckedText(age: 300) == "5分钟前更新")
+        #expect(lastCheckedText(age: 7_200) == "2小时前更新")
+        #expect(lastCheckedText(age: 3 * 86_400) == "3天前更新")
+    }
+
+    @Test func smallFutureSkewReadsAsJustUpdated() {
+        #expect(lastCheckedText(age: -0.5) == "刚刚更新")
+        #expect(lastCheckedText(age: -2) == "刚刚更新")
+        #expect(lastCheckedText(age: -5) == "刚刚更新")
+    }
+
+    @Test func clearlyFutureTimestampIsAnHonestAnomaly() {
+        #expect(lastCheckedText(age: -6) == "更新时间异常")
+        #expect(lastCheckedText(age: -3_600) == "更新时间异常")
+    }
+
+    @Test func noSecondLevelCopyInAnyBand() {
+        let ages: [Double] = [
+            -3_600, -600, -60, -59, -5, -1, -0.5, 0,
+            0.5, 1, 59, 60, 90, 300, 7_200, 3 * 86_400,
+        ]
+        for age in ages {
+            let text = lastCheckedText(age: age) ?? ""
+            #expect(!text.contains("秒"), "unexpected second-level copy at age \(age): \(text)")
+            #expect(!text.contains("0 分钟"), "zero minutes at age \(age): \(text)")
+        }
+    }
+}
+
 struct CalmSpaceLayoutTests {
     private let sizes: [CGSize] = [
         CGSize(width: 680, height: 480),
