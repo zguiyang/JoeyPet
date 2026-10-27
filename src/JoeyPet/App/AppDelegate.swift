@@ -105,6 +105,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         configureMenuBarStatusItem()
 
+        // The SwiftUI app menu's Settings command (⌘,) posts this intent. Route it to
+        // the same AppKit-owned window/presentation path as the status-bar 设置… item,
+        // so no separate (empty) settings window is ever created.
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(openSettings),
+            name: .joeyPetOpenSettings,
+            object: nil
+        )
+
         #if DEBUG
         applyQALaunchSideEffects()
         #endif
@@ -320,6 +330,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         mainWindowController?.present(intent: .macCareCleanup)
         appModel?.scan()
     }
+    /// Opens the in-window Settings page in the single AppKit-owned main window.
+    /// Reused by the status-bar menu and the app-menu Settings command (⌘,).
     @objc private func openSettings() {
         mainWindowController?.present(intent: .settings)
     }
@@ -339,4 +351,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             self?.mainWindowController?.present(intent: .default)
         })
     }
+}
+
+extension Notification.Name {
+    /// Posted by the SwiftUI app-menu Settings command (⌘,). The command scene cannot
+    /// reach AppDelegate's AppKit-owned window directly, so AppDelegate observes this
+    /// and presents the existing in-window Settings page.
+    static let joeyPetOpenSettings = Notification.Name("com.zguiyang.JoeyPet.openSettings")
 }
