@@ -2,12 +2,15 @@
 
 Hard rules for agents working on JoeyPet. Read this before any code change.
 
-## Product scope (V1)
+## Current product scope (V0 — takes precedence over legacy docs)
 
-- macOS-only native Swift desktop pet and lightweight system resource assistant.
-- **Usually a pet, when needed a tool** — playful presence first; utilities only when useful.
-- Qualities: lightweight, native, privacy-friendly, local-first, system-aware, quiet, useful.
-- No AI companion, chatbot, LLM runtime, or database in V1.
+Read [`开发交接文档.md`](开发交接文档.md) and [`V0_FEATURE_SCOPE.md`](V0_FEATURE_SCOPE.md) before planning or changing this repository.
+
+- macOS-only native desktop pet for gentle work rhythm and recovery companionship.
+- Joey is a pet, never a Mac Care tool or productivity supervisor.
+- Keep the product lightweight, native, privacy-friendly, local-first and quiet.
+- Do not add cleanup, uninstall, system monitoring, Todo, task management, MCP/CLI integrations, cloud accounts, chat, LLM runtime or a database without an explicit new product decision.
+- Legacy Mac Care / Calm Space documents exist only for historical reference; do not restore their scope or architecture from them.
 
 ## Allowed stack
 

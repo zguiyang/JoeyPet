@@ -28,23 +28,7 @@ final class PetRuntime {
         applyAnimation(for: initialAnimationID, state: .idle)
     }
 
-    func apply(behavior: PetBehavior) {
-        currentState = behavior.state
-
-        if behavior.state != .idle {
-            transientSessionTask?.cancel()
-            transientSessionTask = nil
-            currentTransientBehavior = nil
-        } else if currentTransientBehavior != nil {
-            return
-        }
-
-        let animationID = PetStateAnimationMapping.animationID(for: behavior.state)
-        applyAnimation(for: animationID, state: behavior.state)
-    }
-
     /// Requests one explicit or ambient behavior through the runtime arbitration point.
-    /// Ambient and explicit behaviors are intentionally dropped while a system state is active.
     @discardableResult
     func perform(_ behavior: PetTransientBehavior) -> Bool {
         guard currentState == .idle, currentTransientBehavior == nil else { return false }
@@ -80,10 +64,6 @@ final class PetRuntime {
     /// Direct asset playback hook for Debug builds; it does not alter PetState or behavior mapping.
     func applyDebugAnimation(_ animationID: String) {
         applyAnimation(for: animationID, state: currentState)
-    }
-
-    func updateStatusSeverity(_ severity: SignalSeverity) {
-        scene.applyStatusSeverity(severity)
     }
 
     func finishTransientIfCurrent(_ behavior: PetTransientBehavior) {

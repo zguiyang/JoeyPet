@@ -1,361 +1,39 @@
 import AppKit
-import Combine
-import OSLog
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
-    private static let logger = Logger(subsystem: "com.zguiyang.JoeyPet", category: "AppDelegate")
-
+final class AppDelegate: NSObject, NSApplicationDelegate {
     private var panelController: PetPanelController?
     private var coordinator: PetCoordinator?
-    private var appModel: AppModel?
-    private let shellState = AppShellState()
-    private let stageState = JoeyStageState()
-    private var mainWindowController: MainWindowController?
-    private let bubbleController = JoeyBubbleController()
     private var statusItem: NSStatusItem?
-    private var statusBarMenu: NSMenu?
-    private var permissionStatusObservation: AnyCancellable?
-    private var didPresentPermissionOnboardingThisLaunch = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)
-
-        #if DEBUG
-        if let qaAppearance = DebugStateInjector.qaAppearance() {
-            NSApp.appearance = qaAppearance
-        }
-        #endif
-
-        let panelController = PetPanelController()
-        let coordinator = PetCoordinator(panelController: panelController)
-        let appModel = AppModel()
-        let mainWindowController = MainWindowController(model: appModel, shellState: shellState, stageState: stageState)
-
-        self.panelController = panelController
+        let panel = PetPanelController()
+        let coordinator = PetCoordinator(panelController: panel)
+        panelController = panel
         self.coordinator = coordinator
-        self.appModel = appModel
-        self.mainWindowController = mainWindowController
-
-        panelController.onLeftClick = { [weak self] in self?.showStatusBubble() }
-        coordinator.onSystemSnapshot = { [weak appModel] snapshot in appModel?.update(systemStatus: snapshot) }
-        coordinator.onStageSnapshot = { [weak stageState] snapshot in stageState?.apply(snapshot) }
-        coordinator.onBubble = { [weak self] message, frame, primary, secondary in
-            self?.bubbleController.show(message, near: frame, onPrimary: primary, onSecondary: secondary)
-        }
-        coordinator.onQuickClean = { [weak appModel] in appModel?.beginQuickClean() }
-        coordinator.onScan = { [weak appModel, weak mainWindowController] in
-            mainWindowController?.present(intent: .macCareCleanup)
-            appModel?.scan()
-        }
-        appModel.onPreferencesChanged = { [weak coordinator] in coordinator?.refreshPreferences() }
-        appModel.onResetPetPosition = { [weak panelController] in panelController?.resetPosition() }
-        appModel.onShowsDesktopPetChanged = { [weak panelController] visible in
-            panelController?.setVisible(visible)
-        }
-        appModel.onCleanupStarted = { [weak panelController, weak coordinator] in
-            _ = panelController?.petRuntime.perform(.cleaning)
-            coordinator?.publishStageSnapshot()
-        }
-        appModel.onCleanupFinished = { [weak self, weak mainWindowController, weak panelController, weak coordinator] result in
-            guard let panelController else { return }
-            let behavior: PetTransientBehavior = result.failedCount == 0 ? .celebrating : .notifying
-            _ = panelController.petRuntime.perform(behavior)
-            coordinator?.publishStageSnapshot()
-            let message = result.failedCount == 0
-                ? "处理好了，\(result.succeededCount) 个项目已经移到废纸篓。"
-                : "已处理 \(result.succeededCount) 个项目，\(result.failedCount) 个项目失败。"
-            self?.bubbleController.show(
-                JoeyBubbleMessage(text: message, severity: result.failedCount == 0 ? .normal : .warning, primaryTitle: "查看详情", secondaryTitle: nil),
-                near: panelController.currentFrame(),
-                onPrimary: { mainWindowController?.present(intent: .macCareCleanup) }
-            )
-        }
-        appModel.onQuickCleanNeedsConfirmation = { [weak self] in
-            self?.presentQuickCleanConfirmation()
-        }
-        appModel.onQuickCleanNothingToProcess = { [weak self, weak panelController] in
-            self?.bubbleController.show(
-                JoeyBubbleMessage(text: "当前没有需要快速处理的内容。", severity: .normal, primaryTitle: nil, secondaryTitle: nil),
-                near: panelController?.currentFrame() ?? .zero
-            )
-        }
-
-        #if DEBUG
-        let showsDesktopPet = !DebugStateInjector.qaHidesPet() && appModel.showsDesktopPet
-        #else
-        let showsDesktopPet = appModel.showsDesktopPet
-        #endif
-        panelController.setVisible(showsDesktopPet)
+        panel.setVisible(PetPreferences.showsDesktopPet())
         coordinator.start()
-
-        #if DEBUG
-        if DebugStateInjector.resetsPermissionOnboarding() {
-            PermissionOnboardingPreferences.resetForDevelopment()
-        }
-        #endif
-
-        permissionStatusObservation = PermissionService.shared.$fullDiskAccessStatus
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] status in
-                self?.handlePermissionStatusForOnboarding(status)
-            }
-
-        PermissionService.shared.refresh()
-
-        configureMenuBarStatusItem()
-
-        // The SwiftUI app menu's Settings command (⌘,) posts this intent. Route it to
-        // the same AppKit-owned window/presentation path as the status-bar 设置… item,
-        // so no separate (empty) settings window is ever created.
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(openSettings),
-            name: .joeyPetOpenSettings,
-            object: nil
-        )
-
-        #if DEBUG
-        applyQALaunchSideEffects()
-        #endif
-
-        // Every launch must be visible: open the main window instead of staying
-        // menu-bar-only. (Previously the window only appeared when the user found the
-        // status-bar item, which was easy to miss.)
-        presentMainWindowOnLaunch()
-
-        Self.logger.info("JoeyPet desktop MVP launched")
+        configureStatusItem()
     }
 
-    #if DEBUG
-    /// DEBUG-only launch side effects that are not window presentation (e.g. auto scan).
-    private func applyQALaunchSideEffects() {
-        guard DebugStateInjector.qaMainWindowIntent() != nil,
-              DebugStateInjector.qaTriggersScan()
-        else { return }
-        appModel?.scan()
-    }
-    #endif
-
-    /// Presents the main window on launch.
-    ///
-    /// Product behavior: launching the app (Finder, Dock, Xcode run) opens the main window.
-    /// First-run onboarding still wins; QA flags can suppress or redirect the launch window.
-    private func presentMainWindowOnLaunch() {
-        #if DEBUG
-        if DebugStateInjector.qaSuppressesMainWindow() { return }
-        if let intent = DebugStateInjector.qaMainWindowIntent() {
-            mainWindowController?.present(intent: intent)
-            return
-        }
-        #endif
-
-        let hasCompletedOnboarding = PermissionOnboardingPreferences.hasCompleted()
-        let status = PermissionService.shared.fullDiskAccessStatus
-        let intent: MainWindowIntent = PermissionOnboardingGate.shouldPresentOnboarding(
-            hasCompleted: hasCompletedOnboarding,
-            fullDiskAccessStatus: status
-        ) ? .permissionOnboarding : .default
-        mainWindowController?.present(intent: intent)
-    }
-
-    func applicationDidBecomeActive(_ notification: Notification) {
-        PermissionService.shared.refresh()
-    }
-
-    private func handlePermissionStatusForOnboarding(_ status: FullDiskAccessStatus) {
-        let hasCompleted = PermissionOnboardingPreferences.hasCompleted()
-
-        if PermissionOnboardingGate.shouldAutoCompleteOnLaunch(
-            hasCompleted: hasCompleted,
-            fullDiskAccessStatus: status
-        ) {
-            PermissionOnboardingPreferences.markCompleted()
-            if shellState.presentation == .permissionOnboarding {
-                shellState.presentation = .main
-            }
-            return
-        }
-
-        guard PermissionOnboardingGate.shouldPresentOnboarding(
-            hasCompleted: hasCompleted,
-            fullDiskAccessStatus: status
-        ) else { return }
-
-        #if DEBUG
-        if DebugStateInjector.qaSuppressesMainWindow() { return }
-        if DebugStateInjector.qaMainWindowIntent() != nil { return }
-        #endif
-
-        guard !didPresentPermissionOnboardingThisLaunch else { return }
-        didPresentPermissionOnboardingThisLaunch = true
-        mainWindowController?.present(intent: .permissionOnboarding)
-    }
-
-    func applicationWillTerminate(_ notification: Notification) {
-        coordinator?.stop()
-        appModel?.cancelOperations()
-        bubbleController.dismiss()
-    }
-
+    func applicationWillTerminate(_ notification: Notification) { coordinator?.stop() }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 
-    /// Dock icon click / Finder reopen: bring the main window back when it is closed.
-    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        if !flag {
-            mainWindowController?.present(intent: .default)
-        }
-        return true
-    }
-
-    @objc private func openMainWindow() { mainWindowController?.present(intent: .default) }
-
-    private func configureMenuBarStatusItem() {
-        #if DEBUG
-        print("[JoeyPet] configureMenuBarStatusItem")
-        #endif
-        Self.logger.info("configureMenuBarStatusItem")
-
+    private func configureStatusItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        statusItem = item
-
-        guard let button = item.button else {
-            #if DEBUG
-            print("[JoeyPet] NSStatusItem.button is nil")
-            #endif
-            Self.logger.error("NSStatusItem.button is nil")
-            return
-        }
-
-        button.toolTip = "JoeyPet"
-
-        if let image = Self.statusBarTemplateImage(named: "JoeyPetMenuBarTemplate") {
-            #if DEBUG
-            print("[JoeyPet] JoeyPetMenuBarTemplate asset loaded for status bar")
-            #endif
-            button.image = image
-            button.title = ""
-            button.imagePosition = .imageOnly
-            button.imageScaling = .scaleProportionallyDown
-        } else {
-            #if DEBUG
-            print("[JoeyPet] JoeyPetMenuBarTemplate asset NOT FOUND — using title fallback JP")
-            #endif
-            Self.logger.error("JoeyPetMenuBarTemplate asset NOT FOUND")
-            button.image = nil
-            button.title = "JP"
-        }
-
-        let menu = makeStatusBarMenu()
-        menu.delegate = self
-        statusBarMenu = menu
-        item.menu = menu
-
-        item.isVisible = true
-        #if DEBUG
-        print("[JoeyPet] statusItem configured visible=\(item.isVisible)")
-        #endif
-    }
-
-    private func makeStatusBarMenu() -> NSMenu {
+        item.button?.image = NSImage(named: "JoeyPetMenuBarTemplate")
         let menu = NSMenu()
-        menu.autoenablesItems = false
-
-        menu.addItem(menuItem(title: "打开 JoeyPet", action: #selector(openMainWindow), tag: 1))
-        menu.addItem(menuItem(title: "快速清理", action: #selector(quickClean), tag: 2))
-        menu.addItem(menuItem(title: "扫描并查看…", action: #selector(scanAndView), tag: 3))
+        menu.addItem(withTitle: "显示 Joey", action: #selector(showJoey), keyEquivalent: "")
+        menu.addItem(withTitle: "隐藏 Joey", action: #selector(hideJoey), keyEquivalent: "")
         menu.addItem(.separator())
-        menu.addItem(menuItem(title: "设置…", action: #selector(openSettings), tag: 4))
-        menu.addItem(.separator())
-        menu.addItem(menuItem(title: "退出 JoeyPet", action: #selector(quit), keyEquivalent: "q", tag: 5))
-
-        return menu
+        menu.addItem(withTitle: "退出 JoeyPet", action: #selector(quit), keyEquivalent: "q")
+        menu.items.forEach { $0.target = self }
+        item.menu = menu
+        statusItem = item
     }
 
-    private func menuItem(
-        title: String,
-        action: Selector,
-        keyEquivalent: String = "",
-        tag: Int
-    ) -> NSMenuItem {
-        let item = NSMenuItem(title: title, action: action, keyEquivalent: keyEquivalent)
-        item.target = self
-        item.tag = tag
-        return item
-    }
-
-    func menuNeedsUpdate(_ menu: NSMenu) {
-        let busy = appModel?.isBusy ?? false
-        menu.item(withTag: 2)?.isEnabled = !busy // Quick Clean
-        menu.item(withTag: 3)?.isEnabled = !busy // Scan and View
-    }
-
-    /// Rasterize asset-catalog template artwork for NSStatusItem (SVG often has no bitmap backing).
-    private static func statusBarTemplateImage(named name: String, pointSize: CGFloat = 19) -> NSImage? {
-        guard let source = NSImage(named: name) ?? Bundle.main.image(forResource: name) else {
-            return nil
-        }
-        source.isTemplate = true
-        let size = NSSize(width: pointSize, height: pointSize)
-        let output = NSImage(size: size)
-        output.isTemplate = true
-        output.lockFocus()
-        defer { output.unlockFocus() }
-        NSColor.clear.set()
-        NSBezierPath(rect: NSRect(origin: .zero, size: size)).fill()
-        source.draw(
-            in: NSRect(origin: .zero, size: size),
-            from: NSRect(origin: .zero, size: source.size),
-            operation: .sourceOver,
-            fraction: 1,
-            respectFlipped: true,
-            hints: nil
-        )
-        return output
-    }
-
-    @objc private func quickClean() { appModel?.beginQuickClean() }
-
-    private func presentQuickCleanConfirmation() {
-        let alert = NSAlert()
-        alert.messageText = "清理可安全处理的内容？"
-        alert.informativeText = "这些缓存和临时文件会被移到废纸篓，不会永久删除。"
-        alert.alertStyle = .informational
-        alert.addButton(withTitle: "移到废纸篓")
-        alert.addButton(withTitle: "取消")
-        guard alert.runModal() == .alertFirstButtonReturn else { return }
-        appModel?.confirmQuickClean()
-    }
-    @objc private func scanAndView() {
-        mainWindowController?.present(intent: .macCareCleanup)
-        appModel?.scan()
-    }
-    /// Opens the in-window Settings page in the single AppKit-owned main window.
-    /// Reused by the status-bar menu and the app-menu Settings command (⌘,).
-    @objc private func openSettings() {
-        mainWindowController?.present(intent: .settings)
-    }
+    @objc private func showJoey() { panelController?.setVisible(true) }
+    @objc private func hideJoey() { panelController?.setVisible(false) }
     @objc private func quit() { NSApp.terminate(nil) }
-
-    private func showStatusBubble() {
-        guard let panelController, let appModel else { return }
-        let status = appModel.systemStatus
-        let message: JoeyBubbleMessage
-        switch status.overallSeverity {
-        case .normal: message = JoeyBubbleMessage(text: "Joey 在这里陪你工作。", severity: .normal, primaryTitle: nil, secondaryTitle: nil)
-        case .notice: message = JoeyBubbleMessage(text: "Mac 有一点小提醒。", severity: .notice, primaryTitle: "查看", secondaryTitle: nil)
-        case .warning: message = JoeyBubbleMessage(text: "Mac 需要注意一下。", severity: .warning, primaryTitle: "查看", secondaryTitle: nil)
-        case .critical: message = JoeyBubbleMessage(text: "Mac 状态比较紧张。", severity: .critical, primaryTitle: "查看", secondaryTitle: nil)
-        }
-        bubbleController.show(message, near: panelController.currentFrame(), onPrimary: { [weak self] in
-            self?.mainWindowController?.present(intent: .default)
-        })
-    }
-}
-
-extension Notification.Name {
-    /// Posted by the SwiftUI app-menu Settings command (⌘,). The command scene cannot
-    /// reach AppDelegate's AppKit-owned window directly, so AppDelegate observes this
-    /// and presents the existing in-window Settings page.
-    static let joeyPetOpenSettings = Notification.Name("com.zguiyang.JoeyPet.openSettings")
 }

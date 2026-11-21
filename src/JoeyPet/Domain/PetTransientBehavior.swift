@@ -4,7 +4,6 @@ enum PetTransientBehavior: String, Equatable, Sendable, CaseIterable {
     case blink
     case walking
     case sleeping
-    case cleaning
     case celebrating
     case notifying
 
@@ -16,7 +15,7 @@ enum PetTransientBehavior: String, Equatable, Sendable, CaseIterable {
         switch self {
         case .blink, .walking, .sleeping:
             return true
-        case .cleaning, .celebrating, .notifying:
+        case .celebrating, .notifying:
             return false
         }
     }
@@ -27,8 +26,6 @@ enum PetTransientBehavior: String, Equatable, Sendable, CaseIterable {
         switch self {
         case .walking:
             return 2
-        case .cleaning:
-            return 5
         case .sleeping:
             return 18
         case .blink, .celebrating, .notifying:

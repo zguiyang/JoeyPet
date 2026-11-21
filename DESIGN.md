@@ -1,5 +1,7 @@
 # JoeyPet — Native macOS Design Implementation Contract
 
+> **Legacy on `dev` (2026-11):** This document records the retired Mac Care / Calm Space direction. It must not guide new work on the current product. Read [`开发交接文档.md`](开发交接文档.md) and [`V0_FEATURE_SCOPE.md`](V0_FEATURE_SCOPE.md) instead; a new desktop-companion design baseline will be created after the V0 UI direction is agreed.
+
 **Status:** Repository design source of truth for **native implementation** (SwiftUI, AppKit, SpriteKit).  
 **Design input:** Stitch project **JoeyPet** (`projects/14486211155070464514`) — freeze screens + **JoeyPet macOS Native** design system, used when retrievable.  
 **Not in scope here:** product acceptance rules ([`docs/product/feature-spec.md`](docs/product/feature-spec.md)), file safety ([`docs/safety.md`](docs/safety.md), [`docs/cleanup.md`](docs/cleanup.md)), pet runtime ([`docs/pet-runtime.md`](docs/pet-runtime.md)), pixel character production ([`docs/character-design.md`](docs/character-design.md)).

@@ -39,8 +39,4 @@ final class CharacterNode: SKSpriteNode {
         }
     }
 
-    func applyStatusSeverity(_ severity: SignalSeverity) {
-        color = severity.statusColor
-        colorBlendFactor = severity == .normal ? 0 : 0.22
-    }
 }

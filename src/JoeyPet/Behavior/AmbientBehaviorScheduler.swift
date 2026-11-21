@@ -57,9 +57,9 @@ final class AmbientBehaviorScheduler {
         Self.logger.info("Ambient scheduler stopped")
     }
 
-    func update(sustainedState: PetState) {
+    func update() {
         let enabled = PetPreferences.ambientBehaviorsEnabled(defaults: defaults)
-        if sustainedState == .idle, enabled {
+        if enabled {
             start()
         } else {
             stop()

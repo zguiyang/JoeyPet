@@ -2,18 +2,12 @@
 
 [简体中文](./README.zh-CN.md)
 
-A tiny desktop pet that watches over your Mac, reacts to system status, and helps with everyday chores.
+A tiny desktop pet that quietly accompanies healthy work rhythms.
 
-JoeyPet is a lightweight, native desktop pet designed to live quietly on your desktop and respond to the state of your computer.
+JoeyPet is a lightweight, native desktop pet designed to live quietly on your desktop and gently invite short recovery breaks.
 
 JoeyPet is not an AI companion or chatbot. It focuses on a quiet desktop
-presence, a lightweight Mac System Overview, three semantic signals for Joey's
-reactions (thermal pressure, memory pressure, and storage), and a small
-safety-gated cleanup workflow.
-
-The V1 Overview target includes CPU, memory, storage, network, and thermal
-status with short-term trends where useful. It is system monitoring, not
-process management or system optimization.
+presence, gentle work-rhythm companionship and a small sense of shared growth.
 
 ## Current Status
 
@@ -25,15 +19,13 @@ The first version is focused on macOS and will be built as a native Swift applic
 
 - [AGENTS.md](./AGENTS.md) — rules for coding agents
 - [Design.md](./Design.md) — native UI/UX implementation contract (Stitch upstream)
-- [docs/product/](docs/product/) — product Source of Truth: PRD, V1 scope, feature specs, and roadmap
-- [docs/](docs/) — technical architecture, sensors, safety, lifecycle, and ADRs
+- [V0_FEATURE_SCOPE.md](./V0_FEATURE_SCOPE.md) — current test-version product scope
+- [开发交接文档.md](./开发交接文档.md) — current handoff and development boundary
 
 ## Principles
 
 - Lightweight and resource-friendly
 - Native macOS experience
 - Privacy-friendly and local-first
-- Read-only system awareness by default
-- Safe and explicit confirmation for destructive actions
 - Playful interaction without becoming an AI companion
-- Small, focused everyday utilities
+- Gentle reminders without supervision or pressure
