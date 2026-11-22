@@ -1,0 +1,669 @@
+import AppKit
+import SwiftUI
+
+struct SettingsRootView: View {
+    @Bindable var settings: AppSettings
+    @State private var selection: SettingsSection = .rhythm
+    @State private var hoveredSection: SettingsSection?
+    @State private var isFeedbackOpen = false
+    @FocusState private var isFeedbackFocused: Bool
+
+    private var theme: JoeyTheme { JoeyTheme(appearance: settings.appearance) }
+
+    var body: some View {
+        HStack(spacing: 0) {
+            sidebar
+            Rectangle()
+                .fill(theme.hairline)
+                .frame(width: 1)
+            VStack(alignment: .leading, spacing: 0) {
+                detail
+                Spacer(minLength: 0)
+            }
+            .padding(.init(top: 24, leading: 28, bottom: 24, trailing: 28))
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }
+        .background(theme.windowBg)
+        .environment(\.joeyAppearance, settings.appearance)
+        .task(id: settings.pauseUntil) {
+            await clearExpiredPause()
+        }
+    }
+
+    private var sidebar: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            ForEach(SettingsSection.allCases) { section in
+                navRow(section)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 12)
+        .frame(width: 200)
+        .background(theme.windowChrome)
+    }
+
+    private func navRow(_ section: SettingsSection) -> some View {
+        let isSelected = selection == section
+        let isHovered = hoveredSection == section
+
+        return Button {
+            selection = section
+        } label: {
+            Text(section.title)
+                .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
+                .foregroundStyle(isSelected ? selectedTextColor : theme.ink2)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 7)
+                .background(
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .fill(isSelected ? theme.sageSoft : (isHovered ? theme.panel2 : Color.clear))
+                )
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hoveredSection = $0 ? section : nil }
+        .accessibilityLabel(Text(section.title))
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    /// The reference uses sage-deep in light and plain sage in dusk.
+    private var selectedTextColor: Color {
+        settings.appearance == .dusk ? theme.sage : theme.sageDeep
+    }
+
+    @ViewBuilder
+    private var detail: some View {
+        switch selection {
+        case .rhythm:
+            rhythmPane
+        case .quiet:
+            quietPane
+        case .appearance:
+            appearancePane
+        case .growth:
+            growthPane
+        case .about:
+            aboutPane
+        }
+    }
+
+    private var rhythmPane: some View {
+        SettingsPane(title: "节奏与提醒", description: "只在你开始工作后提醒。") {
+            SettingsRowList {
+                SettingsRow("提醒节奏", subtitle: "两次邀请之间的安静时间") {
+                    JoeySegmentedControl(
+                        titles: AppSettings.rhythmOptions.map { "\($0) 分钟" },
+                        selectedIndex: AppSettings.rhythmOptions.firstIndex(of: settings.rhythmMinutes) ?? 0
+                    ) { index in
+                        settings.rhythmMinutes = AppSettings.rhythmOptions[index]
+                    }
+                    .accessibilityLabel("提醒节奏")
+                }
+
+                SettingsRow("暂停一小时", subtitle: settings.pauseResumeText) {
+                    JoeySwitch(isOn: pauseBinding, label: "暂停一小时")
+                }
+            }
+        }
+    }
+
+    private var quietPane: some View {
+        SettingsPane(title: "安静时段", description: "这段时间里 Joey 不会来叫你。") {
+            SettingsRowList {
+                SettingsRow("安静时段", subtitle: settings.quietHoursText) {
+                    QuietHoursField(
+                        startMinutes: $settings.quietStartMinutes,
+                        endMinutes: $settings.quietEndMinutes
+                    )
+                }
+            }
+        }
+    }
+
+    private var appearancePane: some View {
+        SettingsPane(title: "外观与位置", description: "Joey 在桌面上的样子。") {
+            SettingsRowList {
+                SettingsRow("外观", subtitle: "白天和黄昏各有一套配色") {
+                    JoeySegmentedControl(
+                        titles: ["白天", "黄昏"],
+                        selectedIndex: settings.appearance == .light ? 0 : 1
+                    ) { index in
+                        settings.appearance = index == 0 ? .light : .dusk
+                    }
+                    .accessibilityLabel("外观")
+                }
+
+                SettingsRow("在桌面上显示 Joey", subtitle: "停在屏幕右下角") {
+                    JoeySwitch(isOn: $settings.showsDesktopPet, label: "在桌面上显示 Joey")
+                }
+            }
+        }
+    }
+
+    private var growthPane: some View {
+        SettingsPane(title: "成长记录", description: "休息会在小窝里留下痕迹。") {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("今天还没有休息记录。")
+                    .font(.system(size: 13.5))
+                    .foregroundStyle(theme.ink2)
+                Text("完成一次短暂休息，小窝里会多一片叶子。")
+                    .font(.system(size: 12.5))
+                    .foregroundStyle(theme.muted)
+            }
+            .padding(.top, 18)
+        }
+    }
+
+    private var aboutPane: some View {
+        SettingsPane(title: "关于 JoeyPet", description: "一只安静生活在桌面上的宠物。") {
+            VStack(alignment: .leading, spacing: 0) {
+                SettingsRowList {
+                    SettingsRow("版本", subtitle: "") {
+                        Text(appVersion)
+                            .font(.system(size: 13))
+                            .monospacedDigit()
+                            .foregroundStyle(theme.ink2)
+                    }
+
+                    SettingsRow("反馈", subtitle: "哪里觉得打扰，写在这里") {
+                        SettingsSmallButton(
+                            title: isFeedbackOpen ? "收起" : "写一句"
+                        ) {
+                            withAnimation(.easeOut(duration: 0.16)) {
+                                isFeedbackOpen.toggle()
+                            }
+                        }
+                    }
+                }
+
+                if isFeedbackOpen {
+                    feedbackEditor
+                        .padding(.top, 14)
+                }
+            }
+        }
+    }
+
+    private var feedbackEditor: some View {
+        ZStack(alignment: .topLeading) {
+            if settings.feedback.isEmpty {
+                Text("说给 Joey 听…")
+                    .font(.system(size: 13))
+                    .foregroundStyle(theme.muted)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 16)
+                    .allowsHitTesting(false)
+            }
+
+            TextEditor(text: $settings.feedback)
+                .font(.system(size: 13))
+                .foregroundStyle(theme.ink)
+                .scrollContentBackground(.hidden)
+                .padding(12)
+                .frame(minHeight: 72)
+                .focused($isFeedbackFocused)
+                .accessibilityLabel("反馈")
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(theme.panel)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .stroke(
+                    isFeedbackFocused ? theme.focus : theme.hairlineStrong,
+                    lineWidth: isFeedbackFocused ? 2 : 1
+                )
+        )
+    }
+
+    private var pauseBinding: Binding<Bool> {
+        Binding(
+            get: { settings.isPaused },
+            set: { settings.setPaused($0) }
+        )
+    }
+
+    private var appVersion: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    }
+
+    private func clearExpiredPause() async {
+        guard let until = settings.pauseUntil, until > .now else {
+            settings.clearExpiredPause()
+            return
+        }
+        let seconds = until.timeIntervalSinceNow
+        if seconds > 0 {
+            try? await Task.sleep(for: .seconds(seconds))
+        }
+        settings.clearExpiredPause()
+    }
+}
+
+// MARK: - Sections
+
+enum SettingsSection: String, CaseIterable, Identifiable {
+    case rhythm
+    case quiet
+    case appearance
+    case growth
+    case about
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .rhythm: return "节奏与提醒"
+        case .quiet: return "安静时段"
+        case .appearance: return "外观与位置"
+        case .growth: return "成长记录"
+        case .about: return "关于 JoeyPet"
+        }
+    }
+}
+
+// MARK: - Layout
+
+private struct SettingsPane<Content: View>: View {
+    private let title: String
+    private let description: String
+    private let content: Content
+
+    init(title: String, description: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.description = description
+        self.content = content()
+    }
+
+    @Environment(\.joeyAppearance) private var appearance
+    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(title)
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(theme.ink)
+
+            Text(description)
+                .font(.system(size: 12.5))
+                .foregroundStyle(theme.muted)
+                .padding(.top, 4)
+                .padding(.bottom, 18)
+
+            content
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct SettingsRowList<Content: View>: View {
+    private let content: Content
+
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+
+    @Environment(\.joeyAppearance) private var appearance
+
+    var body: some View {
+        VStack(spacing: 0) {
+            content
+            Rectangle()
+                .fill(JoeyTheme(appearance: appearance).hairline)
+                .frame(height: 1)
+        }
+    }
+}
+
+private struct SettingsRow<Control: View>: View {
+    private let title: String
+    private let subtitle: String
+    private let control: Control
+
+    init(_ title: String, subtitle: String = "", @ViewBuilder control: () -> Control) {
+        self.title = title
+        self.subtitle = subtitle
+        self.control = control()
+    }
+
+    @Environment(\.joeyAppearance) private var appearance
+    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 20) {
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title)
+                    .font(.system(size: 13.5, weight: .semibold))
+                    .foregroundStyle(theme.ink)
+                if !subtitle.isEmpty {
+                    Text(subtitle)
+                        .font(.system(size: 12))
+                        .foregroundStyle(theme.muted)
+                }
+            }
+
+            Spacer(minLength: 20)
+
+            control
+        }
+        .padding(.vertical, 14)
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(theme.hairline)
+                .frame(height: 1)
+        }
+    }
+}
+
+// MARK: - Controls
+
+private struct JoeySegmentedControl: View {
+    let titles: [String]
+    let selectedIndex: Int
+    let onSelect: (Int) -> Void
+
+    @Environment(\.joeyAppearance) private var appearance
+    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(titles.indices, id: \.self) { index in
+                Button {
+                    onSelect(index)
+                } label: {
+                    Text(titles[index])
+                        .font(.system(size: 12, weight: selectedIndex == index ? .semibold : .regular))
+                        .foregroundStyle(selectedIndex == index ? theme.ink : theme.ink2)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .fill(selectedIndex == index ? theme.panel : Color.clear)
+                                .shadow(
+                                    color: selectedIndex == index ? .black.opacity(0.06) : .clear,
+                                    radius: 2,
+                                    x: 0,
+                                    y: 1
+                                )
+                                .shadow(
+                                    color: selectedIndex == index ? .black.opacity(0.05) : .clear,
+                                    radius: 6,
+                                    x: 0,
+                                    y: 2
+                                )
+                        )
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(selectedIndex == index ? .isSelected : [])
+            }
+        }
+        .padding(2)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(theme.panel2)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(theme.hairline, lineWidth: 1)
+        )
+    }
+}
+
+private struct JoeySwitch: View {
+    @Binding var isOn: Bool
+    let label: String
+
+    @Environment(\.joeyAppearance) private var appearance
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+
+    var body: some View {
+        Button {
+            isOn.toggle()
+        } label: {
+            ZStack(alignment: .leading) {
+                Capsule(style: .continuous)
+                    .fill(isOn ? theme.sage : theme.hairlineStrong)
+
+                Circle()
+                    .fill(appearance == .dusk ? Color(hex: 0xE9E3D7) : .white)
+                    .frame(width: 17, height: 17)
+                    .shadow(color: .black.opacity(0.25), radius: 2, x: 0, y: 1)
+                    .offset(x: isOn ? 17 : 2)
+            }
+            .frame(width: 36, height: 21)
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.16), value: isOn)
+        }
+        .buttonStyle(.plain)
+        .onHover { isInside in
+            if isInside {
+                NSCursor.pointingHand.set()
+            } else {
+                NSCursor.arrow.set()
+            }
+        }
+        .accessibilityRepresentation {
+            Toggle(label, isOn: $isOn)
+                .toggleStyle(.switch)
+                .labelsHidden()
+        }
+    }
+}
+
+private struct QuietHoursField: View {
+    @Binding var startMinutes: Int
+    @Binding var endMinutes: Int
+
+    @Environment(\.joeyAppearance) private var appearance
+    @State private var startText: String
+    @State private var endText: String
+    @State private var focusedSide: Side?
+
+    private enum Side: Hashable {
+        case start
+        case end
+    }
+
+    init(startMinutes: Binding<Int>, endMinutes: Binding<Int>) {
+        _startMinutes = startMinutes
+        _endMinutes = endMinutes
+        _startText = State(initialValue: Self.format(startMinutes.wrappedValue))
+        _endText = State(initialValue: Self.format(endMinutes.wrappedValue))
+    }
+
+    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+
+    var body: some View {
+        HStack(spacing: 6) {
+            timeField(label: "安静时段开始", text: $startText, side: .start)
+
+            Rectangle()
+                .fill(theme.hairlineStrong)
+                .frame(width: 10, height: 1)
+
+            timeField(label: "安静时段结束", text: $endText, side: .end)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(theme.panel2)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(
+                    focusedSide == nil ? theme.hairline : theme.focus,
+                    lineWidth: focusedSide == nil ? 1 : 2
+                )
+        )
+        .onChange(of: startMinutes) { _, newValue in
+            if focusedSide != .start {
+                startText = Self.format(newValue)
+            }
+        }
+        .onChange(of: endMinutes) { _, newValue in
+            if focusedSide != .end {
+                endText = Self.format(newValue)
+            }
+        }
+    }
+
+    private func timeField(label: String, text: Binding<String>, side: Side) -> some View {
+        TimeRangeTextField(
+            label: label,
+            text: text,
+            textColor: NSColor(theme.ink),
+            onFocusChange: { isFocused in
+                if isFocused {
+                    focusedSide = side
+                } else if focusedSide == side {
+                    focusedSide = nil
+                }
+            },
+            onCommit: commit
+        )
+        .frame(width: 44, height: 17)
+    }
+
+    private func commit() {
+        if let value = Self.parse(startText) {
+            startMinutes = value
+        }
+        startText = Self.format(startMinutes)
+
+        if let value = Self.parse(endText) {
+            endMinutes = value
+        }
+        endText = Self.format(endMinutes)
+    }
+
+    private static func format(_ minutes: Int) -> String {
+        String(format: "%02d:%02d", minutes / 60, minutes % 60)
+    }
+
+    private static func parse(_ text: String) -> Int? {
+        let parts = text.trimmingCharacters(in: .whitespaces).split(separator: ":")
+        guard parts.count == 2,
+              let hour = Int(parts[0]),
+              let minute = Int(parts[1]),
+              (0...23).contains(hour),
+              (0...59).contains(minute)
+        else {
+            return nil
+        }
+        return hour * 60 + minute
+    }
+}
+
+/// Plain AppKit text field so a double click selects the whole time and typing replaces it.
+private struct TimeRangeTextField: NSViewRepresentable {
+    let label: String
+    @Binding var text: String
+    let textColor: NSColor
+    let onFocusChange: (Bool) -> Void
+    let onCommit: () -> Void
+
+    func makeNSView(context: Context) -> TimeRangeNSTextField {
+        let field = TimeRangeNSTextField()
+        field.delegate = context.coordinator
+        field.isBordered = false
+        field.isBezeled = false
+        field.drawsBackground = false
+        field.focusRingType = .none
+        field.alignment = .center
+        field.font = .monospacedDigitSystemFont(ofSize: 13, weight: .regular)
+        field.textColor = textColor
+        field.usesSingleLineMode = true
+        field.cell?.isScrollable = true
+        field.cell?.wraps = false
+        field.stringValue = text
+        field.setAccessibilityLabel(label)
+        return field
+    }
+
+    func updateNSView(_ nsView: TimeRangeNSTextField, context: Context) {
+        context.coordinator.parent = self
+        nsView.textColor = textColor
+        if nsView.currentEditor() == nil, nsView.stringValue != text {
+            nsView.stringValue = text
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+
+    final class Coordinator: NSObject, NSTextFieldDelegate {
+        var parent: TimeRangeTextField
+
+        init(_ parent: TimeRangeTextField) {
+            self.parent = parent
+        }
+
+        func controlTextDidBeginEditing(_ obj: Notification) {
+            parent.onFocusChange(true)
+        }
+
+        func controlTextDidChange(_ obj: Notification) {
+            guard let field = obj.object as? NSTextField else { return }
+            parent.text = field.stringValue
+        }
+
+        func controlTextDidEndEditing(_ obj: Notification) {
+            parent.onFocusChange(false)
+            parent.onCommit()
+        }
+    }
+}
+
+private final class TimeRangeNSTextField: NSTextField {
+    override func mouseDown(with event: NSEvent) {
+        if event.clickCount == 2 {
+            window?.makeFirstResponder(self)
+            if let editor = currentEditor() {
+                editor.selectAll(nil)
+            } else {
+                DispatchQueue.main.async { [weak self] in
+                    self?.currentEditor()?.selectAll(nil)
+                }
+            }
+            return
+        }
+        super.mouseDown(with: event)
+    }
+}
+
+private struct SettingsSmallButton: View {
+    let title: String
+    let action: () -> Void
+
+    @Environment(\.joeyAppearance) private var appearance
+    @State private var isHovering = false
+    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 13))
+                .foregroundStyle(theme.ink)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 7)
+                .background(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(isHovering ? theme.panel2 : Color.clear)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .stroke(theme.hairlineStrong, lineWidth: 1)
+                )
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { isHovering = $0 }
+        .accessibilityLabel(Text(title))
+    }
+}
