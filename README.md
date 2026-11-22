@@ -21,7 +21,6 @@ The first version is focused on macOS and will be built as a native Swift applic
 macos/        macOS app (Xcode project, Swift sources, tests, platform scripts)
 docs/         shared product, design and ADR documentation
 .agents/      repository-level agent skills
-windows/      reserved for a future Windows implementation
 ```
 
 ## Documentation
