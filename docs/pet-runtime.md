@@ -56,7 +56,7 @@ active, the new request is dropped rather than queued.
 - Animation playback uses `SKAction.animate` (no per-frame timers or display links).
 - Debug builds may hold a manifest clip via `-JoeyPetDebugAnimation <id>` or request `-JoeyPetDebugBehavior <id>`. Release ignores both.
 
-See [ADR 008](decisions/008-pixel-perfect-display-scaling.md) and [character-design.md](character-design.md).
+See [ADR 008](decisions/008-pixel-perfect-display-scaling.md).
 
 ## Out of scope (V0)
 
@@ -71,6 +71,4 @@ See [ADR 008](decisions/008-pixel-perfect-display-scaling.md) and [character-des
 
 ## Related docs
 
-- [character-design.md](character-design.md)
-- [pixel-asset-workflow.md](pixel-asset-workflow.md)
 - [tech-stack.md](tech-stack.md)

@@ -74,5 +74,3 @@ Before marking done:
 ## Related docs
 
 - [pet-runtime.md](pet-runtime.md)
-- [character-design.md](character-design.md)
-- [pixel-asset-workflow.md](pixel-asset-workflow.md)

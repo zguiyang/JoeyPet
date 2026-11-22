@@ -91,8 +91,6 @@ Do not use deleted legacy UI specs (`docs/product/ui-spec.md`), the old three-si
 | UI / UX (native) | [DESIGN.md](DESIGN.md) (V0 design contract; authority rules in this file) |
 | Frozen UI design | [docs/reference/joeypet-ui-v0.html](docs/reference/joeypet-ui-v0.html) |
 | Pet runtime | [docs/pet-runtime.md](docs/pet-runtime.md) |
-| Character design | [docs/character-design.md](docs/character-design.md) |
-| Pixel asset workflow | [docs/pixel-asset-workflow.md](docs/pixel-asset-workflow.md) |
 | Tech stack | [docs/tech-stack.md](docs/tech-stack.md) |
 | Workflow | [docs/development.md](docs/development.md) |
 | ADRs | [docs/decisions/](docs/decisions/) |
@@ -101,7 +99,7 @@ Do not use deleted legacy UI specs (`docs/product/ui-spec.md`), the old three-si
 
 Use `.agents/skills/joeypet-macos/SKILL.md` for implementation workflow, layering, and verification steps.
 
-One generic SwiftUI skill is expected locally at `.agents/skills/swiftui-expert-skill` (`avdlee/swiftui-agent-skill`, MIT). It is gitignored and machine-local like the rest of `.agents/skills/**` except `joeypet-macos`; do not vendor a second general SwiftUI skill or a HIG corpus into the repo. See [ADR 013](docs/decisions/013-ui-skill-and-design-authority.md).
+One generic SwiftUI skill is expected locally at `.agents/skills/swiftui-expert-skill` (`avdlee/swiftui-agent-skill`, MIT). It is gitignored and machine-local like the rest of `.agents/skills/**` except `joeypet-macos`; do not vendor a second general SwiftUI skill or a HIG corpus into the repo.
 
 ## Before finishing a task
 

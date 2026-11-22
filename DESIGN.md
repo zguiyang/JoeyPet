@@ -3,7 +3,7 @@
 **Status:** Design source of truth for the V0 desktop-companion product.
 **Scope:** visual language, layout, tokens, components, copy voice, motion, and the six agreed surfaces.
 **Frozen visual reference:** [`docs/reference/joeypet-ui-v0.html`](docs/reference/joeypet-ui-v0.html) — the reviewed high-fidelity design artifact (six states, light + dusk). Open it in a browser. It is a **visual target, not implementation code**.
-**Not in scope here:** product acceptance rules ([`V0_FEATURE_SCOPE.md`](V0_FEATURE_SCOPE.md)), pet animation runtime ([`docs/pet-runtime.md`](docs/pet-runtime.md)), character sprite production ([`docs/character-design.md`](docs/character-design.md)).
+**Not in scope here:** product acceptance rules ([`V0_FEATURE_SCOPE.md`](V0_FEATURE_SCOPE.md)), pet animation runtime ([`docs/pet-runtime.md`](docs/pet-runtime.md)).
 
 The previous Mac Care / Calm Space contract is **Legacy**. It lives in the `archive/mac-care-calm-space-2026-11` branch and must not guide new work.
 
@@ -24,7 +24,7 @@ Engineering AGENTS.md, docs/tech-stack.md        → AppKit/SwiftUI/SpriteKit sp
 - **This file is the reviewable baseline.** Implementation is checked against it.
 - **The HTML reference resolves visual ambiguity, not product rules.** If it disagrees with this file, this file wins; fix the reference in the same task when the artifact is wrong.
 - **Apple HIG governs platform behavior and accessibility.** Prefer the official pages (`https://developer.apple.com/design/human-interface-guidelines/<page>.md`).
-- **ADR 011 (Calm Space main window) is Legacy.** Do not cite it as permission for custom chrome on new surfaces.
+- **The legacy Calm Space main-window decision is retired.** It lives only in the archive branch; do not cite it as permission for custom chrome on new surfaces.
 
 ---
 
@@ -656,7 +656,6 @@ Git history and the archive branch explain why they were replaced.
 | Handoff and next steps | [`开发交接文档.md`](开发交接文档.md) |
 | Frozen UI design | [`docs/reference/joeypet-ui-v0.html`](docs/reference/joeypet-ui-v0.html) |
 | Pet animation and state | [`docs/pet-runtime.md`](docs/pet-runtime.md) |
-| Character production | [`docs/character-design.md`](docs/character-design.md) |
 | Tech stack | [`docs/tech-stack.md`](docs/tech-stack.md) |
 | Agent hard rules | [`AGENTS.md`](AGENTS.md) |
 | UI intent triage | [`.agents/skills/joeypet-macos/references/ui-intent.md`](.agents/skills/joeypet-macos/references/ui-intent.md) |
