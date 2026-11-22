@@ -10,7 +10,6 @@ struct RoomSceneView: View {
     @Environment(\.joeyAppearance) private var appearance
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isFrameHovering = false
-    @FocusState private var isFrameFocused: Bool
 
     @State private var petOffset = CGSize.zero
     @State private var dragStartOffset: CGSize?
@@ -155,11 +154,6 @@ struct RoomSceneView: View {
         Button(action: onOpenReflection) {
             Color.clear
                 .frame(width: 120 * scale, height: 130 * scale)
-                .overlay {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .stroke(theme.sage.opacity(0.35), lineWidth: 3)
-                        .opacity(isFrameHovering || isFrameFocused ? 1 : 0)
-                }
                 .overlay(alignment: .top) {
                     if isFrameHovering {
                         Text(JoeyCopy.reviewHint)
@@ -182,7 +176,7 @@ struct RoomSceneView: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .focused($isFrameFocused)
+        .focusEffectDisabled()
         .onHover { isFrameHovering = $0 }
         .accessibilityLabel(Text(JoeyCopy.reviewHint))
     }
@@ -516,7 +510,7 @@ private struct RoomPainter {
             Text("回顾")
                 .font(.system(size: 13))
                 .foregroundStyle(theme.roomNoteLine),
-            at: CGPoint(x: 760, y: 272),
+            at: CGPoint(x: 760, y: 264),
             anchor: .center
         )
     }
