@@ -32,8 +32,8 @@ struct ReflectionView: View {
                 sign
                     .frame(width: 388, alignment: .leading)
                     .offset(
-                        x: originX + 52 * scale,
-                        y: originY + 42 * scale
+                        x: originX + 60 * scale,
+                        y: originY + 48 * scale
                     )
 
                 JoeySecondaryButton(
@@ -72,17 +72,7 @@ struct ReflectionView: View {
                 .foregroundStyle(theme.ink2)
                 .lineSpacing(4)
         }
-        .padding(.init(top: 18, leading: 22, bottom: 20, trailing: 22))
         .frame(width: 388, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: JoeyRadius.md, style: .continuous)
-                .fill(theme.panel)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: JoeyRadius.md, style: .continuous)
-                .stroke(theme.hairline, lineWidth: 1)
-        )
-        .joeyShadowMD()
     }
 
     private var headline: Text {
@@ -190,7 +180,12 @@ private struct GardenPainter {
         )
 
         var hill1 = Path()
-        hill1.move(to: CGPoint(x: 0, y: 360))
+        hill1.move(to: CGPoint(x: -1000, y: 420))
+        hill1.addCurve(
+            to: CGPoint(x: 0, y: 360),
+            control1: CGPoint(x: -650, y: 420),
+            control2: CGPoint(x: -180, y: 420)
+        )
         hill1.addCurve(
             to: CGPoint(x: 540, y: 330),
             control1: CGPoint(x: 180, y: 300),
@@ -201,13 +196,23 @@ private struct GardenPainter {
             control1: CGPoint(x: 760, y: 308),
             control2: CGPoint(x: 900, y: 350)
         )
-        hill1.addLine(to: CGPoint(x: 1080, y: 680))
-        hill1.addLine(to: CGPoint(x: 0, y: 680))
+        hill1.addCurve(
+            to: CGPoint(x: 2000, y: 300),
+            control1: CGPoint(x: 1260, y: 290),
+            control2: CGPoint(x: 1600, y: 295)
+        )
+        hill1.addLine(to: CGPoint(x: 2000, y: 680))
+        hill1.addLine(to: CGPoint(x: -1000, y: 680))
         hill1.closeSubpath()
         context.fill(hill1, with: .color(theme.roomHill1.opacity(0.7)))
 
         var hill2 = Path()
-        hill2.move(to: CGPoint(x: 0, y: 420))
+        hill2.move(to: CGPoint(x: -1000, y: 470))
+        hill2.addCurve(
+            to: CGPoint(x: 0, y: 420),
+            control1: CGPoint(x: -650, y: 470),
+            control2: CGPoint(x: -220, y: 468)
+        )
         hill2.addCurve(
             to: CGPoint(x: 640, y: 400),
             control1: CGPoint(x: 220, y: 372),
@@ -218,8 +223,13 @@ private struct GardenPainter {
             control1: CGPoint(x: 860, y: 380),
             control2: CGPoint(x: 1000, y: 420)
         )
-        hill2.addLine(to: CGPoint(x: 1080, y: 680))
-        hill2.addLine(to: CGPoint(x: 0, y: 680))
+        hill2.addCurve(
+            to: CGPoint(x: 2000, y: 380),
+            control1: CGPoint(x: 1160, y: 380),
+            control2: CGPoint(x: 1600, y: 380)
+        )
+        hill2.addLine(to: CGPoint(x: 2000, y: 680))
+        hill2.addLine(to: CGPoint(x: -1000, y: 680))
         hill2.closeSubpath()
         context.fill(hill2, with: .color(theme.roomHill2.opacity(0.6)))
 
@@ -233,7 +243,12 @@ private struct GardenPainter {
         )
 
         var path = Path()
-        path.move(to: CGPoint(x: 120, y: 560))
+        path.move(to: CGPoint(x: -1000, y: 600))
+        path.addCurve(
+            to: CGPoint(x: 120, y: 560),
+            control1: CGPoint(x: -600, y: 600),
+            control2: CGPoint(x: -60, y: 600)
+        )
         path.addCurve(
             to: CGPoint(x: 620, y: 562),
             control1: CGPoint(x: 300, y: 520),
@@ -243,6 +258,11 @@ private struct GardenPainter {
             to: CGPoint(x: 980, y: 560),
             control1: CGPoint(x: 780, y: 534),
             control2: CGPoint(x: 900, y: 588)
+        )
+        path.addCurve(
+            to: CGPoint(x: 2000, y: 540),
+            control1: CGPoint(x: 1060, y: 532),
+            control2: CGPoint(x: 1500, y: 540)
         )
         context.stroke(
             path,
@@ -260,10 +280,15 @@ private struct GardenPainter {
         for index in 0..<7 {
             let x = 120 + index * 128
             let count = index < breaks.count ? breaks[index] : 0
-            if count > 0 {
+            switch count {
+            case 0:
+                drawSeed(&context, origin: CGPoint(x: x, y: 500))
+            case 1:
                 drawSprout(&context, origin: CGPoint(x: x, y: 500))
-            } else {
-                drawStone(&context, origin: CGPoint(x: x, y: 504))
+            case 2:
+                drawSprout(&context, origin: CGPoint(x: x, y: 500), growth: 1.32)
+            default:
+                drawTree(&context, origin: CGPoint(x: x, y: 500))
             }
 
             context.draw(
@@ -276,59 +301,135 @@ private struct GardenPainter {
         }
     }
 
-    private func drawSprout(_ context: inout GraphicsContext, origin: CGPoint) {
+    private func drawSeed(_ context: inout GraphicsContext, origin: CGPoint) {
+        context.drawLayer { layer in
+            layer.translateBy(x: origin.x, y: origin.y)
+            layer.fill(
+                Path(ellipseIn: CGRect(x: 2, y: 46, width: 36, height: 11)),
+                with: .color(theme.roomFloorLine.opacity(0.35))
+            )
+
+            layer.drawLayer { seed in
+                seed.translateBy(x: 20, y: 39)
+                seed.rotate(by: .degrees(-24))
+                seed.fill(
+                    Path(ellipseIn: CGRect(x: -5.5, y: -8.5, width: 11, height: 17)),
+                    with: .color(theme.apricotInk.opacity(0.9))
+                )
+                seed.fill(
+                    Path(ellipseIn: CGRect(x: -2, y: -5, width: 4, height: 7)),
+                    with: .color(theme.apricot.opacity(0.6))
+                )
+            }
+
+            layer.fill(
+                Path(ellipseIn: CGRect(x: 4, y: 44, width: 32, height: 10)),
+                with: .color(theme.roomSill)
+            )
+        }
+    }
+
+    private func drawTree(_ context: inout GraphicsContext, origin: CGPoint) {
+        context.drawLayer { layer in
+            layer.translateBy(x: origin.x, y: origin.y)
+            layer.fill(
+                Path(ellipseIn: CGRect(x: 4, y: 47, width: 32, height: 10)),
+                with: .color(theme.roomSill)
+            )
+
+            var trunk = Path()
+            trunk.move(to: CGPoint(x: 20, y: 48))
+            trunk.addCurve(
+                to: CGPoint(x: 22, y: -8),
+                control1: CGPoint(x: 18, y: 30),
+                control2: CGPoint(x: 20, y: 10)
+            )
+            layer.stroke(
+                trunk,
+                with: .color(theme.roomStem),
+                style: StrokeStyle(lineWidth: 5, lineCap: .round)
+            )
+
+            layer.fill(
+                Path(ellipseIn: CGRect(x: -2, y: -40, width: 34, height: 30)),
+                with: .color(theme.roomLeaf.opacity(0.85))
+            )
+            layer.fill(
+                Path(ellipseIn: CGRect(x: 10, y: -56, width: 32, height: 30)),
+                with: .color(theme.roomLeaf)
+            )
+            layer.fill(
+                Path(ellipseIn: CGRect(x: 18, y: -38, width: 32, height: 28)),
+                with: .color(theme.roomLeaf.opacity(0.92))
+            )
+            layer.fill(
+                Path(ellipseIn: CGRect(x: 4, y: -30, width: 38, height: 26)),
+                with: .color(theme.roomLeaf)
+            )
+            layer.fill(
+                Path(ellipseIn: CGRect(x: 14, y: -50, width: 12, height: 8)),
+                with: .color(theme.roomCushion2.opacity(0.45))
+            )
+            layer.fill(
+                Path(ellipseIn: CGRect(x: 9, y: -31, width: 5, height: 5)),
+                with: .color(theme.apricot)
+            )
+            layer.fill(
+                Path(ellipseIn: CGRect(x: 31, y: -26, width: 4, height: 4)),
+                with: .color(theme.apricot.opacity(0.9))
+            )
+        }
+    }
+
+    private func drawSprout(
+        _ context: inout GraphicsContext,
+        origin: CGPoint,
+        growth: CGFloat = 1
+    ) {
         context.drawLayer { layer in
             layer.translateBy(x: origin.x, y: origin.y)
             layer.fill(
                 Path(ellipseIn: CGRect(x: 2, y: 47, width: 36, height: 10)),
                 with: .color(theme.roomSill)
             )
-            var stem = Path()
-            stem.move(to: CGPoint(x: 20, y: 48))
-            stem.addCurve(
-                to: CGPoint(x: 25, y: 4),
-                control1: CGPoint(x: 20, y: 28),
-                control2: CGPoint(x: 23, y: 12)
-            )
-            layer.stroke(
-                stem,
-                with: .color(theme.roomStem),
-                style: StrokeStyle(lineWidth: 3, lineCap: .round)
-            )
-            layer.drawLayer { leaf in
-                leaf.translateBy(x: 31, y: 12)
-                leaf.rotate(by: .degrees(28))
-                leaf.fill(
-                    Path(ellipseIn: CGRect(x: -8, y: -13, width: 16, height: 26)),
+            layer.drawLayer { plant in
+                plant.translateBy(x: 20, y: 48)
+                plant.scaleBy(x: 1 + (growth - 1) * 0.12, y: growth)
+                plant.translateBy(x: -20, y: -48)
+
+                var stem = Path()
+                stem.move(to: CGPoint(x: 20, y: 48))
+                stem.addCurve(
+                    to: CGPoint(x: 25, y: 4),
+                    control1: CGPoint(x: 20, y: 28),
+                    control2: CGPoint(x: 23, y: 12)
+                )
+                plant.stroke(
+                    stem,
+                    with: .color(theme.roomStem),
+                    style: StrokeStyle(lineWidth: 3, lineCap: .round)
+                )
+                plant.drawLayer { leaf in
+                    leaf.translateBy(x: 31, y: 12)
+                    leaf.rotate(by: .degrees(28))
+                    leaf.fill(
+                        Path(ellipseIn: CGRect(x: -8, y: -13, width: 16, height: 26)),
+                        with: .color(theme.roomLeaf)
+                    )
+                }
+                plant.drawLayer { leaf in
+                    leaf.translateBy(x: 12, y: 18)
+                    leaf.rotate(by: .degrees(-30))
+                    leaf.fill(
+                        Path(ellipseIn: CGRect(x: -7, y: -11, width: 14, height: 22)),
+                        with: .color(theme.roomLeaf.opacity(0.8))
+                    )
+                }
+                plant.fill(
+                    Path(ellipseIn: CGRect(x: 17, y: -8, width: 14, height: 20)),
                     with: .color(theme.roomLeaf)
                 )
             }
-            layer.drawLayer { leaf in
-                leaf.translateBy(x: 12, y: 18)
-                leaf.rotate(by: .degrees(-30))
-                leaf.fill(
-                    Path(ellipseIn: CGRect(x: -7, y: -11, width: 14, height: 22)),
-                    with: .color(theme.roomLeaf.opacity(0.8))
-                )
-            }
-            layer.fill(
-                Path(ellipseIn: CGRect(x: 17, y: -8, width: 14, height: 20)),
-                with: .color(theme.roomLeaf)
-            )
-        }
-    }
-
-    private func drawStone(_ context: inout GraphicsContext, origin: CGPoint) {
-        context.drawLayer { layer in
-            layer.translateBy(x: origin.x, y: origin.y)
-            layer.fill(
-                Path(ellipseIn: CGRect(x: 4, y: 47, width: 32, height: 14)),
-                with: .color(theme.roomSill)
-            )
-            layer.fill(
-                Path(ellipseIn: CGRect(x: 8, y: 37, width: 24, height: 18)),
-                with: .color(theme.roomFrame)
-            )
         }
     }
 }
