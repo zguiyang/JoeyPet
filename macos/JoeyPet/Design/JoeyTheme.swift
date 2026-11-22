@@ -53,7 +53,7 @@ struct JoeyTheme {
     var hairlineStrong: Color {
         isLight ? Color(hex: 0x3F3A35, opacity: 0.24) : Color(hex: 0xE9E3D7, opacity: 0.24)
     }
-    var focus: Color { Color(hex: 0x4A90D9) }
+    var focus: Color { isLight ? Color(hex: 0x4F6D54) : Color(hex: 0x86A98A) }
 
     // Surfaces (DESIGN.md §4.2)
     var windowBg: Color { isLight ? Color(hex: 0xFBF8F0) : Color(hex: 0x313A3B) }

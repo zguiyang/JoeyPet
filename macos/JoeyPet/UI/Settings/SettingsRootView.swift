@@ -6,7 +6,6 @@ struct SettingsRootView: View {
     @State private var selection: SettingsSection = .rhythm
     @State private var hoveredSection: SettingsSection?
     @State private var isFeedbackOpen = false
-    @FocusState private var isFeedbackFocused: Bool
 
     private var theme: JoeyTheme { JoeyTheme(appearance: settings.appearance) }
 
@@ -203,7 +202,7 @@ struct SettingsRootView: View {
                 .scrollContentBackground(.hidden)
                 .padding(12)
                 .frame(minHeight: 72)
-                .focused($isFeedbackFocused)
+                .focusEffectDisabled()
                 .accessibilityLabel("反馈")
         }
         .background(
@@ -212,10 +211,7 @@ struct SettingsRootView: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .stroke(
-                    isFeedbackFocused ? theme.focus : theme.hairlineStrong,
-                    lineWidth: isFeedbackFocused ? 2 : 1
-                )
+                .stroke(theme.hairlineStrong, lineWidth: 1)
         )
     }
 
@@ -461,12 +457,6 @@ private struct QuietHoursField: View {
     @Environment(\.joeyAppearance) private var appearance
     @State private var startText: String
     @State private var endText: String
-    @State private var focusedSide: Side?
-
-    private enum Side: Hashable {
-        case start
-        case end
-    }
 
     init(startMinutes: Binding<Int>, endMinutes: Binding<Int>) {
         _startMinutes = startMinutes
@@ -479,13 +469,13 @@ private struct QuietHoursField: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            timeField(label: "安静时段开始", text: $startText, side: .start)
+            timeField(label: "安静时段开始", text: $startText)
 
             Rectangle()
                 .fill(theme.hairlineStrong)
                 .frame(width: 10, height: 1)
 
-            timeField(label: "安静时段结束", text: $endText, side: .end)
+            timeField(label: "安静时段结束", text: $endText)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
@@ -495,35 +485,21 @@ private struct QuietHoursField: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .stroke(
-                    focusedSide == nil ? theme.hairline : theme.focus,
-                    lineWidth: focusedSide == nil ? 1 : 2
-                )
+                .stroke(theme.hairline, lineWidth: 1)
         )
         .onChange(of: startMinutes) { _, newValue in
-            if focusedSide != .start {
-                startText = Self.format(newValue)
-            }
+            startText = Self.format(newValue)
         }
         .onChange(of: endMinutes) { _, newValue in
-            if focusedSide != .end {
-                endText = Self.format(newValue)
-            }
+            endText = Self.format(newValue)
         }
     }
 
-    private func timeField(label: String, text: Binding<String>, side: Side) -> some View {
+    private func timeField(label: String, text: Binding<String>) -> some View {
         TimeRangeTextField(
             label: label,
             text: text,
             textColor: NSColor(theme.ink),
-            onFocusChange: { isFocused in
-                if isFocused {
-                    focusedSide = side
-                } else if focusedSide == side {
-                    focusedSide = nil
-                }
-            },
             onCommit: commit
         )
         .frame(width: 44, height: 17)
@@ -564,7 +540,6 @@ private struct TimeRangeTextField: NSViewRepresentable {
     let label: String
     @Binding var text: String
     let textColor: NSColor
-    let onFocusChange: (Bool) -> Void
     let onCommit: () -> Void
 
     func makeNSView(context: Context) -> TimeRangeNSTextField {
@@ -604,17 +579,12 @@ private struct TimeRangeTextField: NSViewRepresentable {
             self.parent = parent
         }
 
-        func controlTextDidBeginEditing(_ obj: Notification) {
-            parent.onFocusChange(true)
-        }
-
         func controlTextDidChange(_ obj: Notification) {
             guard let field = obj.object as? NSTextField else { return }
             parent.text = field.stringValue
         }
 
         func controlTextDidEndEditing(_ obj: Notification) {
-            parent.onFocusChange(false)
             parent.onCommit()
         }
     }
