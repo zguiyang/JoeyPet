@@ -42,7 +42,7 @@ Engineering AGENTS.md, docs/tech-stack.md        → AppKit/SwiftUI/SpriteKit sp
 | Rest invitation | Agreed | Pending |
 | 30-second recovery | Agreed | Pending |
 | Nest home (main window, room scene) | Agreed | Implemented (room shell, draggable Joey; session CTA not wired) |
-| Rhythm reflection (garden view) | Agreed | Implemented (empty state until session data exists) |
+| Rhythm reflection (garden view) | Agreed | Implemented (seed / sprout / tall sprout / tree stages; waiting on session data) |
 | Settings | Agreed | Implemented (page inside the main window) |
 | Light + dusk appearances | Agreed | Implemented |
 | Calm Space / Mac Care shell | Legacy | Removed — archive branch only |
@@ -245,7 +245,7 @@ Allowed only as an extremely subtle background grain: 120 px noise tile at **1.8
 | Settings sidebar | 200 | Divider + detail |
 | Invitation card | 400 wide | Anchored beside Joey |
 | Recovery panel | 420 wide | Centred, top offset 100 |
-| Reflection sign | 388 wide | Top-left of the garden |
+| Reflection copy | 388 wide | Top-left, directly on the garden; no panel |
 
 All layout derives from the live window size in code. The 1440 × 900 numbers describe proportion, not a fixed frame to hardcode.
 
@@ -463,8 +463,8 @@ The main window, and it should feel like entering Joey's home.
 
 A garden inside the same window, opened from the wall frame.
 
-- A small path across seven days. A day with a break grows a sprout; a day without stays a stone. No bars, no axes, no percentages.
-- Sign (388 wide, top-left): date range `11月16日 – 11月22日`, headline `这周我们一起休息了 6 次。`, sub `今天陪了 2 小时 10 分。周三没有记录。`
+- A small path across seven days. Every day leaves something visible: 0 breaks shows a seed in the soil, 1 break a sprout, 2 a taller sprout, 3+ a small tree. No bars, no axes, no percentages.
+- Copy (388 wide, top-left, directly on the garden): date range `11月16日 – 11月22日`, headline `这周我们一起休息了 6 次。`, sub `今天陪了 2 小时 10 分。周三没有记录。` No card, panel, border or shadow behind this text.
 - Numbers are facts, not scores. Never say "only", "missed", "failed", or "keep it up".
 - Return: **回巢**, bottom-right.
 - Data must be self-consistent: today's breaks ≤ this week's total; if today has none, say so plainly.
@@ -557,7 +557,7 @@ Rules:
 | Recovery skipped | Return to desktop silently; count unchanged |
 | Hidden Joey | Pet invisible but state preserved; Settings switch is the way back |
 | Quiet hours | Joey `sleep`, no invitations, no motion beyond breath |
-| Empty reflection day | Show the day as a stone; never a zero-score or a "failure" |
+| Empty reflection day | Show a visible seed in the soil; never a zero-score or a "failure" |
 
 Every feedback message states what happened in one sentence. Never a status code, never a machine voice.
 
