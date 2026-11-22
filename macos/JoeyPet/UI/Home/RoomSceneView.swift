@@ -1,0 +1,1016 @@
+import AppKit
+import SwiftUI
+
+struct RoomSceneView: View {
+    let rhythmMinutes: Int
+    let summary: CompanionSummary
+    let onOpenReflection: () -> Void
+    let onPrimaryAction: () -> Void
+
+    @Environment(\.joeyAppearance) private var appearance
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var isFrameHovering = false
+    @FocusState private var isFrameFocused: Bool
+
+    @State private var petOffset = CGSize.zero
+    @State private var dragStartOffset: CGSize?
+    @State private var isDragging = false
+    @State private var isHappy = false
+    @State private var happyTask: Task<Void, Never>?
+
+    private let designSize = CGSize(width: 1080, height: 680)
+    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+
+    var body: some View {
+        GeometryReader { geometry in
+            let scale = min(
+                geometry.size.width / designSize.width,
+                geometry.size.height / designSize.height
+            )
+            let sceneWidth = designSize.width * scale
+            let sceneHeight = designSize.height * scale
+            let originX = (geometry.size.width - sceneWidth) / 2
+            let originY = (geometry.size.height - sceneHeight) / 2
+
+            ZStack(alignment: .topLeading) {
+                theme.roomWall
+
+                Canvas { context, _ in
+                    var painterContext = context
+                    painterContext.translateBy(x: originX, y: originY)
+                    painterContext.scaleBy(x: scale, y: scale)
+                    RoomPainter(theme: theme).draw(in: &painterContext)
+                }
+
+                JoeyFigureView(isHappy: isHappy)
+                    .frame(width: 230 * scale, height: 300 * scale)
+                    .scaleEffect(isHappy && !reduceMotion ? 1.03 : 1, anchor: .bottom)
+                    .animation(
+                        reduceMotion ? nil : .spring(response: 0.34, dampingFraction: 0.62),
+                        value: isHappy
+                    )
+                    .contentShape(Rectangle())
+                    .gesture(petDragGesture(scale: scale))
+                    .onHover { isInside in
+                        if isInside {
+                            NSCursor.openHand.set()
+                        } else if !isDragging {
+                            NSCursor.arrow.set()
+                        }
+                    }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("Joey")
+                    .accessibilityHint("拖动可以移动 Joey，点一下它会回应你")
+                    .position(
+                        x: originX + (305 + petOffset.width) * scale,
+                        y: originY + (468 + petOffset.height) * scale
+                    )
+
+                clockLabel
+                    .position(
+                        x: originX + 250 * scale,
+                        y: originY + 214 * scale
+                    )
+
+                notebookLabel
+                    .frame(width: 320, alignment: .trailing)
+                    .position(
+                        x: originX + sceneWidth - 40 * scale - 160,
+                        y: originY + 342 * scale
+                    )
+
+                plantLabel
+                    .frame(width: 320, alignment: .leading)
+                    .position(
+                        x: originX + 40 * scale + 160,
+                        y: originY + 342 * scale
+                    )
+
+                reflectionButton(scale: scale)
+                    .position(
+                        x: originX + 760 * scale,
+                        y: originY + 215 * scale
+                    )
+
+                JoeyPrimaryButton(
+                    title: JoeyCopy.startCompanionship,
+                    systemImage: "play.fill",
+                    action: onPrimaryAction
+                )
+                .position(
+                    x: originX + 570 * scale,
+                    y: originY + sceneHeight - 40 * scale - 25
+                )
+            }
+            .frame(width: geometry.size.width, height: geometry.size.height)
+            .clipped()
+        }
+        .background(theme.roomWall)
+        .onDisappear { happyTask?.cancel() }
+    }
+
+    private var clockLabel: some View {
+        JoeyRoomLabel {
+            HStack(spacing: 0) {
+                Text("Joey 大约每 ")
+                Text("\(rhythmMinutes) 分钟")
+                    .fontWeight(.semibold)
+                    .foregroundStyle(theme.sageDeep)
+                Text("来叫你一次")
+            }
+        }
+    }
+
+    private var notebookLabel: some View {
+        JoeyRoomLabel {
+            if summary.todayCompanionship > 0 {
+                HStack(spacing: 0) {
+                    Text("今天陪了 ")
+                    Text(summary.todayCompanionshipText)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(theme.sageDeep)
+                }
+            } else {
+                Text(JoeyCopy.emptyToday)
+            }
+        }
+    }
+
+    private var plantLabel: some View {
+        JoeyRoomLabel {
+            if summary.todayBreaks > 0 {
+                HStack(spacing: 0) {
+                    Text("今天休息 ")
+                    Text("\(summary.todayBreaks) 次")
+                        .fontWeight(.semibold)
+                        .foregroundStyle(theme.sageDeep)
+                }
+            } else {
+                Text(JoeyCopy.emptyBreaks)
+            }
+        }
+    }
+
+    private func reflectionButton(scale: CGFloat) -> some View {
+        Button(action: onOpenReflection) {
+            Color.clear
+                .frame(width: 120 * scale, height: 130 * scale)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .stroke(theme.sage.opacity(0.35), lineWidth: 3)
+                        .opacity(isFrameHovering || isFrameFocused ? 1 : 0)
+                }
+                .overlay(alignment: .top) {
+                    if isFrameHovering {
+                        Text(JoeyCopy.reviewHint)
+                            .font(JoeyType.caption)
+                            .foregroundStyle(theme.ink)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .fill(theme.popover)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .stroke(theme.hairline, lineWidth: 1)
+                            )
+                            .joeyShadowMD()
+                            .offset(y: -34)
+                    }
+                }
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .focused($isFrameFocused)
+        .onHover { isFrameHovering = $0 }
+        .accessibilityLabel(Text(JoeyCopy.reviewHint))
+    }
+
+    private func petDragGesture(scale: CGFloat) -> some Gesture {
+        DragGesture(minimumDistance: 0)
+            .onChanged { value in
+                if dragStartOffset == nil {
+                    dragStartOffset = petOffset
+                    isDragging = false
+                }
+
+                let dx = value.translation.width / scale
+                let dy = value.translation.height / scale
+
+                if !isDragging, hypot(dx, dy) > 4 {
+                    isDragging = true
+                    happyTask?.cancel()
+                    isHappy = false
+                    NSCursor.closedHand.set()
+                }
+
+                guard isDragging, let start = dragStartOffset else { return }
+                petOffset = CGSize(
+                    width: min(max(start.width + dx, -150), 310),
+                    height: min(max(start.height + dy, -40), 22)
+                )
+            }
+            .onEnded { _ in
+                if isDragging {
+                    NSCursor.openHand.set()
+                } else {
+                    reactHappy()
+                }
+                dragStartOffset = nil
+                isDragging = false
+            }
+    }
+
+    private func reactHappy() {
+        happyTask?.cancel()
+        isHappy = true
+        happyTask = Task {
+            try? await Task.sleep(for: .seconds(1.1))
+            guard !Task.isCancelled else { return }
+            isHappy = false
+        }
+    }
+}
+
+// MARK: - Joey in the room
+
+private struct JoeyFigureView: View {
+    let isHappy: Bool
+
+    @Environment(\.joeyAppearance) private var appearance
+
+    var body: some View {
+        Canvas { context, size in
+            var figureContext = context
+            figureContext.scaleBy(x: size.width / 320, y: size.height / 400)
+            RoomPainter(theme: JoeyTheme(appearance: appearance))
+                .drawJoey(&figureContext, isHappy: isHappy)
+        }
+    }
+}
+
+// MARK: - Room illustration
+
+private struct RoomPainter {
+    let theme: JoeyTheme
+
+    func draw(in context: inout GraphicsContext) {
+        drawShell(&context)
+        drawWindow(&context)
+        drawClock(&context)
+        drawPictureFrame(&context)
+        drawPlant(&context)
+        drawNest(&context)
+        drawDesk(&context)
+    }
+
+    private func drawShell(_ context: inout GraphicsContext) {
+        context.fill(
+            Path(CGRect(x: -1000, y: -1000, width: 3000, height: 1532)),
+            with: .color(theme.roomWall)
+        )
+        context.fill(
+            Path(ellipseIn: CGRect(x: 520, y: -140, width: 760, height: 460)),
+            with: .radialGradient(
+                Gradient(colors: [theme.roomWash, theme.roomWash.opacity(0)]),
+                center: CGPoint(x: 900, y: 90),
+                startRadius: 10,
+                endRadius: 380
+            )
+        )
+        context.fill(
+            Path(CGRect(x: -1000, y: 532, width: 3000, height: 2000)),
+            with: .color(theme.roomFloor)
+        )
+        context.fill(
+            Path(CGRect(x: -1000, y: 524, width: 3000, height: 8)),
+            with: .color(theme.roomBase)
+        )
+
+        var lines = Path()
+        lines.move(to: CGPoint(x: 0, y: 576))
+        lines.addLine(to: CGPoint(x: 1080, y: 576))
+        lines.move(to: CGPoint(x: 0, y: 620))
+        lines.addLine(to: CGPoint(x: 1080, y: 620))
+        lines.move(to: CGPoint(x: 220, y: 532))
+        lines.addLine(to: CGPoint(x: 150, y: 680))
+        lines.move(to: CGPoint(x: 620, y: 532))
+        lines.addLine(to: CGPoint(x: 600, y: 680))
+        lines.move(to: CGPoint(x: 900, y: 532))
+        lines.addLine(to: CGPoint(x: 920, y: 680))
+        context.stroke(
+            lines,
+            with: .color(theme.roomFloorLine.opacity(0.55)),
+            lineWidth: 1
+        )
+    }
+
+    private func drawWindow(_ context: inout GraphicsContext) {
+        let windowRect = CGRect(x: 430, y: 96, width: 210, height: 204)
+
+        context.fill(
+            Path(roundedRect: windowRect, cornerRadius: 8),
+            with: .color(theme.roomSky)
+        )
+
+        var inner = context
+        inner.clip(to: Path(roundedRect: windowRect.insetBy(dx: 4, dy: 4), cornerRadius: 6))
+
+        var hill1 = Path()
+        hill1.move(to: CGPoint(x: 430, y: 200))
+        hill1.addCurve(
+            to: CGPoint(x: 560, y: 190),
+            control1: CGPoint(x: 480, y: 182),
+            control2: CGPoint(x: 520, y: 210)
+        )
+        hill1.addCurve(
+            to: CGPoint(x: 640, y: 180),
+            control1: CGPoint(x: 600, y: 172),
+            control2: CGPoint(x: 630, y: 186)
+        )
+        hill1.addLine(to: CGPoint(x: 640, y: 300))
+        hill1.addLine(to: CGPoint(x: 430, y: 300))
+        hill1.closeSubpath()
+        inner.fill(hill1, with: .color(theme.roomHill1))
+
+        var hill2 = Path()
+        hill2.move(to: CGPoint(x: 430, y: 226))
+        hill2.addCurve(
+            to: CGPoint(x: 566, y: 218),
+            control1: CGPoint(x: 480, y: 208),
+            control2: CGPoint(x: 525, y: 236)
+        )
+        hill2.addCurve(
+            to: CGPoint(x: 640, y: 210),
+            control1: CGPoint(x: 606, y: 202),
+            control2: CGPoint(x: 630, y: 214)
+        )
+        hill2.addLine(to: CGPoint(x: 640, y: 300))
+        hill2.addLine(to: CGPoint(x: 430, y: 300))
+        hill2.closeSubpath()
+        inner.fill(hill2, with: .color(theme.roomHill2))
+
+        context.stroke(
+            Path(roundedRect: windowRect, cornerRadius: 8),
+            with: .color(theme.roomFrame),
+            lineWidth: 9
+        )
+
+        var mullions = Path()
+        mullions.move(to: CGPoint(x: 535, y: 96))
+        mullions.addLine(to: CGPoint(x: 535, y: 300))
+        mullions.move(to: CGPoint(x: 430, y: 198))
+        mullions.addLine(to: CGPoint(x: 640, y: 198))
+        context.stroke(mullions, with: .color(theme.roomFrame), lineWidth: 7)
+
+        context.fill(
+            Path(roundedRect: CGRect(x: 414, y: 294, width: 242, height: 10), cornerRadius: 5),
+            with: .color(theme.roomSill)
+        )
+
+        var leftCurtain = Path()
+        leftCurtain.move(to: CGPoint(x: 418, y: 90))
+        leftCurtain.addCurve(
+            to: CGPoint(x: 414, y: 294),
+            control1: CGPoint(x: 400, y: 130),
+            control2: CGPoint(x: 404, y: 200)
+        )
+        leftCurtain.addLine(to: CGPoint(x: 434, y: 294))
+        leftCurtain.addCurve(
+            to: CGPoint(x: 438, y: 90),
+            control1: CGPoint(x: 424, y: 200),
+            control2: CGPoint(x: 424, y: 130)
+        )
+        leftCurtain.closeSubpath()
+        context.fill(leftCurtain, with: .color(theme.roomCurtain.opacity(0.92)))
+
+        var rightCurtain = Path()
+        rightCurtain.move(to: CGPoint(x: 652, y: 90))
+        rightCurtain.addCurve(
+            to: CGPoint(x: 656, y: 294),
+            control1: CGPoint(x: 670, y: 130),
+            control2: CGPoint(x: 666, y: 200)
+        )
+        rightCurtain.addLine(to: CGPoint(x: 636, y: 294))
+        rightCurtain.addCurve(
+            to: CGPoint(x: 632, y: 90),
+            control1: CGPoint(x: 646, y: 200),
+            control2: CGPoint(x: 646, y: 130)
+        )
+        rightCurtain.closeSubpath()
+        context.fill(rightCurtain, with: .color(theme.roomCurtain.opacity(0.92)))
+    }
+
+    private func drawClock(_ context: inout GraphicsContext) {
+        let center = CGPoint(x: 250, y: 140)
+        let circle = Path(
+            ellipseIn: CGRect(x: center.x - 44, y: center.y - 44, width: 88, height: 88)
+        )
+        context.fill(circle, with: .color(theme.roomClock))
+        context.stroke(circle, with: .color(theme.roomClockRim), lineWidth: 5)
+
+        var ticks = Path()
+        for index in 0..<8 {
+            let angle = Double(index) * .pi / 4
+            let outer = CGPoint(
+                x: center.x + cos(angle) * 38,
+                y: center.y + sin(angle) * 38
+            )
+            let inner = CGPoint(
+                x: center.x + cos(angle) * 32,
+                y: center.y + sin(angle) * 32
+            )
+            ticks.move(to: outer)
+            ticks.addLine(to: inner)
+        }
+        context.stroke(
+            ticks,
+            with: .color(theme.roomClockTick),
+            style: StrokeStyle(lineWidth: 2, lineCap: .round)
+        )
+
+        var hands = Path()
+        hands.move(to: center)
+        hands.addLine(to: CGPoint(x: center.x, y: center.y - 25))
+        hands.move(to: center)
+        hands.addLine(to: CGPoint(x: center.x + 18, y: center.y + 8))
+        context.stroke(
+            hands,
+            with: .color(theme.roomHand),
+            style: StrokeStyle(lineWidth: 3.5, lineCap: .round)
+        )
+        context.fill(
+            Path(ellipseIn: CGRect(x: center.x - 3.5, y: center.y - 3.5, width: 7, height: 7)),
+            with: .color(theme.roomHand)
+        )
+    }
+
+    private func drawPictureFrame(_ context: inout GraphicsContext) {
+        var string = Path()
+        string.move(to: CGPoint(x: 760, y: 142))
+        string.addLine(to: CGPoint(x: 760, y: 158))
+        context.stroke(string, with: .color(theme.roomClockRim), lineWidth: 3)
+
+        let frame = CGRect(x: 700, y: 158, width: 120, height: 122)
+        context.fill(
+            Path(roundedRect: frame, cornerRadius: 6),
+            with: .color(theme.roomPaper)
+        )
+        context.stroke(
+            Path(roundedRect: frame, cornerRadius: 6),
+            with: .color(theme.roomFrame),
+            lineWidth: 6
+        )
+
+        var dashed = Path()
+        dashed.move(to: CGPoint(x: 718, y: 246))
+        dashed.addCurve(
+            to: CGPoint(x: 802, y: 228),
+            control1: CGPoint(x: 744, y: 230),
+            control2: CGPoint(x: 778, y: 238)
+        )
+        context.stroke(
+            dashed,
+            with: .color(theme.roomNoteLine.opacity(0.5)),
+            style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [1, 7])
+        )
+
+        var stems = Path()
+        stems.move(to: CGPoint(x: 724, y: 234))
+        stems.addCurve(
+            to: CGPoint(x: 727, y: 212),
+            control1: CGPoint(x: 724, y: 226),
+            control2: CGPoint(x: 726, y: 218)
+        )
+        stems.move(to: CGPoint(x: 748, y: 230))
+        stems.addCurve(
+            to: CGPoint(x: 751, y: 208),
+            control1: CGPoint(x: 748, y: 222),
+            control2: CGPoint(x: 750, y: 214)
+        )
+        stems.move(to: CGPoint(x: 772, y: 234))
+        stems.addCurve(
+            to: CGPoint(x: 775, y: 212),
+            control1: CGPoint(x: 772, y: 226),
+            control2: CGPoint(x: 774, y: 218)
+        )
+        stems.move(to: CGPoint(x: 796, y: 226))
+        stems.addCurve(
+            to: CGPoint(x: 799, y: 204),
+            control1: CGPoint(x: 796, y: 218),
+            control2: CGPoint(x: 798, y: 210)
+        )
+        context.stroke(
+            stems,
+            with: .color(theme.roomStem),
+            style: StrokeStyle(lineWidth: 2.5, lineCap: .round)
+        )
+
+        fillEllipse(&context, center: CGPoint(x: 730, y: 210), rx: 5, ry: 9, rotation: -20, color: theme.roomLeaf)
+        fillEllipse(&context, center: CGPoint(x: 754, y: 206), rx: 5, ry: 9, rotation: 20, color: theme.roomLeaf)
+        fillEllipse(&context, center: CGPoint(x: 778, y: 210), rx: 5, ry: 9, rotation: -20, color: theme.roomLeaf)
+        fillEllipse(&context, center: CGPoint(x: 802, y: 202), rx: 5, ry: 9, rotation: 20, color: theme.roomLeaf)
+
+        context.draw(
+            Text("回顾")
+                .font(.system(size: 13))
+                .foregroundStyle(theme.roomNoteLine),
+            at: CGPoint(x: 760, y: 272),
+            anchor: .center
+        )
+    }
+
+    private func drawPlant(_ context: inout GraphicsContext) {
+        fillEllipse(
+            &context,
+            center: CGPoint(x: 120, y: 556),
+            rx: 40,
+            ry: 8,
+            color: Color(hex: 0x3F3A35),
+            opacity: 0.06
+        )
+
+        var pot = Path()
+        pot.move(to: CGPoint(x: 98, y: 556))
+        pot.addLine(to: CGPoint(x: 104, y: 500))
+        pot.addLine(to: CGPoint(x: 136, y: 500))
+        pot.addLine(to: CGPoint(x: 142, y: 556))
+        pot.closeSubpath()
+        context.fill(pot, with: .color(theme.roomPot))
+
+        var stems = Path()
+        stems.move(to: CGPoint(x: 120, y: 500))
+        stems.addCurve(
+            to: CGPoint(x: 122, y: 378),
+            control1: CGPoint(x: 120, y: 450),
+            control2: CGPoint(x: 126, y: 414)
+        )
+        stems.move(to: CGPoint(x: 120, y: 480))
+        stems.addCurve(
+            to: CGPoint(x: 98, y: 430),
+            control1: CGPoint(x: 104, y: 466),
+            control2: CGPoint(x: 96, y: 448)
+        )
+        stems.move(to: CGPoint(x: 120, y: 460))
+        stems.addCurve(
+            to: CGPoint(x: 144, y: 410),
+            control1: CGPoint(x: 138, y: 446),
+            control2: CGPoint(x: 146, y: 428)
+        )
+        context.stroke(
+            stems,
+            with: .color(theme.roomStem),
+            style: StrokeStyle(lineWidth: 4, lineCap: .round)
+        )
+
+        fillEllipse(&context, center: CGPoint(x: 114, y: 392), rx: 16, ry: 28, rotation: -18, color: theme.roomLeaf)
+        fillEllipse(&context, center: CGPoint(x: 130, y: 366), rx: 14, ry: 26, rotation: 22, color: theme.roomLeaf)
+        fillEllipse(&context, center: CGPoint(x: 96, y: 426), rx: 13, ry: 22, rotation: -40, color: theme.roomLeaf)
+        fillEllipse(&context, center: CGPoint(x: 146, y: 406), rx: 12, ry: 21, rotation: 40, color: theme.roomLeaf)
+        fillEllipse(&context, center: CGPoint(x: 122, y: 440), rx: 14, ry: 24, rotation: 4, color: theme.roomLeaf, opacity: 0.85)
+    }
+
+    private func drawNest(_ context: inout GraphicsContext) {
+        fillEllipse(
+            &context,
+            center: CGPoint(x: 340, y: 612),
+            rx: 230,
+            ry: 42,
+            color: theme.roomRug,
+            opacity: 0.5
+        )
+        fillEllipse(&context, center: CGPoint(x: 340, y: 598), rx: 186, ry: 38, color: theme.roomNestDark)
+
+        var nest = Path()
+        nest.move(to: CGPoint(x: 154, y: 598))
+        nest.addCurve(
+            to: CGPoint(x: 340, y: 548),
+            control1: CGPoint(x: 154, y: 568),
+            control2: CGPoint(x: 238, y: 548)
+        )
+        nest.addCurve(
+            to: CGPoint(x: 526, y: 598),
+            control1: CGPoint(x: 442, y: 548),
+            control2: CGPoint(x: 526, y: 568)
+        )
+        nest.addCurve(
+            to: CGPoint(x: 340, y: 648),
+            control1: CGPoint(x: 526, y: 630),
+            control2: CGPoint(x: 442, y: 648)
+        )
+        nest.addCurve(
+            to: CGPoint(x: 154, y: 598),
+            control1: CGPoint(x: 238, y: 648),
+            control2: CGPoint(x: 154, y: 630)
+        )
+        nest.closeSubpath()
+        context.fill(nest, with: .color(theme.roomNest))
+
+        fillEllipse(&context, center: CGPoint(x: 340, y: 586), rx: 154, ry: 42, color: theme.roomCushion)
+        fillEllipse(&context, center: CGPoint(x: 340, y: 580), rx: 140, ry: 34, color: theme.roomCushion2)
+
+        var lip = Path()
+        lip.move(to: CGPoint(x: 194, y: 602))
+        lip.addCurve(
+            to: CGPoint(x: 486, y: 602),
+            control1: CGPoint(x: 228, y: 628),
+            control2: CGPoint(x: 452, y: 628)
+        )
+        lip.addCurve(
+            to: CGPoint(x: 340, y: 646),
+            control1: CGPoint(x: 476, y: 632),
+            control2: CGPoint(x: 412, y: 646)
+        )
+        lip.addCurve(
+            to: CGPoint(x: 194, y: 602),
+            control1: CGPoint(x: 268, y: 646),
+            control2: CGPoint(x: 204, y: 632)
+        )
+        lip.closeSubpath()
+        context.fill(lip, with: .color(theme.roomNest))
+    }
+
+    private func drawDesk(_ context: inout GraphicsContext) {
+        context.fill(
+            Path(roundedRect: CGRect(x: 730, y: 500, width: 290, height: 14), cornerRadius: 4),
+            with: .color(theme.roomDesk)
+        )
+        context.fill(
+            Path(CGRect(x: 748, y: 514, width: 10, height: 146)),
+            with: .color(theme.roomDeskLeg)
+        )
+        context.fill(
+            Path(CGRect(x: 1002, y: 514, width: 10, height: 146)),
+            with: .color(theme.roomDeskLeg)
+        )
+
+        context.drawLayer { layer in
+            layer.translateBy(x: 852, y: 482)
+            layer.rotate(by: .degrees(-4))
+            layer.fill(
+                Path(roundedRect: CGRect(x: -58, y: -18, width: 116, height: 40), cornerRadius: 4),
+                with: .color(theme.roomPaper)
+            )
+            layer.stroke(
+                Path(roundedRect: CGRect(x: -58, y: -18, width: 116, height: 40), cornerRadius: 4),
+                with: .color(theme.roomPaperLine),
+                lineWidth: 1
+            )
+            var noteLines = Path()
+            noteLines.move(to: CGPoint(x: -44, y: -6))
+            noteLines.addLine(to: CGPoint(x: 38, y: -6))
+            noteLines.move(to: CGPoint(x: -44, y: 4))
+            noteLines.addLine(to: CGPoint(x: 26, y: 4))
+            layer.stroke(
+                noteLines,
+                with: .color(theme.roomNoteLine.opacity(0.3)),
+                lineWidth: 1.6
+            )
+        }
+
+        context.fill(
+            Path(roundedRect: CGRect(x: 928, y: 462, width: 44, height: 40), cornerRadius: 7),
+            with: .color(theme.roomMug)
+        )
+        var handle = Path()
+        handle.move(to: CGPoint(x: 972, y: 470))
+        handle.addCurve(
+            to: CGPoint(x: 972, y: 492),
+            control1: CGPoint(x: 986, y: 470),
+            control2: CGPoint(x: 986, y: 492)
+        )
+        context.stroke(
+            handle,
+            with: .color(theme.roomMug),
+            style: StrokeStyle(lineWidth: 5, lineCap: .round)
+        )
+        fillEllipse(
+            &context,
+            center: CGPoint(x: 950, y: 462),
+            rx: 22,
+            ry: 5,
+            color: theme.roomMugTop,
+            opacity: 0.5
+        )
+
+        let potOrigin = CGPoint(x: 886, y: 422)
+        context.fill(
+            Path(roundedRect: CGRect(x: potOrigin.x - 14, y: potOrigin.y + 54, width: 28, height: 26), cornerRadius: 4),
+            with: .color(theme.roomPot)
+        )
+        var potStems = Path()
+        potStems.move(to: CGPoint(x: potOrigin.x, y: potOrigin.y + 54))
+        potStems.addCurve(
+            to: CGPoint(x: potOrigin.x - 12, y: potOrigin.y + 24),
+            control1: CGPoint(x: potOrigin.x, y: potOrigin.y + 40),
+            control2: CGPoint(x: potOrigin.x - 6, y: potOrigin.y + 30)
+        )
+        potStems.move(to: CGPoint(x: potOrigin.x, y: potOrigin.y + 54))
+        potStems.addCurve(
+            to: CGPoint(x: potOrigin.x + 16, y: potOrigin.y + 26),
+            control1: CGPoint(x: potOrigin.x + 4, y: potOrigin.y + 38),
+            control2: CGPoint(x: potOrigin.x + 12, y: potOrigin.y + 30)
+        )
+        context.stroke(
+            potStems,
+            with: .color(theme.roomStem),
+            style: StrokeStyle(lineWidth: 3, lineCap: .round)
+        )
+        fillEllipse(&context, center: CGPoint(x: potOrigin.x - 14, y: potOrigin.y + 22), rx: 9, ry: 13, rotation: -30, color: theme.roomLeaf)
+        fillEllipse(&context, center: CGPoint(x: potOrigin.x + 18, y: potOrigin.y + 24), rx: 8, ry: 12, rotation: 30, color: theme.roomLeaf)
+        fillEllipse(&context, center: CGPoint(x: potOrigin.x + 2, y: potOrigin.y + 14), rx: 8, ry: 12, color: theme.roomLeaf, opacity: 0.9)
+    }
+
+    func drawJoey(_ context: inout GraphicsContext, isHappy: Bool) {
+        context.drawLayer { layer in
+            layer.fill(
+                Path(ellipseIn: CGRect(x: 66, y: 340, width: 188, height: 24)),
+                with: .color(Color(hex: 0x3F3A35, opacity: 0.08))
+            )
+
+            var tail = Path()
+            tail.move(to: CGPoint(x: 228, y: 314))
+            tail.addCurve(
+                to: CGPoint(x: 290, y: 272),
+                control1: CGPoint(x: 268, y: 324),
+                control2: CGPoint(x: 294, y: 300)
+            )
+            tail.addCurve(
+                to: CGPoint(x: 256, y: 256),
+                control1: CGPoint(x: 287, y: 250),
+                control2: CGPoint(x: 266, y: 244)
+            )
+            tail.addCurve(
+                to: CGPoint(x: 269, y: 277),
+                control1: CGPoint(x: 248, y: 266),
+                control2: CGPoint(x: 256, y: 280)
+            )
+            layer.stroke(
+                tail,
+                with: .color(theme.joeyTail),
+                style: StrokeStyle(lineWidth: 23, lineCap: .round)
+            )
+
+            drawEar(&layer, mirrored: false)
+            drawEar(&layer, mirrored: true)
+            drawJoeyBody(&layer)
+
+            fillEllipse(&layer, center: CGPoint(x: 128, y: 337), rx: 27, ry: 13, color: theme.joeyPaw)
+            fillEllipse(&layer, center: CGPoint(x: 192, y: 337), rx: 27, ry: 13, color: theme.joeyPaw)
+
+            var scarf = Path()
+            scarf.move(to: CGPoint(x: 122, y: 244))
+            scarf.addCurve(
+                to: CGPoint(x: 198, y: 244),
+                control1: CGPoint(x: 142, y: 258),
+                control2: CGPoint(x: 178, y: 258)
+            )
+            layer.stroke(
+                scarf,
+                with: .color(theme.joeyScarf),
+                style: StrokeStyle(lineWidth: 9, lineCap: .round)
+            )
+            layer.fill(
+                Path(ellipseIn: CGRect(x: 193, y: 240, width: 14, height: 14)),
+                with: .color(theme.joeyScarf)
+            )
+
+            fillEllipse(&layer, center: CGPoint(x: 84, y: 262), rx: 18, ry: 28, rotation: 10, color: theme.joeyArm)
+            fillEllipse(&layer, center: CGPoint(x: 236, y: 262), rx: 18, ry: 28, rotation: -10, color: theme.joeyArm)
+
+            drawJoeyFace(&layer, isHappy: isHappy)
+        }
+    }
+
+    private func drawEar(_ context: inout GraphicsContext, mirrored: Bool) {
+        let transform = CGAffineTransform.identity
+            .translatedBy(x: mirrored ? 320 : 0, y: 0)
+            .scaledBy(x: mirrored ? -1 : 1, y: 1)
+
+        var outer = Path()
+        outer.move(to: CGPoint(x: 118, y: 148))
+        outer.addCurve(
+            to: CGPoint(x: 93, y: 68),
+            control1: CGPoint(x: 100, y: 126),
+            control2: CGPoint(x: 88, y: 90)
+        )
+        outer.addCurve(
+            to: CGPoint(x: 126, y: 62),
+            control1: CGPoint(x: 97, y: 50),
+            control2: CGPoint(x: 116, y: 46)
+        )
+        outer.addCurve(
+            to: CGPoint(x: 146, y: 140),
+            control1: CGPoint(x: 138, y: 80),
+            control2: CGPoint(x: 144, y: 116)
+        )
+        outer.closeSubpath()
+        context.fill(outer.applying(transform), with: .color(theme.joeyBody))
+
+        var inner = Path()
+        inner.move(to: CGPoint(x: 120, y: 136))
+        inner.addCurve(
+            to: CGPoint(x: 105, y: 80),
+            control1: CGPoint(x: 108, y: 118),
+            control2: CGPoint(x: 101, y: 94)
+        )
+        inner.addCurve(
+            to: CGPoint(x: 122, y: 78),
+            control1: CGPoint(x: 108, y: 70),
+            control2: CGPoint(x: 117, y: 69)
+        )
+        inner.addCurve(
+            to: CGPoint(x: 136, y: 132),
+            control1: CGPoint(x: 129, y: 90),
+            control2: CGPoint(x: 134, y: 114)
+        )
+        inner.closeSubpath()
+        context.fill(inner.applying(transform), with: .color(theme.joeyInnerEar))
+    }
+
+    private func drawJoeyBody(_ context: inout GraphicsContext) {
+        var body = Path()
+        body.move(to: CGPoint(x: 160, y: 116))
+        body.addCurve(
+            to: CGPoint(x: 242, y: 231),
+            control1: CGPoint(x: 209, y: 116),
+            control2: CGPoint(x: 242, y: 167)
+        )
+        body.addCurve(
+            to: CGPoint(x: 160, y: 342),
+            control1: CGPoint(x: 242, y: 299),
+            control2: CGPoint(x: 208, y: 342)
+        )
+        body.addCurve(
+            to: CGPoint(x: 78, y: 231),
+            control1: CGPoint(x: 112, y: 342),
+            control2: CGPoint(x: 78, y: 299)
+        )
+        body.addCurve(
+            to: CGPoint(x: 160, y: 116),
+            control1: CGPoint(x: 78, y: 167),
+            control2: CGPoint(x: 111, y: 116)
+        )
+        body.closeSubpath()
+        context.fill(body, with: .color(theme.joeyBody))
+
+        var shade = Path()
+        shade.move(to: CGPoint(x: 160, y: 342))
+        shade.addCurve(
+            to: CGPoint(x: 78, y: 231),
+            control1: CGPoint(x: 112, y: 342),
+            control2: CGPoint(x: 78, y: 299)
+        )
+        shade.addCurve(
+            to: CGPoint(x: 79, y: 212),
+            control1: CGPoint(x: 78, y: 224),
+            control2: CGPoint(x: 78, y: 218)
+        )
+        shade.addCurve(
+            to: CGPoint(x: 160, y: 322),
+            control1: CGPoint(x: 93, y: 298),
+            control2: CGPoint(x: 118, y: 322)
+        )
+        shade.addCurve(
+            to: CGPoint(x: 241, y: 212),
+            control1: CGPoint(x: 202, y: 322),
+            control2: CGPoint(x: 227, y: 298)
+        )
+        shade.addCurve(
+            to: CGPoint(x: 242, y: 231),
+            control1: CGPoint(x: 242, y: 218),
+            control2: CGPoint(x: 242, y: 224)
+        )
+        shade.addCurve(
+            to: CGPoint(x: 160, y: 342),
+            control1: CGPoint(x: 242, y: 299),
+            control2: CGPoint(x: 208, y: 342)
+        )
+        shade.closeSubpath()
+        context.fill(shade, with: .color(theme.joeyShade.opacity(0.5)))
+    }
+
+    private func drawJoeyFace(_ context: inout GraphicsContext, isHappy: Bool) {
+        guard !isHappy else {
+            fillEllipse(&context, center: CGPoint(x: 111, y: 228), rx: 18, ry: 9, color: theme.joeyBlush, opacity: 0.36)
+            fillEllipse(&context, center: CGPoint(x: 209, y: 228), rx: 18, ry: 9, color: theme.joeyBlush, opacity: 0.36)
+
+            var eyes = Path()
+            eyes.move(to: CGPoint(x: 124, y: 207))
+            eyes.addCurve(
+                to: CGPoint(x: 147, y: 207),
+                control1: CGPoint(x: 130, y: 198),
+                control2: CGPoint(x: 141, y: 198)
+            )
+            eyes.move(to: CGPoint(x: 173, y: 207))
+            eyes.addCurve(
+                to: CGPoint(x: 196, y: 207),
+                control1: CGPoint(x: 179, y: 198),
+                control2: CGPoint(x: 190, y: 198)
+            )
+            context.stroke(
+                eyes,
+                with: .color(theme.joeyEye),
+                style: StrokeStyle(lineWidth: 4, lineCap: .round)
+            )
+
+            var nose = Path()
+            nose.move(to: CGPoint(x: 160, y: 214))
+            nose.addCurve(
+                to: CGPoint(x: 166, y: 220),
+                control1: CGPoint(x: 165, y: 214),
+                control2: CGPoint(x: 168, y: 217)
+            )
+            nose.addCurve(
+                to: CGPoint(x: 154, y: 220),
+                control1: CGPoint(x: 164, y: 222.5),
+                control2: CGPoint(x: 156, y: 222.5)
+            )
+            nose.addCurve(
+                to: CGPoint(x: 160, y: 214),
+                control1: CGPoint(x: 152, y: 217),
+                control2: CGPoint(x: 155, y: 214)
+            )
+            nose.closeSubpath()
+            context.fill(nose, with: .color(theme.joeyNose))
+
+            var mouth = Path()
+            mouth.move(to: CGPoint(x: 150, y: 226))
+            mouth.addCurve(
+                to: CGPoint(x: 170, y: 226),
+                control1: CGPoint(x: 152, y: 238),
+                control2: CGPoint(x: 168, y: 238)
+            )
+            mouth.closeSubpath()
+            context.fill(mouth, with: .color(theme.joeyMouth))
+            return
+        }
+
+        fillEllipse(&context, center: CGPoint(x: 111, y: 226), rx: 18, ry: 9, color: theme.joeyBlush, opacity: 0.26)
+        fillEllipse(&context, center: CGPoint(x: 209, y: 226), rx: 18, ry: 9, color: theme.joeyBlush, opacity: 0.26)
+
+        fillEllipse(&context, center: CGPoint(x: 134, y: 204), rx: 8.5, ry: 11, color: theme.joeyEye)
+        fillEllipse(&context, center: CGPoint(x: 186, y: 204), rx: 8.5, ry: 11, color: theme.joeyEye)
+        fillEllipse(&context, center: CGPoint(x: 131, y: 200), rx: 2.8, ry: 2.8, color: .white)
+        fillEllipse(&context, center: CGPoint(x: 183, y: 200), rx: 2.8, ry: 2.8, color: .white)
+
+        var nose = Path()
+        nose.move(to: CGPoint(x: 160, y: 216))
+        nose.addCurve(
+            to: CGPoint(x: 166.5, y: 223),
+            control1: CGPoint(x: 166, y: 216),
+            control2: CGPoint(x: 169, y: 220)
+        )
+        nose.addCurve(
+            to: CGPoint(x: 153.5, y: 223),
+            control1: CGPoint(x: 164.5, y: 225.5),
+            control2: CGPoint(x: 155.5, y: 225.5)
+        )
+        nose.addCurve(
+            to: CGPoint(x: 160, y: 216),
+            control1: CGPoint(x: 151, y: 220),
+            control2: CGPoint(x: 154, y: 216)
+        )
+        nose.closeSubpath()
+        context.fill(nose, with: .color(theme.joeyNose))
+
+        var mouth = Path()
+        mouth.move(to: CGPoint(x: 160, y: 224))
+        mouth.addCurve(
+            to: CGPoint(x: 150, y: 228),
+            control1: CGPoint(x: 158, y: 230),
+            control2: CGPoint(x: 153, y: 232)
+        )
+        mouth.move(to: CGPoint(x: 160, y: 224))
+        mouth.addCurve(
+            to: CGPoint(x: 170, y: 228),
+            control1: CGPoint(x: 162, y: 230),
+            control2: CGPoint(x: 167, y: 232)
+        )
+        context.stroke(
+            mouth,
+            with: .color(theme.joeyMouth),
+            style: StrokeStyle(lineWidth: 2.3, lineCap: .round)
+        )
+    }
+
+    private func fillEllipse(
+        _ context: inout GraphicsContext,
+        center: CGPoint,
+        rx: CGFloat,
+        ry: CGFloat,
+        rotation: Double = 0,
+        color: Color,
+        opacity: Double = 1
+    ) {
+        context.drawLayer { layer in
+            layer.translateBy(x: center.x, y: center.y)
+            layer.rotate(by: .degrees(rotation))
+            layer.fill(
+                Path(ellipseIn: CGRect(x: -rx, y: -ry, width: rx * 2, height: ry * 2)),
+                with: .color(color.opacity(opacity))
+            )
+        }
+    }
+}
