@@ -99,7 +99,7 @@ Every surface colour comes from a token. Never hardcode a hex in a view.
 | `clay` | `#C9B08C` | `#C9B08C` | Paper, wood, tape, illustration props |
 | `hairline` | `rgba(63,58,53,.14)` | `rgba(233,227,215,.14)` | 1 px strokes, dividers |
 | `hairline-strong` | `rgba(63,58,53,.24)` | `rgba(233,227,215,.24)` | Secondary button border, fields |
-| `focus` | `#4A90D9` | `#4A90D9` | macOS system-blue focus ring |
+| `focus` | `#4F6D54` | `#86A98A` | Sage focus ring; never system blue |
 
 ### 4.2 Surfaces
 
@@ -266,7 +266,7 @@ The main window is **one room**, not a container of pages.
 | Rhythm reflection | Wall frame labelled 回顾 (hover: 回顾这周) | 回巢 button, bottom-right |
 | Settings | Gear in the titlebar | Gear toggles back to the previous page |
 
-- The scene affordance is a real hit target with a visible hover ring (`0 0 0 3px rgba(134,169,138,.35)`) and a keyboard focus state.
+- The scene affordance is a real hit target; hovering shows the 回顾这周 tooltip. Never draw a hover or focus outline around the scene area.
 - Never add a second navigation layer (tab bar, segmented control, breadcrumb) to the room.
 - Reflection and settings are **views inside the same window**, not separate windows. The window title changes while either is open.
 - Settings returns to whichever page was open before the gear was pressed.
@@ -298,7 +298,7 @@ Rules:
 - **Exactly one primary action per state.** Secondary and quiet actions sit below or beside it.
 - Hover: primary brightens 3 %; secondary fills `panel-2`; quiet text moves to `ink`. Never lighten text to grey on hover.
 - Pressed: 1 px downward translate.
-- Focus: system-blue ring, visible on keyboard focus.
+- Focus: sage ring, visible on keyboard focus. Mouse clicks show caret and selection only; text inputs never gain a blue outline.
 - No icon in every button. Icons only where they speed recognition (play, home, gear).
 
 ### 8.2 Status chip
@@ -323,8 +323,8 @@ Small in-scene information tag: `popover` fill, 1 px hairline, radius 9, `6/11` 
 |---------|------|
 | Switch | 36 × 21 track, 17 px knob, sage when on, 160 ms |
 | Segmented | `panel-2` track, radius 8, 2 px inset, active item `panel` + `shadow-sm` |
-| Time field | radius 8, 1 px hairline, `panel-2` fill, tabular numerals |
-| Textarea | radius 10, 1 px `hairline-strong`, 72 px min height, focus ring |
+| Time field | radius 8, 1 px hairline, `panel-2` fill, tabular numerals; caret and sage selection only |
+| Textarea | radius 10, 1 px `hairline-strong`, 72 px min height; caret and sage selection only |
 | Menu | radius 12, 6 px padding, 8 px row radius, 1 px divider, `shadow-lg` |
 
 Controls follow macOS sizing and behavior. Custom styling is limited to fill, radius, and typography — not to interaction models.
@@ -486,6 +486,7 @@ Native, quieter, more functional than the room. No illustration, no hero copy, n
 | 反馈 | Button → textarea | 哪里觉得打扰，写在这里 |
 
 - Section description: `只在你开始工作后提醒。` — this is a product rule, not marketing.
+- Time inputs use direct typing. Focus shows a caret and sage selection, never a blue outline.
 - Native `Form`/`Toggle`/`Picker`/`TextField` behavior; semantic system colours are acceptable here where native controls demand them, but the surface stays ivory/panel, never system-grey dashboard.
 
 ---
@@ -569,7 +570,7 @@ Every feedback message states what happened in one sentence. Never a status code
 | Contrast | Body ≥ 4.5:1, large text ≥ 3:1, essential graphics ≥ 3:1; audit dusk independently |
 | Colour | Never the only channel; pair with text, icon, or shape |
 | VoiceOver | One combined label for composite surfaces; decorative SVG hidden; every custom control named |
-| Keyboard | Full Keyboard Access; visible system-blue focus ring; primary action as default button; menu reachable |
+| Keyboard | Full Keyboard Access; visible sage focus ring; primary action as default button; menu reachable |
 | Hit targets | ≥ 28 × 28 pt, never below 20 × 20 pt; ≥ 8 pt between adjacent targets; the hit region may exceed the glyph |
 | Text scaling | Settings and feedback survive system text size; illustration-side captions may stay fixed |
 | Motion | Reduce Motion honoured everywhere, including breathing and hover |
