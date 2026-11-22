@@ -114,12 +114,9 @@
 			isa = PBXGroup;
 			children = (
 				D7PET207305978720070926E /* App */,
-				D7SHGRPDES /* Design */,
-				D7SHGRPFEAT /* Features */,
 				D7PET20D305978720070926E /* Behavior */,
 				D7PET201305978720070926E /* Domain */,
 				D7PET204305978720070926E /* Pet */,
-				D7PET202305978720070926E /* System */,
 				D7PET208305978720070926E /* UI */,
 				D7PET210305978720070926E /* Utilities */,
 				D7PET209305978720070926E /* Resources */,
@@ -149,37 +146,6 @@
 				D7PET028305978720070926E /* PetPosition.swift */,
 			);
 			path = Domain;
-			sourceTree = "<group>";
-		};
-		D7PET202305978720070926E /* System */ = {
-			isa = PBXGroup;
-			children = (
-				D7PET203305978720070926E /* Sensors */,
-				D7STOGR305978720070926E /* Storage */,
-				D7PERGR305978720070926E /* Permissions */,
-			);
-			path = System;
-			sourceTree = "<group>";
-		};
-		D7PERGR305978720070926E /* Permissions */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Permissions;
-			sourceTree = "<group>";
-		};
-		D7STOGR305978720070926E /* Storage */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Storage;
-			sourceTree = "<group>";
-		};
-		D7PET203305978720070926E /* Sensors */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Sensors;
 			sourceTree = "<group>";
 		};
 		D7PET204305978720070926E /* Pet */ = {
@@ -225,76 +191,6 @@
 				D7PET20C305978720070926E /* Pets */,
 			);
 			name = Pets;
-			sourceTree = "<group>";
-		};
-		D7SHGRPFEAT /* Features */ = {
-			isa = PBXGroup;
-			children = (
-				D7SHGRPSHELL /* Shell */,
-				D7SHGRPMAC /* MacCare */,
-				D7SHGRPWR /* WorkRhythm */,
-				D7SHGRPSET /* Settings */,
-				D7PERGRP305978720070926E /* Permission */,
-				D7CA0000305978720070926E /* CalmSpace */,
-			);
-			path = Features;
-			sourceTree = "<group>";
-		};
-		D7SHGRPDES /* Design */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Design;
-			sourceTree = "<group>";
-		};
-		D7SHGRPSHELL /* Shell */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Shell;
-			sourceTree = "<group>";
-		};
-		D7SHGRPMAC /* MacCare */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = MacCare;
-			sourceTree = "<group>";
-		};
-		D7SHGRPWR /* WorkRhythm */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = WorkRhythm;
-			sourceTree = "<group>";
-		};
-		D7CA0000305978720070926E /* CalmSpace */ = {
-			isa = PBXGroup;
-			children = (
-				D7E5A0F0305978720070926E /* StagePrototype */,
-			);
-			path = CalmSpace;
-			sourceTree = "<group>";
-		};
-		D7E5A0F0305978720070926E /* StagePrototype */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = StagePrototype;
-			sourceTree = "<group>";
-		};
-		D7SHGRPSET /* Settings */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Settings;
-			sourceTree = "<group>";
-		};
-		D7PERGRP305978720070926E /* Permission */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Permission;
 			sourceTree = "<group>";
 		};
 		D7PET207305978720070926E /* App */ = {

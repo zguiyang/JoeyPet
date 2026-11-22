@@ -19,10 +19,6 @@ RUNTIME_STATES: list[tuple[str, str]] = [
     ("blink", "joey-blink.png"),
     ("walking", "joey-walking.png"),
     ("sleeping", "joey-sleeping.png"),
-    ("sweating", "joey-sweating.png"),
-    ("tired", "joey-tired.png"),
-    ("carryingTrash", "joey-carryingTrash.png"),
-    ("cleaning", "joey-cleaning.png"),
     ("celebrating", "joey-celebrating.png"),
     ("notifying", "joey-notifying.png"),
 ]
@@ -38,15 +34,11 @@ BODY_TARGET_FRACTION = 0.86
 STATE_BODY_SCALE: dict[str, float] = {
     "idle": 1.0,
     "walking": 1.0,
-    "carryingTrash": 1.06,
-    "cleaning": 1.02,
     "celebrating": 1.1,
     "notifying": 1.03,
 }
 
 STATE_OFFSET_Y: dict[str, int] = {
-    "carryingTrash": -4,
-    "cleaning": -2,
     "celebrating": 0,
     "notifying": 2,
 }
@@ -148,7 +140,7 @@ def main() -> None:
         img = Image.open(SOURCE_DIR / filename).convert("RGBA")
         frame = normalize_frame(img, anim_id, target_body_height)
         normalized.append(frame)
-        if anim_id in {"idle", "walking", "carryingTrash", "cleaning", "celebrating", "notifying"}:
+        if anim_id in {"idle", "walking", "celebrating", "notifying"}:
             qa_frames.append((anim_id, frame))
 
     columns = len(RUNTIME_STATES)
@@ -165,7 +157,7 @@ def main() -> None:
     animations: dict[str, dict] = {}
     for index, (anim_id, _filename) in enumerate(RUNTIME_STATES):
         loop = anim_id not in ("blink", "celebrating", "notifying")
-        fps = 6 if anim_id == "blink" else (4 if anim_id in ("walking", "cleaning", "celebrating") else 3)
+        fps = 6 if anim_id == "blink" else (4 if anim_id in ("walking", "celebrating") else 3)
         if anim_id in ("idle", "sleeping"):
             fps = 1
         animations[anim_id] = {"frames": [index], "fps": fps, "loop": loop}
