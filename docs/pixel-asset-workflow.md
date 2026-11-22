@@ -55,9 +55,9 @@ See [ADR 008](decisions/008-pixel-perfect-display-scaling.md).
 
 | Package ID | Status | Frames | Sheet | Display | Logical pt |
 |------------|--------|--------|-------|---------|------------|
-| `Joey` | Default shipping production package | 256×256 | 10×1 → 2560×256 | `displayPointSize: 128` | 128×128 |
+| `Joey` | Default shipping production package | 256×256 | 6×1 → 1536×256 | `displayPointSize: 128` | 128×128 |
 
-Paths: `src/JoeyPet/Resources/Pets/<PackageID>/`.
+Paths: `macos/JoeyPet/Resources/Pets/<PackageID>/`.
 
 Debug animation/behavior switches (Debug builds only; Release ignores them):
 

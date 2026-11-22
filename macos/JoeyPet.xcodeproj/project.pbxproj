@@ -68,7 +68,7 @@
 		D7PET01A305978720070926E /* PetRootNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetRootNode.swift; sourceTree = "<group>"; };
 		D7PET01B305978720070926E /* PetTransientBehavior.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetTransientBehavior.swift; sourceTree = "<group>"; };
 		D7PET01C305978720070926E /* AmbientBehaviorScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientBehaviorScheduler.swift; sourceTree = "<group>"; };
-		D7PET20C305978720070926E /* Pets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Pets; path = src/JoeyPet/Resources/Pets; sourceTree = SOURCE_ROOT; };
+		D7PET20C305978720070926E /* Pets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Pets; path = JoeyPet/Resources/Pets; sourceTree = SOURCE_ROOT; };
 		D7PET027305978720070926E /* PetPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetPreferences.swift; sourceTree = "<group>"; };
 		D7PET028305978720070926E /* PetPosition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetPosition.swift; sourceTree = "<group>"; };
 		D7PET029305978720070926E /* PetPositionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetPositionStore.swift; sourceTree = "<group>"; };
@@ -124,7 +124,7 @@
 						D7BABD65305978720070926E /* JoeyPetApp.swift */,
 			);
 			name = JoeyPet;
-			path = src/JoeyPet;
+			path = JoeyPet;
 			sourceTree = "<group>";
 		};
 		D7PET20D305978720070926E /* Behavior */ = {
@@ -228,7 +228,7 @@
 				D7BABD6A305978E70070926E /* JoeyPetTests.swift */,
 			);
 			name = JoeyPetTests;
-			path = tests/JoeyPetTests;
+			path = JoeyPetTests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

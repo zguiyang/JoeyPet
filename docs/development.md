@@ -17,14 +17,14 @@ Workflow for humans and agents building JoeyPet V0.
 ## Implementation
 
 - Smallest diff that satisfies the task.
-- App/lifecycle code in `App/`, scheduling in `Behavior/`, domain types in `Domain/`, runtime in `Pet/Runtime/`, SpriteKit nodes in `Pet/Sprite/`, panel and input in `UI/`.
+- App/lifecycle code in `macos/JoeyPet/App/`, scheduling in `Behavior/`, domain types in `Domain/`, runtime in `Pet/Runtime/`, SpriteKit nodes in `Pet/Sprite/`, panel and input in `UI/`.
 - Use Swift Concurrency; avoid blocking the main thread.
 - Log with `Logger`; no print debugging in committed code.
 
 ## Build
 
 ```bash
-xcodebuild -project JoeyPet.xcodeproj -scheme JoeyPet -destination 'platform=macOS' build
+xcodebuild -project macos/JoeyPet.xcodeproj -scheme JoeyPet -destination 'platform=macOS' build
 ```
 
 ### Debug Dev install
@@ -33,15 +33,15 @@ Debug builds use bundle ID `com.zguiyang.JoeyPet.dev` and product name **JoeyPet
 
 ```bash
 export JOEYPET_DEVELOPMENT_TEAM=YOUR_TEAM_ID
-./scripts/build_joeypet_dev.sh
+./macos/scripts/build_joeypet_dev.sh
 ```
 
-The script builds into `.derived-data/joeypet-dev` and installs the Dev app locally. It does not modify system privacy settings or user data.
+The script builds into `macos/.derived-data/joeypet-dev` and installs the Dev app locally. It does not modify system privacy settings or user data.
 
 ## Test
 
 ```bash
-xcodebuild -project JoeyPet.xcodeproj -scheme JoeyPet -destination 'platform=macOS' test
+xcodebuild -project macos/JoeyPet.xcodeproj -scheme JoeyPet -destination 'platform=macOS' test
 ```
 
 `JoeyPetTests` uses the App target as the test host. Prefer Swift Testing (`@Test`, `#expect`) for new tests.

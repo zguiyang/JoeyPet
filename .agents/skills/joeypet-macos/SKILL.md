@@ -11,7 +11,7 @@ Use when working on JoeyPet implementation or review. **Do not duplicate [AGENTS
 
 ## When to use
 
-- Adding or changing Swift code under `src/JoeyPet/`
+- Adding or changing Swift code under `macos/JoeyPet/`
 - UI/UX request described in plain language
 - New ambient behavior, pet state, or animation clip
 - Desktop panel, drag, hide/show or menu bar changes
@@ -62,7 +62,7 @@ Platform guardrails (official pages are `https://developer.apple.com/design/huma
 
 ## Add or change a sprite animation
 
-1. Edit `src/JoeyPet/Resources/Pets/Joey/spritesheet.png` — keep row-major layout matching `columns` × `rows` in `pet.json`.
+1. Edit `macos/JoeyPet/Resources/Pets/Joey/spritesheet.png` — keep row-major layout matching `columns` × `rows` in `pet.json`.
 2. Add or update an entry under `animations` (`frames`, `fps`, `loop`).
 3. If it maps to a `PetState`, update `PetStateAnimationMapping.swift` only.
 4. Run `PetManifestValidator` tests (dimensions, in-bounds frames, fallback).
@@ -91,8 +91,8 @@ Platform guardrails (official pages are `https://developer.apple.com/design/huma
 ## Build & test
 
 ```bash
-xcodebuild -project JoeyPet.xcodeproj -scheme JoeyPet -destination 'platform=macOS' build
-xcodebuild -project JoeyPet.xcodeproj -scheme JoeyPet -destination 'platform=macOS' test
+xcodebuild -project macos/JoeyPet.xcodeproj -scheme JoeyPet -destination 'platform=macOS' build
+xcodebuild -project macos/JoeyPet.xcodeproj -scheme JoeyPet -destination 'platform=macOS' test
 ```
 
 Run the app for panel and SpriteKit behavior after runtime changes.

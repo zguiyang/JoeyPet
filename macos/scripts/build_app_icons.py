@@ -9,7 +9,7 @@ from pathlib import Path
 from PIL import Image
 
 SOURCE = Path("/Users/joyzhao/Downloads/joeypet_pics/app-logo.png")
-ICONSET = Path(__file__).resolve().parents[1] / "src/JoeyPet/Assets.xcassets/AppIcon.appiconset"
+ICONSET = Path(__file__).resolve().parents[1] / "JoeyPet/Assets.xcassets/AppIcon.appiconset"
 MASTER_OUT = Path(__file__).resolve().parent / "output/app_icon_master_square.png"
 
 SLOTS = [

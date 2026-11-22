@@ -11,7 +11,7 @@ from PIL import Image
 
 SOURCE_DIR = Path("/Users/joyzhao/Downloads/joeypet_pics")
 REPO_ROOT = Path(__file__).resolve().parents[1]
-JOEY_PKG = REPO_ROOT / "src/JoeyPet/Resources/Pets/Joey"
+JOEY_PKG = REPO_ROOT / "JoeyPet/Resources/Pets/Joey"
 QA_SHEET = REPO_ROOT / "scripts/output/joey_state_qa_sheet.png"
 
 RUNTIME_STATES: list[tuple[str, str]] = [

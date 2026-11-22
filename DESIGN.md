@@ -582,7 +582,7 @@ Do not apply iOS 44 × 44 guidance to macOS controls.
 
 | Concern | Decision |
 |---------|----------|
-| Tokens | Create `src/JoeyPet/Design/JoeyPetTheme.swift` (colors, type, spacing, radius, motion) before the first screen. Views reference tokens only. |
+| Tokens | Create `macos/JoeyPet/Design/JoeyPetTheme.swift` (colors, type, spacing, radius, motion) before the first screen. Views reference tokens only. |
 | Appearance | `Color` sets or a theme environment value for light/dusk; no per-view hex. |
 | Windows | AppKit owns windows and panels (`NSWindow`, `NSPanel`, `NSStatusItem`). SwiftUI owns content. Do not migrate to SwiftUI `App`/`WindowGroup`. |
 | Main window | Standard titled window, full-size content view, transparent titlebar, no toolbar, no titlebar separator. Native traffic lights. |

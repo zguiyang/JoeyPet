@@ -28,7 +28,10 @@ DerivedData/
 *.xcscmblueprint
 
 # Script-generated artifacts (QA captures, diagnostics, icon pipeline intermediates)
-scripts/output/
+macos/scripts/output/
+
+# Screenshot tooling scratch
+.screenshots/
 
 # Python bytecode
 __pycache__/

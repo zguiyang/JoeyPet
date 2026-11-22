@@ -15,6 +15,15 @@ macOS desktop pet MVP in active development.
 
 The first version is focused on macOS and will be built as a native Swift application.
 
+## Repository Layout
+
+```text
+macos/        macOS app (Xcode project, Swift sources, tests, platform scripts)
+docs/         shared product, design and ADR documentation
+.agents/      repository-level agent skills
+windows/      reserved for a future Windows implementation
+```
+
 ## Documentation
 
 - [AGENTS.md](./AGENTS.md) — rules for coding agents

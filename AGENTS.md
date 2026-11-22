@@ -12,6 +12,16 @@ Read [`开发交接文档.md`](开发交接文档.md), [`V0_FEATURE_SCOPE.md`](V
 - Do not add cleanup, uninstall, system monitoring, Todo, task management, MCP/CLI integrations, cloud accounts, chat, LLM runtime or a database without an explicit new product decision.
 - Legacy Mac Care / Calm Space documents exist only for historical reference; do not restore their scope or architecture from them.
 
+## Repository layout
+
+- macOS implementation: `macos/JoeyPet/`
+- macOS tests: `macos/JoeyPetTests/`
+- macOS Xcode project: `macos/JoeyPet.xcodeproj/`
+- macOS-only scripts: `macos/scripts/`
+- Future platforms: sibling directories such as `windows/`; create them only when implementation starts
+- Shared product, design and ADR docs: `docs/`
+- Repository-level agent skills: `.agents/`
+
 ## Allowed stack
 
 Swift, SwiftUI, AppKit, SpriteKit, Swift Concurrency, Apple frameworks first, Foundation, UserDefaults / `@AppStorage`, OSLog / `Logger`, SPM, Swift Testing (preferred).

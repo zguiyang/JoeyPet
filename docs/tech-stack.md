@@ -15,7 +15,7 @@ Fixed direction for JoeyPet V0. Deviations require a new ADR and explicit approv
 | Logging | OSLog / `Logger` |
 | Package manager | Swift Package Manager (SPM) |
 | Tests | Swift Testing (preferred over XCTest for new tests) |
-| Project | Xcode project (`JoeyPet.xcodeproj`) |
+| Project | Xcode project (`macos/JoeyPet.xcodeproj`) |
 
 ## V0 dependency policy
 
