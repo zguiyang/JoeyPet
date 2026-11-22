@@ -38,16 +38,16 @@ Engineering AGENTS.md, docs/tech-stack.md        → AppKit/SwiftUI/SpriteKit sp
 
 | Surface | Design | Implementation |
 |---------|--------|----------------|
-| Desktop Joey (idle, drag, hide, menu) | Agreed | Implemented (V0 base) |
+| Desktop Joey (idle, drag, hide, menu) | Agreed | Implemented (V0 base), hidden by default |
 | Rest invitation | Agreed | Pending |
 | 30-second recovery | Agreed | Pending |
-| Nest home (main window, room scene) | Agreed | Pending |
-| Rhythm reflection (garden view) | Agreed | Pending |
-| Settings | Agreed | Pending |
-| Light + dusk appearances | Agreed | Pending |
+| Nest home (main window, room scene) | Agreed | Implemented (room shell, draggable Joey; session CTA not wired) |
+| Rhythm reflection (garden view) | Agreed | Implemented (empty state until session data exists) |
+| Settings | Agreed | Implemented (page inside the main window) |
+| Light + dusk appearances | Agreed | Implemented |
 | Calm Space / Mac Care shell | Legacy | Removed — archive branch only |
 
-> Shipped today: the desktop panel (drag, hide, show), menu bar item and idle ambient behavior. Nothing else in this table is implemented — rest invitation, recovery, nest, rhythm reflection and settings are design-only until their row says otherwise. Do not treat planned rows as shipped.
+> Shipped today: the desktop panel (drag, hide, show; hidden by default), menu bar item, the nest window with in-scene reflection navigation, and settings with light/dusk appearance and persisted V0 settings. Rest invitation and 30-second recovery remain design-only until their row says otherwise. The nest primary action is visual only — it is not wired to a companionship session yet. Do not treat planned rows as shipped.
 
 ---
 
@@ -241,7 +241,7 @@ Allowed only as an extremely subtle background grain: 120 px noise tile at **1.8
 |---------|------|-------|
 | Design canvas | 1440 × 900 | Desktop composition reference |
 | Nest window (default) | 1080 × 720 | Min 880 × 560 |
-| Settings window | 1000 × 720 | Min 760 × 520 |
+| Settings | 200 sidebar + detail inside the nest window | Shares the 1080 × 720 window; no second window |
 | Settings sidebar | 200 | Divider + detail |
 | Invitation card | 400 wide | Anchored beside Joey |
 | Recovery panel | 420 wide | Centred, top offset 100 |
@@ -264,11 +264,12 @@ The main window is **one room**, not a container of pages.
 | Destination | Scene affordance | Return |
 |-------------|------------------|--------|
 | Rhythm reflection | Wall frame labelled 回顾 (hover: 回顾这周) | 回巢 button, bottom-right |
-| Settings | Gear in the titlebar | Standard window close / native back |
+| Settings | Gear in the titlebar | Gear toggles back to the previous page |
 
 - The scene affordance is a real hit target with a visible hover ring (`0 0 0 3px rgba(134,169,138,.35)`) and a keyboard focus state.
 - Never add a second navigation layer (tab bar, segmented control, breadcrumb) to the room.
-- Reflection is a **view inside the same window**, not a second window. The window title changes to 节奏回顾 while it is open.
+- Reflection and settings are **views inside the same window**, not separate windows. The window title changes while either is open.
+- Settings returns to whichever page was open before the gear was pressed.
 
 ### 7.4 Safe area
 
@@ -472,15 +473,15 @@ A garden inside the same window, opened from the wall frame.
 
 Native, quieter, more functional than the room. No illustration, no hero copy, no sage hero blocks.
 
-- Window title **JoeyPet 设置**; 200 px sidebar + detail.
-- Sidebar groups: **陪伴** (节奏与提醒, 安静时段) · **Joey** (外观与位置, 成长记录) · **关于** (关于 JoeyPet).
+- Page title **JoeyPet 设置** inside the shared window; 200 px sidebar + detail.
+- Sidebar is one flat list, no group headings: 节奏与提醒 · 安静时段 · 外观与位置 · 成长记录 · 关于 JoeyPet.
 - Rows:
 
 | Row | Control | Copy |
 |-----|---------|------|
 | 提醒节奏 | Segmented 45 / 60 / 90 分钟 | 两次邀请之间的安静时间 |
 | 暂停一小时 | Switch | 到 16:24 自动恢复 |
-| 安静时段 | Time field | 22:00 到 08:00，Joey 会安静下来 |
+| 安静时段 | Time-range field: two editable halves, centre dash, double-click selects all | 22:00 到 08:00，Joey 会安静下来 |
 | 在桌面上显示 Joey | Switch | 停在屏幕右下角 |
 | 反馈 | Button → textarea | 哪里觉得打扰，写在这里 |
 
