@@ -38,16 +38,16 @@ Engineering AGENTS.md, docs/tech-stack.md        → AppKit/SwiftUI/SpriteKit sp
 
 | Surface | Design | Implementation |
 |---------|--------|----------------|
-| Desktop Joey (idle, drag, hide, menu) | Agreed | Pending |
+| Desktop Joey (idle, drag, hide, menu) | Agreed | Implemented (V0 base) |
 | Rest invitation | Agreed | Pending |
 | 30-second recovery | Agreed | Pending |
 | Nest home (main window, room scene) | Agreed | Pending |
 | Rhythm reflection (garden view) | Agreed | Pending |
 | Settings | Agreed | Pending |
 | Light + dusk appearances | Agreed | Pending |
-| Calm Space / Mac Care shell | Legacy | Present in code, do not extend |
+| Calm Space / Mac Care shell | Legacy | Removed — archive branch only |
 
-> The shipped code is still the legacy Calm Space build. It is **not** evidence that any row above is implemented. Do not reverse-engineer design decisions from that code.
+> Shipped today: the desktop panel (drag, hide, show), menu bar item and idle ambient behavior. Nothing else in this table is implemented — rest invitation, recovery, nest, rhythm reflection and settings are design-only until their row says otherwise. Do not treat planned rows as shipped.
 
 ---
 
