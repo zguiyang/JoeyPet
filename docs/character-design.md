@@ -1,18 +1,20 @@
 # Joey Character Design
 
-Phase **2B-2** production definition for Joey — the default built-in Pixel Robot. Phase 2A established the character direction and Phase 2B-1 validated display density; this phase locks the first reusable Joey sprite set.
+V0 production definition for Joey — the default built-in desktop companion. It locks the first reusable Joey sprite set and the six V0 animation clips.
 
-**Runtime note:** Joey is the V1 built-in character (`Resources/Pets/JoeyRobot/`). Runtime remains **character-agnostic** — load any valid `pet.json` + spritesheet package; do not hard-code Joey-specific branches in Swift.
+**Runtime note:** Joey is the V0 built-in character (`Resources/Pets/Joey/`). Runtime remains **character-agnostic** — load any valid `pet.json` + spritesheet package; do not hard-code Joey-specific branches in Swift.
 
 Current packages:
 
-| Package | Role | Frame | `defaultScale` | Logical size |
-|---------|------|-------|----------------|--------------|
-| `JoeyRobot` | Shipping production package / default | `32` × `32` | `4` | **128** × **128** pt |
+| Package | Role | Frame | Display size | Logical size |
+|---------|------|-------|--------------|--------------|
+| `Joey` | Shipping production package / default | `256` × `256` | `displayPointSize: 128` | **128** × **128** pt |
 
-The production decision is **32@4** (128 pt). Do **not** treat 64@96 pt (e.g. scale 1.5) as a production configuration. The 2B-1 candidates were comparison-only and are not shipped.
+The current Joey package uses a 10×1 sheet of 256 px HD frames and displays at
+128 pt. Pixel-grid packages may instead use an integer `defaultScale`. Do not
+treat mismatched fractional scales as production configurations.
 
-Sheet contract: `columns` × `rows`, row-major; `fallbackAnimation: idle`; integer `defaultScale`; nearest filtering ([ADR 007](decisions/007-configurable-sprite-asset-package.md), [ADR 008](decisions/008-pixel-perfect-display-scaling.md)).
+Sheet contract: `columns` × `rows`, row-major; `fallbackAnimation: idle`; integer `defaultScale` or positive `displayPointSize`; manifest-selected filtering ([ADR 007](decisions/007-configurable-sprite-asset-package.md), [ADR 008](decisions/008-pixel-perfect-display-scaling.md)).
 
 ## Display Model
 
@@ -26,31 +28,31 @@ Asset / Texel Grid  →  Logical Points  →  Physical / Backing Pixels
 | Layer | Meaning |
 |-------|---------|
 | Asset / Texel Grid | Source PNG cell size (`frameWidth` × `frameHeight`) |
-| Logical Points | On-screen SpriteKit / AppKit size = frame × integer `defaultScale` |
+| Logical Points | On-screen SpriteKit / AppKit size = frame × integer `defaultScale`, or `displayPointSize` |
 | Physical / Backing Pixels | What the display lights; depends on `backingScaleFactor` (often 2.0 on Retina, not guaranteed) |
 
-`CharacterNode` applies `manifest.defaultScale` via `setScale`. Textures use nearest filtering. See [pet-runtime.md](pet-runtime.md) and [ADR 008](decisions/008-pixel-perfect-display-scaling.md).
+`CharacterNode` applies the manifest display scale. Textures use the manifest filtering mode (current Joey uses smooth HD frames). See [pet-runtime.md](pet-runtime.md) and [ADR 008](decisions/008-pixel-perfect-display-scaling.md).
 
 ## Pixel-perfect Rules
 
-- Nearest-neighbor filtering only (no linear blur on pet sprites).
-- **Integer** logical `defaultScale` only in production packages.
-- No fractional production scales (e.g. 1.5×, 2.5×).
+- Use nearest filtering for pixel-grid assets; HD packages may opt into smooth through the manifest.
+- **Integer** logical `defaultScale` for pixel-grid packages; HD packages use `displayPointSize`.
+- No unintended fractional production scales.
 - No anti-alias or soft blur inside authored frames.
 - Account for `NSScreen.backingScaleFactor` when judging sharpness; do not assume every display is Retina / 2×.
 - Compare candidates at equal logical points (128 pt), not mismatched scales.
 
 ## Role
 
-- Desktop companion first; lightweight system assistant only when useful.
-- Expresses macOS conditions as **character metaphors** (sweat, tired, trash motif) — never as metric readouts.
+- Desktop companion first; always a pet, never a system assistant.
+- Expresses care and work rhythm through character gestures — never as metric readouts.
 - Quiet presence; does not compete with the user’s work.
 
 ## Personality
 
 | Trait | On-screen meaning |
 |-------|-------------------|
-| Helpful | Notices clutter or pressure; offers tools only after explain → approve |
+| Helpful | Gently invites a break; never monitors or judges |
 | Quiet | Prefers small loops and soft state changes over constant motion |
 | Playful | Short celebration / notify beats; never chaotic |
 | Stoic-cute | Robot body, readable face; emotions are clear but not melodramatic |
@@ -72,19 +74,19 @@ Asset / Texel Grid  →  Logical Points  →  Physical / Backing Pixels
 1. Rounded or blocky robot head (dominant mass).
 2. Compact torso / stubby limbs.
 3. Short antenna + status light (color may shift with state; keep light small).
-4. 1–2 px eyes as primary expression vehicle (at 32; slightly denser at 64 without changing character).
-5. Optional first-wave props: **Trash Can**, **Broom** (drawn into frames; no attachment/socket system in V1).
+4. Eyes as primary expression vehicle (readable at the current 256 px frame size).
+5. No props or attachment/socket system in V0.
 
 ## Color System
 
-The production palette is locked for the first Joey V1 sprite set:
+The production palette is locked for the first Joey V0 sprite set:
 
 | Role | Guidance |
 |------|----------|
 | Primary | Body / armor — 1 dominant hue |
 | Secondary | Accents (antenna base, joints, panel lines) |
 | Tertiary | Face plate or under-detail (optional) |
-| Status accents | Few colors for sweat, sleep Z’s, notify blink, antenna light |
+| Status accents | Few colors for sleep Z’s, notify blink, antenna light |
 | Outline | Single dark outline or high-contrast edge for silhouette |
 
 **Palette:**
@@ -110,15 +112,15 @@ Transparent pixels are fully transparent; no semi-transparent edge pixels are us
 
 ## Expression System
 
-Map pet-facing states to readable face / body cues. State names stay **pet-centric** (see [domain-model.md](domain-model.md)).
+Map pet-facing states to readable face / body cues. State names stay **pet-centric**.
 
 | Cue | Examples |
 |-----|----------|
 | Eyes open / closed | idle blink, sleep |
-| Eye shape | tired (half-lid), celebrating (happy arcs) |
-| Antenna light | idle soft, notifying pulse, sweating warm |
-| Body posture | upright idle, slumped tired, bounce celebrate |
-| Props in-frame | trash can for `carryingTrash`, broom for `cleaning` |
+| Eye shape | celebrating (happy arcs) |
+| Antenna light | idle soft, notifying pulse |
+| Body posture | upright idle, bounce celebrate |
+| Props in-frame | none in V0 |
 
 Do not encode system metric names into art filenames or animation ids (`cpuHigh`, etc.).
 
@@ -126,15 +128,15 @@ Do not encode system metric names into art filenames or animation ids (`cpuHigh`
 
 - Prefer **2–4 frames** per clip (looping ambient states). Phase 2B-1 candidates were **idle-only** comparison assets (≤2 frames) and are no longer shipped.
 - **Integer pixel** motion only — no subpixel offsets, no interpolated soft moves in source art.
-- Hold silhouette stability across frames; change a few pixels for life (blink, antenna, sweat drops).
+- Hold silhouette stability across frames; change a few pixels for life (blink, antenna).
 - Avoid animation jitter: locked pivot, aligned feet, shared outline where pose allows.
 - Looping clips must tile cleanly (last → first without a pop).
-- One-shot beats (`celebrating`, `notifying`) may still be short loops in V1 if the runtime only plays looping `AnimationClip`s; keep them short and readable.
-- Match runtime: nearest filtering, integer `defaultScale`.
+- One-shot beats (`celebrating`, `notifying`) may still be short loops if the runtime only plays looping `AnimationClip`s; keep them short and readable.
+- Match runtime: manifest filtering, display scale, and frame timing.
 
 ## Initial Animation Set
 
-Target ~10 clips for Phase 2B production. Ids below align with package / mapping vocabulary (`carryingTrash` matches current `pet.json`).
+V0 ships six clips. Ids below align with the package and mapping vocabulary in `pet.json`.
 
 | Animation id | Intent | Typical frames |
 |--------------|--------|----------------|
@@ -142,18 +144,12 @@ Target ~10 clips for Phase 2B production. Ids below align with package / mapping
 | `blink` | Occasional eye close (or short idle variant) | 2 |
 | `walking` | Soft locomotion on desk | 2–4 |
 | `sleeping` | Rest / low-activity metaphor | 2–3 |
-| `sweating` | Thermal / heat metaphor | 2–4 |
-| `tired` | Memory pressure / sluggish metaphor | 2–3 |
-| `carryingTrash` | Storage / clutter motif | 2–4 |
-| `cleaning` | Cleanup utility mood (broom) | 2–4 |
-| `celebrating` | Positive feedback after approved action | 2–4 |
-| `notifying` | Gentle attention or result cue | 2–3 |
+| `celebrating` | Positive feedback after a completed recovery | 2–4 |
+| `notifying` | Gentle break invitation cue | 2–3 |
 
-Phase 2B-2 delivers the first production set in `JoeyRobot`: all ten clips below, with props composited into their frames. The runtime remains manifest-driven and does not gain animation-specific business branches.
+The runtime remains manifest-driven and does not gain animation-specific business branches.
 
-### Phase 3 runtime semantics
-
-The ten production clips are intentionally split by runtime meaning:
+### V0 runtime semantics
 
 | Animation id | Runtime meaning |
 |--------------|-----------------|
@@ -161,16 +157,11 @@ The ten production clips are intentionally split by runtime meaning:
 | `blink` | Ambient transient, most frequent |
 | `walking` | Ambient short-distance locomotion transient; window movement allowed |
 | `sleeping` | Rare ambient session |
-| `sweating` | Sustained thermal system state |
-| `tired` | Sustained memory-pressure system state |
-| `carryingTrash` | Sustained low-storage system state |
-| `cleaning` | Explicit utility behavior hook; no cleanup utility in V1 |
 | `celebrating` | Explicit transient success feedback |
-| `notifying` | Explicit transient attention cue; never random ambient behavior |
+| `notifying` | Explicit transient break-invitation cue; never random ambient behavior |
 
-System states may preempt transient behavior. Transient completion resumes the
-latest sustained state, and ambient behavior is discarded rather than queued
-when a warning is active.
+Transient completion returns to `idle`. Ambient behavior is discarded rather than
+queued while a transient is active.
 
 ## Asset Rules
 
@@ -180,7 +171,7 @@ when a warning is active.
 - `animations`: each clip has `frames`, `fps`, `loop`; indices must stay in-bounds.
 - `fallbackAnimation` must exist (Joey: `idle`).
 - Display: integer scale only; nearest-neighbor ([ADR 008](decisions/008-pixel-perfect-display-scaling.md)).
-- Props (Trash Can, Broom): composite into sprite frames for now — **no** separate attachment, bone, or layered prop runtime.
+- No separate prop, attachment, bone, or layered-equipment runtime in V0.
 - Concept / AI reference images are **not** shipping sprites until manually pixel-checked (see [pixel-asset-workflow.md](pixel-asset-workflow.md)).
 
 ## Anti-Patterns
@@ -189,13 +180,13 @@ when a warning is active.
 - High-detail faces, tiny unreadable ornaments, or busy backgrounds in the frame cell.
 - Metric-named states or clips (`cpuHigh`, `memoryHigh`).
 - Hard-coding Joey art paths or clip ids throughout runtime (keep mapping centralized).
-- Complex attachment / equipment systems in V1.
+- Complex attachment / equipment systems in V0.
 - Live2D, 3D, skeletal meshes, or non-pixel styles.
 - Treating unconfirmed concept art as final `spritesheet.png`.
-- Expanding into multi-character select, remote asset download, sound, or LLM “personality chat” in this phase.
+- Expanding into multi-character select, remote asset download, sound, or LLM “personality chat” in V0.
 - Comparing 32@4 to 64 at a different logical size and calling it a resolution decision.
 
-## Out of scope (Phase 2B-2)
+## Out of scope (V0)
 
 - Pet picker UI, sensors/settings/utilities changes.
 - Installing or training ComfyUI / LoRA pipelines.
@@ -203,9 +194,6 @@ when a warning is active.
 ## Related docs
 
 - [pixel-asset-workflow.md](pixel-asset-workflow.md)
-- [domain-model.md](domain-model.md)
 - [pet-runtime.md](pet-runtime.md)
-- [product.md](product.md)
-- [roadmap.md](roadmap.md)
 - [decisions/007-configurable-sprite-asset-package.md](decisions/007-configurable-sprite-asset-package.md)
 - [decisions/008-pixel-perfect-display-scaling.md](decisions/008-pixel-perfect-display-scaling.md)

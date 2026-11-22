@@ -1,0 +1,1582 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>JoeyPet · macOS 桌面伙伴 · UI 设计稿</title>
+<style>
+  :root {
+    /* —— 颜色 token（暖象牙 / 炭灰 / 鼠尾草 / 杏桃 / 雾蓝）—— */
+    --ivory: #F7F3EB;
+    --ivory-2: #F1E9DA;
+    --ink: #3F3A35;
+    --ink-2: #6B6259;
+    --muted: #6E6459;
+    --sage: #86A98A;
+    --sage-deep: #4F6D54;
+    --sage-ink: #263227;
+    --sage-soft: #E8EEE3;
+    --apricot: #EFAE7D;
+    --apricot-ink: #A96B42;
+    --mist: #90B9C9;
+    --mist-deep: #5E8B9D;
+    --mist-soft: #DFE9EB;
+    --clay: #C9B08C;
+    --hairline: rgba(63, 58, 53, 0.14);
+    --hairline-strong: rgba(63, 58, 53, 0.24);
+
+    /* —— 表面 —— */
+    --desk-bg: radial-gradient(1200px 540px at 80% 4%, #F4EAD6 0%, rgba(244,234,214,0) 60%),
+                radial-gradient(920px 440px at 10% 24%, #E8EFE5 0%, rgba(232,239,229,0) 58%),
+                linear-gradient(180deg, #F7F3EB 0%, #F1E9DA 52%, #EADFCC 100%);
+    --chrome: rgba(246, 241, 232, 0.92);
+    --menubar-text: #4A443D;
+    --window-bg: #FBF8F0;
+    --window-chrome: #F2ECE1;
+    --window-toolbar: #F6F1E7;
+    --panel: #FFFDF7;
+    --panel-2: #F8F3E9;
+    --popover: #FFFDF8;
+    --dock-bg: rgba(246, 241, 232, 0.82);
+    --shadow-sm: 0 1px 2px rgba(63,58,53,0.06), 0 2px 6px rgba(63,58,53,0.05);
+    --shadow-md: 0 2px 6px rgba(63,58,53,0.08), 0 10px 30px rgba(63,58,53,0.12);
+    --shadow-lg: 0 6px 20px rgba(63,58,53,0.14), 0 24px 60px rgba(63,58,53,0.20);
+
+    /* —— 房间场景（joey-room 使用 CSS 变量上色）—— */
+    --room-wall: #F8F4EC;
+    --room-wash: rgba(255, 253, 244, 0.55);
+    --room-floor: #E6D5BE;
+    --room-base: #EFE5D4;
+    --room-floorline: #D9C6AC;
+    --room-sky: #D9E7E6;
+    --room-frame: #E3D3BC;
+    --room-hill1: #C3D8D5;
+    --room-hill2: #AFC9C5;
+    --room-sill: #EFE5D4;
+    --room-curtain: #E8EDE4;
+    --room-clock: #FBF6EC;
+    --room-clockrim: #D9C6AE;
+    --room-clocktick: #C9B08C;
+    --room-chand: #3F3A35;
+    --room-pot: #D8B892;
+    --room-stem: #7E9B7C;
+    --room-leaf: #86A98A;
+    --room-rug: #E0CDB6;
+    --room-nestdark: #D2B189;
+    --room-nest: #D9BD97;
+    --room-cushion: #E7EDDD;
+    --room-cushion2: #F0F4E8;
+    --room-desk: #DEC9AE;
+    --room-deskleg: #D2BB9E;
+    --room-paper: #FBF7EF;
+    --room-paperline: #E4D6C1;
+    --room-noteline: #3F3A35;
+    --room-mug: #EFAE7D;
+    --room-mugtop: #C98F6E;
+
+    /* —— 焦点（macOS 系统蓝）—— */
+    --focus: #4A90D9;
+    --focus-ring: 0 0 0 3px rgba(74, 144, 217, 0.38);
+
+    /* —— 字体 —— */
+    --font-ui: -apple-system, "SF Pro Text", "SF Pro Display", "PingFang SC", "Helvetica Neue", "Segoe UI", sans-serif;
+    --font-display: -apple-system, "SF Pro Display", "SF Pro Text", "PingFang SC", sans-serif;
+
+    /* —— 圆角 / 动效 —— */
+    --r-lg: 22px;
+    --r-md: 16px;
+    --r-sm: 12px;
+    --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+    --ease-inout: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* ================= 黄昏（dim evening） ================= */
+  body[data-theme="dusk"] {
+    --desk-bg: radial-gradient(1100px 500px at 82% 4%, #3A474B 0%, rgba(58,71,75,0) 58%),
+                radial-gradient(820px 400px at 12% 22%, #2F3D40 0%, rgba(47,61,64,0) 56%),
+                linear-gradient(180deg, #2B3234 0%, #272E2F 60%, #222829 100%);
+    --chrome: rgba(38, 45, 47, 0.90);
+    --menubar-text: #D9D2C4;
+    --window-bg: #313A3B;
+    --window-chrome: #262E2F;
+    --window-toolbar: #2C3435;
+    --panel: #37403F;
+    --panel-2: #2F3838;
+    --popover: #394241;
+    --dock-bg: rgba(42, 50, 51, 0.80);
+    --ink: #E9E3D7;
+    --ink-2: #BFB8AB;
+    --muted: #B0A89C;
+    --hairline: rgba(233, 227, 215, 0.14);
+    --hairline-strong: rgba(233, 227, 215, 0.24);
+    --sage-ink: #1E2A20;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.24), 0 2px 6px rgba(0,0,0,0.22);
+    --shadow-md: 0 2px 6px rgba(0,0,0,0.28), 0 12px 30px rgba(0,0,0,0.34);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.36), 0 26px 64px rgba(0,0,0,0.44);
+
+    --room-wall: #2F3736;
+    --room-wash: rgba(196, 214, 210, 0.05);
+    --room-floor: #29302F;
+    --room-base: #3A4240;
+    --room-floorline: #3D4644;
+    --room-sky: #3E5560;
+    --room-frame: #4A5451;
+    --room-hill1: #35474B;
+    --room-hill2: #2E4045;
+    --room-sill: #3A4240;
+    --room-curtain: #3D4744;
+    --room-clock: #3B4544;
+    --room-clockrim: #4A5451;
+    --room-clocktick: #5A6A66;
+    --room-chand: #D9D2C4;
+    --room-pot: #4A443B;
+    --room-stem: #5F7A62;
+    --room-leaf: #6E9077;
+    --room-rug: #232A29;
+    --room-nestdark: #3A342C;
+    --room-nest: #4A4238;
+    --room-cushion: #3E4A42;
+    --room-cushion2: #46544A;
+    --room-desk: #4A4238;
+    --room-deskleg: #3E3830;
+    --room-paper: #3B4544;
+    --room-paperline: #4A5451;
+    --room-noteline: #C9C2B4;
+    --room-mug: #B98A62;
+    --room-mugtop: #8A654A;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: var(--font-ui);
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--ink);
+    background: #E9E4DA;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "kern" 1;
+  }
+  button { font-family: inherit; }
+  :focus { outline: none; }
+  :focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: 6px; }
+
+  /* 主题切换时表面颜色平滑过渡（不影响组件自身动画） */
+  .rail, .rail-status, .window, .win-titlebar, .set-nav, .invite-card,
+  .recover-panel, .room-label, .reflect-sign, .reflect-home, .pet-chip,
+  .pet-hint, .pet-menu, .seg, .timefield, .set-btn, .feedback-box textarea {
+    transition: background-color 0.35s ease, border-color 0.35s ease, color 0.35s ease;
+  }
+
+  @keyframes state-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes rise-in {
+    from { opacity: 0; translate: 0 10px; }
+    to { opacity: 1; translate: 0 0; }
+  }
+
+  /* ================= 应用骨架 ================= */
+  .app { display: flex; width: 100%; height: 100%; }
+
+  /* ================= 左侧规格导航 ================= */
+  .rail {
+    width: 272px;
+    flex: 0 0 272px;
+    height: 100%;
+    background: var(--chrome);
+    border-right: 1px solid var(--hairline);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    display: flex;
+    flex-direction: column;
+    padding: 20px 16px 16px;
+    z-index: 20;
+  }
+  .rail-brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 18px; }
+  .rail-brand .logo {
+    width: 34px; height: 34px; flex: 0 0 34px;
+    border-radius: 9px;
+    background: var(--sage);
+    display: grid; place-items: center;
+    color: #263227;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.18);
+  }
+  .rail-brand .logo svg { width: 20px; height: 20px; }
+  .rail-brand .name { font-weight: 650; font-size: 15px; line-height: 1.3; letter-spacing: 0.005em; }
+  .rail-brand .sub { font-size: 11.5px; line-height: 1.4; color: var(--muted); margin-top: 2px; }
+
+  .rail-group-label {
+    font-size: 11px;
+    line-height: 1.4;
+    letter-spacing: 0.02em;
+    color: var(--muted);
+    padding: 12px 10px 6px;
+  }
+  .nav { display: flex; flex-direction: column; gap: 2px; }
+  .nav button {
+    display: flex; align-items: center; gap: 11px;
+    width: 100%;
+    padding: 8px 10px;
+    border: 0; background: transparent;
+    border-radius: 9px;
+    color: var(--ink-2);
+    font-size: 13.5px;
+    line-height: 1.35;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.14s ease, color 0.14s ease;
+  }
+  .nav button svg { width: 18px; height: 18px; flex: 0 0 18px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; opacity: 0.9; }
+  .nav button:hover { background: rgba(63,58,53,0.06); color: var(--ink); }
+  .nav button.on { background: var(--sage-soft); color: var(--sage-deep); font-weight: 600; }
+  body[data-theme="dusk"] .nav button.on { background: rgba(134,169,138,0.16); color: var(--sage); }
+  body[data-theme="dusk"] .nav button:hover { background: rgba(233,227,215,0.06); color: var(--ink); }
+  .nav button .idx {
+    margin-left: auto;
+    font-size: 10.5px;
+    line-height: 1;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .nav button.on .idx { color: var(--sage-deep); opacity: 0.8; }
+  body[data-theme="dusk"] .nav button.on .idx { color: var(--sage); }
+
+  .rail-spacer { flex: 1; }
+
+  .rail-controls { border-top: 1px solid var(--hairline); padding-top: 14px; display: flex; flex-direction: column; gap: 12px; }
+  .rail-ctl { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .rail-ctl .lbl { font-size: 12.5px; line-height: 1.4; color: var(--ink-2); }
+  .rail-ctl .lbl b { display: block; font-weight: 600; color: var(--ink); font-size: 13px; }
+  .rail-ctl .lbl span { display: block; font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+  .seg { display: inline-flex; background: var(--panel-2); border: 1px solid var(--hairline); border-radius: 8px; padding: 2px; }
+  .seg button { border: 0; background: transparent; padding: 4px 10px; border-radius: 6px; font-size: 12px; line-height: 1.3; color: var(--ink-2); cursor: pointer; transition: background 0.14s ease, color 0.14s ease; }
+  .seg button:hover { color: var(--ink); }
+  .seg button.on { background: var(--panel); color: var(--ink); font-weight: 600; box-shadow: var(--shadow-sm); }
+
+  .switch { position: relative; width: 36px; height: 21px; flex: 0 0 36px; border-radius: 999px; background: var(--hairline-strong); cursor: pointer; transition: background 0.16s ease; }
+  .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 17px; height: 17px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.25); transition: transform 0.16s ease; }
+  .switch.on { background: var(--sage); }
+  .switch.on::after { transform: translateX(15px); }
+  body[data-theme="dusk"] .switch::after { background: #E9E3D7; }
+
+  .rail-status {
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 12px; border-radius: 10px;
+    background: var(--panel-2); border: 1px solid var(--hairline);
+    font-size: 12.5px; line-height: 1.4; color: var(--ink-2);
+    font-variant-numeric: tabular-nums;
+  }
+  .rail-status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: 0 0 8px; }
+  .rail-status.on .dot { background: var(--sage); }
+  .rail-status.on .dot { box-shadow: 0 0 0 3px rgba(134,169,138,0.22); }
+
+  /* ================= 舞台（桌面画布） ================= */
+  .stage { flex: 1; min-width: 0; display: grid; place-items: center; padding: 20px; }
+  .viewport { position: relative; }
+  .desktop {
+    width: 1440px; height: 900px;
+    position: absolute; top: 0; left: 0;
+    background: var(--desk-bg);
+    border-radius: 10px;
+    overflow: hidden;
+    transform-origin: top left;
+    box-shadow: var(--shadow-lg);
+  }
+  .desktop::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+    opacity: 0.018; mix-blend-mode: multiply;
+  }
+
+  /* —— 壁纸山丘 —— */
+  .wall-hills { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .wall-hills .h { transition: fill 0.4s ease; }
+  .wall-hills .glow { transition: fill 0.4s ease; }
+  body[data-theme="dusk"] .wall-hills .h:nth-child(2) { fill: #3E4D49; opacity: 0.7; }
+  body[data-theme="dusk"] .wall-hills .h:nth-child(3) { fill: #35433F; opacity: 0.6; }
+  body[data-theme="dusk"] .wall-hills .h:nth-child(4) { fill: #303A38; opacity: 0.7; }
+  body[data-theme="dusk"] .wall-hills .glow { fill: #4A5655; opacity: 0.5; }
+
+  /* —— 菜单栏 —— */
+  .menubar {
+    position: absolute; top: 0; left: 0; right: 0; height: 30px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 14px;
+    background: var(--chrome);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--hairline);
+    font-size: 13px; color: var(--menubar-text);
+    z-index: 12;
+  }
+  .menubar .l, .menubar .r { display: flex; align-items: center; gap: 14px; }
+  .menubar .appname { font-weight: 700; display: flex; align-items: center; gap: 5px; }
+  .menubar .appname svg { width: 13px; height: 13px; }
+  .menubar .menu { opacity: 0.9; }
+  .menubar .r { gap: 12px; }
+  .menubar .r .mico { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; opacity: 0.85; }
+  .menubar .r .mico:first-child { width: 20px; }
+
+  /* —— Dock —— */
+  .dock {
+    position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 8px; padding: 8px 10px;
+    background: var(--dock-bg);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--hairline);
+    border-radius: 16px;
+    box-shadow: var(--shadow-md);
+    z-index: 12;
+  }
+  .dock .d {
+    width: 46px; height: 46px; border-radius: 11px;
+    display: grid; place-items: center;
+    transition: transform 0.16s ease;
+  }
+  .dock .d:hover { transform: translateY(-4px); }
+  .dock .d svg { width: 26px; height: 26px; stroke: #4A443D; stroke-width: 1.4; fill: none; stroke-linecap: round; stroke-linejoin: round; opacity: 0.72; }
+  .dock .d.leaf { background: #DCE9DF; }
+  .dock .d.paper { background: #F3E4CF; }
+  .dock .d.folder { background: #DCE7EB; }
+  .dock .d.wheel { background: #E8E3D8; }
+  .dock .d.chat { background: #E7DFD2; }
+  .dock .d.gear { background: #DDE7DE; }
+  .dock .d.joey { background: var(--sage); }
+  .dock .d.joey svg { stroke: #263227; fill: none; opacity: 1; }
+  .dock .d.joey { position: relative; }
+  .dock .d.joey::after { content: ""; position: absolute; bottom: -5px; width: 4px; height: 4px; border-radius: 50%; background: var(--ink-2); }
+
+  /* ================= 状态层 ================= */
+  .state { position: absolute; inset: 0; }
+  .state:not(.on) { display: none !important; }
+  .state.on { animation: state-in 0.3s var(--ease-out) both; }
+
+  /* —— 桌面宠物 —— */
+  #s-desktop { --pet-dx: 0px; --pet-dy: 0px; user-select: none; }
+  .pet {
+    position: absolute; right: 40px; bottom: 92px;
+    width: 168px; height: 210px;
+    cursor: grab;
+    touch-action: none;
+    z-index: 10;
+  }
+  .pet:active { cursor: grabbing; }
+  .pet, .pet-chip, .pet-hint, .pet-menu { translate: var(--pet-dx) var(--pet-dy); }
+  .pet .shadow { position: absolute; left: 50%; bottom: 4px; width: 120px; height: 18px; transform: translateX(-50%); background: radial-gradient(50% 50% at 50% 50%, rgba(63,58,53,0.22), transparent 70%); }
+  .pet svg { width: 100%; height: 100%; display: block; position: relative; }
+  .pet.breathing svg { animation: breathe 4.2s ease-in-out infinite; transform-origin: 50% 92%; }
+  @keyframes breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.012); } }
+  .pet-chip {
+    position: absolute; right: 24px; bottom: 306px;
+    display: flex; align-items: center; gap: 7px;
+    background: var(--popover);
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    padding: 7px 13px;
+    font-size: 12.5px; color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    box-shadow: var(--shadow-md);
+    z-index: 11;
+    opacity: 0; transform: translateY(4px);
+    transition: opacity 0.24s ease, transform 0.24s ease;
+  }
+  .pet-chip.show { opacity: 1; transform: translateY(0); }
+  .pet-chip .leaf { width: 8px; height: 8px; border-radius: 2px 2px 2px 0; background: var(--sage); transform: rotate(-45deg); }
+  .pet-hint {
+    position: absolute; right: 26px; bottom: 274px;
+    font-size: 11.5px; line-height: 1.4; color: var(--muted);
+    background: var(--popover);
+    border: 1px solid var(--hairline);
+    padding: 5px 10px; border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+    opacity: 0; transition: opacity 0.2s ease;
+    pointer-events: none; z-index: 11;
+  }
+  .pet:hover ~ .pet-hint, .pet:focus-visible ~ .pet-hint { opacity: 1; }
+  .pet-menu {
+    position: absolute; right: 24px; bottom: 350px;
+    background: var(--popover);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
+    padding: 6px;
+    min-width: 168px;
+    transform-origin: 100% 100%;
+    z-index: 20;
+  }
+  .pet-menu:not([hidden]) { animation: menu-in 0.16s var(--ease-out) both; }
+  @keyframes menu-in {
+    from { opacity: 0; transform: scale(0.97) translateY(4px); }
+    to { opacity: 1; transform: none; }
+  }
+  .pet-menu button {
+    display: flex; align-items: center; gap: 9px; width: 100%;
+    padding: 8px 10px; border: 0; background: transparent; border-radius: 8px;
+    font-size: 13px; color: var(--ink); cursor: pointer; text-align: left;
+  }
+  .pet-menu button svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; opacity: 0.85; }
+  .pet-menu button:hover { background: var(--sage-soft); }
+  body[data-theme="dusk"] .pet-menu button:hover { background: rgba(134,169,138,0.16); }
+  .pet-menu .divider { height: 1px; background: var(--hairline); margin: 5px 4px; }
+  .pet-menu .muted { color: var(--muted); }
+
+  /* —— 休息邀请 —— */
+  .invite-scene { position: relative; width: 100%; height: 100%; }
+  .invite-joey { position: absolute; left: 158px; bottom: 96px; width: 208px; height: 260px; z-index: 9; }
+  .invite-joey svg { width: 100%; height: 100%; animation: breathe 5.4s ease-in-out infinite; transform-origin: 50% 94%; }
+  .invite-joey .shadow { position: absolute; left: 50%; bottom: 0; width: 150px; height: 20px; transform: translateX(-50%); background: radial-gradient(50% 50% at 50% 50%, rgba(63,58,53,0.22), transparent 70%); }
+  .invite-card {
+    position: absolute; left: 410px; top: 296px;
+    width: 400px;
+    background: var(--panel);
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-lg);
+    padding: 26px 28px 24px;
+    z-index: 10;
+    animation: rise-in 0.42s var(--ease-out) both;
+  }
+  .invite-card .tape {
+    position: absolute; top: -11px; left: 50%; transform: translateX(-50%) rotate(-2.5deg);
+    width: 86px; height: 22px; border-radius: 3px;
+    background: rgba(201,176,140,0.5);
+    box-shadow: 0 1px 2px rgba(63,58,53,0.05);
+  }
+  .invite-card .msg { font-family: var(--font-display); font-size: 27px; line-height: 1.38; font-weight: 650; color: var(--ink); letter-spacing: 0; margin: 0 0 8px; }
+  .invite-card .sub { font-size: 13.5px; line-height: 1.65; color: var(--muted); }
+  .invite-actions { margin-top: 22px; display: flex; flex-direction: column; gap: 10px; }
+  .invite-actions .row { display: flex; gap: 8px; }
+  .toast {
+    position: absolute; top: 50px; left: 50%; transform: translateX(-50%);
+    background: var(--popover); border: 1px solid var(--hairline);
+    border-radius: 999px; padding: 9px 18px;
+    font-size: 13px; line-height: 1.4; color: var(--ink);
+    box-shadow: var(--shadow-md);
+    opacity: 0; translate: 0 -6px;
+    transition: opacity 0.22s ease, translate 0.22s var(--ease-out);
+    z-index: 30;
+  }
+  .toast.show { opacity: 1; translate: 0 0; }
+
+  /* ================= 按钮 ================= */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    border: 0; cursor: pointer;
+    border-radius: var(--r-md);
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0.005em;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease, filter 0.12s ease;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn--primary { background: var(--sage); color: var(--sage-ink); height: 50px; padding: 0 24px; font-size: 16px; box-shadow: 0 1px 2px rgba(38,50,39,0.16), inset 0 1px 0 rgba(255,255,255,0.14); }
+  .btn--primary:hover { filter: brightness(1.03); box-shadow: 0 2px 8px rgba(38,50,39,0.2), inset 0 1px 0 rgba(255,255,255,0.14); }
+  .btn--secondary { background: transparent; border: 1px solid var(--hairline-strong); color: var(--ink); height: 40px; padding: 0 16px; font-size: 13.5px; }
+  .btn--secondary:hover { background: var(--panel-2); }
+  .btn--quiet { background: transparent; color: var(--muted); height: 40px; padding: 0 14px; font-size: 13.5px; }
+  .btn--quiet:hover { color: var(--ink); background: var(--panel-2); }
+  .btn--sm { height: 38px; }
+
+  /* ================= 恢复面板 ================= */
+  .recover-veil {
+    position: absolute; inset: 0;
+    background: radial-gradient(120% 80% at 50% 36%, rgba(63,58,53,0) 34%, rgba(63,58,53,0.09) 100%);
+    pointer-events: none;
+  }
+  .recover-panel {
+    position: absolute; left: 50%; top: 100px; transform: translateX(-50%);
+    width: 420px;
+    background: var(--panel);
+    border: 1px solid var(--hairline);
+    border-radius: 26px;
+    box-shadow: var(--shadow-lg);
+    padding: 28px 30px 26px;
+    z-index: 12;
+    animation: rise-in 0.34s var(--ease-out) both;
+  }
+  .recover-panel h3 { font-family: var(--font-display); font-size: 23px; line-height: 1.35; font-weight: 650; letter-spacing: 0; color: var(--ink); margin: 0 0 6px; }
+  .recover-panel .hint { font-size: 13.5px; line-height: 1.65; color: var(--muted); }
+  .recover-timer { display: flex; align-items: center; gap: 22px; margin: 22px 0 24px; }
+  .ring { position: relative; width: 104px; height: 104px; flex: 0 0 104px; }
+  .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .ring .track { fill: none; stroke: var(--panel-2); stroke-width: 8; }
+  .ring .prog { fill: none; stroke: var(--sage); stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
+  body[data-theme="dusk"] .ring .track { stroke: rgba(233,227,215,0.12); }
+  .ring .time { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; }
+  .ring .time b { display: block; font-family: var(--font-display); font-size: 22px; font-weight: 650; line-height: 1; font-variant-numeric: tabular-nums; }
+  .ring .time small { display: block; font-size: 10.5px; line-height: 1.3; color: var(--muted); margin-top: 4px; }
+  .recover-timer .copy b { font-size: 15px; line-height: 1.4; color: var(--ink); font-weight: 600; }
+  .recover-timer .copy p { font-size: 13px; line-height: 1.6; color: var(--muted); margin-top: 3px; }
+  .recover-actions { display: flex; gap: 10px; }
+  .recover-actions .btn--primary { flex: 1; }
+  .recover-joey { position: absolute; right: 118px; bottom: 108px; width: 224px; height: 280px; z-index: 9; }
+  .recover-joey svg { width: 100%; height: 100%; animation: breathe 6s ease-in-out infinite; transform-origin: 50% 94%; }
+  .recover-joey .shadow { position: absolute; left: 50%; bottom: 0; width: 160px; height: 20px; transform: translateX(-50%); background: radial-gradient(50% 50% at 50% 50%, rgba(63,58,53,0.2), transparent 70%); }
+
+  /* ================= macOS 窗口 ================= */
+  .window {
+    position: absolute;
+    background: var(--window-bg);
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--hairline);
+    overflow: hidden;
+    z-index: 8;
+    display: flex; flex-direction: column;
+  }
+  .win-titlebar {
+    height: 40px; flex: 0 0 40px;
+    display: flex; align-items: center;
+    background: var(--window-chrome);
+    border-bottom: 1px solid var(--hairline);
+    position: relative;
+  }
+  .lights { display: flex; gap: 8px; padding: 0 14px; }
+  .lights i { width: 12px; height: 12px; border-radius: 50%; display: block; }
+  .lights i:nth-child(1) { background: #FF5F57; }
+  .lights i:nth-child(2) { background: #FEBC2E; }
+  .lights i:nth-child(3) { background: #28C840; }
+  body[data-theme="dusk"] .lights i { filter: saturate(0.75) brightness(0.85); }
+  .win-title {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    font-size: 13px; font-weight: 600; color: var(--ink-2);
+    white-space: nowrap;
+  }
+  .win-tools { position: absolute; right: 14px; display: flex; gap: 8px; }
+  .win-tools svg { width: 16px; height: 16px; stroke: var(--ink-2); fill: none; stroke-width: 1.6; stroke-linecap: round; }
+  .win-tool-btn { background: transparent; border: 0; padding: 4px; border-radius: 6px; cursor: pointer; display: grid; place-items: center; }
+  .win-tool-btn:hover { background: var(--panel-2); }
+  .win-tool-btn svg { width: 16px; height: 16px; stroke: var(--ink-2); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* —— 巢居主页 —— */
+  .nest-win { left: 180px; top: 90px; width: 1080px; height: 720px; }
+  .nest-room { position: relative; flex: 1; min-height: 0; }
+  .nest-room > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .joey-idle { animation: breathe 5.8s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 94%; }
+  .room-label {
+    position: absolute;
+    background: var(--popover);
+    border: 1px solid var(--hairline);
+    border-radius: 9px;
+    padding: 6px 11px;
+    font-size: 12.5px; line-height: 1.45; color: var(--ink-2);
+    font-variant-numeric: tabular-nums;
+    box-shadow: var(--shadow-sm);
+    z-index: 4;
+  }
+  .room-label b { color: var(--sage-deep); font-weight: 650; }
+  body[data-theme="dusk"] .room-label b { color: #A9C6AC; }
+  .room-cta {
+    position: absolute; left: 570px; bottom: 16px; transform: translateX(-50%);
+    display: inline-flex; align-items: center; gap: 8px;
+    height: 50px; padding: 0 26px;
+    background: var(--sage); color: var(--sage-ink);
+    border: 0; border-radius: var(--r-md);
+    font-size: 16px; font-weight: 650; line-height: 1.2; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(38,50,39,0.2);
+    transition: transform 0.16s var(--ease-out), filter 0.16s ease, box-shadow 0.16s ease;
+    z-index: 5;
+  }
+  .room-cta:hover { filter: brightness(1.03); box-shadow: 0 4px 14px rgba(38,50,39,0.24); transform: translateX(-50%) translateY(-1px); }
+  .room-cta:active { transform: translateX(-50%) translateY(0); box-shadow: 0 1px 4px rgba(38,50,39,0.2); }
+  .room-cta svg { width: 16px; height: 16px; fill: var(--sage-ink); }
+  .room-cta .spark { width: 16px; height: 16px; }
+
+  /* —— 巢居主页 · 场景导航 —— */
+  .room-nav {
+    position: absolute; z-index: 6;
+    background: transparent; border: 0; cursor: pointer;
+    border-radius: 10px;
+  }
+  .room-nav::after {
+    content: "回顾这周";
+    position: absolute; left: 50%; top: -32px; transform: translateX(-50%);
+    font-size: 12px; line-height: 1.4; color: var(--ink);
+    background: var(--popover); border: 1px solid var(--hairline);
+    border-radius: 8px; padding: 5px 10px; white-space: nowrap;
+    box-shadow: var(--shadow-md);
+    opacity: 0; transition: opacity 0.18s ease, transform 0.18s ease;
+    pointer-events: none;
+  }
+  .room-nav:hover::after, .room-nav:focus-visible::after { opacity: 1; transform: translateX(-50%) translateY(-2px); }
+  .room-nav:hover, .room-nav:focus-visible { box-shadow: 0 0 0 3px rgba(134,169,138,0.35); }
+  body[data-theme="dusk"] .room-nav:hover, body[data-theme="dusk"] .room-nav:focus-visible { box-shadow: 0 0 0 3px rgba(134,169,138,0.3); }
+  .room-status {
+    position: absolute; left: 570px; bottom: 76px; transform: translateX(-50%);
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--popover); border: 1px solid var(--hairline);
+    border-radius: 999px; padding: 5px 13px;
+    font-size: 12px; line-height: 1.4; color: var(--ink); box-shadow: var(--shadow-sm);
+    font-variant-numeric: tabular-nums;
+    opacity: 0; transition: opacity 0.24s ease, translate 0.24s var(--ease-out); translate: 0 3px;
+    pointer-events: none; z-index: 5;
+    white-space: nowrap;
+  }
+  .room-status.show { opacity: 1; translate: 0 0; }
+  .room-status .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--sage); box-shadow: 0 0 0 3px rgba(134,169,138,0.22); }
+
+  /* —— 节奏回顾（主窗口内的花园视图） —— */
+  .reflect-view { position: relative; flex: 1; min-height: 0; animation: state-in 0.3s var(--ease-out) both; }
+  .reflect-bg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .reflect-sign {
+    position: absolute; left: 52px; top: 42px; width: 388px; z-index: 3;
+    background: var(--panel); border: 1px solid var(--hairline);
+    border-radius: var(--r-md); box-shadow: var(--shadow-md);
+    padding: 18px 22px 20px;
+  }
+  .reflect-sign .k { font-size: 11.5px; letter-spacing: 0.02em; line-height: 1.4; color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .reflect-sign .main { font-family: var(--font-display); font-size: 21px; line-height: 1.45; font-weight: 650; letter-spacing: 0; color: var(--ink); margin: 7px 0 6px; }
+  .reflect-sign .main b { color: var(--sage-deep); font-variant-numeric: tabular-nums; }
+  body[data-theme="dusk"] .reflect-sign .main b { color: var(--sage); }
+  body[data-theme="dusk"] .reflect-bg .g-h1 { fill: #2B3D41; }
+  body[data-theme="dusk"] .reflect-bg .g-h2 { fill: #233337; }
+  .reflect-sign .sub { font-size: 13px; line-height: 1.7; color: var(--ink-2); }
+  .reflect-home {
+    position: absolute; right: 44px; bottom: 14px; z-index: 3;
+    display: inline-flex; align-items: center; gap: 8px;
+    height: 44px; padding: 0 20px;
+    background: var(--panel); border: 1px solid var(--hairline-strong);
+    border-radius: var(--r-md); color: var(--ink); font-size: 14px; font-weight: 600;
+    cursor: pointer; box-shadow: var(--shadow-md);
+    transition: transform 0.12s ease, background 0.12s ease;
+  }
+  .reflect-home:hover { background: var(--panel-2); }
+  .reflect-home:active { transform: translateY(1px); }
+  .reflect-home svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* —— 设置 —— */
+  .settings-win { left: 220px; top: 88px; width: 1000px; height: 720px; }
+  .settings-body { flex: 1; display: grid; grid-template-columns: 200px 1fr; min-height: 0; }
+  .set-nav { border-right: 1px solid var(--hairline); padding: 12px 8px; display: flex; flex-direction: column; gap: 2px; background: var(--window-chrome); }
+  .set-nav .grp { font-size: 10.5px; letter-spacing: 0.02em; line-height: 1.4; color: var(--muted); padding: 12px 10px 4px; }
+  .set-nav a { display: block; padding: 7px 10px; border-radius: 7px; font-size: 13px; line-height: 1.4; color: var(--ink-2); cursor: pointer; transition: background 0.14s ease, color 0.14s ease; }
+  .set-nav a:hover { background: var(--panel-2); color: var(--ink); }
+  .set-nav a.on { background: var(--sage-soft); color: var(--sage-deep); font-weight: 600; }
+  body[data-theme="dusk"] .set-nav a.on { background: rgba(134,169,138,0.16); color: var(--sage); }
+  .set-panel { padding: 24px 28px; overflow: auto; }
+  .set-panel h3 { font-size: 17px; font-weight: 650; color: var(--ink); line-height: 1.4; }
+  .set-panel .desc { font-size: 12.5px; line-height: 1.6; color: var(--muted); margin: 4px 0 18px; }
+  .set-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    padding: 14px 0; border-top: 1px solid var(--hairline);
+  }
+  .set-panel .set-row:last-of-type { border-bottom: 1px solid var(--hairline); }
+  .set-row .k b { display: block; font-size: 13.5px; font-weight: 600; line-height: 1.4; color: var(--ink); }
+  .set-row .k span { display: block; font-size: 12px; line-height: 1.5; color: var(--muted); margin-top: 1px; }
+  .timefield { font-size: 13px; line-height: 1.4; color: var(--ink); background: var(--panel-2); border: 1px solid var(--hairline); border-radius: 8px; padding: 6px 12px; font-variant-numeric: tabular-nums; }
+  .timefield em { color: var(--muted); font-style: normal; margin: 0 4px; }
+  .set-btn { border: 1px solid var(--hairline-strong); background: transparent; color: var(--ink); border-radius: 8px; padding: 7px 14px; font-size: 13px; line-height: 1.4; cursor: pointer; }
+  .set-btn:hover { background: var(--panel-2); }
+  .feedback-box { margin-top: 14px; }
+  .feedback-box textarea {
+    width: 100%; min-height: 72px; resize: vertical;
+    background: var(--panel); border: 1px solid var(--hairline-strong);
+    border-radius: 10px; padding: 12px; font: inherit; font-size: 13px; color: var(--ink);
+  }
+  .feedback-box textarea:focus { box-shadow: var(--focus-ring); outline: none; }
+
+  /* ================= 规格标注 ================= */
+  .spec {
+    position: absolute; z-index: 40;
+    font-size: 11px; line-height: 1.5;
+    color: #0B57D0;
+    pointer-events: none;
+    display: none;
+  }
+  body.annot-on .spec { display: block; }
+  .spec .t { font-weight: 700; }
+  .spec::before {
+    content: ""; position: absolute; left: -8px; top: 5px; width: 5px; height: 5px; border-radius: 50%; background: #0B57D0;
+  }
+  body.annot-on .spec-target { outline: 1.5px dashed #0B57D0 !important; outline-offset: 3px; }
+
+  /* ================= 动效减弱 ================= */
+  @media (prefers-reduced-motion: reduce) {
+    .pet.breathing svg { animation: none; }
+    * { transition-duration: 0.01ms !important; }
+  }
+
+  /* ================= 响应式缩放 ================= */
+  @media (max-width: 900px) {
+    .rail { width: 232px; flex-basis: 232px; }
+  }
+</style>
+</head>
+<body>
+  <!-- Joey 与房间 SVG 素材（原创矢量） -->
+  <svg aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden">
+    <defs>
+      <symbol id="j-body" viewBox="0 0 320 400">
+        <ellipse cx="160" cy="352" rx="94" ry="12" fill="#3F3A35" opacity="0.08"/>
+        <path d="M228 314 C 268 324 294 300 290 272 C 287 250 266 244 256 256 C 248 266 256 280 269 277" fill="none" stroke="#F0DFC8" stroke-width="23" stroke-linecap="round"/>
+        <path d="M118 148 C 100 126 88 90 93 68 C 97 50 116 46 126 62 C 138 80 144 116 146 140 Z" fill="#F3E3CD"/>
+        <path d="M120 136 C 108 118 101 94 105 80 C 108 70 117 69 122 78 C 129 90 134 114 136 132 Z" fill="#EFC8AA"/>
+        <path d="M202 148 C 220 126 232 90 227 68 C 223 50 204 46 194 62 C 182 80 176 116 174 140 Z" fill="#F3E3CD"/>
+        <path d="M200 136 C 212 118 219 94 215 80 C 212 70 203 69 198 78 C 191 90 186 114 184 132 Z" fill="#EFC8AA"/>
+        <path d="M160 116 C 209 116 242 167 242 231 C 242 299 208 342 160 342 C 112 342 78 299 78 231 C 78 167 111 116 160 116 Z" fill="#F3E3CD"/>
+        <path d="M160 342 C 112 342 78 299 78 231 C 78 224 78 218 79 212 C 93 298 118 322 160 322 C 202 322 227 298 241 212 C 242 218 242 224 242 231 C 242 299 208 342 160 342 Z" fill="#EBD7BE" opacity="0.5"/>
+        <ellipse cx="128" cy="337" rx="27" ry="13" fill="#F8ECDA"/>
+        <ellipse cx="192" cy="337" rx="27" ry="13" fill="#F8ECDA"/>
+        <path d="M122 244 C 142 258 178 258 198 244" fill="none" stroke="#86A98A" stroke-width="9" stroke-linecap="round"/>
+        <circle cx="200" cy="247" r="7" fill="#86A98A"/>
+      </symbol>
+      <symbol id="j-arms-rest" viewBox="0 0 320 400">
+        <ellipse cx="84" cy="262" rx="18" ry="28" fill="#EDDAC1" transform="rotate(10 84 262)"/>
+        <ellipse cx="236" cy="262" rx="18" ry="28" fill="#EDDAC1" transform="rotate(-10 236 262)"/>
+      </symbol>
+      <symbol id="j-arms-up" viewBox="0 0 320 400">
+        <path d="M112 250 C 96 222 88 194 84 168" fill="none" stroke="#EDDAC1" stroke-width="28" stroke-linecap="round"/>
+        <path d="M208 250 C 224 222 232 194 236 168" fill="none" stroke="#EDDAC1" stroke-width="28" stroke-linecap="round"/>
+        <circle cx="84" cy="164" r="14" fill="#F8ECDA"/>
+        <circle cx="236" cy="164" r="14" fill="#F8ECDA"/>
+      </symbol>
+      <symbol id="j-arms-sign" viewBox="0 0 320 400">
+        <ellipse cx="84" cy="262" rx="18" ry="28" fill="#EDDAC1" transform="rotate(10 84 262)"/>
+        <path d="M226 258 C 240 226 245 202 247 182" fill="none" stroke="#EDDAC1" stroke-width="28" stroke-linecap="round"/>
+        <circle cx="247" cy="178" r="14" fill="#F8ECDA"/>
+      </symbol>
+      <symbol id="j-face-calm" viewBox="0 0 320 400">
+        <ellipse cx="111" cy="226" rx="18" ry="9" fill="#EFAE7D" opacity="0.26"/>
+        <ellipse cx="209" cy="226" rx="18" ry="9" fill="#EFAE7D" opacity="0.26"/>
+        <ellipse cx="134" cy="204" rx="8.5" ry="11" fill="#3F3A35"/>
+        <ellipse cx="186" cy="204" rx="8.5" ry="11" fill="#3F3A35"/>
+        <circle cx="131" cy="200" r="2.8" fill="#FFFFFF"/>
+        <circle cx="183" cy="200" r="2.8" fill="#FFFFFF"/>
+        <path d="M160 216 C 166 216 169 220 166.5 223 C 164.5 225.5 155.5 225.5 153.5 223 C 151 220 154 216 160 216 Z" fill="#C98F6E"/>
+        <path d="M160 224 C 158 230 153 232 150 228 M160 224 C 162 230 167 232 170 228" fill="none" stroke="#6F5F53" stroke-width="2.3" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="j-face-look" viewBox="0 0 320 400">
+        <ellipse cx="111" cy="226" rx="18" ry="9" fill="#EFAE7D" opacity="0.28"/>
+        <ellipse cx="209" cy="226" rx="18" ry="9" fill="#EFAE7D" opacity="0.28"/>
+        <ellipse cx="133" cy="204" rx="8.5" ry="11" fill="#3F3A35"/>
+        <ellipse cx="185" cy="204" rx="8.5" ry="11" fill="#3F3A35"/>
+        <circle cx="128.5" cy="199.5" r="2.9" fill="#FFFFFF"/>
+        <circle cx="180.5" cy="199.5" r="2.9" fill="#FFFFFF"/>
+        <path d="M122 189 C 128 185 136 185 141 188" fill="none" stroke="#DCC3A6" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M160 216 C 166 216 169 220 166.5 223 C 164.5 225.5 155.5 225.5 153.5 223 C 151 220 154 216 160 216 Z" fill="#C98F6E"/>
+        <path d="M160 224 C 158 230 153 232 150 228 M160 224 C 162 230 167 232 170 228" fill="none" stroke="#6F5F53" stroke-width="2.3" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="j-face-happy" viewBox="0 0 320 400">
+        <ellipse cx="111" cy="228" rx="18" ry="9" fill="#EFAE7D" opacity="0.36"/>
+        <ellipse cx="209" cy="228" rx="18" ry="9" fill="#EFAE7D" opacity="0.36"/>
+        <path d="M124 207 C 130 198 141 198 147 207" fill="none" stroke="#3F3A35" stroke-width="4" stroke-linecap="round"/>
+        <path d="M173 207 C 179 198 190 198 196 207" fill="none" stroke="#3F3A35" stroke-width="4" stroke-linecap="round"/>
+        <path d="M160 214 C 165 214 168 217 166 220 C 164 222.5 156 222.5 154 220 C 152 217 155 214 160 214 Z" fill="#C98F6E"/>
+        <path d="M150 226 C 152 238 168 238 170 226 Z" fill="#6F5F53"/>
+      </symbol>
+      <symbol id="j-face-stretch" viewBox="0 0 320 400">
+        <ellipse cx="111" cy="228" rx="18" ry="9" fill="#EFAE7D" opacity="0.3"/>
+        <ellipse cx="209" cy="228" rx="18" ry="9" fill="#EFAE7D" opacity="0.3"/>
+        <path d="M124 207 C 130 198 141 198 147 207" fill="none" stroke="#3F3A35" stroke-width="4" stroke-linecap="round"/>
+        <path d="M173 207 C 179 198 190 198 196 207" fill="none" stroke="#3F3A35" stroke-width="4" stroke-linecap="round"/>
+        <path d="M160 214 C 165 214 168 217 166 220 C 164 222.5 156 222.5 154 220 C 152 217 155 214 160 214 Z" fill="#C98F6E"/>
+        <path d="M153 228 C 156 232 164 232 167 228" fill="none" stroke="#6F5F53" stroke-width="2.4" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="joey-sit" viewBox="0 0 320 400">
+        <use href="#j-body"/><use href="#j-arms-rest"/><use href="#j-face-calm"/>
+      </symbol>
+      <symbol id="joey-look" viewBox="0 0 320 400">
+        <g transform="rotate(-3 160 330)"><use href="#j-body"/><use href="#j-arms-rest"/><use href="#j-face-look"/></g>
+      </symbol>
+      <symbol id="joey-sign" viewBox="0 0 320 400">
+        <use href="#j-body"/><use href="#j-arms-sign"/><use href="#j-face-calm"/>
+        <line x1="248" y1="180" x2="258" y2="112" stroke="#C9B08C" stroke-width="5" stroke-linecap="round"/>
+        <g transform="rotate(-4 262 70)">
+          <rect x="212" y="30" width="104" height="78" rx="6" fill="#F6E9D2" stroke="#C9B08C" stroke-width="3"/>
+          <rect x="220" y="38" width="88" height="62" rx="3" fill="none" stroke="#E3D2B6" stroke-width="1.5"/>
+          <text x="264" y="76" text-anchor="middle" font-family="-apple-system, 'PingFang SC', sans-serif" font-size="22" font-weight="600" fill="#3F3A35" letter-spacing="1">坐久啦</text>
+          <path d="M226 96 C 232 100 240 100 246 96" fill="none" stroke="#C9B08C" stroke-width="2" stroke-linecap="round"/>
+        </g>
+      </symbol>
+      <symbol id="joey-stretch" viewBox="0 0 320 400">
+        <use href="#j-body"/><use href="#j-arms-up"/><use href="#j-face-stretch"/>
+      </symbol>
+      <symbol id="joey-happy" viewBox="0 0 320 400">
+        <g transform="translate(0,-5)"><use href="#j-body"/><use href="#j-arms-rest"/><use href="#j-face-happy"/></g>
+      </symbol>
+      <symbol id="joey-sleep" viewBox="0 0 320 400">
+        <ellipse cx="160" cy="368" rx="96" ry="12" fill="#3F3A35" opacity="0.08"/>
+        <path d="M150 250 C 204 244 258 274 266 312 C 274 350 226 374 162 374 C 98 374 54 350 56 312 C 58 288 90 264 118 256 Z" fill="#F3E3CD"/>
+        <path d="M266 330 C 292 336 302 312 288 300 C 278 291 264 296 265 307" fill="none" stroke="#F0DFC8" stroke-width="20" stroke-linecap="round"/>
+        <path d="M112 268 C 96 254 88 232 96 220 C 104 209 119 215 124 230 Z" fill="#F3E3CD"/>
+        <path d="M152 254 C 146 236 148 216 160 210 C 172 205 182 218 180 234 Z" fill="#F3E3CD"/>
+        <ellipse cx="112" cy="318" rx="20" ry="10" fill="#EFAE7D" opacity="0.22"/>
+        <ellipse cx="170" cy="314" rx="16" ry="8" fill="#EFAE7D" opacity="0.16"/>
+        <path d="M98 306 C 104 314 116 314 122 306" fill="none" stroke="#3F3A35" stroke-width="3.6" stroke-linecap="round"/>
+        <path d="M150 306 C 156 314 168 314 174 306" fill="none" stroke="#3F3A35" stroke-width="3.6" stroke-linecap="round"/>
+        <path d="M136 318 C 141 318 143 321 141 323.5 C 139.5 325.5 132.5 325.5 131 323.5 C 129 321 131 318 136 318 Z" fill="#C98F6E"/>
+        <path d="M136 326 C 134 330 130 331 128 329" fill="none" stroke="#6F5F53" stroke-width="2" stroke-linecap="round"/>
+        <path d="M124 340 C 140 350 176 350 194 338" fill="none" stroke="#86A98A" stroke-width="8" stroke-linecap="round" opacity="0.85"/>
+      </symbol>
+      <radialGradient id="roomWash" cx="50%" cy="50%" r="50%">
+        <stop offset="0" stop-color="var(--room-wash)"/>
+        <stop offset="0.6" stop-color="var(--room-wash)" stop-opacity="0.6"/>
+        <stop offset="1" stop-color="var(--room-wash)" stop-opacity="0"/>
+      </radialGradient>
+      <symbol id="joey-room" viewBox="0 0 1080 680">
+        <rect width="1080" height="532" fill="var(--room-wall)"/>
+        <ellipse cx="900" cy="90" rx="380" ry="230" fill="url(#roomWash)"/>
+        <rect y="532" width="1080" height="148" fill="var(--room-floor)"/>
+        <rect y="524" width="1080" height="8" fill="var(--room-base)"/>
+        <g stroke="var(--room-floorline)" stroke-width="1" opacity="0.55">
+          <line x1="0" y1="576" x2="1080" y2="576"/>
+          <line x1="0" y1="620" x2="1080" y2="620"/>
+          <line x1="220" y1="532" x2="150" y2="680"/>
+          <line x1="620" y1="532" x2="600" y2="680"/>
+          <line x1="900" y1="532" x2="920" y2="680"/>
+        </g>
+        <g>
+          <rect x="430" y="96" width="210" height="204" rx="8" fill="var(--room-sky)" stroke="var(--room-frame)" stroke-width="9"/>
+          <path d="M430 200 C 480 182 520 210 560 190 C 600 172 630 186 640 180 L640 288 L430 288 Z" fill="var(--room-hill1)"/>
+          <path d="M430 226 C 480 208 525 236 566 218 C 606 202 630 214 640 210 L640 288 L430 288 Z" fill="var(--room-hill2)"/>
+          <line x1="535" y1="96" x2="535" y2="300" stroke="var(--room-frame)" stroke-width="7"/>
+          <line x1="430" y1="198" x2="640" y2="198" stroke="var(--room-frame)" stroke-width="7"/>
+          <rect x="414" y="294" width="242" height="10" rx="5" fill="var(--room-sill)"/>
+          <path d="M418 90 C 400 130 404 200 414 294 L434 294 C 424 200 424 130 438 90 Z" fill="var(--room-curtain)" opacity="0.92"/>
+          <path d="M652 90 C 670 130 666 200 656 294 L636 294 C 646 200 646 130 632 90 Z" fill="var(--room-curtain)" opacity="0.92"/>
+        </g>
+        <g transform="translate(250,140)">
+          <circle r="44" fill="var(--room-clock)" stroke="var(--room-clockrim)" stroke-width="5"/>
+          <g stroke="var(--room-clocktick)" stroke-width="2" stroke-linecap="round">
+            <line x1="0" y1="-38" x2="0" y2="-32"/><line x1="38" y1="0" x2="32" y2="0"/>
+            <line x1="0" y1="38" x2="0" y2="32"/><line x1="-38" y1="0" x2="-32" y2="0"/>
+            <line x1="26" y1="-26" x2="23" y2="-23"/><line x1="-26" y1="-26" x2="-23" y2="-23"/>
+            <line x1="26" y1="26" x2="23" y2="23"/><line x1="-26" y1="26" x2="-23" y2="23"/>
+          </g>
+          <line x1="0" y1="0" x2="0" y2="-25" stroke="var(--room-chand)" stroke-width="3.5" stroke-linecap="round"/>
+          <line x1="0" y1="0" x2="18" y2="8" stroke="var(--room-chand)" stroke-width="3.5" stroke-linecap="round"/>
+          <circle r="3.5" fill="var(--room-chand)"/>
+        </g>
+        <g transform="translate(700,150)">
+          <line x1="60" y1="-8" x2="60" y2="8" stroke="var(--room-clockrim)" stroke-width="3"/>
+          <rect x="0" y="8" width="120" height="122" rx="6" fill="var(--room-paper)" stroke="var(--room-frame)" stroke-width="6"/>
+          <path d="M18 96 C 44 80 78 88 102 78" fill="none" stroke="var(--room-noteline)" stroke-width="2" opacity="0.5" stroke-linecap="round" stroke-dasharray="1 7"/>
+          <g stroke="var(--room-stem)" stroke-width="2.5" fill="none" stroke-linecap="round">
+            <path d="M24 84 C 24 76 26 68 27 62"/><path d="M48 80 C 48 72 50 64 51 58"/><path d="M72 84 C 72 76 74 68 75 62"/><path d="M96 76 C 96 68 98 60 99 54"/>
+          </g>
+          <g fill="var(--room-leaf)">
+            <ellipse cx="30" cy="60" rx="5" ry="9" transform="rotate(-20 30 60)"/>
+            <ellipse cx="54" cy="56" rx="5" ry="9" transform="rotate(20 54 56)"/>
+            <ellipse cx="78" cy="60" rx="5" ry="9" transform="rotate(-20 78 60)"/>
+            <ellipse cx="102" cy="52" rx="5" ry="9" transform="rotate(20 102 52)"/>
+          </g>
+          <text x="60" y="120" text-anchor="middle" font-family="-apple-system,'PingFang SC',sans-serif" font-size="13" fill="var(--room-noteline)">回顾</text>
+        </g>
+        <g transform="translate(120,0)">
+          <ellipse cx="0" cy="556" rx="40" ry="8" fill="#3F3A35" opacity="0.06"/>
+          <path d="M-22 556 L-16 500 L16 500 L22 556 Z" fill="var(--room-pot)"/>
+          <g stroke="var(--room-stem)" stroke-width="4" fill="none" stroke-linecap="round">
+            <path d="M0 500 C 0 450 6 414 2 378"/><path d="M0 480 C -16 466 -24 448 -22 430"/><path d="M0 460 C 18 446 26 428 24 410"/>
+          </g>
+          <g fill="var(--room-leaf)">
+            <ellipse cx="-6" cy="392" rx="16" ry="28" transform="rotate(-18 -6 392)"/>
+            <ellipse cx="10" cy="366" rx="14" ry="26" transform="rotate(22 10 366)"/>
+            <ellipse cx="-24" cy="426" rx="13" ry="22" transform="rotate(-40 -24 426)"/>
+            <ellipse cx="26" cy="406" rx="12" ry="21" transform="rotate(40 26 406)"/>
+            <ellipse cx="2" cy="440" rx="14" ry="24" transform="rotate(4 2 440)" opacity="0.85"/>
+          </g>
+        </g>
+        <ellipse cx="340" cy="612" rx="230" ry="42" fill="var(--room-rug)" opacity="0.5"/>
+        <g>
+          <ellipse cx="340" cy="598" rx="186" ry="38" fill="var(--room-nestdark)"/>
+          <path d="M154 598 C 154 568 238 548 340 548 C 442 548 526 568 526 598 C 526 630 442 648 340 648 C 238 648 154 630 154 598 Z" fill="var(--room-nest)"/>
+          <ellipse cx="340" cy="586" rx="154" ry="42" fill="var(--room-cushion)"/>
+          <ellipse cx="340" cy="580" rx="140" ry="34" fill="var(--room-cushion2)"/>
+          <path d="M194 602 C 228 628 452 628 486 602 C 476 632 412 646 340 646 C 268 646 204 632 194 602 Z" fill="var(--room-nest)"/>
+        </g>
+        <g>
+          <rect x="730" y="500" width="290" height="14" rx="4" fill="var(--room-desk)"/>
+          <rect x="748" y="514" width="10" height="146" fill="var(--room-deskleg)"/>
+          <rect x="1002" y="514" width="10" height="146" fill="var(--room-deskleg)"/>
+          <g transform="rotate(-4 852 480)">
+            <rect x="794" y="462" width="116" height="40" rx="4" fill="var(--room-paper)" stroke="var(--room-paperline)"/>
+            <line x1="808" y1="474" x2="890" y2="474" stroke="var(--room-noteline)" stroke-width="1.6" opacity="0.35"/>
+            <line x1="808" y1="484" x2="878" y2="484" stroke="var(--room-noteline)" stroke-width="1.6" opacity="0.2"/>
+          </g>
+          <g>
+            <rect x="928" y="462" width="44" height="40" rx="7" fill="var(--room-mug)"/>
+            <path d="M972 470 C 986 470 986 492 972 492" fill="none" stroke="var(--room-mug)" stroke-width="5"/>
+            <ellipse cx="950" cy="462" rx="22" ry="5" fill="var(--room-mugtop)" opacity="0.5"/>
+          </g>
+          <g transform="translate(886,422)">
+            <rect x="-14" y="54" width="28" height="26" rx="4" fill="var(--room-pot)"/>
+            <path d="M0 54 C 0 40 -6 30 -12 24 M0 54 C 4 38 12 30 16 26" stroke="var(--room-stem)" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <ellipse cx="-14" cy="22" rx="9" ry="13" transform="rotate(-30 -14 22)" fill="var(--room-leaf)"/>
+            <ellipse cx="18" cy="24" rx="8" ry="12" transform="rotate(30 18 24)" fill="var(--room-leaf)"/>
+            <ellipse cx="2" cy="14" rx="8" ry="12" fill="var(--room-leaf)" opacity="0.9"/>
+          </g>
+        </g>
+      </symbol>
+      <symbol id="sprout" viewBox="0 0 40 60">
+        <ellipse cx="20" cy="52" rx="18" ry="5" fill="var(--room-sill)"/>
+        <path d="M20 48 C 20 28 23 12 25 4" stroke="var(--room-stem)" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <ellipse cx="31" cy="12" rx="8" ry="13" transform="rotate(28 31 12)" fill="var(--room-leaf)"/>
+        <ellipse cx="12" cy="18" rx="7" ry="11" transform="rotate(-30 12 18)" fill="var(--room-leaf)" opacity="0.8"/>
+        <ellipse cx="24" cy="2" rx="7" ry="10" fill="var(--room-leaf)"/>
+      </symbol>
+      <symbol id="stone" viewBox="0 0 40 60">
+        <ellipse cx="20" cy="54" rx="16" ry="7" fill="var(--room-sill)"/>
+        <ellipse cx="20" cy="46" rx="12" ry="9" fill="var(--room-frame)"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <div class="app">
+    <!-- ==================== 左侧规格导航 ==================== -->
+    <aside class="rail">
+      <div class="rail-brand">
+        <div class="logo">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21 C 6 17 5 12 8 9 C 10.5 6.5 14 7 15.5 10 C 17.5 14 15 18 12 21 Z" fill="#263227"/><path d="M12 21 C 12 16 13 12 15 9" fill="none" stroke="#5A7A5F" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+          <div class="name">JoeyPet</div>
+          <div class="sub">macOS 桌面伙伴 · UI 设计稿</div>
+        </div>
+      </div>
+
+      <div class="rail-group-label">界面状态</div>
+      <nav class="nav" id="nav">
+        <button data-state="desktop" class="on">
+          <svg viewBox="0 0 24 24"><path d="M12 20 C 7.5 16 7 12 9.5 9.5 C 11.8 7.3 14 8 15.5 10.5 C 17.5 13.5 15.5 17 12 20 Z"/><path d="M12 20 C 12 15 13 12 15.5 10"/></svg>
+          桌面陪伴 <span class="idx">桌面</span>
+        </button>
+        <button data-state="invite">
+          <svg viewBox="0 0 24 24"><path d="M4 6 H20 V16 H12 L8 19 V16 H4 Z"/></svg>
+          休息邀请 <span class="idx">气泡</span>
+        </button>
+        <button data-state="recover">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="7"/><path d="M12 9 V13 L15 15"/></svg>
+          30 秒恢复 <span class="idx">面板</span>
+        </button>
+        <button data-state="nest">
+          <svg viewBox="0 0 24 24"><path d="M4 10 L12 4 L20 10 V20 H4 Z"/><path d="M9 20 V14 H15 V20"/></svg>
+          巢居主页 <span class="idx">窗口</span>
+        </button>
+        <button data-state="reflect">
+          <svg viewBox="0 0 24 24"><path d="M4 18 C 7 14 10 17 12 13 C 14 9 18 11 20 8"/><path d="M4 18 C 4 20 6 21 8 21 C 12 21 16 19 20 15"/></svg>
+          节奏回顾 <span class="idx">视图</span>
+        </button>
+        <button data-state="settings">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3 V6 M12 18 V21 M3 12 H6 M18 12 H21 M5.6 5.6 L7.7 7.7 M16.3 16.3 L18.4 18.4 M18.4 5.6 L16.3 7.7 M7.7 16.3 L5.6 18.4"/></svg>
+          设置 <span class="idx">窗口</span>
+        </button>
+      </nav>
+
+      <div class="rail-spacer"></div>
+
+      <div class="rail-status" id="railStatus">
+        <span class="dot"></span>
+        <span>此刻没在陪伴</span>
+      </div>
+
+      <div class="rail-controls">
+        <div class="rail-ctl">
+          <div class="lbl"><b>明暗</b></div>
+          <div class="seg" id="themeSeg">
+            <button data-theme="light" class="on">白天</button>
+            <button data-theme="dusk">黄昏</button>
+          </div>
+        </div>
+        <div class="rail-ctl">
+          <div class="lbl"><b>标注规格</b><span>显示间距与字号</span></div>
+          <div class="switch" id="annotSwitch" role="switch" aria-checked="false" tabindex="0"></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ==================== 桌面画布 ==================== -->
+    <main class="stage">
+      <div class="viewport" id="viewport">
+        <div class="desktop" id="desktop">
+          <!-- 壁纸山丘 -->
+          <svg class="wall-hills" viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true">
+            <circle class="glow" cx="1160" cy="150" r="110" fill="#F5EBD9" opacity="0.5"/>
+            <path class="h" d="M0 470 C 220 408 380 476 560 448 C 760 418 900 478 1080 442 C 1210 416 1320 440 1440 420 L1440 900 L0 900 Z" fill="#C7D9D2" opacity="0.72"/>
+            <path class="h" d="M0 540 C 240 500 420 556 620 528 C 820 500 1000 556 1200 528 C 1290 518 1330 524 1440 518 L1440 900 L0 900 Z" fill="#B9CFC6" opacity="0.62"/>
+            <path class="h" d="M0 610 C 300 582 520 628 760 608 C 980 590 1180 622 1440 600 L1440 900 L0 900 Z" fill="#D8CDB7" opacity="0.7"/>
+          </svg>
+
+          <!-- 菜单栏 -->
+          <div class="menubar">
+            <div class="l">
+              <span class="appname">
+                <svg viewBox="0 0 24 24" fill="#263227"><path d="M12 21 C 6 17 5 12 8 9 C 10.5 6.5 14 7 15.5 10 C 17.5 14 15 18 12 21 Z"/></svg>
+                JoeyPet
+              </span>
+              <span class="menu">文件</span><span class="menu">编辑</span><span class="menu">显示</span><span class="menu">窗口</span><span class="menu">帮助</span>
+            </div>
+            <div class="r">
+              <svg class="mico" viewBox="0 0 24 24"><rect x="2.5" y="7" width="19" height="10" rx="2.5"/><rect x="5" y="10.5" width="11" height="3" rx="1"/><path d="M24 11 V 13"/></svg>
+              <svg class="mico" viewBox="0 0 24 24"><path d="M3 9 C 7 5 12 4 16 6 C 20 8 21 10 21 12"/><path d="M3 14 C 7 10 12 9 16 11 C 20 13 21 15 21 17"/><path d="M3 19 C 7 15 12 14 16 16 C 19 17.5 20 19 20 20"/></svg>
+              <span>15:24</span><span>11月21日 周六</span>
+            </div>
+          </div>
+
+          <!-- Dock -->
+          <div class="dock" aria-hidden="true">
+            <div class="d leaf"><svg viewBox="0 0 24 24"><path d="M12 21 C 6 17 5 12 8 9 C 10.5 6.5 14 7 15.5 10 C 17.5 14 15 18 12 21 Z"/><path d="M12 21 C 12 16 13 12 15 9"/></svg></div>
+            <div class="d paper"><svg viewBox="0 0 24 24"><path d="M7 4 H17 V20 H7 Z"/><path d="M10 8 H14 M10 12 H14 M10 16 H13"/></svg></div>
+            <div class="d folder"><svg viewBox="0 0 24 24"><path d="M3 8 C 3 6.5 4 6 5 6 H9 L11 8 H19 C 20 8 21 8.8 21 10 V18 C 21 19 20 20 19 20 H5 C 4 20 3 19 3 18 Z"/></svg></div>
+            <div class="d wheel"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7 L14.5 12 L12 17 L9.5 12 Z"/></svg></div>
+            <div class="d chat"><svg viewBox="0 0 24 24"><path d="M4 6 H20 V16 H10 L6 19 V16 H4 Z"/></svg></div>
+            <div class="d joey"><svg viewBox="0 0 24 24"><path d="M12 20 C 7.5 16 7 12 9.5 9.5 C 11.8 7.3 14 8 15.5 10.5 C 17.5 13.5 15.5 17 12 20 Z"/><path d="M12 20 C 12 15 13 12 15.5 10"/></svg></div>
+          </div>
+
+          <!-- Toast -->
+          <div class="toast" id="toast"></div>
+
+          <!-- ============ 状态 01 · 桌面陪伴 ============ -->
+          <section class="state on" id="s-desktop">
+            <div class="pet-wrap">
+              <div class="pet breathing" id="pet" tabindex="0" role="button" aria-label="Joey，桌面宠物">
+                <div class="shadow"></div>
+                <svg viewBox="0 0 320 400"><use id="petUse" href="#joey-look"/></svg>
+              </div>
+              <div class="pet-chip" id="petChip"><span class="leaf"></span><span id="petChipText">陪伴中 · 00:00</span></div>
+              <div class="pet-hint">拖动换位置 · 点击打开菜单</div>
+              <div class="pet-menu" id="petMenu" hidden>
+                <button id="menuEnd"><svg viewBox="0 0 24 24"><path d="M18 6 L6 18"/><path d="M6 6 L18 18"/></svg>结束陪伴</button>
+                <button id="menuHide"><svg viewBox="0 0 24 24"><path d="M3 12 C 5 8 8.5 6.5 12 6.5 C 15.5 6.5 19 8 21 12 C 19 16 15.5 17.5 12 17.5 C 8.5 17.5 5 16 3 12 Z"/><path d="M9.5 12 A 2.5 2.5 0 1 0 14.5 12 A 2.5 2.5 0 1 0 9.5 12 Z"/><path d="M4 20 L20 4"/></svg>隐藏 Joey</button>
+                <div class="divider"></div>
+                <button class="muted" id="menuPause"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8 V12 L15 14"/></svg>暂停一小时</button>
+              </div>
+            </div>
+            <div class="spec" style="right: 30px; bottom: 318px;"><span class="t">状态标签</span> · 12.5px / 鼠尾草叶点</div>
+            <div class="spec" style="right: 30px; bottom: 252px;"><span class="t">桌面宠物</span> · 168×210 · 右下角</div>
+          </section>
+
+          <!-- ============ 状态 02 · 休息邀请 ============ -->
+          <section class="state" id="s-invite">
+            <div class="invite-scene">
+              <div class="invite-joey">
+                <div class="shadow"></div>
+                <svg viewBox="0 0 320 400"><use href="#joey-sign"/></svg>
+              </div>
+              <div class="invite-card spec-target" id="inviteCard">
+                <div class="tape"></div>
+                <p class="msg">坐久啦，<br>我们一起伸个懒腰？</p>
+                <p class="sub">不用走开，半分钟就够。</p>
+                <div class="invite-actions">
+                  <button class="btn btn--primary" id="inviteAccept">休息一下</button>
+                  <div class="row">
+                    <button class="btn btn--secondary btn--sm" id="inviteLater">稍后提醒</button>
+                    <button class="btn btn--quiet btn--sm" id="invitePause">暂停一会儿</button>
+                  </div>
+                </div>
+              </div>
+              <div class="spec" style="left: 410px; top: 262px;"><span class="t">邀请卡</span> · 400px · 圆角 22 · 描边 1px</div>
+              <div class="spec" style="left: 826px; top: 468px;"><span class="t">主按钮</span> · 高 50 · 字 16 / 600</div>
+            </div>
+          </section>
+
+          <!-- ============ 状态 03 · 30 秒恢复 ============ -->
+          <section class="state" id="s-recover">
+            <div class="recover-veil"></div>
+            <div class="recover-joey">
+              <div class="shadow"></div>
+              <svg viewBox="0 0 320 400"><use href="#joey-stretch"/></svg>
+            </div>
+            <div class="recover-panel spec-target" id="recoverPanel">
+              <h3>望向远处</h3>
+              <p class="hint">找个六米外的点，肩膀放松。</p>
+              <div class="recover-timer">
+                <div class="ring">
+                  <svg viewBox="0 0 104 104">
+                    <circle class="track" cx="52" cy="52" r="46"/>
+                    <circle class="prog" id="ringProg" cx="52" cy="52" r="46" stroke-dasharray="289" stroke-dashoffset="0"/>
+                  </svg>
+                  <div class="time"><b id="ringTime">00:30</b><small id="ringLeft">剩余 30 秒</small></div>
+                </div>
+                <div class="copy">
+                  <b>吸气四拍，呼气六拍</b>
+                  <p>不用数得很准。</p>
+                </div>
+              </div>
+              <div class="recover-actions">
+                <button class="btn btn--primary" id="recoverDone">好了</button>
+                <button class="btn btn--quiet" id="recoverSkip">先跳过</button>
+              </div>
+            </div>
+            <div class="spec" style="left: 50%; top: 96px; transform: translateX(-50%);"><span class="t">恢复面板</span> · 420px · 圆角 26 · 进度环</div>
+          </section>
+
+          <!-- ============ 状态 04 · Joey 的家（主窗口） ============ -->
+          <section class="state" id="s-nest">
+            <div class="window nest-win spec-target">
+              <div class="win-titlebar">
+                <div class="lights"><i></i><i></i><i></i></div>
+                <div class="win-title" id="nestTitle">Joey 的家</div>
+                <div class="win-tools">
+                  <button class="win-tool-btn" id="openSettingsFromNest" aria-label="打开设置">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 4 V6 M12 18 V20 M4 12 H6 M18 12 H20 M6.5 6.5 L8 8 M16 16 L17.5 17.5 M17.5 6.5 L16 8 M8 16 L6.5 17.5"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- 视图 1 · 房间（家） -->
+              <div class="nest-room" id="nestRoomView">
+                <svg viewBox="0 0 1080 680" preserveAspectRatio="xMidYMid meet" aria-label="Joey 的房间：挂钟、窗户、书桌、植物与编织垫">
+                  <use href="#joey-room"/>
+                  <g class="joey-idle"><use href="#joey-sit" x="190" y="318" width="230" height="300"/></g>
+                </svg>
+                <button class="room-nav" id="roomNavReflect" aria-label="回顾这周" style="left:700px; top:150px; width:120px; height:130px;"></button>
+                <div class="room-label" style="left:250px; top:198px; transform:translateX(-50%);">Joey 大约每 <b>45 分钟</b>来叫你一次</div>
+                <div class="room-label" style="right:40px; top:326px;">今天陪了 <b id="roomFocus">2 小时 10 分</b></div>
+                <div class="room-label" style="left:40px; top:326px;">今天休息 <b id="roomBreaks">2 次</b></div>
+                <div class="room-status" id="roomStatus"><span class="dot"></span><span id="roomStatusText">陪伴中 · 00:00</span></div>
+                <button class="room-cta" id="roomCta">
+                  <svg viewBox="0 0 24 24"><path d="M8 5 L19 12 L8 19 Z"/></svg>
+                  <span id="roomCtaText">开始一起工作</span>
+                </button>
+              </div>
+
+              <!-- 视图 2 · 节奏回顾（花园） -->
+              <div class="reflect-view" id="nestReflectView" hidden>
+                <svg class="reflect-bg" viewBox="0 0 1080 680" preserveAspectRatio="xMidYMid meet" aria-label="一周七天的小路，有休息的日子长出一株植物，周三空着">
+                  <defs>
+                    <linearGradient id="gardenSky" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0" stop-color="var(--room-sky)" stop-opacity="0.12"/>
+                      <stop offset="0.55" stop-color="var(--room-sky)" stop-opacity="0.42"/>
+                      <stop offset="1" stop-color="var(--room-sky)" stop-opacity="0.82"/>
+                    </linearGradient>
+                    <radialGradient id="gardenSun" cx="50%" cy="50%" r="50%">
+                      <stop offset="0" stop-color="var(--apricot)" stop-opacity="0.26"/>
+                      <stop offset="0.5" stop-color="var(--apricot)" stop-opacity="0.12"/>
+                      <stop offset="1" stop-color="var(--apricot)" stop-opacity="0"/>
+                    </radialGradient>
+                  </defs>
+                  <rect width="1080" height="520" fill="var(--room-wall)"/>
+                  <rect width="1080" height="520" fill="url(#gardenSky)"/>
+                  <circle cx="902" cy="148" r="128" fill="url(#gardenSun)"/>
+                  <circle cx="902" cy="148" r="34" fill="var(--apricot)" opacity="0.22"/>
+                  <path d="M0 360 C 180 300 340 350 540 330 C 760 308 900 350 1080 320 L1080 680 L0 680 Z" fill="var(--room-hill1)" opacity="0.7" class="g-h1"/>
+                  <path d="M0 420 C 220 372 420 420 640 400 C 860 380 1000 420 1080 400 L1080 680 L0 680 Z" fill="var(--room-hill2)" opacity="0.6" class="g-h2"/>
+                  <rect y="520" width="1080" height="160" fill="var(--room-floor)"/>
+                  <rect y="512" width="1080" height="8" fill="var(--room-base)"/>
+                  <path d="M120 560 C 300 520 460 590 620 562 C 780 534 900 588 980 560" fill="none" stroke="var(--room-floorline)" stroke-width="26" stroke-linecap="round" opacity="0.4"/>
+                  <path d="M120 560 C 300 520 460 590 620 562 C 780 534 900 588 980 560" fill="none" stroke="var(--room-floorline)" stroke-width="2" stroke-dasharray="1 12" stroke-linecap="round" opacity="0.8"/>
+                  <use href="#sprout" x="120" y="500" width="40" height="60"/>
+                  <use href="#sprout" x="248" y="500" width="40" height="60"/>
+                  <use href="#stone" x="376" y="504" width="40" height="60"/>
+                  <use href="#sprout" x="504" y="500" width="40" height="60"/>
+                  <use href="#sprout" x="632" y="500" width="40" height="60"/>
+                  <use href="#sprout" x="760" y="500" width="40" height="60"/>
+                  <use href="#sprout" x="888" y="500" width="40" height="60"/>
+                  <g font-family="-apple-system,'PingFang SC',sans-serif" font-size="13" fill="var(--ink-2)" text-anchor="middle">
+                    <text x="140" y="596">一</text><text x="268" y="596">二</text><text x="396" y="596">三</text><text x="524" y="596">四</text><text x="652" y="596">五</text><text x="780" y="596">六</text><text x="908" y="596">日</text>
+                  </g>
+                </svg>
+                <div class="reflect-sign">
+                  <div class="k">11月16日 – 11月22日</div>
+                  <div class="main">这周我们一起休息了 <b>6 次</b>。</div>
+                  <div class="sub">今天陪了 2 小时 10 分。周三没有记录。</div>
+                </div>
+                <button class="reflect-home" id="reflectHomeBtn">
+                  <svg viewBox="0 0 24 24"><path d="M4 10 L12 4 L20 10 V20 H4 Z"/><path d="M9 20 V14 H15 V20"/></svg>
+                  回巢
+                </button>
+              </div>
+            </div>
+            <div class="spec" style="left: 180px; top: 66px;"><span class="t">主窗口</span> · 1080×720 · 单窗口 · 交通灯</div>
+            <div class="spec" style="left: 180px; bottom: 56px;"><span class="t">菜单长在场景里</span> · 墙上相框=回顾 · 右下=回巢</div>
+          </section>
+
+          <!-- ============ 状态 05 · 设置 ============ -->
+          <section class="state" id="s-settings">
+            <div class="window settings-win spec-target">
+              <div class="win-titlebar">
+                <div class="lights"><i></i><i></i><i></i></div>
+                <div class="win-title">JoeyPet 设置</div>
+                <div class="win-tools"></div>
+              </div>
+              <div class="settings-body">
+                <aside class="set-nav">
+                  <div class="grp">陪伴</div>
+                  <a class="on">节奏与提醒</a>
+                  <a>安静时段</a>
+                  <div class="grp">Joey</div>
+                  <a>外观与位置</a>
+                  <a>成长记录</a>
+                  <div class="grp">关于</div>
+                  <a>关于 JoeyPet</a>
+                </aside>
+                <div class="set-panel">
+                  <h3>节奏与提醒</h3>
+                  <p class="desc">只在你开始工作后提醒。</p>
+                  <div class="set-row">
+                    <div class="k"><b>提醒节奏</b><span>两次邀请之间的安静时间</span></div>
+                    <div class="seg" id="rhythmSeg">
+                      <button class="on">45 分钟</button><button>60 分钟</button><button>90 分钟</button>
+                    </div>
+                  </div>
+                  <div class="set-row">
+                    <div class="k"><b>暂停一小时</b><span>到 16:24 自动恢复</span></div>
+                    <div class="switch" id="swPause" role="switch" aria-checked="false" tabindex="0"></div>
+                  </div>
+                  <div class="set-row">
+                    <div class="k"><b>安静时段</b><span>22:00 到 08:00，Joey 会安静下来</span></div>
+                    <div class="timefield">22:00 <em>–</em> 08:00</div>
+                  </div>
+                  <div class="set-row">
+                    <div class="k"><b>在桌面上显示 Joey</b><span>停在屏幕右下角</span></div>
+                    <div class="switch on" id="swShow" role="switch" aria-checked="true" tabindex="0"></div>
+                  </div>
+                  <div class="set-row">
+                    <div class="k"><b>反馈</b><span>哪里觉得打扰，写在这里</span></div>
+                    <button class="set-btn" id="feedbackBtn">写一句</button>
+                  </div>
+                  <div class="feedback-box" id="feedbackBox" hidden>
+                    <textarea placeholder="说给 Joey 听…"></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="spec" style="left: 220px; top: 64px;"><span class="t">设置窗口</span> · 1000×720 · 原生侧栏 + 行式布局</div>
+            <div class="spec" style="left: 220px; bottom: 52px;"><span class="t">macOS 原生控件</span> · 开关/分段/字段 · 系统蓝焦点</div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+
+<script>
+(function () {
+  "use strict";
+  var body = document.body;
+  var desktop = document.getElementById("desktop");
+  var viewport = document.getElementById("viewport");
+
+  /* ============ 缩放适配 ============ */
+  function fit() {
+    var stage = document.querySelector(".stage");
+    var rail = document.querySelector(".rail");
+    var availW = stage.clientWidth - 40;
+    var availH = stage.clientHeight - 40;
+    var scale = Math.min(availW / 1440, availH / 900, 1.2);
+    desktop.style.transform = "scale(" + scale + ")";
+    viewport.style.width = (1440 * scale) + "px";
+    viewport.style.height = (900 * scale) + "px";
+  }
+  window.addEventListener("resize", fit);
+
+  /* ============ 会话状态 ============ */
+  var state = {
+    sessionActive: false,
+    seconds: 0,
+    breaks: 2,
+    hidden: false,
+    timer: null
+  };
+
+  var petUse = document.getElementById("petUse");
+  var petChip = document.getElementById("petChip");
+  var petChipText = document.getElementById("petChipText");
+  var railStatus = document.getElementById("railStatus");
+  var roomCtaText = document.getElementById("roomCtaText");
+  var roomStatus = document.getElementById("roomStatus");
+  var roomStatusText = document.getElementById("roomStatusText");
+  var nestTitle = document.getElementById("nestTitle");
+  var nestRoomView = document.getElementById("nestRoomView");
+  var nestReflectView = document.getElementById("nestReflectView");
+
+  function fmt(sec) {
+    var m = Math.floor(sec / 60), s = sec % 60;
+    return (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
+  }
+  function fmtHM(sec) {
+    var h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60);
+    return h + " 小时 " + m + " 分";
+  }
+
+  function setPetPose(ref) { petUse.setAttribute("href", ref); }
+
+  function refreshSessionUI() {
+    var active = state.sessionActive;
+    if (active) {
+      petChip.classList.add("show");
+      petChipText.textContent = "陪伴中 · " + fmt(state.seconds);
+      setPetPose("#joey-look");
+      railStatus.classList.add("on");
+      railStatus.lastElementChild.textContent = "陪伴中 · " + fmt(state.seconds);
+      roomCtaText.textContent = "结束陪伴";
+      roomStatus.classList.add("show");
+      roomStatusText.textContent = "陪伴中 · " + fmt(state.seconds);
+    } else {
+      petChip.classList.remove("show");
+      setPetPose("#joey-sit");
+      railStatus.classList.remove("on");
+      railStatus.lastElementChild.textContent = "此刻没在陪伴";
+      roomCtaText.textContent = "开始一起工作";
+      roomStatus.classList.remove("show");
+      roomStatusText.textContent = "此刻 · 未开始";
+    }
+  }
+
+  function toggleSession() {
+    state.sessionActive = !state.sessionActive;
+    if (state.sessionActive) {
+      if (state.timer) clearInterval(state.timer);
+      state.timer = setInterval(function () {
+        state.seconds++;
+        refreshSessionUI();
+      }, 1000);
+    } else {
+      if (state.timer) clearInterval(state.timer);
+      state.timer = null;
+      state.seconds = 0;
+    }
+    refreshSessionUI();
+    showToast(state.sessionActive ? "好了，Joey 到旁边了。" : "先到这儿。Joey 回窝里了。");
+  }
+
+  document.getElementById("roomCta").addEventListener("click", toggleSession);
+
+  /* ============ 状态导航 ============ */
+  var navBtns = Array.prototype.slice.call(document.querySelectorAll("#nav button"));
+  function showState(name) {
+    Array.prototype.forEach.call(document.querySelectorAll(".state"), function (s) {
+      s.classList.toggle("on", s.id === "s-" + name);
+    });
+    navBtns.forEach(function (b) { b.classList.toggle("on", b.dataset.state === name); });
+  }
+  function openReflect() {
+    nestRoomView.hidden = true;
+    nestReflectView.hidden = false;
+    nestTitle.textContent = "节奏回顾";
+    navBtns.forEach(function (b) { b.classList.toggle("on", b.dataset.state === "reflect"); });
+  }
+  function closeReflect() {
+    nestReflectView.hidden = true;
+    nestRoomView.hidden = false;
+    nestTitle.textContent = "Joey 的家";
+    navBtns.forEach(function (b) { b.classList.toggle("on", b.dataset.state === "nest"); });
+  }
+  navBtns.forEach(function (b) {
+    b.addEventListener("click", function () {
+      var name = b.dataset.state;
+      if (name === "reflect") {
+        showState("nest");
+        openReflect();
+      } else {
+        showState(name);
+        if (name === "nest") closeReflect();
+      }
+    });
+  });
+  document.getElementById("roomNavReflect").addEventListener("click", openReflect);
+  document.getElementById("reflectHomeBtn").addEventListener("click", closeReflect);
+  document.getElementById("openSettingsFromNest").addEventListener("click", function () { showState("settings"); });
+
+  /* ============ 主题切换 ============ */
+  var themeSeg = document.getElementById("themeSeg");
+  themeSeg.addEventListener("click", function (e) {
+    var t = e.target.closest("button");
+    if (!t) return;
+    Array.prototype.forEach.call(themeSeg.querySelectorAll("button"), function (b) { b.classList.toggle("on", b === t); });
+    body.setAttribute("data-theme", t.dataset.theme);
+  });
+
+  /* ============ 标注开关 ============ */
+  var annotSwitch = document.getElementById("annotSwitch");
+  annotSwitch.addEventListener("click", function () {
+    var on = annotSwitch.classList.toggle("on");
+    body.classList.toggle("annot-on", on);
+    annotSwitch.setAttribute("aria-checked", on ? "true" : "false");
+  });
+  annotSwitch.addEventListener("keydown", function (e) {
+    if (e.key === " " || e.key === "Enter") { e.preventDefault(); annotSwitch.click(); }
+  });
+
+  /* ============ 通用 switch ============ */
+  function bindSwitch(el, cb) {
+    el.addEventListener("click", function () {
+      var on = el.classList.toggle("on");
+      el.setAttribute("aria-checked", on ? "true" : "false");
+      if (cb) cb(on);
+    });
+    el.addEventListener("keydown", function (e) {
+      if (e.key === " " || e.key === "Enter") { e.preventDefault(); el.click(); }
+    });
+  }
+
+  /* 设置 · 暂停一小时 */
+  bindSwitch(document.getElementById("swPause"));
+  /* 设置 · 显示 Joey */
+  bindSwitch(document.getElementById("swShow"), function (on) {
+    state.hidden = !on;
+    document.getElementById("pet").style.opacity = on ? "1" : "0";
+    document.getElementById("pet").style.pointerEvents = on ? "" : "none";
+    showToast(on ? "Joey 回到桌面了。" : "Joey 藏起来了。设置里可以叫回来。");
+  });
+
+  /* 设置 · 节奏分段 */
+  var rhythmSeg = document.getElementById("rhythmSeg");
+  rhythmSeg.addEventListener("click", function (e) {
+    var t = e.target.closest("button");
+    if (!t) return;
+    Array.prototype.forEach.call(rhythmSeg.querySelectorAll("button"), function (b) { b.classList.toggle("on", b === t); });
+  });
+
+  /* 设置 · 反馈 */
+  var feedbackBtn = document.getElementById("feedbackBtn");
+  var feedbackBox = document.getElementById("feedbackBox");
+  feedbackBtn.addEventListener("click", function () {
+    var show = feedbackBox.hidden;
+    feedbackBox.hidden = !show;
+    if (show) feedbackBox.querySelector("textarea").focus();
+  });
+
+  /* ============ 桌面宠物拖动 ============ */
+  var pet = document.getElementById("pet");
+  var petMenu = document.getElementById("petMenu");
+  var petOff = { x: 0, y: 0 };
+  var dragState = null;
+  var suppressClick = false;
+
+  pet.addEventListener("pointerdown", function (e) {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    var stage = desktop.getBoundingClientRect();
+    var scale = stage.width / 1440;
+    var r = pet.getBoundingClientRect();
+    dragState = {
+      sx: e.clientX, sy: e.clientY,
+      ox: petOff.x, oy: petOff.y,
+      scale: scale,
+      minX: (stage.left + 8 - r.left) / scale,
+      maxX: (stage.right - 8 - r.right) / scale,
+      minY: (stage.top + 8 - r.top) / scale,
+      maxY: (stage.bottom - 8 - r.bottom) / scale,
+      moved: false
+    };
+    try { pet.setPointerCapture(e.pointerId); } catch (err) {}
+  });
+
+  pet.addEventListener("pointermove", function (e) {
+    if (!dragState) return;
+    var dx = (e.clientX - dragState.sx) / dragState.scale;
+    var dy = (e.clientY - dragState.sy) / dragState.scale;
+    if (!dragState.moved && Math.abs(dx) + Math.abs(dy) < 4) return;
+    dragState.moved = true;
+    var nx = Math.min(dragState.maxX, Math.max(dragState.minX, dragState.ox + dx));
+    var ny = Math.min(dragState.maxY, Math.max(dragState.minY, dragState.oy + dy));
+    petOff.x = nx; petOff.y = ny;
+    desktop.style.setProperty("--pet-dx", nx + "px");
+    desktop.style.setProperty("--pet-dy", ny + "px");
+  });
+
+  function endDrag() {
+    if (!dragState) return;
+    if (dragState.moved) {
+      suppressClick = true;
+      setTimeout(function () { suppressClick = false; }, 400);
+      showToast("Joey 换了个位置。");
+    }
+    dragState = null;
+  }
+  pet.addEventListener("pointerup", endDrag);
+  pet.addEventListener("pointercancel", endDrag);
+
+  /* ============ 桌面宠物菜单 ============ */
+  pet.addEventListener("click", function (e) {
+    e.stopPropagation();
+    if (suppressClick) { suppressClick = false; return; }
+    if (state.hidden) return;
+    petMenu.hidden = !petMenu.hidden;
+  });
+  document.addEventListener("click", function () { if (!petMenu.hidden) petMenu.hidden = true; });
+  petMenu.addEventListener("click", function (e) { e.stopPropagation(); });
+
+  document.getElementById("menuEnd").addEventListener("click", function () {
+    petMenu.hidden = true;
+    if (state.sessionActive) toggleSession();
+  });
+  document.getElementById("menuHide").addEventListener("click", function () {
+    petMenu.hidden = true;
+    document.getElementById("swShow").click();
+  });
+  document.getElementById("menuPause").addEventListener("click", function () {
+    petMenu.hidden = true;
+    showToast("暂停一小时。16:24 恢复。");
+  });
+
+  /* ============ 休息邀请 ============ */
+  document.getElementById("inviteAccept").addEventListener("click", function () {
+    showState("recover");
+    startRecovery();
+  });
+  document.getElementById("inviteLater").addEventListener("click", function () {
+    showToast("好，过一阵再问你。");
+  });
+  document.getElementById("invitePause").addEventListener("click", function () {
+    showToast("先安静一会儿。");
+  });
+
+  /* ============ 恢复倒计时 ============ */
+  var TOTAL = 30;
+  var remain = TOTAL;
+  var recTimer = null;
+  var ringProg = document.getElementById("ringProg");
+  var ringTime = document.getElementById("ringTime");
+  var ringLeft = document.getElementById("ringLeft");
+  var CIRC = 289; // 2πr, r=46
+
+  function startRecovery() {
+    remain = TOTAL;
+    updateRing();
+    if (recTimer) clearInterval(recTimer);
+    recTimer = setInterval(function () {
+      remain--;
+      updateRing();
+      if (remain <= 0) finishRecovery();
+    }, 1000);
+  }
+  function updateRing() {
+    ringProg.style.strokeDashoffset = String(CIRC * (1 - remain / TOTAL));
+    ringTime.textContent = "00:" + (remain < 10 ? "0" + remain : remain);
+    ringLeft.textContent = "剩余 " + remain + " 秒";
+  }
+  function finishRecovery() {
+    if (recTimer) clearInterval(recTimer);
+    recTimer = null;
+    state.breaks++;
+    document.getElementById("roomBreaks").textContent = state.breaks + " 次";
+    showToast("好了。Joey 的窝里多了一片叶子。");
+    showState("desktop");
+    setPetPose("#joey-happy");
+    setTimeout(function () { refreshSessionUI(); }, 2600);
+  }
+  document.getElementById("recoverDone").addEventListener("click", function () {
+    if (remain <= 0) return;
+    finishRecovery();
+  });
+  document.getElementById("recoverSkip").addEventListener("click", function () {
+    if (recTimer) clearInterval(recTimer);
+    recTimer = null;
+    showState("desktop");
+  });
+
+  /* ============ Toast ============ */
+  var toast = document.getElementById("toast");
+  var toastTimer = null;
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add("show");
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toast.classList.remove("show"); }, 2600);
+  }
+
+  /* ============ 初始化 ============ */
+  refreshSessionUI();
+  fit();
+})();
+</script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 # Tech Stack
 
-Fixed direction for JoeyPet V1. Deviations require a new ADR and explicit approval.
+Fixed direction for JoeyPet V0. Deviations require a new ADR and explicit approval.
 
 ## Core
 
@@ -17,7 +17,7 @@ Fixed direction for JoeyPet V1. Deviations require a new ADR and explicit approv
 | Tests | Swift Testing (preferred over XCTest for new tests) |
 | Project | Xcode project (`JoeyPet.xcodeproj`) |
 
-## V1 dependency policy
+## V0 dependency policy
 
 **Runtime third-party dependencies: 0.**
 
@@ -29,7 +29,7 @@ Do not introduce:
 
 - Electron, Tauri, KMP, Avalonia
 - Live2D, 3D engines, Unity
-- Database (SQLite, Core Data for V1 product data, etc.)
+- Database (SQLite, Core Data for V0 product data, etc.)
 - LLM runtime, LangChain, AI SDK
 - Redux, TCA, heavy Clean Architecture templates
 - Third-party DI containers
@@ -47,5 +47,7 @@ Do not introduce:
 
 ## Related docs
 
-- [architecture.md](architecture.md)
+- [V0_FEATURE_SCOPE.md](../V0_FEATURE_SCOPE.md)
+- [DESIGN.md](../DESIGN.md)
 - [development.md](development.md)
+- [pet-runtime.md](pet-runtime.md)

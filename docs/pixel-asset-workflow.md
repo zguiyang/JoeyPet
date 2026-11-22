@@ -1,6 +1,6 @@
 # Pixel Asset Workflow
 
-How Joey sprite packages move from idea to a validated `pet.json` + spritesheet. Complements [character-design.md](character-design.md). **Phase 2A** defined design and workflow; **Phase 2B-1** validated display density; **Phase 2B-2** produces the first reusable production clip set.
+How Joey sprite packages move from idea to a validated `pet.json` + spritesheet. Complements [character-design.md](character-design.md). The V0 package uses one 256 px HD frame per animation, a 6×1 sheet, and `displayPointSize: 128`.
 
 ## Pipeline
 
@@ -25,8 +25,8 @@ Concept
 | Animation Frames | 2–4 frames typical | Integer-pixel deltas only |
 | Sprite Sheet | Single PNG, row-major grid | Size = `columns × frameWidth` by `rows × frameHeight` |
 | `pet.json` | `PetManifest` | Clip ids, fps, loop, fallback, layout fields |
-| Debug Validation | Visual check | `-JoeyPetDebugState <state>`; `-JoeyPetDebugAnimation <id>` (Debug only) |
-| Runtime Validation | App playthrough | No restart flicker; fallback works; nearest + integer scale |
+| Debug Validation | Visual check | `-JoeyPetDebugAnimation <id>` and `-JoeyPetDebugBehavior <id>` (Debug only) |
+| Runtime Validation | App playthrough | No restart flicker; fallback works; manifest filtering + display size |
 
 ## Display Model
 
@@ -53,20 +53,18 @@ See [ADR 008](decisions/008-pixel-perfect-display-scaling.md).
 
 ## Production package
 
-| Package ID | Status | Frames | Sheet | `defaultScale` | Logical pt |
-|------------|--------|--------|-------|----------------|------------|
-| `JoeyRobot` | Default shipping production package | 32×32 | 10×3 → 320×96 | 4 | 128×128 |
+| Package ID | Status | Frames | Sheet | Display | Logical pt |
+|------------|--------|--------|-------|---------|------------|
+| `Joey` | Default shipping production package | 256×256 | 10×1 → 2560×256 | `displayPointSize: 128` | 128×128 |
 
 Paths: `src/JoeyPet/Resources/Pets/<PackageID>/`.
 
-Debug animation switch (Debug builds only; Release ignores it):
+Debug animation/behavior switches (Debug builds only; Release ignores them):
 
 ```text
 -JoeyPetDebugAnimation idle
--JoeyPetDebugAnimation=cleaning
+-JoeyPetDebugBehavior celebrating
 ```
-
-`-JoeyPetDebugState <state>` remains the separate System/PetState chain check. Do not ship concept renders as the spritesheet.
 
 ## AI assistance vs human gate
 
@@ -111,22 +109,22 @@ Before calling an asset “done”:
 - [ ] PNG size equals `columns * frameWidth` × `rows * frameHeight`
 - [ ] Every animation frame index is in-bounds
 - [ ] `fallbackAnimation` exists and loops safely
-- [ ] `defaultScale` is a positive integer; logical size = frame × scale
+- [ ] Display scale is valid: integer `defaultScale`, or positive `displayPointSize`
 - [ ] Pixels are hard-edged (no partial alpha anti-alias)
-- [ ] New clips needed by [character-design.md](character-design.md) Initial Animation Set are listed when producing full Phase 2B art
-- [ ] Props (Trash Can, Broom) are in-frame pixels — no attachment system
+- [ ] New clips needed by [character-design.md](character-design.md) Initial Animation Set are listed when producing V0 art
+- [ ] No prop/attachment system; V0 has no in-frame utility props
 - [ ] `PetManifestValidator` / package tests pass when assets change
-- [ ] Debug package / state pass + short runtime pass shows no flicker
+- [ ] Debug animation/behavior pass + short runtime pass shows no flicker
 
 ## Production Sprite Checklist
 
 - [ ] Master silhouette, head/body ratio, antenna, eyes and baseline stay consistent
 - [ ] Shared locked palette only; no accidental colors
 - [ ] Integer pixel alignment and no partial-alpha anti-aliasing
-- [ ] Props are readable at 32×32 and baked into `carryingTrash` / `cleaning`
-- [ ] Verify the full Joey frame set at 4× logical scale
+- [ ] No utility props; V0 clips stay character-only
+- [ ] Verify the full Joey frame set at the display size
 - [ ] Run every clip with `-JoeyPetDebugAnimation <id>`
-- [ ] Run representative `-JoeyPetDebugState` values through the normal mapping
+- [ ] Run representative `-JoeyPetDebugBehavior <id>` clips through the runtime
 
 ## Phase boundaries
 
@@ -134,15 +132,13 @@ Before calling an asset “done”:
 |-------|---------|
 | **2A** | Character design + workflow docs |
 | **2B-1** | Idle 32/64 candidates, display model docs, Debug package override, tests |
-| **2B-2** | Production `JoeyRobot` sprites, first ten clips, Debug animation override, asset tests |
+| **2B-2** | Production `Joey` sprites, first reusable clip set, Debug animation/behavior override, asset tests |
 
 Still forbidden without a separate task: pet picker UI, sensors, settings, multi-character product select, remote packs, sound, LLM features.
 
 ## Related docs
 
 - [character-design.md](character-design.md)
-- [domain-model.md](domain-model.md)
 - [pet-runtime.md](pet-runtime.md)
 - [decisions/007-configurable-sprite-asset-package.md](decisions/007-configurable-sprite-asset-package.md)
 - [decisions/008-pixel-perfect-display-scaling.md](decisions/008-pixel-perfect-display-scaling.md)
-- [roadmap.md](roadmap.md)

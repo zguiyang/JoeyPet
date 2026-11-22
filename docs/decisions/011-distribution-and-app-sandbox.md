@@ -2,30 +2,24 @@
 
 ## Status
 
-Accepted for MVP
+Accepted for V0
 
 ## Context
 
-The Cleanup MVP needs access to explicitly supported paths under the current
-user's Library. Baseline cleanup does not require Full Disk Access and does not use sudo.
-Full Mac Care requires FDA (see ADR 012).
+JoeyPet V0 is a local-first desktop pet. It does not scan the filesystem,
+monitor system metrics, clean files, or request Full Disk Access. Distribution
+is direct during development and MVP use.
 
 ## Decision
 
-For the current MVP:
-
-- App Sandbox is disabled.
-- Cleanup remains limited to explicit allowlisted roots.
-- JoeyPet operates with the current user's normal filesystem permissions.
-- Permission failures are skipped or reported.
-- JoeyPet does not attempt to bypass macOS privacy controls.
-- Distribution is currently assumed to be direct macOS distribution during
-  development and MVP use.
-
-This decision does not authorize broader filesystem scanning.
+- App Sandbox is disabled for the current direct-distribution build.
+- JoeyPet operates with the current user's normal permissions.
+- JoeyPet does not inspect user files or attempt to bypass macOS privacy controls.
+- Distribution is assumed to be direct macOS distribution during development and MVP use.
+- Any future filesystem or system-monitoring feature requires a new ADR and product approval.
 
 ## Consequences
 
-- The MVP can inspect supported Library cleanup locations.
-- A future Mac App Store release would require the sandbox and file-access
-  strategy to be reconsidered.
+- The V0 app needs no privacy onboarding or FDA flow.
+- A future Mac App Store release would require the sandbox and distribution strategy to be reconsidered.
+- Adding cleanup, sensors or broader filesystem access would require revisiting this decision.

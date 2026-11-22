@@ -17,6 +17,8 @@ JoeyPet 是一款原生 macOS 桌面宠物。它会安静地生活在桌面上�
 ## 文档
 
 - [AGENTS.md](./AGENTS.md) — Agent 开发规则
+- [DESIGN.md](./DESIGN.md) — V0 原生 UI/UX 设计契约
+- [V0 UI 设计稿](./docs/reference/joeypet-ui-v0.html) — 冻结的视觉参考
 - [V0_FEATURE_SCOPE.md](./V0_FEATURE_SCOPE.md) — 当前测试版功能范围
 - [开发交接文档.md](./开发交接文档.md) — 当前交接与开发边界
 

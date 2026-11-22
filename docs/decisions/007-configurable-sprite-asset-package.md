@@ -15,6 +15,6 @@ Ship pets as **bundled asset packages** under `Resources/Pets/<PackageID>/` cont
 ## Consequences
 
 - Art changes are manifest + PNG updates; no runtime code changes for new clips on the same pet.
-- V1 ships one built-in package: `JoeyRobot`.
+- V0 ships one built-in package: `Joey`.
 - Plugin/download/import systems remain out of scope until a future ADR.
 - Invalid packages log and fall back in Release; no crash.

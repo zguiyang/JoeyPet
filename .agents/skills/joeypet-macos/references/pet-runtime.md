@@ -1,29 +1,36 @@
-# Pet Runtime — Agent Quick Reference
+# Pet Runtime Rule Checklist
 
-Full doc: [docs/pet-runtime.md](../../../../docs/pet-runtime.md).
+V0 runtime: `AppDelegate → PetCoordinator → AmbientBehaviorScheduler → PetRuntime → PetScene`.
 
-## Every behavior rule should specify
+## Responsibilities
 
-| Field | Question to answer |
-|-------|-------------------|
-| Priority | Can this preempt idle/low states? |
-| Cooldown | Min seconds before re-trigger |
-| Hysteresis | Enter threshold vs exit threshold |
-| Minimum duration | Min time state stays active |
-| Interruption | Can a higher priority cut this short? |
-| Fallback | State when signals clear (usually `idle`) |
+- `PetRuntime` owns the active transient behavior and maps it to an animation id.
+- `PetScene` only plays animation ids; it does not select behaviors or read app state.
+- `PetStateAnimationMapping` is the only place that maps `PetState` → animation id.
+- Callers never call `SKScene.run` directly for behavior changes.
 
-## Anti-flicker
+## Ambient scheduling
 
-- Do not change `PetState` on every poll if severity unchanged
-- Runtime rejects transitions that violate minimum duration unless interruption allows
-- Same state → keep current clip playing; do not restart from frame 0
+- Random interval in 12–35 seconds, clamped.
+- One event per interval; no polling and no display link.
+- Stop on system sleep and app teardown; resume at most once after wake.
+- Ambient behavior is dropped while a transient is active.
 
-## Testing snippet (concept)
+## Transient behavior
 
-Given: `[signal events + timestamps]`
-Expect: `[PetState sequence]` and `[AnimationClip ids]`
+- `PetTransientBehavior` is the allowlist of runtime behaviors.
+- Each behavior has an animation id, `isAmbient`, and duration.
+- Completion returns the pet to `idle`.
+- Re-applying the same animation id must not restart playback from frame 0.
 
-## Out of scope
+## Frame-rate and efficiency
 
-Behavior Trees, ML clip picker, sensor → scene shortcuts
+- SpriteKit renders on demand; no high-frequency timer.
+- Hidden mode pauses the scene.
+- Do not add sensors, metric-driven states, cleanup hooks or LLM calls.
+
+## Verification
+
+- Unit-test pure timing/selection rules.
+- Manual: drag position restore, hide/show, sleep/wake, no animation flicker.
+- Build and test after runtime changes.

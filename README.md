@@ -18,7 +18,8 @@ The first version is focused on macOS and will be built as a native Swift applic
 ## Documentation
 
 - [AGENTS.md](./AGENTS.md) — rules for coding agents
-- [Design.md](./Design.md) — native UI/UX implementation contract (Stitch upstream)
+- [DESIGN.md](./DESIGN.md) — V0 native UI/UX design contract
+- [V0 UI reference](./docs/reference/joeypet-ui-v0.html) — frozen visual target
 - [V0_FEATURE_SCOPE.md](./V0_FEATURE_SCOPE.md) — current test-version product scope
 - [开发交接文档.md](./开发交接文档.md) — current handoff and development boundary
 

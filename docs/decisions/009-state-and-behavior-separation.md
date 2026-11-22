@@ -6,28 +6,27 @@ Accepted
 
 ## Context
 
-`PetState` expresses a sustained mode such as `sweating` or `tired`. The
+`PetState` expresses a sustained mode such as `idle` or `sleeping`. The
 production animation set also contains short-lived reactions such as `blink`
 and explicit product hooks such as `celebrating`. Treating every animation as
-a state would blur system meaning, make ambient behavior compete with warnings,
+a state would blur meaning, make ambient behavior compete with explicit cues,
 and make one-shot completion incorrectly fall back to `idle`.
 
 ## Decision
 
-Keep `PetState` for sustained system-backed state. Represent short-lived
-ambient and explicit actions as `PetTransientBehavior`. Route both through
-`PetRuntime`, where system state has priority, transient requests may be
-dropped, and completion resumes the latest underlying sustained state.
+Keep `PetState` for sustained pet state. Represent short-lived ambient and
+explicit actions as `PetTransientBehavior`. Route both through `PetRuntime`,
+where explicit requests may be dropped if a transient is active, and completion
+resumes `idle`.
 
 Ambient scheduling remains a small low-frequency task with no queue. The
-later product definition permits `walking` to move the desktop panel a short
-distance; that change supersedes the old no-locomotion example, not the
-state/behavior separation decision. Explicit utility behaviors are runtime
-hooks only until a future feature supplies a real approved product event.
+product definition permits `walking` to move the desktop panel a short
+distance. Explicit cues such as `notifying` and `celebrating` are runtime hooks
+until V0 supplies a real approved product event.
 
 ## Consequences
 
-- State names remain pet-centric and system mapping stays in `BehaviorEngine`.
+- State names remain pet-centric and animation mapping stays in `PetStateAnimationMapping`.
 - Production animations can have clear semantics without expanding `PetState`.
-- Runtime tests can cover preemption, completion, and resume independently.
-- No generic behavior graph, queue, settings system, or new sensor is needed.
+- Runtime tests can cover completion and idle restore independently.
+- No generic behavior graph, queue, settings system, or sensor is needed.
