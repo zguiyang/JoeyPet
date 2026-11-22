@@ -5,7 +5,8 @@ enum PetPreferences {
     static let showsDesktopPetKey = "showsDesktopPet"
 
     static let defaultAmbientBehaviorsEnabled = true
-    static let defaultShowsDesktopPet = true
+    /// The pet is hidden by default while the companion line is rebuilt.
+    static let defaultShowsDesktopPet = false
 
     static func ambientBehaviorsEnabled(defaults: UserDefaults = .standard) -> Bool {
         defaults.object(forKey: ambientBehaviorsEnabledKey) as? Bool ?? defaultAmbientBehaviorsEnabled

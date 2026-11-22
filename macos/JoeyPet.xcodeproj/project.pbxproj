@@ -32,6 +32,15 @@
 		D7PET127305978720070926E /* PetPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET027305978720070926E /* PetPreferences.swift */; };
 		D7PET128305978720070926E /* PetPosition.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET028305978720070926E /* PetPosition.swift */; };
 		D7PET129305978720070926E /* PetPositionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET029305978720070926E /* PetPositionStore.swift */; };
+		D7F000000000000000000001 /* JoeyTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000002 /* JoeyTheme.swift */; };
+		D7F000000000000000000003 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000004 /* AppSettings.swift */; };
+		D7F000000000000000000005 /* CompanionSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000006 /* CompanionSummary.swift */; };
+		D7F000000000000000000007 /* JoeyComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000008 /* JoeyComponents.swift */; };
+		D7F000000000000000000009 /* MainWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F00000000000000000000A /* MainWindowController.swift */; };
+		D7F00000000000000000000D /* NestRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F00000000000000000000E /* NestRootView.swift */; };
+		D7F00000000000000000000F /* RoomSceneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000010 /* RoomSceneView.swift */; };
+		D7F000000000000000000011 /* ReflectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000012 /* ReflectionView.swift */; };
+		D7F000000000000000000013 /* SettingsRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000014 /* SettingsRootView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -72,6 +81,15 @@
 		D7PET027305978720070926E /* PetPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetPreferences.swift; sourceTree = "<group>"; };
 		D7PET028305978720070926E /* PetPosition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetPosition.swift; sourceTree = "<group>"; };
 		D7PET029305978720070926E /* PetPositionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetPositionStore.swift; sourceTree = "<group>"; };
+		D7F000000000000000000002 /* JoeyTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeyTheme.swift; sourceTree = "<group>"; };
+		D7F000000000000000000004 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		D7F000000000000000000006 /* CompanionSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionSummary.swift; sourceTree = "<group>"; };
+		D7F000000000000000000008 /* JoeyComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeyComponents.swift; sourceTree = "<group>"; };
+		D7F00000000000000000000A /* MainWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowController.swift; sourceTree = "<group>"; };
+		D7F00000000000000000000E /* NestRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NestRootView.swift; sourceTree = "<group>"; };
+		D7F000000000000000000010 /* RoomSceneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoomSceneView.swift; sourceTree = "<group>"; };
+		D7F000000000000000000012 /* ReflectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflectionView.swift; sourceTree = "<group>"; };
+		D7F000000000000000000014 /* SettingsRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsRootView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -115,10 +133,12 @@
 			children = (
 				D7PET207305978720070926E /* App */,
 				D7PET20D305978720070926E /* Behavior */,
+				D7F000000000000000000020 /* Design */,
 				D7PET201305978720070926E /* Domain */,
 				D7PET204305978720070926E /* Pet */,
 				D7PET208305978720070926E /* UI */,
 				D7PET210305978720070926E /* Utilities */,
+				D7F000000000000000000021 /* Windows */,
 				D7PET209305978720070926E /* Resources */,
 				D7BABD63305978720070926E /* Assets.xcassets */,
 						D7BABD65305978720070926E /* JoeyPetApp.swift */,
@@ -139,6 +159,7 @@
 			isa = PBXGroup;
 			children = (
 				D7PET015305978720070926E /* AnimationClip.swift */,
+				D7F000000000000000000006 /* CompanionSummary.swift */,
 				D7PET016305978720070926E /* PetManifest.swift */,
 				D7PET01B305978720070926E /* PetTransientBehavior.swift */,
 				D7PET002305978720070926E /* PetState.swift */,
@@ -197,6 +218,7 @@
 			isa = PBXGroup;
 			children = (
 				D7PET00E305978720070926E /* AppDelegate.swift */,
+				D7F000000000000000000004 /* AppSettings.swift */,
 				D7PET011305978720070926E /* DebugStateInjector.swift */,
 				D7PET00F305978720070926E /* PetCoordinator.swift */,
 				D7PET010305978720070926E /* SleepWakeMonitor.swift */,
@@ -207,11 +229,48 @@
 		D7PET208305978720070926E /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				D7F000000000000000000008 /* JoeyComponents.swift */,
+				D7F000000000000000000022 /* Home */,
+				D7F000000000000000000023 /* Settings */,
 				D7PET012305978720070926E /* PetPanel.swift */,
 				D7PET014305978720070926E /* PetPanelController.swift */,
 				D7PET013305978720070926E /* PetSpriteView.swift */,
 			);
 			path = UI;
+			sourceTree = "<group>";
+		};
+		D7F000000000000000000020 /* Design */ = {
+			isa = PBXGroup;
+			children = (
+				D7F000000000000000000002 /* JoeyTheme.swift */,
+			);
+			path = Design;
+			sourceTree = "<group>";
+		};
+		D7F000000000000000000021 /* Windows */ = {
+			isa = PBXGroup;
+			children = (
+				D7F00000000000000000000A /* MainWindowController.swift */,
+			);
+			path = Windows;
+			sourceTree = "<group>";
+		};
+		D7F000000000000000000022 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				D7F00000000000000000000E /* NestRootView.swift */,
+				D7F000000000000000000010 /* RoomSceneView.swift */,
+				D7F000000000000000000012 /* ReflectionView.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		D7F000000000000000000023 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				D7F000000000000000000014 /* SettingsRootView.swift */,
+			);
+			path = Settings;
 			sourceTree = "<group>";
 		};
 		D7PET210305978720070926E /* Utilities */ = {
@@ -358,6 +417,15 @@
 				D7PET128305978720070926E /* PetPosition.swift in Sources */,
 				D7PET129305978720070926E /* PetPositionStore.swift in Sources */,
 				D7PET11F305978720070926E /* AmbientBehaviorScheduler.swift in Sources */,
+				D7F000000000000000000001 /* JoeyTheme.swift in Sources */,
+				D7F000000000000000000003 /* AppSettings.swift in Sources */,
+				D7F000000000000000000005 /* CompanionSummary.swift in Sources */,
+				D7F000000000000000000007 /* JoeyComponents.swift in Sources */,
+				D7F000000000000000000009 /* MainWindowController.swift in Sources */,
+				D7F00000000000000000000D /* NestRootView.swift in Sources */,
+				D7F00000000000000000000F /* RoomSceneView.swift in Sources */,
+				D7F000000000000000000011 /* ReflectionView.swift in Sources */,
+				D7F000000000000000000013 /* SettingsRootView.swift in Sources */,
 
 			);
 			runOnlyForDeploymentPostprocessing = 0;
