@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted
+Superseded by [ADR 013](013-hd-layered-rendering.md) for the V0 HD layered pet.
+Kept for historical context.
 
 ## Context
 

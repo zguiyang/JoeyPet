@@ -4,7 +4,7 @@ Hard rules for agents working on JoeyPet. Read this before any code change.
 
 ## Current product scope (V0 — takes precedence over legacy docs)
 
-Read [`开发交接文档.md`](开发交接文档.md), [`V0_FEATURE_SCOPE.md`](V0_FEATURE_SCOPE.md), and [`DESIGN.md`](DESIGN.md) before planning or changing this repository.
+Read [`开发交接文档.md`](开发交接文档.md), [`V0_FEATURE_SCOPE.md`](V0_FEATURE_SCOPE.md), [`DESIGN.md`](DESIGN.md), and [`docs/pet-domain-model.md`](docs/pet-domain-model.md) before planning or changing this repository.
 
 - macOS-only native desktop pet for gentle work rhythm and recovery companionship.
 - Joey is a pet, never a Mac Care tool or productivity supervisor.
@@ -90,6 +90,7 @@ Do not use deleted legacy UI specs (`docs/product/ui-spec.md`), the old three-si
 | Handoff and next steps | [开发交接文档.md](开发交接文档.md) |
 | UI / UX (native) | [DESIGN.md](DESIGN.md) (V0 design contract; authority rules in this file) |
 | Frozen UI design | [docs/reference/joeypet-ui-v0.html](docs/reference/joeypet-ui-v0.html) |
+| Pet domain & state model | [docs/pet-domain-model.md](docs/pet-domain-model.md) (engineering contract for states, poses, clips, timers) |
 | Pet runtime | [docs/pet-runtime.md](docs/pet-runtime.md) |
 | Tech stack | [docs/tech-stack.md](docs/tech-stack.md) |
 | Workflow | [docs/development.md](docs/development.md) |

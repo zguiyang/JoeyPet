@@ -3,6 +3,10 @@
 The V0 pet runtime turns a small set of ambient and explicit behaviors into
 stable on-screen animation. It sits between `PetCoordinator` and SpriteKit.
 
+Domain semantics (states, poses, clips, timers, conflict rules) are defined in
+[pet-domain-model.md](pet-domain-model.md). This file covers runtime mechanics only;
+when they disagree, the domain model wins.
+
 ## Responsibilities
 
 - Hold the current `PetState` and active animation id.
@@ -71,4 +75,5 @@ See [ADR 008](decisions/008-pixel-perfect-display-scaling.md).
 
 ## Related docs
 
+- [pet-domain-model.md](pet-domain-model.md)
 - [tech-stack.md](tech-stack.md)

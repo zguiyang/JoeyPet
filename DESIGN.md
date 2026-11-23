@@ -360,6 +360,8 @@ Silhouette rules: no neck (head and body merge), long upright ears, round belly,
 
 ### 9.2 Poses
 
+Twelve poses. The first six are the V0 state set; the last six cover ambient, low-attention moments. All twelve derive from the same body, arms, and face layers — never redraw the silhouette per pose, and never scale the whole pet to fake one.
+
 | Pose | Reads as | Used in |
 |------|----------|---------|
 | `sit` | Quiet company, breathing | Idle, nest |
@@ -368,20 +370,38 @@ Silhouette rules: no neck (head and body merge), long upright ears, round belly,
 | `stretch` | Arms up, eyes closed, small mouth | Recovery demo |
 | `happy` | Arc eyes, open smile, brighter blush | After a completed break |
 | `sleep` | Curled, closed arc eyes, sage blanket line | Quiet hours, hidden attention |
+| `groom` | Paw to the ear, eyes half-closed | Idle, when the room is quiet |
+| `yawn` | Eyes squeezed shut, wide small mouth, head back | Waking up, or after long sitting |
+| `doze` | Head low, eyes flat lines, loose shoulders | Light sleep, after 90 s without interaction |
+| `peek` | Only ears and two paws at the screen edge | Docked at the edge, hovering out of view |
+| `step` | One paw forward, slight lean, low lift | Short 40–120 pt move |
+| `carry` | Leaf in mouth, returning to the nest | After a completed break |
 
-Transition rules (0.3 s, ease-out, no bounce):
+Pose layer rules:
 
-```text
-sit → look       attention arrives (invitation 5 min away)
-look → sign      invitation appears
-sign → stretch   user accepts
-stretch → happy  recovery completed
-happy → sit      after ~2.6 s
-sit → sleep      quiet hours begin
-sleep → sit      quiet hours end / user returns
-```
+- Animate only the layers allowed to move: body (small translate / tilt), arms (swappable), face (eyes / mouth / blush), props. The body never changes outline.
+- Contact shadow stays fixed in place; its opacity may change with height, its position may not.
+- Props follow the hand; they do not float independently.
+- Switch pose at the body level and keep the contact shadow anchored. Never cross-fade through a full-body morph that loses the silhouette.
 
-Never cross-fade through a full-body morph that loses the silhouette; switch pose at the body level and keep the contact shadow fixed.
+Transitions run 240–420 ms, ease-out; exits are ~65 % of entrance; no bounce, no jelly, no window parallax.
+
+| From → to | Trigger | Duration | Note |
+|-----------|---------|----------|------|
+| `sit` → `look` | Invitation 5 min away, or session start | 300 ms | Eyes lift only, body still |
+| `look` → `sign` | Invitation due | 340 ms | Arm rises first, sign turns upright after |
+| `sign` → `stretch` | User accepts | 300 ms | Sign retracts as arms go up |
+| `stretch` → `happy` | 30 s completed | 300 ms | Eyes arc first, then mouth opens |
+| `happy` → `sit` | Hold 2.6 s | 420 ms | Breathing restarts on the way down |
+| `sit` → `doze` | 90 s without interaction | 600 ms | Head lowers first, eyes close last |
+| `doze` → `yawn` | User returns to the desk | 400 ms | Wake with a yawn |
+| `yawn` → `look` | Yawn ends | 400 ms | Then `look` or `sit` by context |
+| `sit` → `sleep` | Quiet hours begin | 600 ms | Body sinks, tail tucks |
+| `sleep` → `sit` | Quiet hours end | 500 ms | Eyes open before sitting up |
+| `sign` → `sit` | Snooze / pause / dismiss | 240 ms | Sign drops, card fades after |
+| `look` → `sit` | Session ends | 240 ms | Gaze falls back |
+
+Panels, cards, and menus keep the 300–420 ms UI timing. Do not run the pose through one shared CSS transition — drive it per row above, or arm and sign will smear together.
 
 ### 9.3 Room
 
@@ -391,6 +411,30 @@ A single warm room, 1080 × 680: ivory wall, warm wood floor, one window with hi
 - **Growth is additive and non-regressive:** each completed break may add one leaf, sprout, or small object. Nothing is ever removed, wilted, or reset.
 - No levels, XP, counters on the wall, trophy shelf, or scoreboard.
 - Prop colours use the `room-*` token family (wall, floor, frame, sky, hill, nest, cushion, desk, paper, mug, leaf), so light and dusk swap in one place.
+
+### 9.4 Ambient motion
+
+Small, low-contrast loops are what make Joey feel alive. They must stay quiet, predictable, and absent under Reduce Motion.
+
+| Loop | Cycle | Property | Note |
+|------|-------|----------|------|
+| Breath | 4.2–6 s | scale 1 → 1.012 | Origin at the base; the floor line never moves |
+| Blink | 2.5–6 s, 180 ms per blink | 3 frames | Never two blinks back to back |
+| Ear flick | Random 12–35 s, 240 ms | −7° → 4° | Ears only; head stays still |
+| Tail sway | In phase with breath | ±8° | Tip lags the base |
+| Weight shift | 6–9 s | ±2 px, 0.5° tilt | Body only, feet planted |
+| Groom | Spread ~3.8 s | One paw, −15° | Plays as a short transient |
+| Yawn | 1.8 s | Head 10.5°, nose | Only after idle or waking |
+| Step | 2.4 s | 40–120 pt displacement | Replaces walk keys; no leg cycle |
+| Peek | 3.6 s | 4 px down, ears up | Docked-edge only |
+
+Rules:
+
+- At most two loops at once: one sustained (breath) plus one transient (blink, ear flick, groom).
+- Transient events are ≥ 12 s apart; the same transient repeats no sooner than 60 s.
+- Groom, yawn, and step are mutually exclusive; none plays during invitation, recovery, or drag.
+- Pause ambient loops when the window is hidden, minimised, occluded, or the app is inactive; resume from the last frame.
+- `prefers-reduced-motion` / Reduce Motion freezes every loop at a readable static frame. No pose may depend on motion to be understood.
 
 ---
 
@@ -561,6 +605,69 @@ Rules:
 
 Every feedback message states what happened in one sentence. Never a status code, never a machine voice.
 
+### 13.1 Desktop state priority
+
+Seven states, highest wins. A higher state overrides pose and interaction only; it never destroys time or counts recorded lower down.
+
+| # | State | Pose | Enters when | Cooldown |
+|---|-------|------|-------------|----------|
+| 1 | Dragging | `look` | Pointer is down and moving; follows the cursor, no ambient loop | None |
+| 2 | Hidden | — | Menu **隐藏 Joey**, or the Settings switch is off | Persistent |
+| 3 | Quiet hours | `sleep` | Local time enters the window (default 22:00–08:00) | Until window ends |
+| 4 | Paused | `sit` | Invite **暂停一会儿**, or menu **暂停一小时** | 60 min |
+| 5 | Snoozed | `sit` | Invite **稍后提醒**; current session only | 10 min |
+| 6 | In session | `look` | User starts a session | Invitation interval ≥ 45 min |
+| 7 | Alone | `sit` | App is running and there is no session | None |
+
+Snooze is a temporary substate of a session, not a new session. When it expires Joey returns to **In session**; it never produces a second invitation inside 45 minutes.
+
+### 13.2 Companion substates
+
+Five substates flow only inside a session:
+
+```text
+idle ──5 min to go──▶ approach ──due──▶ invite ──accept──▶ recover ──30 s done──▶ complete
+  ▲                                                                                 │
+  └──────────────────────────── 2.6 s, then back to idle ───────────────────────────┘
+```
+
+- `invite` and `recover` can exit to `idle` on snooze / pause / dismiss.
+- `complete` holds `happy` for 2.6 s, adds one leaf, then returns to `idle`.
+- When the session ends, the desktop returns to **Alone**.
+
+### 13.3 Guards and cooldowns
+
+| Rule | Check | Result |
+|------|-------|--------|
+| Session source | Only **开始一起工作** establishes a session; never infer work from keyboard or mouse activity | Otherwise stay **Alone** |
+| Invitation interval | ≥ 45 min since the last invitation was dismissed or completed | Otherwise do not enter `invite` |
+| Snooze | 10 min retry; only one snooze per session | Expiry returns to **In session** |
+| Pause | No invitations for 60 min, pose stays `sit`, menu still works | Resume rhythm after 60 min |
+| Quiet hours | Enter `sleep` immediately, schedule no invitations; a running recovery countdown may finish | Return to `sit` when the window ends |
+| Single invitation | At most one invitation card; no repeated `sign` while it exists | Extra requests are dropped |
+| Exit during recovery | Closing the recovery panel counts as a skip; no count, no failure | Return to the desktop quietly |
+
+### 13.4 Pose to runtime mapping
+
+Design poses are for people. At runtime they land on the existing behavior ids; `PetStateAnimationMapping` is the single entry point, and scenes must not hardcode clips.
+
+| Pose | Behavior id | Clip id | Playback |
+|------|-------------|---------|----------|
+| `sit` | `idle` | `idle_sit` | Loop; default fallback |
+| `look` | `idle` | `idle_look` | Loop; used in session |
+| `sign` | `notifying` | `notify_sign` | Once; parks on the sign frame |
+| `stretch` | `idle` | `recover_stretch` | Sustained; holds while the recovery panel counts down |
+| `happy` | `celebrating` | `complete_happy` | Once; returns to idle after 2.6 s |
+| `sleep` | `sleeping` | `sleep_curl` | Loop; quiet hours and extended idle |
+| `groom` | `idle` | `idle_groom` | Once; ambient transient |
+| `yawn` | `idle` | `idle_yawn` | Once; waking or long sitting |
+| `doze` | `sleeping` | `doze_short` | Loop; light sleep, interruptible |
+| `peek` | `notifying` | `peek_edge` | Once; while docked at the edge |
+| `step` | `walking` | `walk_step` | Once; after 40–120 pt of movement |
+| `carry` | `idle` | `idle_carry` | Loop; return-to-nest segment |
+
+Add a new pose to the state graph before adding it to the runtime. Clip ids are stable once shipped.
+
 ---
 
 ## 14. Accessibility
@@ -657,6 +764,7 @@ Git history and the archive branch explain why they were replaced.
 | V0 product scope | [`V0_FEATURE_SCOPE.md`](V0_FEATURE_SCOPE.md) |
 | Handoff and next steps | [`开发交接文档.md`](开发交接文档.md) |
 | Frozen UI design | [`docs/reference/joeypet-ui-v0.html`](docs/reference/joeypet-ui-v0.html) |
+| Frozen pose and state graph | [`docs/reference/joeypet-states-v0.html`](docs/reference/joeypet-states-v0.html) |
 | Pet animation and state | [`docs/pet-runtime.md`](docs/pet-runtime.md) |
 | Tech stack | [`docs/tech-stack.md`](docs/tech-stack.md) |
 | Agent hard rules | [`AGENTS.md`](AGENTS.md) |
@@ -671,3 +779,4 @@ Git history and the archive branch explain why they were replaced.
 | 2026-09-25 | Rebuilt as the native Calm Space implementation contract. |
 | 2026-10-27 | Introduced layered authority; documented dock + hover mode switch; Current/Legacy/Pending status. |
 | 2026-11-22 | Replaced the Calm Space contract with the V0 desktop-companion design: new tokens (ivory / ink / sage / apricot / mist), single-room window with in-scene navigation, six states, copy voice, motion and review rules; frozen HTML reference added; Calm Space moved to Legacy. |
+| 2026-11-22 | Extended Joey to twelve poses and added the pose/state graph: ambient loops, pose transitions, seven-state desktop priority, five companion substates, guards and cooldowns, and the pose → behavior/clip mapping via `PetStateAnimationMapping`. Frozen graph added at `docs/reference/joeypet-states-v0.html`. |

@@ -27,11 +27,14 @@
 		D7PET119305978720070926E /* CharacterNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET019305978720070926E /* CharacterNode.swift */; };
 		D7PET11A305978720070926E /* PetRootNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET01A305978720070926E /* PetRootNode.swift */; };
 		D7PET11E305978720070926E /* PetTransientBehavior.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET01B305978720070926E /* PetTransientBehavior.swift */; };
-		D7PET11D305978720070926E /* Pets in Resources */ = {isa = PBXBuildFile; fileRef = D7PET20C305978720070926E /* Pets */; };
 		D7PET11F305978720070926E /* AmbientBehaviorScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET01C305978720070926E /* AmbientBehaviorScheduler.swift */; };
+		D7PET11D305978720070926E /* Pets in Resources */ = {isa = PBXBuildFile; fileRef = D7PET20C305978720070926E /* Pets */; };
 		D7PET127305978720070926E /* PetPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET027305978720070926E /* PetPreferences.swift */; };
 		D7PET128305978720070926E /* PetPosition.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET028305978720070926E /* PetPosition.swift */; };
 		D7PET129305978720070926E /* PetPositionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET029305978720070926E /* PetPositionStore.swift */; };
+		D7PET12A305978720070926E /* PetDomain.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET02A305978720070926E /* PetDomain.swift */; };
+		D7PET12B305978720070926E /* PetStateMachine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET02B305978720070926E /* PetStateMachine.swift */; };
+		D7PET12C305978720070926E /* JoeyAssetManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET02C305978720070926E /* JoeyAssetManifest.swift */; };
 		D7F000000000000000000001 /* JoeyTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000002 /* JoeyTheme.swift */; };
 		D7F000000000000000000003 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000004 /* AppSettings.swift */; };
 		D7F000000000000000000005 /* CompanionSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000006 /* CompanionSummary.swift */; };
@@ -81,6 +84,9 @@
 		D7PET027305978720070926E /* PetPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetPreferences.swift; sourceTree = "<group>"; };
 		D7PET028305978720070926E /* PetPosition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetPosition.swift; sourceTree = "<group>"; };
 		D7PET029305978720070926E /* PetPositionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetPositionStore.swift; sourceTree = "<group>"; };
+		D7PET02A305978720070926E /* PetDomain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetDomain.swift; sourceTree = "<group>"; };
+		D7PET02B305978720070926E /* PetStateMachine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetStateMachine.swift; sourceTree = "<group>"; };
+		D7PET02C305978720070926E /* JoeyAssetManifest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeyAssetManifest.swift; sourceTree = "<group>"; };
 		D7F000000000000000000002 /* JoeyTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeyTheme.swift; sourceTree = "<group>"; };
 		D7F000000000000000000004 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		D7F000000000000000000006 /* CompanionSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionSummary.swift; sourceTree = "<group>"; };
@@ -165,6 +171,9 @@
 				D7PET002305978720070926E /* PetState.swift */,
 				D7PET027305978720070926E /* PetPreferences.swift */,
 				D7PET028305978720070926E /* PetPosition.swift */,
+				D7PET02A305978720070926E /* PetDomain.swift */,
+				D7PET02B305978720070926E /* PetStateMachine.swift */,
+				D7PET02C305978720070926E /* JoeyAssetManifest.swift */,
 			);
 			path = Domain;
 			sourceTree = "<group>";
@@ -416,6 +425,9 @@
 				D7PET127305978720070926E /* PetPreferences.swift in Sources */,
 				D7PET128305978720070926E /* PetPosition.swift in Sources */,
 				D7PET129305978720070926E /* PetPositionStore.swift in Sources */,
+				D7PET12A305978720070926E /* PetDomain.swift in Sources */,
+				D7PET12B305978720070926E /* PetStateMachine.swift in Sources */,
+				D7PET12C305978720070926E /* JoeyAssetManifest.swift in Sources */,
 				D7PET11F305978720070926E /* AmbientBehaviorScheduler.swift in Sources */,
 				D7F000000000000000000001 /* JoeyTheme.swift in Sources */,
 				D7F000000000000000000003 /* AppSettings.swift in Sources */,

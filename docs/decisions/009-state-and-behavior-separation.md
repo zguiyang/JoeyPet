@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Superseded by [ADR 012](012-four-layer-pet-domain.md). Kept for historical context.
 
 ## Context
 
