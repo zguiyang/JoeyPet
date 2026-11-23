@@ -39,11 +39,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 rhythmMinutes: rhythmMinutes
             )
         }
+        settings.onPauseChanged = { [weak self] until in
+            self?.coordinator?.setPause(until: until)
+        }
 
         let panel = PetPanelController()
         let coordinator = PetCoordinator(panelController: panel)
         coordinator.onSituationChanged = { [weak self] situation, summary in
-            self?.companionStatus.update(situation: situation, summary: summary)
+            guard let self else { return }
+            self.companionStatus.update(situation: situation, summary: summary)
+            if self.settings.pauseUntil != situation.pauseUntil {
+                self.settings.pauseUntil = situation.pauseUntil
+            }
         }
         panel.onHideRequested = { [weak self] in
             self?.settings.showsDesktopPet = false

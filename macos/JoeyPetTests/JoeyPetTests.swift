@@ -764,6 +764,44 @@ struct PetDomainTests {
         #expect(!settled.newlyCompleted)
     }
 
+    @Test func externalPauseCancelsInvitationAndResumeClearsIt() {
+        let calendar = testCalendar()
+        let start = testDate(2026, 11, 23, 9, 0)
+        let due = start.addingTimeInterval(45 * 60)
+
+        let started = PetStateMachine.reduce(
+            PetSituation(),
+            event: .sessionStart,
+            now: start,
+            calendar: calendar
+        ).state
+        let invited = PetStateMachine.reduce(
+            started,
+            event: .tick,
+            now: due,
+            calendar: calendar
+        ).state
+        #expect(invited.companion == .invite)
+
+        let until = due.addingTimeInterval(60 * 60)
+        let paused = PetStateMachine.reduce(
+            invited,
+            event: .pauseChanged(until: until),
+            now: due,
+            calendar: calendar
+        ).state
+        #expect(paused.pauseUntil == until)
+        #expect(paused.companion == .idle)
+
+        let resumed = PetStateMachine.reduce(
+            paused,
+            event: .pauseChanged(until: nil),
+            now: due.addingTimeInterval(60),
+            calendar: calendar
+        ).state
+        #expect(resumed.pauseUntil == nil)
+    }
+
     @Test func companionChipTextUsesMinutesAndSeconds() {
         let start = testDate(2026, 11, 23, 9, 0)
         #expect(CompanionTimeText.elapsedText(from: start, to: start) == "00:00")
@@ -1057,6 +1095,24 @@ struct PetRuntimeTests {
         runtime.setVisible(true)
         #expect(!runtime.situation.isHidden)
         #expect(store.state.showsDesktopPet == true)
+    }
+
+    @Test func runtimeAppliesSettingsPause() {
+        let calendar = testCalendar()
+        let start = testDate(2026, 11, 23, 9, 0)
+        let (runtime, _, store) = makeRuntime(now: start, calendar: calendar)
+
+        runtime.startSession()
+        let until = start.addingTimeInterval(60 * 60)
+        runtime.setPause(until: until)
+
+        #expect(runtime.situation.pauseUntil == until)
+        #expect(runtime.situation.resolvedDesktop(at: start) == .paused)
+        #expect(store.state.pauseUntil == until)
+
+        runtime.setPause(until: nil)
+        #expect(runtime.situation.pauseUntil == nil)
+        #expect(store.state.pauseUntil == nil)
     }
 
     @Test func runtimeRestoresPauseUntilItExpires() {

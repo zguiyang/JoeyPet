@@ -22,6 +22,7 @@ final class AppSettings {
     @ObservationIgnored var onShowsDesktopPetChanged: ((Bool) -> Void)?
     @ObservationIgnored var onAppearanceChanged: ((JoeyAppearance) -> Void)?
     @ObservationIgnored var onScheduleChanged: ((QuietWindow, Int) -> Void)?
+    @ObservationIgnored var onPauseChanged: ((Date?) -> Void)?
 
     var rhythmMinutes: Int {
         didSet {
@@ -116,11 +117,13 @@ final class AppSettings {
 
     func setPaused(_ paused: Bool) {
         pauseUntil = paused ? Date().addingTimeInterval(3600) : nil
+        onPauseChanged?(pauseUntil)
     }
 
     func clearExpiredPause() {
         guard let pauseUntil, pauseUntil <= .now else { return }
         self.pauseUntil = nil
+        onPauseChanged?(nil)
     }
 
     static func clockText(minutes: Int) -> String {

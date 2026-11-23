@@ -177,6 +177,11 @@ final class PetRuntime {
         send(.configurationChanged(quietWindow: quietWindow, rhythmMinutes: rhythmMinutes))
     }
 
+    /// Mirrors the Settings pause switch into the runtime. `nil` resumes immediately.
+    func setPause(until: Date?) {
+        send(.pauseChanged(until: until))
+    }
+
     func setReduceMotion(_ enabled: Bool) {
         send(.reduceMotionChanged(enabled))
     }

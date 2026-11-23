@@ -22,6 +22,7 @@ enum PetEvent: Equatable, Sendable {
     case inviteAccepted
     case snoozeRequested
     case pauseRequested
+    case pauseChanged(until: Date?)
     case inviteDismissed
     case recoverySkipped
     case recoveryFinished
@@ -158,6 +159,25 @@ enum PetStateMachine {
             next.isDozing = false
             next.isYawning = false
             next.yawnUntil = nil
+            effects.append(.persist)
+
+        case let .pauseChanged(until):
+            if let until, until > now {
+                next.pauseUntil = until
+                if next.companion == .invite {
+                    next.companion = next.session != nil ? .idle : nil
+                    next.lastInvitationClosedAt = now
+                } else if next.companion == .recover {
+                    next.companion = next.session != nil ? .idle : nil
+                    next.recoveryEndsAt = nil
+                    effects.append(.log("recoveryCancelledByPause"))
+                }
+                next.isDozing = false
+                next.isYawning = false
+                next.yawnUntil = nil
+            } else {
+                next.pauseUntil = nil
+            }
             effects.append(.persist)
 
         case .inviteDismissed:

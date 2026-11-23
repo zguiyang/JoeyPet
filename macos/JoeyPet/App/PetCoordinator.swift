@@ -97,6 +97,11 @@ final class PetCoordinator {
         runtime.endSession()
     }
 
+    /// Mirrors the Settings pause switch into the runtime.
+    func setPause(until: Date?) {
+        runtime.setPause(until: until)
+    }
+
     func applyConfiguration(quietWindow: QuietWindow, rhythmMinutes: Int) {
         runtime.applyConfiguration(quietWindow: quietWindow, rhythmMinutes: rhythmMinutes)
     }
