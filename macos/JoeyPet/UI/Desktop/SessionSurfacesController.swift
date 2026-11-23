@@ -271,18 +271,54 @@ final class SessionSurfacesController {
     }
 
     private func chipOrigin(size: NSSize) -> NSPoint {
-        clamped(
-            NSPoint(x: petPanel.frame.midX - size.width / 2, y: petPanel.frame.maxY + 4),
+        let visible = activeVisibleFrame
+        let pet = petPanel.frame
+        let margin: CGFloat = 8
+        let above = pet.maxY + 4
+        let below = pet.minY - size.height - 4
+
+        // Prefer above Joey, but drop below when the top edge is too close.
+        let y: CGFloat
+        if above + size.height <= visible.maxY - margin {
+            y = above
+        } else if below >= visible.minY + margin {
+            y = below
+        } else {
+            y = above
+        }
+
+        return clamped(
+            NSPoint(x: pet.midX - size.width / 2, y: y),
             size: size
         )
     }
 
     private func invitationOrigin(size: NSSize) -> NSPoint {
-        clamped(
-            NSPoint(
-                x: petPanel.frame.minX - size.width - 12,
-                y: petPanel.frame.midY - size.height / 2
-            ),
+        let visible = activeVisibleFrame
+        let pet = petPanel.frame
+        let gap: CGFloat = 12
+        let margin: CGFloat = 8
+        let left = pet.minX - size.width - gap
+        let right = pet.maxX + gap
+
+        // Keep the card next to Joey, on the side that has room. When both
+        // sides fit, prefer the side facing the middle of the screen.
+        let fitsLeft = left >= visible.minX + margin
+        let fitsRight = right + size.width <= visible.maxX - margin
+
+        let x: CGFloat
+        if fitsLeft, fitsRight {
+            x = pet.midX >= visible.midX ? left : right
+        } else if fitsLeft {
+            x = left
+        } else if fitsRight {
+            x = right
+        } else {
+            x = pet.midX - size.width / 2
+        }
+
+        return clamped(
+            NSPoint(x: x, y: pet.midY - size.height / 2),
             size: size
         )
     }
