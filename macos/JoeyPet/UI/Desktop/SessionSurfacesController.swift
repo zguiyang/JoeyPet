@@ -77,10 +77,12 @@ final class SessionSurfacesController {
                 chipPanel,
                 host: chipHost,
                 fallback: NSSize(width: 150, height: 30),
-                origin: chipOrigin
+                origin: chipOrigin,
+                duration: 0.24,
+                rise: 6
             )
         } else {
-            dismiss(chipPanel)
+            dismiss(chipPanel, entrance: 0.24)
         }
 
         if presentation.showsInvitation {
@@ -96,10 +98,12 @@ final class SessionSurfacesController {
                 invitationPanel,
                 host: invitationHost,
                 fallback: NSSize(width: 400, height: 292),
-                origin: invitationOrigin
+                origin: invitationOrigin,
+                duration: 0.38,
+                rise: 10
             )
         } else {
-            dismiss(invitationPanel)
+            dismiss(invitationPanel, entrance: 0.38)
         }
 
         if presentation.showsRecovery, let endsAt = presentation.recoveryEndsAt {
@@ -115,10 +119,12 @@ final class SessionSurfacesController {
                 recoveryPanel,
                 host: recoveryHost,
                 fallback: NSSize(width: 420, height: 340),
-                origin: recoveryOrigin
+                origin: recoveryOrigin,
+                duration: 0.38,
+                rise: 10
             )
         } else {
-            dismiss(recoveryPanel)
+            dismiss(recoveryPanel, entrance: 0.38)
         }
 
         if presentation.newlyCompleted {
@@ -156,14 +162,16 @@ final class SessionSurfacesController {
             toastPanel,
             host: toastHost,
             fallback: NSSize(width: 220, height: 34),
-            origin: toastOrigin
+            origin: toastOrigin,
+            duration: 0.24,
+            rise: 6
         )
 
         toastTask?.cancel()
         toastTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(2.6))
             guard !Task.isCancelled else { return }
-            self?.dismiss(self?.toastPanel)
+            self?.dismiss(self?.toastPanel, entrance: 0.24)
         }
     }
 
@@ -189,7 +197,9 @@ final class SessionSurfacesController {
         _ panel: SurfacePanel,
         host: NSView,
         fallback: NSSize,
-        origin: (NSSize) -> NSPoint
+        origin: (NSSize) -> NSPoint,
+        duration: TimeInterval,
+        rise: CGFloat
     ) {
         let size = fittedSize(host, fallback: fallback)
         let target = origin(size)
@@ -203,21 +213,21 @@ final class SessionSurfacesController {
 
         let reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
         panel.alphaValue = reduceMotion ? 1 : 0
-        panel.setFrameOrigin(NSPoint(x: target.x, y: target.y - 8))
+        panel.setFrameOrigin(NSPoint(x: target.x, y: target.y - rise))
         panel.orderFrontRegardless()
         panel.invalidateShadow()
 
         guard !reduceMotion else { return }
 
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.36
+            context.duration = duration
             context.timingFunction = CAMediaTimingFunction(controlPoints: 0.22, 0.61, 0.36, 1)
             panel.animator().alphaValue = 1
             panel.animator().setFrameOrigin(target)
         }
     }
 
-    private func dismiss(_ panel: SurfacePanel?) {
+    private func dismiss(_ panel: SurfacePanel?, entrance: TimeInterval) {
         guard let panel, panel.isVisible else { return }
 
         if NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
@@ -227,7 +237,7 @@ final class SessionSurfacesController {
         }
 
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.24
+            context.duration = max(0.12, entrance * 0.65)
             context.timingFunction = CAMediaTimingFunction(name: .easeOut)
             panel.animator().alphaValue = 0
         } completionHandler: {
@@ -342,7 +352,7 @@ private final class SurfacePanel: NSPanel {
         hidesOnDeactivate = false
         isMovableByWindowBackground = false
         ignoresMouseEvents = !interactive
-        becomesKeyOnlyIfNeeded = true
+        becomesKeyOnlyIfNeeded = false
         isReleasedWhenClosed = false
     }
 

@@ -17,7 +17,7 @@ struct JoeyCompanionChipView: View {
                     .rotationEffect(.degrees(-45))
 
                 Text("陪伴中 · \(CompanionTimeText.elapsedText(from: startedAt, to: context.date))")
-                    .font(.system(size: 12.5))
+                    .font(JoeyType.roomLabel)
                     .monospacedDigit()
                     .foregroundStyle(theme.ink)
             }
@@ -109,6 +109,7 @@ struct InvitationCardView: View {
                 .offset(y: -11)
         }
         .padding(.top, 14)
+        .tint(theme.focus)
         .joeyShadowMD()
     }
 
@@ -176,7 +177,7 @@ struct RecoveryPanelView: View {
     private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
 
     var body: some View {
-        TimelineView(.periodic(from: .now, by: 0.5)) { context in
+        TimelineView(.periodic(from: .now, by: 1)) { context in
             let remaining = max(0, endsAt.timeIntervalSince(context.date))
 
             VStack(alignment: .leading, spacing: 0) {
@@ -195,10 +196,10 @@ struct RecoveryPanelView: View {
 
                     VStack(alignment: .leading, spacing: 3) {
                         Text("吸气四拍，呼气六拍")
-                            .font(.system(size: 15, weight: .semibold))
+                            .font(JoeyType.rowTitle)
                             .foregroundStyle(theme.ink)
                         Text("不用数得很准。")
-                            .font(.system(size: 13))
+                            .font(JoeyType.reflectionBody)
                             .lineSpacing(2)
                             .foregroundStyle(theme.muted)
                     }
@@ -253,6 +254,7 @@ struct RecoveryPanelView: View {
                 RoundedRectangle(cornerRadius: JoeyRadius.xl, style: .continuous)
                     .stroke(theme.hairline, lineWidth: 1)
             )
+            .tint(theme.focus)
             .joeyShadowMD()
         }
     }
@@ -268,15 +270,15 @@ struct RecoveryPanelView: View {
                 .trim(from: 0, to: fraction)
                 .stroke(theme.sage, style: StrokeStyle(lineWidth: 8, lineCap: .round))
                 .rotationEffect(.degrees(-90))
-                .animation(reduceMotion ? nil : .linear(duration: 0.5), value: fraction)
+                .animation(reduceMotion ? nil : .linear(duration: 1), value: fraction)
 
             VStack(spacing: 4) {
                 Text(Self.clockText(remaining))
-                    .font(.system(size: 22, weight: .semibold))
+                    .font(JoeyType.reflectionHeadline)
                     .monospacedDigit()
                     .foregroundStyle(theme.ink)
                 Text("剩余 \(Int(remaining.rounded(.up))) 秒")
-                    .font(.system(size: 10.5))
+                    .font(JoeyType.caption)
                     .foregroundStyle(theme.muted)
             }
         }
@@ -299,7 +301,7 @@ struct JoeyToastView: View {
 
     var body: some View {
         Text(text)
-            .font(.system(size: 13))
+            .font(JoeyType.reflectionBody)
             .lineSpacing(2)
             .foregroundStyle(theme.ink)
             .padding(.horizontal, 18)
