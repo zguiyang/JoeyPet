@@ -3,9 +3,11 @@ import SwiftUI
 
 struct RoomSceneView: View {
     let rhythmMinutes: Int
+    let showsDesktopPet: Bool
     let status: CompanionStatus
     let onOpenReflection: () -> Void
     let onPrimaryAction: () -> Void
+    let onShowDesktopPet: () -> Void
 
     @Environment(\.joeyAppearance) private var appearance
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -100,11 +102,9 @@ struct RoomSceneView: View {
                 }
 
                 JoeyPrimaryButton(
-                    title: status.isSessionActive
-                        ? JoeyCopy.endCompanionship
-                        : JoeyCopy.startCompanionship,
-                    systemImage: status.isSessionActive ? "stop.fill" : "play.fill",
-                    action: onPrimaryAction
+                    title: primaryTitle,
+                    systemImage: primaryIcon,
+                    action: primaryAction
                 )
                 .position(
                     x: originX + 570 * scale,
@@ -118,16 +118,89 @@ struct RoomSceneView: View {
         .onDisappear { happyTask?.cancel() }
     }
 
+    private var primaryTitle: String {
+        if status.isSessionActive {
+            return JoeyCopy.endCompanionship
+        }
+        if !showsDesktopPet {
+            return "让 Joey 到桌面"
+        }
+        return JoeyCopy.startCompanionship
+    }
+
+    private var primaryIcon: String {
+        if status.isSessionActive {
+            return "stop.fill"
+        }
+        if !showsDesktopPet {
+            return "sparkles"
+        }
+        return "play.fill"
+    }
+
+    private func primaryAction() {
+        if status.isSessionActive || showsDesktopPet {
+            onPrimaryAction()
+        } else {
+            onShowDesktopPet()
+        }
+    }
+
     private var clockLabel: some View {
         JoeyRoomLabel {
-            HStack(spacing: 0) {
-                Text("Joey 大约每 ")
-                Text("\(rhythmMinutes) 分钟")
-                    .fontWeight(.semibold)
-                    .foregroundStyle(theme.sageDeep)
-                Text("来叫你一次")
+            if status.isSessionActive {
+                Text(sessionReminderText)
+            } else if !showsDesktopPet {
+                Text("点下面的按钮，让 Joey 到桌面")
+            } else {
+                HStack(spacing: 0) {
+                    Text("Joey 大约每 ")
+                    Text("\(rhythmMinutes) 分钟")
+                        .fontWeight(.semibold)
+                        .foregroundStyle(theme.sageDeep)
+                    Text("来叫你一次")
+                }
             }
         }
+    }
+
+    private var sessionReminderText: String {
+        let situation = status.situation
+        let now = Date()
+
+        if situation.isHidden || !showsDesktopPet {
+            return "显示 Joey 后，才会叫你休息"
+        }
+        if situation.isPauseActive(at: now), let pauseUntil = situation.pauseUntil {
+            return "暂停到 \(Self.timeText(pauseUntil))，先不打扰你"
+        }
+        if situation.isQuietActive {
+            return "安静时段，先不打扰你"
+        }
+        if situation.isSnoozeActive(at: now), let snoozeUntil = situation.snoozeUntil {
+            return "\(Self.timeText(snoozeUntil)) 再问你一次"
+        }
+
+        switch situation.companion {
+        case .invite:
+            return "现在想请你休息一下"
+        case .recover:
+            return "正在一起休息"
+        case .complete:
+            return "刚休息完，真好"
+        default:
+            guard let due = situation.invitationDueDate() else {
+                return "这段时间先安静陪你"
+            }
+            return "下次大约 \(Self.timeText(due)) 叫你"
+        }
+    }
+
+    private static func timeText(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "zh_CN")
+        formatter.dateFormat = "HH:mm"
+        return formatter.string(from: date)
     }
 
     private var notebookLabel: some View {

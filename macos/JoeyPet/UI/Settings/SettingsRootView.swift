@@ -178,8 +178,14 @@ struct SettingsRootView: View {
                 }
 
                 if isFeedbackOpen {
-                    feedbackEditor
-                        .padding(.top, 14)
+                    VStack(alignment: .leading, spacing: 6) {
+                        feedbackEditor
+                        Text("已自动保存在本机")
+                            .font(.caption2)
+                            .foregroundStyle(theme.muted)
+                            .padding(.leading, 4)
+                    }
+                    .padding(.top, 14)
                 }
             }
         }

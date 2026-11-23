@@ -197,7 +197,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             homeWindowController = MainWindowController(
                 settings: settings,
                 status: companionStatus,
-                onPrimaryAction: { [weak self] in self?.toggleCompanionship() }
+                onPrimaryAction: { [weak self] in self?.toggleCompanionship() },
+                onShowDesktopPet: { [weak self] in self?.settings.showsDesktopPet = true }
             )
         }
         homeWindowController?.applyAppearance()

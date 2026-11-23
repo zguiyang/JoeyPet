@@ -47,7 +47,7 @@ Engineering AGENTS.md, docs/tech-stack.md        → AppKit/SwiftUI/SpriteKit sp
 | Light + dusk appearances | Agreed | Implemented |
 | Calm Space / Mac Care shell | Legacy | Removed — archive branch only |
 
-> Shipped today: the desktop panel (drag, hide, show; hidden by default), menu bar item, the companion chip, rest invitation, 30-second recovery, completion feedback, the nest window with a working start / end companionship action, reflection, and settings with light/dusk appearance and persisted V0 settings. The desktop pet is shown only when the user turns it on in Settings or the menu bar; starting companionship does not reveal it automatically.
+> Shipped today: the desktop panel (drag, hide, show; hidden by default), menu bar item, the companion chip, rest invitation, 30-second recovery, completion feedback, the nest window with a working start / end companionship action, first-run "show Joey" step, next-reminder line, reflection, and settings with light/dusk appearance and persisted V0 settings. The desktop pet is shown only when the user turns it on in Settings, the menu bar, or the nest's explicit "让 Joey 到桌面" button; starting companionship does not reveal it automatically.
 
 ---
 

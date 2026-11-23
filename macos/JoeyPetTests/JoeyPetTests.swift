@@ -127,14 +127,15 @@ struct JoeyPetTests {
     }
 
     @Test func appWindowBuildsWithV0Title() {
-        let defaults = UserDefaults(suiteName: "JoeyPetTests")!
-        defaults.removePersistentDomain(forName: "JoeyPetTests")
-        let settings = AppSettings(defaults: defaults)
+        let testDefaults = TestDefaults("JoeyPetTests")
+        defer { testDefaults.remove() }
+        let settings = AppSettings(defaults: testDefaults.defaults)
 
         let home = MainWindowController(
             settings: settings,
             status: CompanionStatus(),
-            onPrimaryAction: {}
+            onPrimaryAction: {},
+            onShowDesktopPet: {}
         )
         #expect(home.window?.title == "Joey 的家")
         #expect(home.window?.contentView != nil)
@@ -158,9 +159,9 @@ struct JoeyPetTests {
     }
 
     @Test func desktopPetIsHiddenByDefault() {
-        let defaults = UserDefaults(suiteName: "JoeyPetTestsDefaults")!
-        defaults.removePersistentDomain(forName: "JoeyPetTestsDefaults")
-        let settings = AppSettings(defaults: defaults)
+        let testDefaults = TestDefaults("JoeyPetTestsDefaults")
+        defer { testDefaults.remove() }
+        let settings = AppSettings(defaults: testDefaults.defaults)
         #expect(settings.showsDesktopPet == false)
     }
 }
@@ -189,6 +190,28 @@ private func testDate(
         hour: hour,
         minute: minute
     ))!
+}
+
+/// A throwaway persistent domain for settings tests.
+///
+/// `removePersistentDomain` clears the keys but leaves the plist on disk, so
+/// cleanup also removes the file to keep `~/Library/Preferences` free of test residue.
+private struct TestDefaults {
+    let defaults: UserDefaults
+    private let suiteName: String
+
+    init(_ suiteName: String) {
+        self.suiteName = suiteName
+        defaults = UserDefaults(suiteName: suiteName)!
+        remove()
+    }
+
+    func remove() {
+        defaults.removePersistentDomain(forName: suiteName)
+        let url = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/Preferences/\(suiteName).plist")
+        try? FileManager.default.removeItem(at: url)
+    }
 }
 
 @MainActor
@@ -642,12 +665,10 @@ struct PetDomainTests {
     }
 
     @Test func persistenceRoundTripsAndNormalizesDays() {
-        let suite = "JoeyPetTestsDomain"
-        let defaults = UserDefaults(suiteName: suite)!
-        defaults.removePersistentDomain(forName: suite)
-        defer { defaults.removePersistentDomain(forName: suite) }
+        let testDefaults = TestDefaults("JoeyPetTestsDomain")
+        defer { testDefaults.remove() }
 
-        let store = UserDefaultsPetSessionStore(defaults: defaults)
+        let store = UserDefaultsPetSessionStore(defaults: testDefaults.defaults)
         let now = testDate(2026, 11, 23, 9, 0)
         let calendar = testCalendar()
 
