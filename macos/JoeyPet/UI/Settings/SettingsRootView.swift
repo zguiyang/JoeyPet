@@ -25,9 +25,6 @@ struct SettingsRootView: View {
         }
         .background(theme.windowBg)
         .environment(\.joeyAppearance, settings.appearance)
-        .task(id: settings.pauseUntil) {
-            await clearExpiredPause()
-        }
     }
 
     private var sidebar: some View {
@@ -90,7 +87,7 @@ struct SettingsRootView: View {
     private var rhythmPane: some View {
         SettingsPane(title: "节奏与提醒", description: "只在你开始工作后提醒。") {
             SettingsRowList {
-                SettingsRow("提醒节奏", subtitle: "两次邀请之间的安静时间") {
+                SettingsRow("提醒节奏", subtitle: "开始陪伴后才计时") {
                     JoeySegmentedControl(
                         titles: AppSettings.rhythmOptions.map { "\($0) 分钟" },
                         selectedIndex: AppSettings.rhythmOptions.firstIndex(of: settings.rhythmMinutes) ?? 0
@@ -100,8 +97,8 @@ struct SettingsRootView: View {
                     .accessibilityLabel("提醒节奏")
                 }
 
-                SettingsRow("暂停一小时", subtitle: settings.pauseResumeText) {
-                    JoeySwitch(isOn: pauseBinding, label: "暂停一小时")
+                SettingsRow("勿扰模式", subtitle: "开启后不会再有邀请或提示，需要恢复时手动关闭") {
+                    JoeySwitch(isOn: $settings.isDoNotDisturb, label: "勿扰模式")
                 }
             }
         }
@@ -110,7 +107,7 @@ struct SettingsRootView: View {
     private var quietPane: some View {
         SettingsPane(title: "安静时段", description: "这段时间里 Joey 不会来叫你。") {
             SettingsRowList {
-                SettingsRow("安静时段", subtitle: settings.quietHoursText) {
+                SettingsRow("安静时段", subtitle: "这段时间不会邀请；正在进行的休息会先走完") {
                     QuietHoursField(
                         startMinutes: $settings.quietStartMinutes,
                         endMinutes: $settings.quietEndMinutes
@@ -133,7 +130,7 @@ struct SettingsRootView: View {
                     .accessibilityLabel("外观")
                 }
 
-                SettingsRow("在桌面上显示 Joey", subtitle: "停在屏幕右下角") {
+                SettingsRow("在桌面上显示 Joey", subtitle: "关掉不会结束陪伴，到点仍会短暂露面提醒") {
                     JoeySwitch(isOn: $settings.showsDesktopPet, label: "在桌面上显示 Joey")
                 }
             }
@@ -151,7 +148,7 @@ struct SettingsRootView: View {
                             .foregroundStyle(theme.ink2)
                     }
 
-                    SettingsRow("反馈", subtitle: "哪里觉得打扰，写在这里") {
+                    SettingsRow("反馈", subtitle: "只保存在这台 Mac，不会上传") {
                         SettingsSmallButton(
                             title: isFeedbackOpen ? "收起" : "写一句"
                         ) {
@@ -206,27 +203,8 @@ struct SettingsRootView: View {
         )
     }
 
-    private var pauseBinding: Binding<Bool> {
-        Binding(
-            get: { settings.isPaused },
-            set: { settings.setPaused($0) }
-        )
-    }
-
     private var appVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
-    }
-
-    private func clearExpiredPause() async {
-        guard let until = settings.pauseUntil, until > .now else {
-            settings.clearExpiredPause()
-            return
-        }
-        let seconds = until.timeIntervalSinceNow
-        if seconds > 0 {
-            try? await Task.sleep(for: .seconds(seconds))
-        }
-        settings.clearExpiredPause()
     }
 }
 

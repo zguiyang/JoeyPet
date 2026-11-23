@@ -7,7 +7,6 @@ struct RoomSceneView: View {
     let status: CompanionStatus
     let onOpenReflection: () -> Void
     let onPrimaryAction: () -> Void
-    let onShowDesktopPet: () -> Void
 
     @Environment(\.joeyAppearance) private var appearance
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -119,39 +118,25 @@ struct RoomSceneView: View {
     }
 
     private var primaryTitle: String {
-        if status.isSessionActive {
-            return JoeyCopy.endCompanionship
-        }
-        if !showsDesktopPet {
-            return "让 Joey 到桌面"
-        }
-        return JoeyCopy.startCompanionship
+        status.isSessionActive ? JoeyCopy.endCompanionship : JoeyCopy.startCompanionship
     }
 
     private var primaryIcon: String {
-        if status.isSessionActive {
-            return "stop.fill"
-        }
-        if !showsDesktopPet {
-            return "sparkles"
-        }
-        return "play.fill"
+        status.isSessionActive ? "stop.fill" : "play.fill"
     }
 
     private func primaryAction() {
-        if status.isSessionActive || showsDesktopPet {
-            onPrimaryAction()
-        } else {
-            onShowDesktopPet()
-        }
+        onPrimaryAction()
     }
 
     private var clockLabel: some View {
         JoeyRoomLabel {
             if status.isSessionActive {
                 Text(sessionReminderText)
+            } else if status.situation.isDoNotDisturb {
+                Text("勿扰中，先不打扰你")
             } else if !showsDesktopPet {
-                Text("点下面的按钮，让 Joey 到桌面")
+                Text("Joey 在后台，开始后会到点来叫你")
             } else {
                 HStack(spacing: 0) {
                     Text("Joey 大约每 ")
@@ -168,11 +153,8 @@ struct RoomSceneView: View {
         let situation = status.situation
         let now = Date()
 
-        if situation.isHidden || !showsDesktopPet {
-            return "显示 Joey 后，才会叫你休息"
-        }
-        if situation.isPauseActive(at: now), let pauseUntil = situation.pauseUntil {
-            return "暂停到 \(Self.timeText(pauseUntil))，先不打扰你"
+        if situation.isDoNotDisturb {
+            return "勿扰中，先不打扰你"
         }
         if situation.isQuietActive {
             return "安静时段，先不打扰你"
@@ -191,6 +173,9 @@ struct RoomSceneView: View {
         default:
             guard let due = situation.invitationDueDate() else {
                 return "这段时间先安静陪你"
+            }
+            if situation.isHidden {
+                return "Joey 隐藏着，下次约 \(Self.timeText(due)) 来叫你"
             }
             return "下次大约 \(Self.timeText(due)) 叫你"
         }

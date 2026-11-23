@@ -10,6 +10,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var coordinator: PetCoordinator?
     private var statusItem: NSStatusItem?
     private var togglePetItem: NSMenuItem?
+    private var doNotDisturbItem: NSMenuItem?
     private var homeWindowController: MainWindowController?
     #if DEBUG
     private var posePreviewWindowController: JoeyPosePreviewWindowController?
@@ -39,8 +40,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 rhythmMinutes: rhythmMinutes
             )
         }
-        settings.onPauseChanged = { [weak self] until in
-            self?.coordinator?.setPause(until: until)
+        settings.onDoNotDisturbChanged = { [weak self] enabled in
+            self?.coordinator?.setDoNotDisturb(enabled)
         }
 
         let panel = PetPanelController()
@@ -48,8 +49,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         coordinator.onSituationChanged = { [weak self] situation, summary in
             guard let self else { return }
             self.companionStatus.update(situation: situation, summary: summary)
-            if self.settings.pauseUntil != situation.pauseUntil {
-                self.settings.pauseUntil = situation.pauseUntil
+            if self.settings.isDoNotDisturb != situation.isDoNotDisturb {
+                self.settings.isDoNotDisturb = situation.isDoNotDisturb
             }
         }
         panel.onHideRequested = { [weak self] in
@@ -179,6 +180,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         togglePetItem = toggle
         menu.addItem(toggle)
 
+        let doNotDisturb = menuItem(
+            settings.isDoNotDisturb ? "勿扰中 · 点击关闭" : "勿扰模式",
+            #selector(toggleDoNotDisturb)
+        )
+        doNotDisturb.state = settings.isDoNotDisturb ? .on : .off
+        doNotDisturbItem = doNotDisturb
+        menu.addItem(doNotDisturb)
+
         menu.addItem(.separator())
         menu.addItem(menuItem("退出 JoeyPet", #selector(quit)))
 
@@ -188,6 +197,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func menuWillOpen(_ menu: NSMenu) {
         togglePetItem?.state = settings.showsDesktopPet ? .on : .off
+        doNotDisturbItem?.state = settings.isDoNotDisturb ? .on : .off
+        doNotDisturbItem?.title = settings.isDoNotDisturb ? "勿扰中 · 点击关闭" : "勿扰模式"
     }
 
     // MARK: - Windows
@@ -197,8 +208,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             homeWindowController = MainWindowController(
                 settings: settings,
                 status: companionStatus,
-                onPrimaryAction: { [weak self] in self?.toggleCompanionship() },
-                onShowDesktopPet: { [weak self] in self?.settings.showsDesktopPet = true }
+                onPrimaryAction: { [weak self] in self?.toggleCompanionship() }
             )
         }
         homeWindowController?.applyAppearance()
@@ -214,6 +224,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func toggleDesktopPet() {
         settings.showsDesktopPet.toggle()
+    }
+
+    @objc private func toggleDoNotDisturb() {
+        settings.isDoNotDisturb.toggle()
     }
 
     @objc private func quit() {

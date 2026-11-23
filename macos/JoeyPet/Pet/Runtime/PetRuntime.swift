@@ -177,9 +177,9 @@ final class PetRuntime {
         send(.configurationChanged(quietWindow: quietWindow, rhythmMinutes: rhythmMinutes))
     }
 
-    /// Mirrors the Settings pause switch into the runtime. `nil` resumes immediately.
-    func setPause(until: Date?) {
-        send(.pauseChanged(until: until))
+    /// Mirrors the Settings do-not-disturb switch into the runtime.
+    func setDoNotDisturb(_ enabled: Bool) {
+        send(.doNotDisturbChanged(enabled))
     }
 
     func setReduceMotion(_ enabled: Bool) {
@@ -240,11 +240,11 @@ final class PetRuntime {
         guard !situation.isSystemSleeping, !situation.isScreenLocked else { return nil }
 
         var deadlines: [Date] = []
-        if let pauseUntil = situation.pauseUntil, pauseUntil > date {
-            deadlines.append(pauseUntil)
-        }
         if let snoozeUntil = situation.snoozeUntil, snoozeUntil > date {
             deadlines.append(snoozeUntil)
+        }
+        if let revealDeadline = situation.hiddenRevealDeadline(), revealDeadline > date {
+            deadlines.append(revealDeadline)
         }
         if let dragSettledAt = situation.dragSettledAt, dragSettledAt > date {
             deadlines.append(dragSettledAt)
@@ -384,7 +384,7 @@ final class PetRuntime {
 
     private func persist(at date: Date) {
         var state = persisted.normalized(now: date, calendar: calendar)
-        state.pauseUntil = situation.pauseUntil
+        state.isDoNotDisturb = situation.isDoNotDisturb
         state.lastInvitationClosedAt = situation.lastInvitationClosedAt
         state.quietWindow = situation.quietWindow
         state.rhythmMinutes = situation.policy.rhythmMinutes

@@ -13,9 +13,12 @@ struct SessionSurfacePresentation: Equatable, Sendable {
 
     init(situation: PetSituation, previous: PetSituation?, now: Date) {
         let desktop = situation.resolvedDesktop(at: now)
-        showsCompanionChip = situation.session != nil && desktop == .companion
+        showsCompanionChip = situation.session != nil
+            && desktop == .companion
+            && !situation.isHidden
         showsInvitation = situation.isInviteCardVisible(at: now)
-        showsRecovery = situation.isRecoveryPanelVisible && situation.recoveryEndsAt != nil
+        showsRecovery = situation.isRecoveryPanelVisible(at: now)
+            && situation.recoveryEndsAt != nil
         recoveryEndsAt = situation.recoveryEndsAt
         newlyCompleted = situation.companion == .complete && previous?.companion != .complete
     }

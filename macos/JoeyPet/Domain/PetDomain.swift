@@ -41,7 +41,7 @@ enum DesktopState: String, CaseIterable, Codable, Sendable {
     case dragging
     case hidden
     case quiet
-    case paused
+    case doNotDisturb
     case snoozed
     case companion
     case alone
@@ -51,7 +51,7 @@ enum DesktopState: String, CaseIterable, Codable, Sendable {
         case .dragging: 1
         case .hidden: 2
         case .quiet: 3
-        case .paused: 4
+        case .doNotDisturb: 4
         case .snoozed: 5
         case .companion: 6
         case .alone: 7
@@ -63,7 +63,7 @@ enum DesktopState: String, CaseIterable, Codable, Sendable {
         case .dragging: .look
         case .hidden: nil
         case .quiet: .sleep
-        case .paused: .sit
+        case .doNotDisturb: .doze
         case .snoozed: .sit
         case .companion: .look
         case .alone: .sit
@@ -142,27 +142,28 @@ struct InvitationPolicy: Equatable, Sendable {
     var minimumGapMinutes: Int
     var rhythmMinutes: Int
     var snoozeMinutes: Int
-    var pauseMinutes: Int
     var approachLeadMinutes: Int
     var recoveryDuration: TimeInterval
     var completeDuration: TimeInterval
+    /// How long a hidden Joey may surface for one invitation before returning to hiding.
+    var hiddenRevealDuration: TimeInterval
 
     init(
         minimumGapMinutes: Int = 45,
         rhythmMinutes: Int = 45,
         snoozeMinutes: Int = 10,
-        pauseMinutes: Int = 60,
         approachLeadMinutes: Int = 5,
         recoveryDuration: TimeInterval = 30,
-        completeDuration: TimeInterval = 2.6
+        completeDuration: TimeInterval = 2.6,
+        hiddenRevealDuration: TimeInterval = 60
     ) {
         self.minimumGapMinutes = minimumGapMinutes
         self.rhythmMinutes = rhythmMinutes
         self.snoozeMinutes = snoozeMinutes
-        self.pauseMinutes = pauseMinutes
         self.approachLeadMinutes = approachLeadMinutes
         self.recoveryDuration = recoveryDuration
         self.completeDuration = completeDuration
+        self.hiddenRevealDuration = hiddenRevealDuration
     }
 
     /// The atlas allows 45 / 60 / 90 minutes, with 45 as a hard floor.
@@ -224,8 +225,10 @@ struct CompanionSession: Equatable, Sendable {
 struct PetSituation: Equatable, Sendable {
     var isDragging = false
     var isHidden = false
+    var isDoNotDisturb = false
     var isQuietActive = false
-    var pauseUntil: Date?
+    /// When a hidden Joey surfaces for an invitation, this starts the auto-hide clock.
+    var inviteShownAt: Date?
     var snoozeUntil: Date?
     var dragSettledAt: Date?
 
@@ -258,7 +261,7 @@ struct PetSituation: Equatable, Sendable {
         calendar: Calendar = .autoupdatingCurrent
     ) -> PetSituation {
         var situation = PetSituation()
-        situation.pauseUntil = persisted.pauseUntil
+        situation.isDoNotDisturb = persisted.isDoNotDisturb
         situation.lastInvitationClosedAt = persisted.lastInvitationClosedAt
         situation.quietWindow = persisted.quietWindow
         situation.policy.rhythmMinutes = persisted.rhythmMinutes
@@ -267,21 +270,38 @@ struct PetSituation: Equatable, Sendable {
         return situation
     }
 
-    func isPauseActive(at now: Date) -> Bool {
-        guard let pauseUntil else { return false }
-        return pauseUntil > now
-    }
-
     func isSnoozeActive(at now: Date) -> Bool {
         guard let snoozeUntil else { return false }
         return snoozeUntil > now
     }
 
+    /// Do-not-disturb, quiet hours and system states all silence invitations.
+    var promptsSuppressed: Bool {
+        isDoNotDisturb || isQuietActive || isSystemSleeping || isScreenLocked
+    }
+
+    /// A hidden Joey only returns to the desktop to deliver an active prompt.
+    func isTemporarilyRevealed(at now: Date) -> Bool {
+        guard isHidden, !promptsSuppressed else { return false }
+        switch companion {
+        case .invite, .recover, .complete:
+            return true
+        default:
+            return false
+        }
+    }
+
+    /// Whether the desktop panel should be on screen. Hidden mode is silent
+    /// except while an invitation, recovery or completion is on display.
+    func shouldShowPanel(at now: Date) -> Bool {
+        !isHidden || isTemporarilyRevealed(at: now)
+    }
+
     func resolvedDesktop(at now: Date) -> DesktopState {
         if isDragging { return .dragging }
-        if isHidden { return .hidden }
+        if isHidden, !isTemporarilyRevealed(at: now) { return .hidden }
         if isQuietActive { return .quiet }
-        if isPauseActive(at: now) { return .paused }
+        if isDoNotDisturb { return .doNotDisturb }
         if isSnoozeActive(at: now) { return .snoozed }
         if session != nil { return .companion }
         return .alone
@@ -297,7 +317,9 @@ struct PetSituation: Equatable, Sendable {
             if companion == .recover { return .stretch }
             if companion == .complete { return .happy }
             return .sleep
-        case .paused, .snoozed:
+        case .doNotDisturb:
+            return .doze
+        case .snoozed:
             if companion == .recover { return .stretch }
             if companion == .complete { return .happy }
             if isYawnActive(at: now) { return .yawn }
@@ -323,15 +345,18 @@ struct PetSituation: Equatable, Sendable {
     }
 
     func isInviteCardVisible(at now: Date) -> Bool {
-        guard session != nil, companion == .invite, !isHidden, !isQuietActive else {
+        guard session != nil, companion == .invite, !promptsSuppressed else {
             return false
         }
-        if isPauseActive(at: now) || isSnoozeActive(at: now) { return false }
+        if isSnoozeActive(at: now) { return false }
         return true
     }
 
-    var isRecoveryPanelVisible: Bool {
-        session != nil && companion == .recover && !isHidden
+    /// Quiet hours may finish a running recovery, so only DND and system
+    /// states hide the panel.
+    func isRecoveryPanelVisible(at now: Date) -> Bool {
+        guard session != nil, companion == .recover else { return false }
+        return !isDoNotDisturb && !isSystemSleeping && !isScreenLocked
     }
 
     func invitationDueDate() -> Date? {
@@ -344,13 +369,19 @@ struct PetSituation: Equatable, Sendable {
         return policy.approachStart(due: due)
     }
 
+    /// The moment a hidden invitation reveals itself.
+    func hiddenRevealDeadline() -> Date? {
+        guard isHidden, companion == .invite, let inviteShownAt else { return nil }
+        return inviteShownAt.addingTimeInterval(policy.hiddenRevealDuration)
+    }
+
     func canEnterDoze(at now: Date) -> Bool {
         let desktop = resolvedDesktop(at: now)
-        guard desktop == .alone || desktop == .paused || desktop == .snoozed else {
+        guard desktop == .alone || desktop == .snoozed else {
             return false
         }
         guard !isMenuOpen, !isDragging, !isHidden else { return false }
-        guard !isInviteCardVisible(at: now), !isRecoveryPanelVisible else { return false }
+        guard !isInviteCardVisible(at: now), !isRecoveryPanelVisible(at: now) else { return false }
         guard !isSystemSleeping, !isScreenLocked else { return false }
         return true
     }
@@ -359,7 +390,7 @@ struct PetSituation: Equatable, Sendable {
 // MARK: - Persistence
 
 struct PetPersistedState: Equatable, Sendable {
-    var pauseUntil: Date?
+    var isDoNotDisturb: Bool
     var lastInvitationClosedAt: Date?
     var todayKey: String
     var todayCompanionshipSeconds: Int
@@ -375,7 +406,7 @@ struct PetPersistedState: Equatable, Sendable {
         calendar: Calendar = .autoupdatingCurrent
     ) -> PetPersistedState {
         PetPersistedState(
-            pauseUntil: nil,
+            isDoNotDisturb: false,
             lastInvitationClosedAt: nil,
             todayKey: PetDayKey.dayKey(for: now, calendar: calendar),
             todayCompanionshipSeconds: 0,
@@ -457,7 +488,7 @@ protocol PetSessionStoring: AnyObject {
 final class UserDefaultsPetSessionStore: PetSessionStoring {
     private enum Key {
         static let rhythm = "joey.rhythmMinutes"
-        static let pauseUntil = "joey.pauseUntil"
+        static let doNotDisturb = "joey.doNotDisturb"
         static let quietStart = "joey.quietStartMinutes"
         static let quietEnd = "joey.quietEndMinutes"
         static let lastInvitationClosedAt = "joey.lastInvitationClosedAt"
@@ -481,7 +512,7 @@ final class UserDefaultsPetSessionStore: PetSessionStoring {
         let rhythm = defaults.object(forKey: Key.rhythm) as? Int ?? 45
 
         let state = PetPersistedState(
-            pauseUntil: date(forKey: Key.pauseUntil),
+            isDoNotDisturb: defaults.object(forKey: Key.doNotDisturb) as? Bool ?? false,
             lastInvitationClosedAt: date(forKey: Key.lastInvitationClosedAt),
             todayKey: defaults.string(forKey: Key.todayKey) ?? "",
             todayCompanionshipSeconds: defaults.integer(forKey: Key.todayCompanionshipSeconds),
@@ -497,7 +528,7 @@ final class UserDefaultsPetSessionStore: PetSessionStoring {
     }
 
     func save(_ state: PetPersistedState) {
-        setDate(state.pauseUntil, forKey: Key.pauseUntil)
+        defaults.set(state.isDoNotDisturb, forKey: Key.doNotDisturb)
         setDate(state.lastInvitationClosedAt, forKey: Key.lastInvitationClosedAt)
         defaults.set(state.todayKey, forKey: Key.todayKey)
         defaults.set(state.todayCompanionshipSeconds, forKey: Key.todayCompanionshipSeconds)

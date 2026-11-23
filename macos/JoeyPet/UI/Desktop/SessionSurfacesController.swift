@@ -12,11 +12,11 @@ import SwiftUI
 final class SessionSurfacesController {
     private static let completionToast = "好了。Joey 的窝里多了一片叶子。"
     private static let snoozeToast = "好，过一阵再问你。"
-    private static let pauseToast = "先安静一会儿。"
+    private static let doNotDisturbToast = "好，先不打扰你。"
 
     var onAcceptInvitation: (() -> Void)?
     var onSnooze: (() -> Void)?
-    var onPause: (() -> Void)?
+    var onEnterDoNotDisturb: (() -> Void)?
     var onFinishRecovery: (() -> Void)?
     var onSkipRecovery: (() -> Void)?
 
@@ -91,7 +91,7 @@ final class SessionSurfacesController {
                 InvitationCardView(
                     onAccept: { [weak self] in self?.onAcceptInvitation?() },
                     onSnooze: { [weak self] in self?.onSnooze?() },
-                    onPause: { [weak self] in self?.onPause?() }
+                    onDoNotDisturb: { [weak self] in self?.onEnterDoNotDisturb?() }
                 )
             )
             present(
@@ -179,8 +179,8 @@ final class SessionSurfacesController {
         showToast(Self.snoozeToast)
     }
 
-    func showPauseToast() {
-        showToast(Self.pauseToast)
+    func showDoNotDisturbToast() {
+        showToast(Self.doNotDisturbToast)
     }
 
     // MARK: - Panels

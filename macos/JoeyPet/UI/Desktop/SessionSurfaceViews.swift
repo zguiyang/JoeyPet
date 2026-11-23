@@ -35,7 +35,7 @@ struct JoeyCompanionChipView: View {
 struct InvitationCardView: View {
     let onAccept: () -> Void
     let onSnooze: () -> Void
-    let onPause: () -> Void
+    let onDoNotDisturb: () -> Void
 
     @Environment(\.joeyAppearance) private var appearance
     @State private var hoveredAction: CardAction?
@@ -43,7 +43,7 @@ struct InvitationCardView: View {
     private enum CardAction: Hashable {
         case accept
         case snooze
-        case pause
+        case doNotDisturb
     }
 
     private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
@@ -85,7 +85,7 @@ struct InvitationCardView: View {
 
                 HStack(spacing: JoeySpacing.md) {
                     secondaryButton("稍后提醒", action: .snooze, perform: onSnooze)
-                    quietButton("暂停一会儿", action: .pause, perform: onPause)
+                    quietButton("进入勿扰", action: .doNotDisturb, perform: onDoNotDisturb)
                     Spacer(minLength: 0)
                 }
             }

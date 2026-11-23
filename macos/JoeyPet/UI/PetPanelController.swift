@@ -79,7 +79,15 @@ final class PetPanelController {
         menuController.onClose = { [weak self] in self?.petRuntime.send(.menuClosed) }
         menuController.onEndSession = { [weak self] in self?.petRuntime.endSession() }
         menuController.onHidePet = { [weak self] in self?.onHideRequested?() }
-        menuController.onPause = { [weak self] in self?.petRuntime.send(.pauseRequested) }
+        menuController.isDoNotDisturb = { [weak self] in
+            self?.petRuntime.situation.isDoNotDisturb ?? false
+        }
+        menuController.onToggleDoNotDisturb = { [weak self] in
+            guard let self else { return }
+            self.petRuntime.send(
+                .doNotDisturbChanged(!self.petRuntime.situation.isDoNotDisturb)
+            )
+        }
 
         sessionSurfaces.onAcceptInvitation = { [weak self] in
             self?.petRuntime.send(.inviteAccepted)
@@ -89,10 +97,10 @@ final class PetPanelController {
             self.petRuntime.send(.snoozeRequested)
             self.sessionSurfaces.showSnoozeToast()
         }
-        sessionSurfaces.onPause = { [weak self] in
+        sessionSurfaces.onEnterDoNotDisturb = { [weak self] in
             guard let self else { return }
-            self.petRuntime.send(.pauseRequested)
-            self.sessionSurfaces.showPauseToast()
+            self.petRuntime.send(.doNotDisturbChanged(true))
+            self.sessionSurfaces.showDoNotDisturbToast()
         }
         sessionSurfaces.onFinishRecovery = { [weak self] in
             self?.petRuntime.send(.recoveryFinished)
@@ -104,10 +112,12 @@ final class PetPanelController {
         petRuntime.onSituationChanged = { [weak self] situation in
             guard let self else { return }
             self.updateAccessibility(situation)
+            self.syncPanelVisibility(with: situation)
             self.sessionSurfaces.update(situation: situation)
             self.onSituationChanged?(situation)
         }
         updateAccessibility(petRuntime.situation)
+        syncPanelVisibility(with: petRuntime.situation)
         sessionSurfaces.update(situation: petRuntime.situation)
     }
 
@@ -125,6 +135,14 @@ final class PetPanelController {
 
     private(set) var isVisible = false
 
+    /// Hidden mode still surfaces briefly for an invitation; this keeps the
+    /// panel in step with the situation instead of the settings switch alone.
+    private func syncPanelVisibility(with situation: PetSituation) {
+        let shouldShow = situation.shouldShowPanel(at: Date())
+        guard shouldShow != isVisible else { return }
+        setVisible(shouldShow)
+    }
+
     /// Shows or hides the desktop pet. Hidden mode also pauses SpriteKit so a hidden pet costs no CPU.
     func setVisible(_ visible: Bool) {
         isVisible = visible
@@ -134,7 +152,7 @@ final class PetPanelController {
             if case .docked = dockState {
                 applyDockFrame(animated: false)
             }
-            panel.makeKeyAndOrderFront(nil)
+            panel.orderFrontRegardless()
             sessionSurfaces.update(situation: petRuntime.situation)
             Self.logger.info("Pet panel shown")
         } else {
@@ -369,8 +387,8 @@ final class PetPanelController {
             return "正在换位置"
         case .quiet:
             return "安静时段，正在睡觉"
-        case .paused:
-            return "休息中"
+        case .doNotDisturb:
+            return "勿扰模式，先不打扰你"
         case .snoozed:
             return "过一会儿提醒你休息"
         case .companion:
@@ -492,12 +510,13 @@ private final class PetMenuController: NSObject, NSMenuDelegate {
     var onClose: (() -> Void)?
     var onEndSession: (() -> Void)?
     var onHidePet: (() -> Void)?
-    var onPause: (() -> Void)?
+    var isDoNotDisturb: (() -> Bool)?
+    var onToggleDoNotDisturb: (() -> Void)?
 
     private let menu = NSMenu()
     private let endSessionItem = NSMenuItem(title: "结束陪伴", action: nil, keyEquivalent: "")
     private let hideItem = NSMenuItem(title: "隐藏 Joey", action: nil, keyEquivalent: "")
-    private let pauseItem = NSMenuItem(title: "暂停一小时", action: nil, keyEquivalent: "")
+    private let doNotDisturbItem = NSMenuItem(title: "勿扰模式", action: nil, keyEquivalent: "")
 
     override init() {
         super.init()
@@ -506,13 +525,13 @@ private final class PetMenuController: NSObject, NSMenuDelegate {
         endSessionItem.action = #selector(endSessionTapped)
         hideItem.target = self
         hideItem.action = #selector(hideTapped)
-        pauseItem.target = self
-        pauseItem.action = #selector(pauseTapped)
+        doNotDisturbItem.target = self
+        doNotDisturbItem.action = #selector(doNotDisturbTapped)
 
         menu.addItem(endSessionItem)
         menu.addItem(hideItem)
         menu.addItem(.separator())
-        menu.addItem(pauseItem)
+        menu.addItem(doNotDisturbItem)
         menu.delegate = self
     }
 
@@ -522,6 +541,9 @@ private final class PetMenuController: NSObject, NSMenuDelegate {
 
     func menuWillOpen(_ menu: NSMenu) {
         endSessionItem.isEnabled = isSessionActive?() ?? false
+        let isOn = isDoNotDisturb?() == true
+        doNotDisturbItem.state = isOn ? .on : .off
+        doNotDisturbItem.title = isOn ? "勿扰中 · 点击关闭" : "勿扰模式"
         onOpen?()
     }
 
@@ -537,7 +559,7 @@ private final class PetMenuController: NSObject, NSMenuDelegate {
         onHidePet?()
     }
 
-    @objc private func pauseTapped() {
-        onPause?()
+    @objc private func doNotDisturbTapped() {
+        onToggleDoNotDisturb?()
     }
 }

@@ -50,7 +50,6 @@ struct NestRootView: View {
     var status: CompanionStatus
     var topChromeHeight: CGFloat = 40
     let onPrimaryAction: () -> Void
-    let onShowDesktopPet: () -> Void
     let onRouteChange: (NestRoute) -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -70,8 +69,7 @@ struct NestRootView: View {
                         showsDesktopPet: settings.showsDesktopPet,
                         status: status,
                         onOpenReflection: { navigation.showReflection() },
-                        onPrimaryAction: onPrimaryAction,
-                        onShowDesktopPet: onShowDesktopPet
+                        onPrimaryAction: onPrimaryAction
                     )
                     .transition(.opacity)
                 case .reflection:

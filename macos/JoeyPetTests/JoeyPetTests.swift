@@ -134,8 +134,7 @@ struct JoeyPetTests {
         let home = MainWindowController(
             settings: settings,
             status: CompanionStatus(),
-            onPrimaryAction: {},
-            onShowDesktopPet: {}
+            onPrimaryAction: {}
         )
         #expect(home.window?.title == "Joey 的家")
         #expect(home.window?.contentView != nil)
@@ -267,7 +266,7 @@ struct PetDomainTests {
         situation.session = CompanionSession(startedAt: now)
         situation.companion = .idle
         situation.snoozeUntil = now.addingTimeInterval(10 * 60)
-        situation.pauseUntil = now.addingTimeInterval(60 * 60)
+        situation.isDoNotDisturb = true
         situation.isQuietActive = true
         situation.isHidden = true
         situation.isDragging = true
@@ -278,8 +277,8 @@ struct PetDomainTests {
         situation.isHidden = false
         #expect(situation.resolvedDesktop(at: now) == .quiet)
         situation.isQuietActive = false
-        #expect(situation.resolvedDesktop(at: now) == .paused)
-        situation.pauseUntil = nil
+        #expect(situation.resolvedDesktop(at: now) == .doNotDisturb)
+        situation.isDoNotDisturb = false
         #expect(situation.resolvedDesktop(at: now) == .snoozed)
         situation.snoozeUntil = nil
         #expect(situation.resolvedDesktop(at: now) == .companion)
@@ -404,9 +403,10 @@ struct PetDomainTests {
         #expect(secondSnooze.snoozeUsedThisSession)
     }
 
-    @Test func pauseKeepsSessionAndExpiresAfterSixtyMinutes() {
+    @Test func doNotDisturbKeepsSessionAndSuppressesInvitations() {
         let calendar = testCalendar()
         let start = testDate(2026, 11, 23, 9, 0)
+        let due = start.addingTimeInterval(45 * 60)
 
         let started = PetStateMachine.reduce(
             PetSituation(),
@@ -414,30 +414,35 @@ struct PetDomainTests {
             now: start,
             calendar: calendar
         ).state
-        let paused = PetStateMachine.reduce(
+        let quiet = PetStateMachine.reduce(
             started,
-            event: .pauseRequested,
+            event: .doNotDisturbChanged(true),
             now: start,
             calendar: calendar
         ).state
-        #expect(paused.resolvedDesktop(at: start) == .paused)
-        #expect(paused.resolvedPose(at: start) == .sit)
-        #expect(paused.session != nil)
+        #expect(quiet.isDoNotDisturb)
+        #expect(quiet.resolvedDesktop(at: start) == .doNotDisturb)
+        #expect(quiet.resolvedPose(at: start) == .doze)
+        #expect(quiet.session != nil)
 
-        let almost = start.addingTimeInterval(59 * 60)
-        #expect(paused.resolvedDesktop(at: almost) == .paused)
-
-        let expired = PetStateMachine.reduce(
-            paused,
+        let still = PetStateMachine.reduce(
+            quiet,
             event: .tick,
-            now: start.addingTimeInterval(60 * 60),
+            now: due,
             calendar: calendar
         ).state
-        #expect(expired.pauseUntil == nil)
-        #expect(expired.resolvedDesktop(at: start.addingTimeInterval(60 * 60)) == .companion)
-        #expect(expired.companion == .invite)
-        #expect(expired.resolvedPose(at: start.addingTimeInterval(60 * 60)) == .sign)
-        #expect(expired.session != nil)
+        #expect(still.companion == .idle)
+        #expect(!still.isInviteCardVisible(at: due))
+
+        let resumed = PetStateMachine.reduce(
+            still,
+            event: .doNotDisturbChanged(false),
+            now: due,
+            calendar: calendar
+        ).state
+        #expect(!resumed.isDoNotDisturb)
+        #expect(resumed.companion == .invite)
+        #expect(resumed.session != nil)
     }
 
     @Test func quietHoursClosesInviteAndSleeps() {
@@ -520,7 +525,116 @@ struct PetDomainTests {
         #expect(sleeping.resolvedPose(at: sleepTime) == .sleep)
     }
 
-    @Test func hiddenKeepsSessionAndHidesSurfaces() {
+    @Test func hiddenKeepsSessionAndStillInvites() {
+        let calendar = testCalendar()
+        let start = testDate(2026, 11, 23, 9, 0)
+        let due = start.addingTimeInterval(45 * 60)
+
+        let started = PetStateMachine.reduce(
+            PetSituation(),
+            event: .sessionStart,
+            now: start,
+            calendar: calendar
+        ).state
+        let hidden = PetStateMachine.reduce(
+            started,
+            event: .hideRequested,
+            now: start,
+            calendar: calendar
+        ).state
+        #expect(hidden.resolvedDesktop(at: start) == .hidden)
+        #expect(hidden.session != nil)
+        #expect(!hidden.shouldShowPanel(at: start))
+
+        let invited = PetStateMachine.reduce(
+            hidden,
+            event: .tick,
+            now: due,
+            calendar: calendar
+        ).state
+        #expect(invited.companion == .invite)
+        #expect(invited.isInviteCardVisible(at: due))
+        #expect(invited.resolvedDesktop(at: due) == .companion)
+        #expect(invited.shouldShowPanel(at: due))
+
+        // An ignored hidden invitation slips away after one minute and is
+        // treated as "later" once.
+        let closed = PetStateMachine.reduce(
+            invited,
+            event: .tick,
+            now: due.addingTimeInterval(60),
+            calendar: calendar
+        ).state
+        #expect(closed.companion == .idle)
+        #expect(closed.snoozeUntil == due.addingTimeInterval(60 + 10 * 60))
+        #expect(!closed.shouldShowPanel(at: due.addingTimeInterval(60)))
+        #expect(closed.session != nil)
+
+        let shown = PetStateMachine.reduce(
+            closed,
+            event: .showRequested,
+            now: due.addingTimeInterval(61),
+            calendar: calendar
+        ).state
+        #expect(shown.resolvedDesktop(at: due.addingTimeInterval(61)) == .snoozed)
+        #expect(shown.session != nil)
+    }
+
+    @Test func hiddenInvitationCompletesAndReturnsToHiding() {
+        let calendar = testCalendar()
+        let start = testDate(2026, 11, 23, 9, 0)
+        let due = start.addingTimeInterval(45 * 60)
+
+        let started = PetStateMachine.reduce(
+            PetSituation(),
+            event: .sessionStart,
+            now: start,
+            calendar: calendar
+        ).state
+        let hidden = PetStateMachine.reduce(
+            started,
+            event: .hideRequested,
+            now: start,
+            calendar: calendar
+        ).state
+        let invited = PetStateMachine.reduce(
+            hidden,
+            event: .tick,
+            now: due,
+            calendar: calendar
+        ).state
+        let recovering = PetStateMachine.reduce(
+            invited,
+            event: .inviteAccepted,
+            now: due,
+            calendar: calendar
+        ).state
+        #expect(recovering.companion == .recover)
+        #expect(recovering.isRecoveryPanelVisible(at: due))
+        #expect(recovering.shouldShowPanel(at: due))
+
+        let completed = PetStateMachine.reduce(
+            recovering,
+            event: .tick,
+            now: due.addingTimeInterval(30),
+            calendar: calendar
+        ).state
+        #expect(completed.companion == .complete)
+        #expect(completed.shouldShowPanel(at: due.addingTimeInterval(30)))
+
+        let settledAt = due.addingTimeInterval(32.6)
+        let settled = PetStateMachine.reduce(
+            completed,
+            event: .tick,
+            now: settledAt,
+            calendar: calendar
+        ).state
+        #expect(settled.companion == .idle)
+        #expect(!settled.shouldShowPanel(at: settledAt))
+        #expect(settled.session != nil)
+    }
+
+    @Test func hidingDuringInvitationClosesIt() {
         let calendar = testCalendar()
         let start = testDate(2026, 11, 23, 9, 0)
         let due = start.addingTimeInterval(45 * 60)
@@ -543,20 +657,9 @@ struct PetDomainTests {
             now: due,
             calendar: calendar
         ).state
-
-        #expect(hidden.resolvedDesktop(at: due) == .hidden)
         #expect(hidden.companion == .idle)
-        #expect(hidden.session != nil)
         #expect(!hidden.isInviteCardVisible(at: due))
-
-        let shown = PetStateMachine.reduce(
-            hidden,
-            event: .showRequested,
-            now: due.addingTimeInterval(1),
-            calendar: calendar
-        ).state
-        #expect(shown.resolvedDesktop(at: due.addingTimeInterval(1)) == .companion)
-        #expect(shown.session != nil)
+        #expect(!hidden.shouldShowPanel(at: due))
     }
 
     @Test func presenceDozeYawnsOnReturn() {
@@ -688,7 +791,7 @@ struct PetDomainTests {
         let calendar = testCalendar()
 
         var state = PetPersistedState.empty(now: now, calendar: calendar)
-        state.pauseUntil = now.addingTimeInterval(60 * 60)
+        state.isDoNotDisturb = true
         state.lastInvitationClosedAt = now.addingTimeInterval(-45 * 60)
         state.todayKey = "1999-01-01"
         state.todayCompanionshipSeconds = 999
@@ -701,7 +804,7 @@ struct PetDomainTests {
         store.save(state)
 
         let loaded = store.load(now: now, calendar: calendar)
-        #expect(loaded.pauseUntil == state.pauseUntil)
+        #expect(loaded.isDoNotDisturb)
         #expect(loaded.lastInvitationClosedAt == state.lastInvitationClosedAt)
         #expect(loaded.quietWindow == state.quietWindow)
         #expect(loaded.rhythmMinutes == 60)
@@ -800,7 +903,7 @@ struct PetDomainTests {
         #expect(!settled.newlyCompleted)
     }
 
-    @Test func externalPauseCancelsInvitationAndResumeClearsIt() {
+    @Test func doNotDisturbCancelsInvitationAndResumeKeepsGap() {
         let calendar = testCalendar()
         let start = testDate(2026, 11, 23, 9, 0)
         let due = start.addingTimeInterval(45 * 60)
@@ -819,23 +922,25 @@ struct PetDomainTests {
         ).state
         #expect(invited.companion == .invite)
 
-        let until = due.addingTimeInterval(60 * 60)
-        let paused = PetStateMachine.reduce(
+        let quiet = PetStateMachine.reduce(
             invited,
-            event: .pauseChanged(until: until),
+            event: .doNotDisturbChanged(true),
             now: due,
             calendar: calendar
         ).state
-        #expect(paused.pauseUntil == until)
-        #expect(paused.companion == .idle)
+        #expect(quiet.isDoNotDisturb)
+        #expect(quiet.companion == .idle)
+        #expect(!quiet.isInviteCardVisible(at: due))
 
         let resumed = PetStateMachine.reduce(
-            paused,
-            event: .pauseChanged(until: nil),
+            quiet,
+            event: .doNotDisturbChanged(false),
             now: due.addingTimeInterval(60),
             calendar: calendar
         ).state
-        #expect(resumed.pauseUntil == nil)
+        #expect(!resumed.isDoNotDisturb)
+        #expect(resumed.companion == .idle)
+        #expect(resumed.invitationDueDate() == due.addingTimeInterval(45 * 60))
     }
 
     @Test func companionChipTextUsesMinutesAndSeconds() {
@@ -1133,44 +1238,43 @@ struct PetRuntimeTests {
         #expect(store.state.showsDesktopPet == true)
     }
 
-    @Test func runtimeAppliesSettingsPause() {
+    @Test func runtimeAppliesDoNotDisturb() {
         let calendar = testCalendar()
         let start = testDate(2026, 11, 23, 9, 0)
         let (runtime, _, store) = makeRuntime(now: start, calendar: calendar)
 
         runtime.startSession()
-        let until = start.addingTimeInterval(60 * 60)
-        runtime.setPause(until: until)
+        runtime.setDoNotDisturb(true)
 
-        #expect(runtime.situation.pauseUntil == until)
-        #expect(runtime.situation.resolvedDesktop(at: start) == .paused)
-        #expect(store.state.pauseUntil == until)
+        #expect(runtime.situation.isDoNotDisturb)
+        #expect(runtime.situation.resolvedDesktop(at: start) == .doNotDisturb)
+        #expect(store.state.isDoNotDisturb)
 
-        runtime.setPause(until: nil)
-        #expect(runtime.situation.pauseUntil == nil)
-        #expect(store.state.pauseUntil == nil)
+        runtime.setDoNotDisturb(false)
+        #expect(!runtime.situation.isDoNotDisturb)
+        #expect(!store.state.isDoNotDisturb)
     }
 
-    @Test func runtimeRestoresPauseUntilItExpires() {
+    @Test func runtimeRestoresDoNotDisturb() {
         let calendar = testCalendar()
         let start = testDate(2026, 11, 23, 9, 0)
         var persisted = makePersisted(now: start, calendar: calendar)
-        persisted.pauseUntil = start.addingTimeInterval(60 * 60)
-
-        var current = start
+        persisted.isDoNotDisturb = true
+        let store = TestSessionStore(persisted)
         let runtime = PetRuntime(
             renderer: TestPoseRenderer(),
-            store: TestSessionStore(persisted),
-            now: { current },
+            store: store,
+            now: { start },
             calendar: calendar
         )
-        #expect(runtime.situation.resolvedDesktop(at: start) == .paused)
-        #expect(runtime.renderedPose == .sit)
+        #expect(runtime.situation.isDoNotDisturb)
+        #expect(runtime.situation.resolvedDesktop(at: start) == .doNotDisturb)
+        #expect(runtime.renderedPose == .doze)
 
-        current = start.addingTimeInterval(60 * 60)
-        runtime.send(.tick)
-        #expect(runtime.situation.pauseUntil == nil)
-        #expect(runtime.situation.resolvedDesktop(at: current) == .alone)
+        runtime.setDoNotDisturb(false)
+        #expect(!runtime.situation.isDoNotDisturb)
+        #expect(runtime.situation.resolvedDesktop(at: start) == .alone)
+        #expect(!store.state.isDoNotDisturb)
     }
 
     @Test func runtimeSchedulesTicksOnlyWhenWorkRemains() {

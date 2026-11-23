@@ -11,8 +11,7 @@ final class MainWindowController: NSWindowController {
     init(
         settings: AppSettings,
         status: CompanionStatus,
-        onPrimaryAction: @escaping () -> Void,
-        onShowDesktopPet: @escaping () -> Void
+        onPrimaryAction: @escaping () -> Void
     ) {
         self.settings = settings
 
@@ -36,7 +35,6 @@ final class MainWindowController: NSWindowController {
             navigation: navigation,
             status: status,
             onPrimaryAction: onPrimaryAction,
-            onShowDesktopPet: onShowDesktopPet,
             onRouteChange: { [weak self] route in
                 self?.updateChrome(for: route)
             }

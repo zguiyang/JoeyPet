@@ -36,7 +36,7 @@
     { "id": "dragging", "priority": 1, "pose": "look", "cooldownMin": 0 },
     { "id": "hidden", "priority": 2, "pose": null, "cooldownMin": null },
     { "id": "quiet", "priority": 3, "pose": "sleep", "window": ["22:00", "08:00"] },
-    { "id": "paused", "priority": 4, "pose": "sit", "cooldownMin": 60 },
+    { "id": "doNotDisturb", "priority": 4, "pose": "doze", "cooldownMin": null },
     { "id": "snoozed", "priority": 5, "pose": "sit", "cooldownMin": 10 },
     { "id": "companion", "priority": 6, "pose": "look", "inviteGapMin": 45 },
     { "id": "alone", "priority": 7, "pose": "sit" }
