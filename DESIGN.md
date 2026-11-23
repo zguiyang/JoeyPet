@@ -518,7 +518,7 @@ A garden inside the same window, opened from the wall frame.
 Native, quieter, more functional than the room. No illustration, no hero copy, no sage hero blocks.
 
 - Page title **JoeyPet 设置** inside the shared window; 200 px sidebar + detail.
-- Sidebar is one flat list, no group headings: 节奏与提醒 · 安静时段 · 外观与位置 · 成长记录 · 关于 JoeyPet.
+- Sidebar is one flat list, no group headings: 节奏与提醒 · 安静时段 · 外观与位置 · 关于 JoeyPet.
 - Rows:
 
 | Row | Control | Copy |

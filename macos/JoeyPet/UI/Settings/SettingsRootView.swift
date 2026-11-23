@@ -82,8 +82,6 @@ struct SettingsRootView: View {
             quietPane
         case .appearance:
             appearancePane
-        case .growth:
-            growthPane
         case .about:
             aboutPane
         }
@@ -139,20 +137,6 @@ struct SettingsRootView: View {
                     JoeySwitch(isOn: $settings.showsDesktopPet, label: "在桌面上显示 Joey")
                 }
             }
-        }
-    }
-
-    private var growthPane: some View {
-        SettingsPane(title: "成长记录", description: "休息会在小窝里留下痕迹。") {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("今天还没有休息记录。")
-                    .font(.system(size: 13.5))
-                    .foregroundStyle(theme.ink2)
-                Text("完成一次短暂休息，小窝里会多一片叶子。")
-                    .font(.system(size: 12.5))
-                    .foregroundStyle(theme.muted)
-            }
-            .padding(.top, 18)
         }
     }
 
@@ -252,7 +236,6 @@ enum SettingsSection: String, CaseIterable, Identifiable {
     case rhythm
     case quiet
     case appearance
-    case growth
     case about
 
     var id: String { rawValue }
@@ -262,7 +245,6 @@ enum SettingsSection: String, CaseIterable, Identifiable {
         case .rhythm: return "节奏与提醒"
         case .quiet: return "安静时段"
         case .appearance: return "外观与位置"
-        case .growth: return "成长记录"
         case .about: return "关于 JoeyPet"
         }
     }
