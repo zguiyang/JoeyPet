@@ -35,6 +35,10 @@
 		D7PET12A305978720070926E /* PetDomain.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET02A305978720070926E /* PetDomain.swift */; };
 		D7PET12B305978720070926E /* PetStateMachine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET02B305978720070926E /* PetStateMachine.swift */; };
 		D7PET12C305978720070926E /* JoeyAssetManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET02C305978720070926E /* JoeyAssetManifest.swift */; };
+		D7PET12D305978720070926E /* JoeyAssetLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET02D305978720070926E /* JoeyAssetLoader.swift */; };
+		D7PET12E305978720070926E /* JoeyCharacterNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET02E305978720070926E /* JoeyCharacterNode.swift */; };
+		D7PET12F305978720070926E /* JoeyPosePreviewScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET02F305978720070926E /* JoeyPosePreviewScene.swift */; };
+		D7PET130305978720070926E /* JoeyPosePreviewWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET030305978720070926E /* JoeyPosePreviewWindowController.swift */; };
 		D7F000000000000000000001 /* JoeyTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000002 /* JoeyTheme.swift */; };
 		D7F000000000000000000003 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000004 /* AppSettings.swift */; };
 		D7F000000000000000000005 /* CompanionSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000006 /* CompanionSummary.swift */; };
@@ -87,6 +91,10 @@
 		D7PET02A305978720070926E /* PetDomain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetDomain.swift; sourceTree = "<group>"; };
 		D7PET02B305978720070926E /* PetStateMachine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetStateMachine.swift; sourceTree = "<group>"; };
 		D7PET02C305978720070926E /* JoeyAssetManifest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeyAssetManifest.swift; sourceTree = "<group>"; };
+		D7PET02D305978720070926E /* JoeyAssetLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeyAssetLoader.swift; sourceTree = "<group>"; };
+		D7PET02E305978720070926E /* JoeyCharacterNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeyCharacterNode.swift; sourceTree = "<group>"; };
+		D7PET02F305978720070926E /* JoeyPosePreviewScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeyPosePreviewScene.swift; sourceTree = "<group>"; };
+		D7PET030305978720070926E /* JoeyPosePreviewWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeyPosePreviewWindowController.swift; sourceTree = "<group>"; };
 		D7F000000000000000000002 /* JoeyTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeyTheme.swift; sourceTree = "<group>"; };
 		D7F000000000000000000004 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		D7F000000000000000000006 /* CompanionSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionSummary.swift; sourceTree = "<group>"; };
@@ -201,6 +209,9 @@
 			isa = PBXGroup;
 			children = (
 				D7PET019305978720070926E /* CharacterNode.swift */,
+				D7PET02D305978720070926E /* JoeyAssetLoader.swift */,
+				D7PET02E305978720070926E /* JoeyCharacterNode.swift */,
+				D7PET02F305978720070926E /* JoeyPosePreviewScene.swift */,
 				D7PET00D305978720070926E /* PetScene.swift */,
 				D7PET01A305978720070926E /* PetRootNode.swift */,
 			);
@@ -260,6 +271,7 @@
 			isa = PBXGroup;
 			children = (
 				D7F00000000000000000000A /* MainWindowController.swift */,
+				D7PET030305978720070926E /* JoeyPosePreviewWindowController.swift */,
 			);
 			path = Windows;
 			sourceTree = "<group>";
@@ -428,6 +440,10 @@
 				D7PET12A305978720070926E /* PetDomain.swift in Sources */,
 				D7PET12B305978720070926E /* PetStateMachine.swift in Sources */,
 				D7PET12C305978720070926E /* JoeyAssetManifest.swift in Sources */,
+				D7PET12D305978720070926E /* JoeyAssetLoader.swift in Sources */,
+				D7PET12E305978720070926E /* JoeyCharacterNode.swift in Sources */,
+				D7PET12F305978720070926E /* JoeyPosePreviewScene.swift in Sources */,
+				D7PET130305978720070926E /* JoeyPosePreviewWindowController.swift in Sources */,
 				D7PET11F305978720070926E /* AmbientBehaviorScheduler.swift in Sources */,
 				D7F000000000000000000001 /* JoeyTheme.swift in Sources */,
 				D7F000000000000000000003 /* AppSettings.swift in Sources */,

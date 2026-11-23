@@ -56,6 +56,16 @@ After behavior, panel or asset changes:
 4. Verify the same animation does not restart when re-applied unchanged.
 5. Check console for unexpected errors.
 
+### Layered pose preview
+
+Debug builds can render the twelve V0.1 poses from the manifest without switching the runtime:
+
+```bash
+open -n ~/Applications/'JoeyPet Dev.app' --args -JoeyPetDebugPoses
+```
+
+Poses render in atlas order, top-left to bottom-right. Keys `1` / `2` / `3` switch the `s` / `m` / `l` size tier.
+
 ## Diff review
 
 Before marking done:

@@ -1,6 +1,7 @@
 import AppKit
 import CoreGraphics
 import Foundation
+import SpriteKit
 import Testing
 @testable import JoeyPet
 
@@ -577,6 +578,101 @@ struct PetDomainTests {
         let calendar = testCalendar()
         #expect(PetDayKey.weekdayIndex(for: testDate(2026, 11, 23, 9, 0), calendar: calendar) == 0)
         #expect(PetDayKey.weekdayIndex(for: testDate(2026, 11, 29, 9, 0), calendar: calendar) == 6)
+    }
+}
+
+// MARK: - Layered rendering
+
+private var joeyManifestURL: URL {
+    URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+        .appendingPathComponent("macos/JoeyPet/Resources/Pets/Joey/joey_manifest.json")
+}
+
+private var joeyResourceRootURL: URL {
+    joeyManifestURL.deletingLastPathComponent()
+}
+
+@MainActor
+struct JoeyManifestTests {
+    @Test func manifestMatchesDomainVocabulary() throws {
+        let manifest = try JoeyManifest.load(from: joeyManifestURL)
+        let issues = JoeyManifestValidator.issues(in: manifest)
+        #expect(issues.isEmpty, "\(issues)")
+
+        #expect(manifest.schemaVersion == "0.1")
+        #expect(manifest.poses.count == 12)
+        #expect(manifest.states.count == 7)
+        #expect(manifest.substates.count == 5)
+        #expect(manifest.ambient.count == 9)
+        #expect(manifest.transitions.count == 12)
+        #expect(manifest.sizes.first(where: { $0.isDefault == true })?.w == 168)
+        #expect(manifest.render?.layerOrder.count == 8)
+        #expect(manifest.render?.poseLayers.count == 12)
+    }
+}
+
+@MainActor
+struct JoeyRenderTests {
+    @Test func manifestDeclaresPosePivots() throws {
+        let manifest = try JoeyManifest.load(from: joeyManifestURL)
+        #expect(manifest.render?.poseLayers["look"]?.pivot == [160, 330])
+        #expect(manifest.render?.poseLayers["doze"]?.pivot == [160, 344])
+        #expect(manifest.render?.poseLayers["step"]?.pivot == [160, 344])
+        #expect(manifest.render?.poseLayers["yawn"]?.pivot == [160, 334])
+    }
+
+    @Test func everyPoseAndLayerResolvesToAPng() throws {
+        let package = try JoeyAssetPackage.load(resourceRoot: joeyResourceRootURL, scale: .x1)
+
+        for pose in PetPose.allCases {
+            let layers = try #require(
+                package.manifest.render?.poseLayers[pose.rawValue],
+                "missing layers for \(pose.rawValue)"
+            )
+            #expect(package.poseTexture(poseID: pose.rawValue) != nil, "missing pose \(pose.rawValue)")
+
+            let assetIDs = [
+                layers.shadow, layers.tail, layers.body, layers.ears,
+                layers.backArm, layers.face, layers.frontArm, layers.prop
+            ].compactMap { $0 }
+
+            for assetID in assetIDs {
+                #expect(
+                    package.layerTexture(assetID: assetID) != nil,
+                    "missing \(assetID) for \(pose.rawValue)"
+                )
+            }
+        }
+
+        for frame in [2, 3] {
+            #expect(package.layerTexture(assetID: "face.calm.blink\(frame)") != nil)
+        }
+    }
+
+    @Test func layerTextureMatchesLogicalCanvas() throws {
+        let package = try JoeyAssetPackage.load(resourceRoot: joeyResourceRootURL, scale: .x1)
+        let texture = try #require(package.layerTexture(assetID: "body.default"))
+        #expect(texture.size() == CGSize(width: 320, height: 400))
+    }
+
+    @Test func characterAppliesPoseAndSize() throws {
+        let package = try JoeyAssetPackage.load(resourceRoot: joeyResourceRootURL, scale: .x1)
+        let character = JoeyCharacterNode(package: package, sizeID: "m", reduceMotion: true)
+        #expect(abs(character.xScale - 168.0 / 320.0) < 0.0001)
+
+        character.applyPose("sit")
+        #expect(character.poseID == "sit")
+        character.applyPose("look")
+        #expect(character.poseID == "look")
+        character.applyPose("sleep")
+        #expect(character.poseID == "sleep")
+
+        character.applySize(id: "l")
+        #expect(character.sizeID == "l")
+        #expect(abs(character.xScale - 216.0 / 320.0) < 0.0001)
     }
 }
 
