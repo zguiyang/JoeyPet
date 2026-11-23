@@ -529,6 +529,8 @@ Native, quieter, more functional than the room. No illustration, no hero copy, n
 | 提醒节奏 | Segmented 45 / 60 / 90 分钟 | 开始陪伴后才计时 |
 | 勿扰模式 | Switch | 开启后不会再有邀请或提示，需要恢复时手动关闭 |
 | 安静时段 | Time-range field: two editable halves, centre dash, double-click selects all | 这段时间不会邀请；正在进行的休息会先走完 |
+| 外观 | Segmented 白天 / 黄昏 | 白天和黄昏各有一套配色 |
+| 显示位置 | Segmented 右下角 / 左下角 | 拖动后以你放的位置为准 |
 | 在桌面上显示 Joey | Switch | 关掉不会结束陪伴，到点仍会短暂露面提醒 |
 | 反馈 | Button → textarea | 只保存在这台 Mac，不会上传 |
 
