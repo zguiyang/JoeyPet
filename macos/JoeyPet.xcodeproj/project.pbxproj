@@ -49,6 +49,10 @@
 		D7F00000000000000000000F /* RoomSceneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000010 /* RoomSceneView.swift */; };
 		D7F000000000000000000011 /* ReflectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000012 /* ReflectionView.swift */; };
 		D7F000000000000000000013 /* SettingsRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000014 /* SettingsRootView.swift */; };
+		D7F000000000000000000030 /* SessionSurfacePresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000031 /* SessionSurfacePresentation.swift */; };
+		D7F000000000000000000032 /* CompanionStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000033 /* CompanionStatus.swift */; };
+		D7F000000000000000000034 /* SessionSurfacesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000035 /* SessionSurfacesController.swift */; };
+		D7F000000000000000000036 /* SessionSurfaceViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000037 /* SessionSurfaceViews.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -106,6 +110,10 @@
 		D7F000000000000000000010 /* RoomSceneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoomSceneView.swift; sourceTree = "<group>"; };
 		D7F000000000000000000012 /* ReflectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflectionView.swift; sourceTree = "<group>"; };
 		D7F000000000000000000014 /* SettingsRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsRootView.swift; sourceTree = "<group>"; };
+		D7F000000000000000000031 /* SessionSurfacePresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionSurfacePresentation.swift; sourceTree = "<group>"; };
+		D7F000000000000000000033 /* CompanionStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionStatus.swift; sourceTree = "<group>"; };
+		D7F000000000000000000035 /* SessionSurfacesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionSurfacesController.swift; sourceTree = "<group>"; };
+		D7F000000000000000000037 /* SessionSurfaceViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionSurfaceViews.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -184,6 +192,7 @@
 				D7PET02A305978720070926E /* PetDomain.swift */,
 				D7PET02B305978720070926E /* PetStateMachine.swift */,
 				D7PET02C305978720070926E /* JoeyAssetManifest.swift */,
+				D7F000000000000000000031 /* SessionSurfacePresentation.swift */,
 			);
 			path = Domain;
 			sourceTree = "<group>";
@@ -242,6 +251,7 @@
 			children = (
 				D7PET00E305978720070926E /* AppDelegate.swift */,
 				D7F000000000000000000004 /* AppSettings.swift */,
+				D7F000000000000000000033 /* CompanionStatus.swift */,
 				D7PET011305978720070926E /* DebugStateInjector.swift */,
 				D7PET00F305978720070926E /* PetCoordinator.swift */,
 				D7PET010305978720070926E /* SleepWakeMonitor.swift */,
@@ -253,6 +263,7 @@
 			isa = PBXGroup;
 			children = (
 				D7F000000000000000000008 /* JoeyComponents.swift */,
+				D7F000000000000000000024 /* Desktop */,
 				D7F000000000000000000022 /* Home */,
 				D7F000000000000000000023 /* Settings */,
 				D7PET012305978720070926E /* PetPanel.swift */,
@@ -295,6 +306,15 @@
 				D7F000000000000000000014 /* SettingsRootView.swift */,
 			);
 			path = Settings;
+			sourceTree = "<group>";
+		};
+		D7F000000000000000000024 /* Desktop */ = {
+			isa = PBXGroup;
+			children = (
+				D7F000000000000000000035 /* SessionSurfacesController.swift */,
+				D7F000000000000000000037 /* SessionSurfaceViews.swift */,
+			);
+			path = Desktop;
 			sourceTree = "<group>";
 		};
 		D7PET210305978720070926E /* Utilities */ = {
@@ -458,6 +478,10 @@
 				D7F00000000000000000000F /* RoomSceneView.swift in Sources */,
 				D7F000000000000000000011 /* ReflectionView.swift in Sources */,
 				D7F000000000000000000013 /* SettingsRootView.swift in Sources */,
+				D7F000000000000000000030 /* SessionSurfacePresentation.swift in Sources */,
+				D7F000000000000000000032 /* CompanionStatus.swift in Sources */,
+				D7F000000000000000000034 /* SessionSurfacesController.swift in Sources */,
+				D7F000000000000000000036 /* SessionSurfaceViews.swift in Sources */,
 
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -11,6 +11,9 @@ final class PetCoordinator {
     private let panelController: PetPanelController
     private var workspaceObservers: [NSObjectProtocol] = []
 
+    /// Forwards every reduced situation together with today's facts.
+    var onSituationChanged: ((PetSituation, CompanionSummary) -> Void)?
+
     init(panelController: PetPanelController) {
         self.panelController = panelController
         presenceMonitor = PetPresenceMonitor(
@@ -18,6 +21,10 @@ final class PetCoordinator {
         )
         presenceMonitor.onEvent = { [weak self] event in
             self?.panelController.petRuntime.send(event)
+        }
+        panelController.onSituationChanged = { [weak self] situation in
+            guard let self else { return }
+            self.onSituationChanged?(situation, self.runtime.summary)
         }
     }
 
@@ -78,6 +85,16 @@ final class PetCoordinator {
     /// Mirrors the menu/settings visibility toggle into the runtime state.
     func setVisible(_ visible: Bool) {
         runtime.setVisible(visible)
+    }
+
+    /// The user starts companionship from the nest.
+    func startSession() {
+        runtime.startSession()
+    }
+
+    /// The user ends the session from the nest or the desktop menu.
+    func endSession() {
+        runtime.endSession()
     }
 
     func applyConfiguration(quietWindow: QuietWindow, rhythmMinutes: Int) {

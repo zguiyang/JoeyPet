@@ -6,6 +6,7 @@ enum JoeyCopy {
     static let settingsTitle = "JoeyPet 设置"
 
     static let startCompanionship = "开始一起工作"
+    static let endCompanionship = "结束陪伴"
     static let returnHome = "回巢"
     static let reviewHint = "回顾这周"
 

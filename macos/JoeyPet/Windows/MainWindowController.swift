@@ -10,7 +10,7 @@ final class MainWindowController: NSWindowController {
 
     init(
         settings: AppSettings,
-        summary: CompanionSummary = .empty,
+        status: CompanionStatus,
         onPrimaryAction: @escaping () -> Void
     ) {
         self.settings = settings
@@ -33,7 +33,7 @@ final class MainWindowController: NSWindowController {
         let root = NestRootView(
             settings: settings,
             navigation: navigation,
-            summary: summary,
+            status: status,
             onPrimaryAction: onPrimaryAction,
             onRouteChange: { [weak self] route in
                 self?.updateChrome(for: route)

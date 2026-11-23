@@ -22,10 +22,14 @@ final class PetPanelController {
     private let positionStore: PetPositionStore
     private let docking: PetDockingPolicy
     private let menuController = PetMenuController()
+    private let sessionSurfaces: SessionSurfacesController
     private(set) var petRuntime: PetRuntime
 
     /// Invoked when the user hides Joey from the desktop menu.
     var onHideRequested: (() -> Void)?
+
+    /// Mirrors every reduced situation so the host can follow session state.
+    var onSituationChanged: ((PetSituation) -> Void)?
 
     private var movementTask: Task<Void, Never>?
     private var settleTask: Task<Void, Never>?
@@ -51,6 +55,7 @@ final class PetPanelController {
 
         petRuntime = PetRuntime(sceneSize: Self.panelSize, package: Self.debugOverridePackage())
         spriteView.presentScene(petRuntime.scene)
+        sessionSurfaces = SessionSurfacesController(petPanel: panel, appearance: .light)
 
         panel.contentView = spriteView
         configureInteractions()
@@ -76,10 +81,39 @@ final class PetPanelController {
         menuController.onHidePet = { [weak self] in self?.onHideRequested?() }
         menuController.onPause = { [weak self] in self?.petRuntime.send(.pauseRequested) }
 
+        sessionSurfaces.onAcceptInvitation = { [weak self] in
+            self?.petRuntime.send(.inviteAccepted)
+        }
+        sessionSurfaces.onSnooze = { [weak self] in
+            guard let self else { return }
+            self.petRuntime.send(.snoozeRequested)
+            self.sessionSurfaces.showSnoozeToast()
+        }
+        sessionSurfaces.onPause = { [weak self] in
+            guard let self else { return }
+            self.petRuntime.send(.pauseRequested)
+            self.sessionSurfaces.showPauseToast()
+        }
+        sessionSurfaces.onFinishRecovery = { [weak self] in
+            self?.petRuntime.send(.recoveryFinished)
+        }
+        sessionSurfaces.onSkipRecovery = { [weak self] in
+            self?.petRuntime.send(.recoverySkipped)
+        }
+
         petRuntime.onSituationChanged = { [weak self] situation in
-            self?.updateAccessibility(situation)
+            guard let self else { return }
+            self.updateAccessibility(situation)
+            self.sessionSurfaces.update(situation: situation)
+            self.onSituationChanged?(situation)
         }
         updateAccessibility(petRuntime.situation)
+        sessionSurfaces.update(situation: petRuntime.situation)
+    }
+
+    /// Follows the app appearance for the floating session surfaces.
+    func applyAppearance(_ appearance: JoeyAppearance) {
+        sessionSurfaces.applyAppearance(appearance)
     }
 
     private static func manifestDockingPolicy() -> PetDockingPolicy {
@@ -116,11 +150,13 @@ final class PetPanelController {
                 applyDockFrame(animated: false)
             }
             panel.makeKeyAndOrderFront(nil)
+            sessionSurfaces.update(situation: petRuntime.situation)
             Self.logger.info("Pet panel shown")
         } else {
             stopMovement()
             cancelDockingTasks()
             panel.orderOut(nil)
+            sessionSurfaces.hideAll()
             spriteView.isPaused = true
             petRuntime.scene.isPaused = true
             Self.logger.info("Pet panel hidden")

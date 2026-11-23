@@ -133,6 +133,7 @@ struct JoeyPetTests {
 
         let home = MainWindowController(
             settings: settings,
+            status: CompanionStatus(),
             onPrimaryAction: {}
         )
         #expect(home.window?.title == "Joey 的家")
@@ -681,6 +682,110 @@ struct PetDomainTests {
         #expect(PetDayKey.weekdayIndex(for: testDate(2026, 11, 23, 9, 0), calendar: calendar) == 0)
         #expect(PetDayKey.weekdayIndex(for: testDate(2026, 11, 29, 9, 0), calendar: calendar) == 6)
     }
+
+    @Test func sessionSurfacesFollowInvitationAndRecovery() {
+        let calendar = testCalendar()
+        let start = testDate(2026, 11, 23, 9, 0)
+        let due = start.addingTimeInterval(45 * 60)
+
+        let started = PetStateMachine.reduce(
+            PetSituation(),
+            event: .sessionStart,
+            now: start,
+            calendar: calendar
+        ).state
+
+        let alonePresentation = SessionSurfacePresentation(
+            situation: PetSituation(),
+            previous: nil,
+            now: start
+        )
+        #expect(!alonePresentation.showsCompanionChip)
+        #expect(!alonePresentation.showsInvitation)
+
+        let idlePresentation = SessionSurfacePresentation(
+            situation: started,
+            previous: nil,
+            now: start
+        )
+        #expect(idlePresentation.showsCompanionChip)
+        #expect(!idlePresentation.showsInvitation)
+        #expect(!idlePresentation.showsRecovery)
+
+        let invited = PetStateMachine.reduce(
+            started,
+            event: .tick,
+            now: due,
+            calendar: calendar
+        ).state
+        let invitePresentation = SessionSurfacePresentation(
+            situation: invited,
+            previous: started,
+            now: due
+        )
+        #expect(invitePresentation.showsInvitation)
+        #expect(!invitePresentation.showsRecovery)
+
+        let recovering = PetStateMachine.reduce(
+            invited,
+            event: .inviteAccepted,
+            now: due,
+            calendar: calendar
+        ).state
+        let recoveryPresentation = SessionSurfacePresentation(
+            situation: recovering,
+            previous: invited,
+            now: due
+        )
+        #expect(!recoveryPresentation.showsInvitation)
+        #expect(recoveryPresentation.showsRecovery)
+        #expect(recoveryPresentation.recoveryEndsAt == due.addingTimeInterval(30))
+        #expect(!recoveryPresentation.newlyCompleted)
+
+        let completed = PetStateMachine.reduce(
+            recovering,
+            event: .recoveryFinished,
+            now: due.addingTimeInterval(30),
+            calendar: calendar
+        ).state
+        let completedPresentation = SessionSurfacePresentation(
+            situation: completed,
+            previous: recovering,
+            now: due.addingTimeInterval(30)
+        )
+        #expect(!completedPresentation.showsRecovery)
+        #expect(completedPresentation.newlyCompleted)
+
+        let settled = SessionSurfacePresentation(
+            situation: completed,
+            previous: completed,
+            now: due.addingTimeInterval(31)
+        )
+        #expect(!settled.newlyCompleted)
+    }
+
+    @Test func companionChipTextUsesMinutesAndSeconds() {
+        let start = testDate(2026, 11, 23, 9, 0)
+        #expect(CompanionTimeText.elapsedText(from: start, to: start) == "00:00")
+        #expect(
+            CompanionTimeText.elapsedText(
+                from: start,
+                to: start.addingTimeInterval(45 * 60 + 7)
+            ) == "45:07"
+        )
+        #expect(
+            CompanionTimeText.elapsedText(
+                from: start,
+                to: start.addingTimeInterval(2 * 60 * 60 + 3 * 60 + 9)
+            ) == "123:09"
+        )
+        #expect(
+            CompanionTimeText.elapsedText(
+                from: start,
+                to: start.addingTimeInterval(-5)
+            ) == "00:00"
+        )
+    }
 }
 
 // MARK: - Layered rendering
@@ -935,6 +1040,7 @@ struct PetRuntimeTests {
 
         #expect(runtime.situation.companion == .complete)
         #expect(store.state.todayBreaks == 1)
+        #expect(runtime.summary.todayBreaks == 1)
         let index = PetDayKey.weekdayIndex(for: current, calendar: calendar)
         #expect(store.state.weekBreakCounts[index] == 1)
     }

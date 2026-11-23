@@ -47,7 +47,7 @@ final class NestNavigation {
 struct NestRootView: View {
     @Bindable var settings: AppSettings
     @Bindable var navigation: NestNavigation
-    var summary: CompanionSummary = .empty
+    var status: CompanionStatus
     var topChromeHeight: CGFloat = 40
     let onPrimaryAction: () -> Void
     let onRouteChange: (NestRoute) -> Void
@@ -66,14 +66,14 @@ struct NestRootView: View {
                 case .home:
                     RoomSceneView(
                         rhythmMinutes: settings.rhythmMinutes,
-                        summary: summary,
+                        status: status,
                         onOpenReflection: { navigation.showReflection() },
                         onPrimaryAction: onPrimaryAction
                     )
                     .transition(.opacity)
                 case .reflection:
                     ReflectionView(
-                        summary: summary,
+                        summary: status.summary,
                         onReturn: { navigation.showHome() }
                     )
                     .transition(.opacity)

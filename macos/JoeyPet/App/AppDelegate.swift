@@ -5,6 +5,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     static var retainedDelegate: AppDelegate?
 
     private let settings = AppSettings()
+    private let companionStatus = CompanionStatus()
     private var panelController: PetPanelController?
     private var coordinator: PetCoordinator?
     private var statusItem: NSStatusItem?
@@ -41,11 +42,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         let panel = PetPanelController()
         let coordinator = PetCoordinator(panelController: panel)
+        coordinator.onSituationChanged = { [weak self] situation, summary in
+            self?.companionStatus.update(situation: situation, summary: summary)
+        }
         panel.onHideRequested = { [weak self] in
             self?.settings.showsDesktopPet = false
         }
         panelController = panel
         self.coordinator = coordinator
+        panel.applyAppearance(settings.appearance)
         panel.setVisible(settings.showsDesktopPet)
         coordinator.start()
         coordinator.applyConfiguration(
@@ -184,7 +189,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if homeWindowController == nil {
             homeWindowController = MainWindowController(
                 settings: settings,
-                onPrimaryAction: {}
+                status: companionStatus,
+                onPrimaryAction: { [weak self] in self?.toggleCompanionship() }
             )
         }
         homeWindowController?.applyAppearance()
@@ -206,8 +212,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         NSApp.terminate(nil)
     }
 
+    /// Starts companionship only from an explicit user action, and ends it the same way.
+    /// Showing the desktop pet stays a separate manual choice in Settings or the menu bar.
+    private func toggleCompanionship() {
+        guard let coordinator else { return }
+        if panelController?.petRuntime.situation.session != nil {
+            coordinator.endSession()
+        } else {
+            coordinator.startSession()
+        }
+    }
+
     private func applyAppearanceToWindows() {
         homeWindowController?.applyAppearance()
+        panelController?.applyAppearance(settings.appearance)
     }
 
     #if DEBUG

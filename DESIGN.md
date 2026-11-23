@@ -39,15 +39,15 @@ Engineering AGENTS.md, docs/tech-stack.md        → AppKit/SwiftUI/SpriteKit sp
 | Surface | Design | Implementation |
 |---------|--------|----------------|
 | Desktop Joey (idle, drag, hide, menu) | Agreed | Implemented (V0 base), hidden by default |
-| Rest invitation | Agreed | Pending |
-| 30-second recovery | Agreed | Pending |
-| Nest home (main window, room scene) | Agreed | Implemented (room shell, draggable Joey; session CTA not wired) |
-| Rhythm reflection (garden view) | Agreed | Implemented (seed / sprout / tall sprout / tree stages; waiting on session data) |
+| Rest invitation | Agreed | Implemented (desktop card, dismiss toasts, snooze / pause) |
+| 30-second recovery | Agreed | Implemented (real countdown, done / skip) |
+| Nest home (main window, room scene) | Agreed | Implemented (room shell, draggable Joey; session CTA wired) |
+| Rhythm reflection (garden view) | Agreed | Implemented (seed / sprout / tall sprout / tree stages; fed by session data) |
 | Settings | Agreed | Implemented (page inside the main window) |
 | Light + dusk appearances | Agreed | Implemented |
 | Calm Space / Mac Care shell | Legacy | Removed — archive branch only |
 
-> Shipped today: the desktop panel (drag, hide, show; hidden by default), menu bar item, the nest window with in-scene reflection navigation, and settings with light/dusk appearance and persisted V0 settings. Rest invitation and 30-second recovery remain design-only until their row says otherwise. The nest primary action is visual only — it is not wired to a companionship session yet. Do not treat planned rows as shipped.
+> Shipped today: the desktop panel (drag, hide, show; hidden by default), menu bar item, the companion chip, rest invitation, 30-second recovery, completion feedback, the nest window with a working start / end companionship action, reflection, and settings with light/dusk appearance and persisted V0 settings. The desktop pet is shown only when the user turns it on in Settings or the menu bar; starting companionship does not reveal it automatically.
 
 ---
 

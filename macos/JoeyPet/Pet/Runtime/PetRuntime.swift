@@ -63,6 +63,15 @@ final class PetRuntime {
     var scene: SKScene { renderer.skScene }
     var currentState: PetState { .idle }
 
+    /// Today's companionship and break facts for the nest and reflection views.
+    var summary: CompanionSummary {
+        CompanionSummary(
+            todayCompanionship: TimeInterval(persisted.todayCompanionshipSeconds),
+            todayBreaks: persisted.todayBreaks,
+            weekBreakCounts: persisted.weekBreakCounts
+        )
+    }
+
     convenience init(sceneSize: CGSize, package: LoadedPetPackage? = nil) {
         self.init(
             renderer: Self.makeRenderer(sceneSize: sceneSize, legacyPackage: package),

@@ -3,7 +3,7 @@ import SwiftUI
 
 struct RoomSceneView: View {
     let rhythmMinutes: Int
-    let summary: CompanionSummary
+    let status: CompanionStatus
     let onOpenReflection: () -> Void
     let onPrimaryAction: () -> Void
 
@@ -91,9 +91,19 @@ struct RoomSceneView: View {
                         y: originY + 215 * scale
                     )
 
+                if status.isSessionActive, let startedAt = status.sessionStartedAt {
+                    JoeyCompanionChipView(startedAt: startedAt)
+                        .position(
+                            x: originX + 570 * scale,
+                            y: originY + sceneHeight - 40 * scale - 71
+                        )
+                }
+
                 JoeyPrimaryButton(
-                    title: JoeyCopy.startCompanionship,
-                    systemImage: "play.fill",
+                    title: status.isSessionActive
+                        ? JoeyCopy.endCompanionship
+                        : JoeyCopy.startCompanionship,
+                    systemImage: status.isSessionActive ? "stop.fill" : "play.fill",
                     action: onPrimaryAction
                 )
                 .position(
@@ -122,10 +132,10 @@ struct RoomSceneView: View {
 
     private var notebookLabel: some View {
         JoeyRoomLabel {
-            if summary.todayCompanionship > 0 {
+            if status.summary.todayCompanionship > 0 {
                 HStack(spacing: 0) {
                     Text("今天陪了 ")
-                    Text(summary.todayCompanionshipText)
+                    Text(status.summary.todayCompanionshipText)
                         .fontWeight(.semibold)
                         .foregroundStyle(theme.sageDeep)
                 }
@@ -137,10 +147,10 @@ struct RoomSceneView: View {
 
     private var plantLabel: some View {
         JoeyRoomLabel {
-            if summary.todayBreaks > 0 {
+            if status.summary.todayBreaks > 0 {
                 HStack(spacing: 0) {
                     Text("今天休息 ")
-                    Text("\(summary.todayBreaks) 次")
+                    Text("\(status.summary.todayBreaks) 次")
                         .fontWeight(.semibold)
                         .foregroundStyle(theme.sageDeep)
                 }
