@@ -12,15 +12,9 @@ final class PetPanelController {
         height: PetPanelGeometry.defaultSize.y
     )
 
-    private enum DockState: Equatable {
-        case free
-        case docked(edge: PetDockEdge, expandedOrigin: NSPoint)
-    }
-
     private let panel: PetPanel
     private let spriteView: PetSpriteView
     private let positionStore: PetPositionStore
-    private let docking: PetDockingPolicy
     private let menuController = PetMenuController()
     private let sessionSurfaces: SessionSurfacesController
     private(set) var petRuntime: PetRuntime
@@ -32,10 +26,6 @@ final class PetPanelController {
     var onSituationChanged: ((PetSituation) -> Void)?
 
     private var movementTask: Task<Void, Never>?
-    private var settleTask: Task<Void, Never>?
-    private var collapseTask: Task<Void, Never>?
-    private var dockState: DockState = .free
-    private var isDockedCollapsed = false
     private var corner: PetCorner
 
     convenience init(corner: PetCorner = .bottomRight) {
@@ -44,11 +34,9 @@ final class PetPanelController {
 
     init(
         positionStore: PetPositionStore,
-        docking: PetDockingPolicy? = nil,
         corner: PetCorner = .bottomRight
     ) {
         self.positionStore = positionStore
-        self.docking = docking ?? Self.manifestDockingPolicy()
         self.corner = corner
 
         let frame = Self.restoredFrame(
@@ -78,8 +66,6 @@ final class PetPanelController {
         spriteView.onMenuRequested = { [weak self] in self?.showMenu() }
         spriteView.onDragBegan = { [weak self] in self?.dragBegan() }
         spriteView.onDragEnded = { [weak self] origin in self?.dragEnded(origin: origin) }
-        spriteView.onPointerEntered = { [weak self] in self?.pointerEntered() }
-        spriteView.onPointerExited = { [weak self] in self?.pointerExited() }
         spriteView.onKeyboardMove = { [weak self] dx, dy in self?.movePanel(by: dx, dy: dy) }
 
         menuController.isSessionActive = { [weak self] in
@@ -136,13 +122,6 @@ final class PetPanelController {
         sessionSurfaces.applyAppearance(appearance)
     }
 
-    private static func manifestDockingPolicy() -> PetDockingPolicy {
-        guard let spec = JoeyAssetPackage.load()?.manifest.docking else {
-            return PetDockingPolicy()
-        }
-        return PetDockingPolicy(spec: spec)
-    }
-
     private(set) var isVisible = false
 
     /// Hidden mode still surfaces briefly for an invitation; this keeps the
@@ -159,15 +138,11 @@ final class PetPanelController {
         if visible {
             spriteView.isPaused = false
             petRuntime.scene.isPaused = false
-            if case .docked = dockState {
-                applyDockFrame(animated: false)
-            }
             panel.orderFrontRegardless()
             sessionSurfaces.update(situation: petRuntime.situation)
             Self.logger.info("Pet panel shown")
         } else {
             stopMovement()
-            cancelDockingTasks()
             panel.orderOut(nil)
             sessionSurfaces.hideAll()
             spriteView.isPaused = true
@@ -178,10 +153,11 @@ final class PetPanelController {
 
     func currentFrame() -> NSRect { panel.frame }
 
+    /// One low-frequency ambient walk. The runtime owns the decision and the
+    /// pose; this method only moves the panel when the pet is free to roam.
     func moveShortDistance() {
         guard isVisible,
               movementTask == nil,
-              petRuntime.currentState == .idle,
               petRuntime.currentTransientBehavior == nil,
               petRuntime.perform(.walking) else { return }
 
@@ -201,13 +177,16 @@ final class PetPanelController {
             return
         }
 
-        panel.animator().setFrameOrigin(NSPoint(x: targetX, y: panel.frame.origin.y))
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 1.2
+            context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            panel.animator().setFrameOrigin(NSPoint(x: targetX, y: panel.frame.origin.y))
+        }
+        let duration = PetTransientBehavior.walking.sessionDuration ?? 2.4
         movementTask = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(1.5))
+            try? await Task.sleep(for: .seconds(duration))
             guard !Task.isCancelled, let self else { return }
-            if self.petRuntime.currentState == .idle {
-                self.petRuntime.finishTransientIfCurrent(.walking)
-            }
+            self.petRuntime.finishTransientIfCurrent(.walking)
             self.movementTask = nil
         }
     }
@@ -221,9 +200,6 @@ final class PetPanelController {
     }
 
     func resetPosition() {
-        cancelDockingTasks()
-        dockState = .free
-        isDockedCollapsed = false
         positionStore.clear()
         let frame = Self.initialFrame(size: Self.panelSize, corner: corner)
         panel.setFrameOrigin(frame.origin)
@@ -234,9 +210,6 @@ final class PetPanelController {
     func applyCorner(_ corner: PetCorner) {
         self.corner = corner
         positionStore.clear()
-        cancelDockingTasks()
-        dockState = .free
-        isDockedCollapsed = false
 
         guard let screen = screenForPanel() ?? NSScreen.main else { return }
         let visible = screen.visibleFrame
@@ -254,124 +227,16 @@ final class PetPanelController {
         sessionSurfaces.update(situation: petRuntime.situation)
     }
 
-    // MARK: - Drag and docking
+    // MARK: - Drag
 
     private func dragBegan() {
         stopMovement()
-        cancelDockingTasks()
-        dockState = .free
-        isDockedCollapsed = false
         petRuntime.send(.dragBegan)
     }
 
     private func dragEnded(origin: NSPoint) {
         petRuntime.send(.dragEnded)
         saveUserPosition(origin: origin)
-        scheduleDockSettle()
-    }
-
-    private func pointerEntered() {
-        guard case .docked = dockState, isDockedCollapsed else { return }
-        collapseTask?.cancel()
-        collapseTask = nil
-        isDockedCollapsed = false
-        applyDockFrame(animated: true)
-    }
-
-    private func pointerExited() {
-        guard case .docked = dockState, !isDockedCollapsed else { return }
-        let delay = docking.collapseDelay
-        collapseTask?.cancel()
-        collapseTask = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(delay))
-            guard !Task.isCancelled, let self, !self.isDockedCollapsed else { return }
-            self.isDockedCollapsed = true
-            self.applyDockFrame(animated: true)
-            self.collapseTask = nil
-        }
-    }
-
-    private func scheduleDockSettle() {
-        let delay = docking.collapseDelay
-        settleTask?.cancel()
-        settleTask = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(delay))
-            guard !Task.isCancelled, let self else { return }
-            self.settleDocking()
-            self.settleTask = nil
-        }
-    }
-
-    /// After release the panel re-evaluates whether it sits within 24 pt of a side edge.
-    private func settleDocking() {
-        guard let screen = screenForPanel() else { return }
-        let visible = petVisibleFrame(screen)
-        let origin = PetPositionPoint(x: panel.frame.origin.x, y: panel.frame.origin.y)
-
-        guard let edge = PetPanelGeometry.dockEdge(
-            for: origin,
-            in: visible,
-            windowSize: Self.panelSizePoint,
-            edgePt: docking.edgePt
-        ) else {
-            dockState = .free
-            isDockedCollapsed = false
-            return
-        }
-
-        let expanded = PetPanelGeometry.clampedOrigin(
-            origin,
-            in: visible,
-            windowSize: Self.panelSizePoint
-        )
-        dockState = .docked(
-            edge: edge,
-            expandedOrigin: NSPoint(x: expanded.x, y: expanded.y)
-        )
-        isDockedCollapsed = true
-        applyDockFrame(animated: true)
-        Self.logger.info("Pet docked to \(String(describing: edge), privacy: .public) edge")
-    }
-
-    private func applyDockFrame(animated: Bool) {
-        guard case let .docked(edge, expandedOrigin) = dockState,
-              let screen = screenForPanel() else { return }
-
-        let origin: NSPoint
-        if isDockedCollapsed {
-            let collapsed = PetPanelGeometry.collapsedOrigin(
-                edge: edge,
-                expandedOrigin: PetPositionPoint(
-                    x: expandedOrigin.x,
-                    y: expandedOrigin.y
-                ),
-                in: petVisibleFrame(screen),
-                windowSize: Self.panelSizePoint,
-                exposeRatio: docking.exposeRatio,
-                minExposePt: docking.minExposePt
-            )
-            origin = NSPoint(x: collapsed.x, y: collapsed.y)
-        } else {
-            origin = expandedOrigin
-        }
-
-        guard animated, isVisible else {
-            panel.setFrameOrigin(origin)
-            return
-        }
-
-        NSAnimationContext.runAnimationGroup { context in
-            context.duration = docking.slideDuration
-            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-            panel.animator().setFrameOrigin(origin)
-        }
-    }
-
-    private func cancelDockingTasks() {
-        settleTask?.cancel()
-        settleTask = nil
-        collapseTask?.cancel()
-        collapseTask = nil
     }
 
     // MARK: - Menu and keyboard
@@ -386,9 +251,6 @@ final class PetPanelController {
 
     private func movePanel(by dx: CGFloat, dy: CGFloat) {
         guard isVisible else { return }
-        cancelDockingTasks()
-        dockState = .free
-        isDockedCollapsed = false
 
         guard let screen = screenForPanel() else { return }
         let visible = petVisibleFrame(screen)
@@ -489,8 +351,6 @@ final class PetPanelController {
 
     deinit {
         movementTask?.cancel()
-        settleTask?.cancel()
-        collapseTask?.cancel()
     }
 
     private static func initialFrame(

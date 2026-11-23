@@ -71,77 +71,6 @@ struct JoeyPetTests {
         #expect(topLeft.y == 900 - 210 - 8)
     }
 
-    @Test func dockEdgeUsesTheTwentyFourPointThreshold() {
-        let visible = PetPositionRect(minX: 0, minY: 0, width: 1440, height: 900)
-        let size = PetPanelGeometry.defaultSize
-
-        #expect(
-            PetPanelGeometry.dockEdge(
-                for: PetPositionPoint(x: 20, y: 300),
-                in: visible,
-                windowSize: size,
-                edgePt: 24
-            ) == .left
-        )
-        #expect(
-            PetPanelGeometry.dockEdge(
-                for: PetPositionPoint(x: 1440 - 168 - 20, y: 300),
-                in: visible,
-                windowSize: size,
-                edgePt: 24
-            ) == .right
-        )
-        #expect(
-            PetPanelGeometry.dockEdge(
-                for: PetPositionPoint(x: 600, y: 300),
-                in: visible,
-                windowSize: size,
-                edgePt: 24
-            ) == nil
-        )
-    }
-
-    @Test func collapsedDockExposesFortyPercent() {
-        let visible = PetPositionRect(minX: 0, minY: 0, width: 1440, height: 900)
-        let size = PetPanelGeometry.defaultSize
-        let exposed = 168 * 0.4
-
-        let left = PetPanelGeometry.collapsedOrigin(
-            edge: .left,
-            expandedOrigin: PetPositionPoint(x: 8, y: 300),
-            in: visible,
-            windowSize: size,
-            exposeRatio: 0.4,
-            minExposePt: 24
-        )
-        #expect(abs(left.x - (0 - (168 - exposed))) < 0.0001)
-        #expect(left.y == 300)
-
-        let right = PetPanelGeometry.collapsedOrigin(
-            edge: .right,
-            expandedOrigin: PetPositionPoint(x: 1000, y: 300),
-            in: visible,
-            windowSize: size,
-            exposeRatio: 0.4,
-            minExposePt: 24
-        )
-        #expect(abs(right.x - (1440 - exposed)) < 0.0001)
-    }
-
-    @Test func collapsedDockKeepsAtLeastTwentyFourPoints() {
-        let visible = PetPositionRect(minX: 0, minY: 0, width: 1440, height: 900)
-
-        let narrow = PetPanelGeometry.collapsedOrigin(
-            edge: .right,
-            expandedOrigin: PetPositionPoint(x: 1000, y: 300),
-            in: visible,
-            windowSize: PetPositionPoint(x: 40, y: 100),
-            exposeRatio: 0.4,
-            minExposePt: 24
-        )
-        #expect(narrow.x == 1440 - 24)
-    }
-
     @Test func appWindowBuildsWithV0Title() {
         let testDefaults = TestDefaults("JoeyPetTests")
         defer { testDefaults.remove() }
@@ -150,7 +79,8 @@ struct JoeyPetTests {
         let home = MainWindowController(
             settings: settings,
             status: CompanionStatus(),
-            onPrimaryAction: {}
+            onPrimaryAction: {},
+            onGreetPet: {}
         )
         #expect(home.window?.title == "Joey 的家")
         #expect(home.window?.contentView != nil)
@@ -744,6 +674,87 @@ struct PetDomainTests {
         ).state
         #expect(!idle.isDozing)
         #expect(idle.resolvedPose(at: start.addingTimeInterval(90)) == .look)
+    }
+
+    @Test func ambientStepsOnlyWhileAloneOnScreen() {
+        let now = testDate(2026, 11, 23, 9, 0)
+
+        #expect(PetSituation().canWalkAmbiently(at: now))
+
+        var hidden = PetSituation()
+        hidden.isHidden = true
+        #expect(!hidden.canWalkAmbiently(at: now))
+
+        var dragging = PetSituation()
+        dragging.isDragging = true
+        #expect(!dragging.canWalkAmbiently(at: now))
+
+        var dozing = PetSituation()
+        dozing.isDozing = true
+        #expect(!dozing.canWalkAmbiently(at: now))
+
+        var quiet = PetSituation()
+        quiet.isQuietActive = true
+        #expect(!quiet.canWalkAmbiently(at: now))
+
+        var companion = PetSituation()
+        companion.session = CompanionSession(startedAt: now)
+        companion.companion = .idle
+        #expect(!companion.canWalkAmbiently(at: now))
+
+        var dnd = PetSituation()
+        dnd.isDoNotDisturb = true
+        #expect(dnd.canWalkAmbiently(at: now))
+
+        var reduced = PetSituation()
+        reduced.isReduceMotion = true
+        #expect(!reduced.canWalkAmbiently(at: now))
+
+        let policy = AmbientStepPolicy()
+        for _ in 0..<20 {
+            let delay = policy.nextDelay(lowPower: false)
+            #expect(delay >= 90 && delay <= 180)
+            let stretched = policy.nextDelay(lowPower: true)
+            #expect(stretched >= 135 && stretched <= 270)
+        }
+    }
+
+    @Test func completedBreakCarriesALeafHome() {
+        let calendar = testCalendar()
+        let start = testDate(2026, 11, 23, 9, 0)
+        var situation = PetSituation()
+        situation.session = CompanionSession(startedAt: start)
+        situation.companion = .complete
+        situation.completeEndsAt = start.addingTimeInterval(2.6)
+
+        let finished = PetStateMachine.reduce(
+            situation,
+            event: .tick,
+            now: start.addingTimeInterval(2.6),
+            calendar: calendar
+        )
+        #expect(finished.state.companion == .idle)
+        #expect(finished.effects.contains(.playCarry))
+
+        var quiet = situation
+        quiet.quietWindow = QuietWindow(startMinutes: 8 * 60, endMinutes: 10 * 60)
+        let quietFinished = PetStateMachine.reduce(
+            quiet,
+            event: .tick,
+            now: start.addingTimeInterval(2.6),
+            calendar: calendar
+        )
+        #expect(!quietFinished.effects.contains(.playCarry))
+
+        var reduced = situation
+        reduced.isReduceMotion = true
+        let reducedFinished = PetStateMachine.reduce(
+            reduced,
+            event: .tick,
+            now: start.addingTimeInterval(2.6),
+            calendar: calendar
+        )
+        #expect(!reducedFinished.effects.contains(.playCarry))
     }
 
     @Test func systemSleepFreezesInvitationProgression() {
@@ -1362,5 +1373,75 @@ struct PetRuntimeTests {
 
         #expect(seen == [.alone, .dragging, .alone, .alone])
         #expect(renderer.shownPoses.contains(.look))
+    }
+
+    @Test func runtimeCarriesLeafAfterBreak() {
+        let calendar = testCalendar()
+        let start = testDate(2026, 11, 23, 9, 0)
+        var current = start
+        let runtime = PetRuntime(
+            renderer: TestPoseRenderer(),
+            store: TestSessionStore(makePersisted(now: start, calendar: calendar)),
+            now: { current },
+            calendar: calendar
+        )
+
+        runtime.startSession()
+        current = start.addingTimeInterval(45 * 60)
+        runtime.send(.tick)
+        runtime.send(.inviteAccepted)
+
+        current = start.addingTimeInterval(45 * 60 + 30)
+        runtime.send(.tick)
+        #expect(runtime.situation.companion == .complete)
+
+        current = start.addingTimeInterval(45 * 60 + 32.6)
+        runtime.send(.tick)
+        #expect(runtime.renderedPose == .carry)
+        #expect(runtime.currentTransientBehavior == .carrying)
+    }
+
+    @Test func greetingPlaysAndNotifiesTheNestMirror() {
+        let calendar = testCalendar()
+        let now = testDate(2026, 11, 23, 9, 0)
+        let (runtime, renderer, _) = makeRuntime(now: now, calendar: calendar)
+
+        var mirrored: [PetPose] = []
+        runtime.onRenderedPoseChanged = { mirrored.append($0) }
+
+        #expect(runtime.perform(.greeting))
+        #expect(runtime.renderedPose == .happy)
+        #expect(runtime.currentTransientBehavior == .greeting)
+        #expect(mirrored == [.happy])
+        #expect(renderer.shownPoses.last == .happy)
+        #expect(PetTransientBehavior.greeting.sessionDuration == 2.8)
+    }
+
+    @Test func greetingStillPlaysWhileTheDesktopPetIsHidden() {
+        let calendar = testCalendar()
+        let now = testDate(2026, 11, 23, 9, 0)
+        var persisted = makePersisted(now: now, calendar: calendar)
+        persisted.showsDesktopPet = false
+        let (runtime, _, _) = makeRuntime(now: now, calendar: calendar, persisted: persisted)
+
+        #expect(runtime.situation.isHidden)
+        #expect(runtime.perform(.greeting))
+        #expect(runtime.renderedPose == .happy)
+    }
+
+    @Test func greetingSurvivesTicksDuringQuietHours() {
+        let calendar = testCalendar()
+        let now = testDate(2026, 11, 23, 23, 0)
+        var persisted = makePersisted(now: now, calendar: calendar)
+        persisted.quietWindow = QuietWindow(startMinutes: 22 * 60, endMinutes: 8 * 60)
+        let (runtime, _, _) = makeRuntime(now: now, calendar: calendar, persisted: persisted)
+
+        #expect(runtime.renderedPose == .sleep)
+        #expect(runtime.perform(.greeting))
+        #expect(runtime.renderedPose == .happy)
+
+        runtime.send(.tick)
+        #expect(runtime.renderedPose == .happy)
+        #expect(runtime.currentTransientBehavior == .greeting)
     }
 }

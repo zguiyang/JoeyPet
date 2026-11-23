@@ -56,7 +56,6 @@
     { "from": "sign", "to": "sit", "ms": 240, "easing": "ease-out" },
     { "from": "look", "to": "sit", "ms": 240, "easing": "ease-out" }
   ],
-  "docking": { "edgePt": 24, "collapseDelayMs": 600, "exposeRatio": 0.4, "minExposePt": 24, "hotZonePt": 24, "slideMs": 180 },
   "mapping": {
     "key": "behavior/clip",
     "buckets": {

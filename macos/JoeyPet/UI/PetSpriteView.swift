@@ -16,8 +16,6 @@ final class PetSpriteView: SKView {
     var onLeftClick: (() -> Void)?
     var onDragBegan: (() -> Void)?
     var onDragEnded: ((NSPoint) -> Void)?
-    var onPointerEntered: (() -> Void)?
-    var onPointerExited: (() -> Void)?
     var onKeyboardMove: ((CGFloat, CGFloat) -> Void)?
     var onMenuRequested: (() -> Void)?
 
@@ -172,8 +170,6 @@ final class PetSpriteView: SKView {
     }
 
     override func mouseEntered(with event: NSEvent) {
-        onPointerEntered?()
-
         hintTask?.cancel()
         hintTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(Self.hintDelay))
@@ -184,7 +180,6 @@ final class PetSpriteView: SKView {
 
     override func mouseExited(with event: NSEvent) {
         cancelHint()
-        onPointerExited?()
     }
 
     // MARK: - Keyboard

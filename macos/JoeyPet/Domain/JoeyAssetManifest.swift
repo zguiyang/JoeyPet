@@ -3,8 +3,7 @@ import Foundation
 /// Decoded form of `Resources/Pets/Joey/joey_manifest.json`.
 ///
 /// The manifest is the single source of numeric truth for poses, clips,
-/// cooldowns, sizes, docking and render layers. Views must not duplicate these
-/// values.
+/// cooldowns, sizes and render layers. Views must not duplicate these values.
 struct JoeyManifest: Codable, Equatable, Sendable {
     let schemaVersion: String
     let canvas: JoeyCanvas
@@ -15,7 +14,6 @@ struct JoeyManifest: Codable, Equatable, Sendable {
     let states: [JoeyStateSpec]
     let substates: [String]
     let transitions: [JoeyTransitionSpec]
-    let docking: JoeyDockingSpec
     let mapping: JoeyMappingSpec
     let assets: JoeyAssetsSpec
     let render: JoeyRenderSpec?
@@ -138,15 +136,6 @@ struct JoeyTransitionSpec: Codable, Equatable, Sendable {
     let ms: Int
     let easing: String
     let afterIdleMs: Int?
-}
-
-struct JoeyDockingSpec: Codable, Equatable, Sendable {
-    let edgePt: Int
-    let collapseDelayMs: Int
-    let exposeRatio: Double
-    let minExposePt: Int
-    let hotZonePt: Int
-    let slideMs: Int
 }
 
 struct JoeyMappingSpec: Codable, Equatable, Sendable {
@@ -286,15 +275,6 @@ enum JoeyManifestValidator {
             if transition.easing != "ease-out" {
                 fail("transitions.\(transition.from)→\(transition.to)", "expected ease-out")
             }
-        }
-
-        if manifest.docking.edgePt <= 0
-            || manifest.docking.collapseDelayMs < 0
-            || manifest.docking.exposeRatio <= 0
-            || manifest.docking.minExposePt <= 0
-            || manifest.docking.hotZonePt <= 0
-            || manifest.docking.slideMs <= 0 {
-            fail("docking", "all docking values must be positive")
         }
 
         if manifest.mapping.key != "behavior/clip" {

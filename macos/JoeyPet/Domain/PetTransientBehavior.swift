@@ -3,9 +3,12 @@ import Foundation
 enum PetTransientBehavior: String, Equatable, Sendable, CaseIterable {
     case blink
     case walking
+    case carrying
     case sleeping
     case celebrating
     case notifying
+    /// One short response when the user taps the nest.
+    case greeting
 
     var animationID: String {
         rawValue
@@ -16,7 +19,11 @@ enum PetTransientBehavior: String, Equatable, Sendable, CaseIterable {
     var sessionDuration: TimeInterval? {
         switch self {
         case .walking:
-            return 2
+            return 2.4
+        case .carrying:
+            return 3.6
+        case .greeting:
+            return 2.8
         case .sleeping:
             return 18
         case .blink, .celebrating, .notifying:

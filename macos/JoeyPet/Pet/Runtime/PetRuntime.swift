@@ -47,6 +47,9 @@ final class PetRuntime {
 
     /// Notifies the host after every reduced event so UI labels can follow the state.
     var onSituationChanged: ((PetSituation) -> Void)?
+    /// Notifies the host whenever the renderer actually switches pose, including
+    /// ambient transients. The nest mirrors this value so both surfaces agree.
+    var onRenderedPoseChanged: ((PetPose) -> Void)?
 
     private var persisted: PetPersistedState
     private var lastCompanionshipSampleAt: Date?
@@ -147,6 +150,14 @@ final class PetRuntime {
         )
         situation = transition.state
 
+        // A pose that must win (sleep, drag, invitation, session) cuts any
+        // ambient transient short instead of letting it finish over it. A
+        // greeting is a direct response to the user, so it plays out.
+        if situation.interruptsAmbientTransient,
+           currentTransientBehavior != .greeting {
+            clearTransient()
+        }
+
         if sessionClockPaused {
             lastCompanionshipSampleAt = nil
         } else if situation.session == nil {
@@ -192,7 +203,16 @@ final class PetRuntime {
     @discardableResult
     func perform(_ behavior: PetTransientBehavior) -> Bool {
         guard transientPose == nil, currentTransientBehavior == nil else { return false }
-        guard situation.resolvedDesktop(at: now()) != .hidden else { return false }
+        // A greeting is a response from the nest, so it may play while the
+        // desktop pet itself is hidden; the panel never appears because of it.
+        guard situation.resolvedDesktop(at: now()) != .hidden
+            || behavior == .greeting
+        else {
+            return false
+        }
+        if behavior == .walking, !situation.canWalkAmbiently(at: now()) {
+            return false
+        }
         switch situation.companion {
         case .invite, .recover, .complete:
             return false
@@ -318,6 +338,9 @@ final class PetRuntime {
             case .completeRecovery:
                 recordCompletedBreak(at: date)
 
+            case .playCarry:
+                playCarryReturn()
+
             case .pauseAmbient, .resumeAmbient, .freeze, .resume:
                 break
 
@@ -334,11 +357,28 @@ final class PetRuntime {
         guard pose != renderedPose else { return }
         renderedPose = pose
         renderer.show(pose: pose)
+        onRenderedPoseChanged?(pose)
         Self.logger.info("Pose -> \(pose.rawValue, privacy: .public)")
     }
 
     private func renderCurrentPose() {
         render(situation.resolvedPose(at: now()))
+    }
+
+    /// The brief "carrying a leaf home" beat after a completed break.
+    private func playCarryReturn() {
+        guard !situation.isReduceMotion,
+              transientPose == nil,
+              currentTransientBehavior == nil,
+              situation.resolvedDesktop(at: now()) != .hidden
+        else {
+            return
+        }
+        playTransient(
+            pose: .carry,
+            duration: PetTransientBehavior.carrying.sessionDuration ?? 3.6,
+            behavior: .carrying
+        )
     }
 
     // MARK: - Transient poses
@@ -433,9 +473,13 @@ final class PetRuntime {
             return nil
         case .walking:
             return .step
+        case .carrying:
+            return .carry
         case .sleeping:
             return .doze
         case .celebrating:
+            return .happy
+        case .greeting:
             return .happy
         case .notifying:
             return .sign

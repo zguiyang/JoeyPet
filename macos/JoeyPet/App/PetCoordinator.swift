@@ -10,9 +10,12 @@ final class PetCoordinator {
     private let presenceMonitor: PetPresenceMonitor
     private let panelController: PetPanelController
     private var workspaceObservers: [NSObjectProtocol] = []
+    private var ambientTask: Task<Void, Never>?
 
     /// Forwards every reduced situation together with today's facts.
     var onSituationChanged: ((PetSituation, CompanionSummary) -> Void)?
+    /// Forwards the pose the renderer actually shows, transients included.
+    var onPoseChanged: ((PetPose) -> Void)?
 
     init(panelController: PetPanelController) {
         self.panelController = panelController
@@ -25,6 +28,9 @@ final class PetCoordinator {
         panelController.onSituationChanged = { [weak self] situation in
             guard let self else { return }
             self.onSituationChanged?(situation, self.runtime.summary)
+        }
+        panelController.petRuntime.onRenderedPoseChanged = { [weak self] pose in
+            self?.onPoseChanged?(pose)
         }
     }
 
@@ -56,7 +62,9 @@ final class PetCoordinator {
         observeAccessibility()
 
         runtime.start()
+        onPoseChanged?(runtime.renderedPose)
         presenceMonitor.start()
+        startAmbientSteps()
 
         if let animationID = DebugStateInjector.injectedAnimationID() {
             runtime.applyDebugAnimation(animationID)
@@ -79,6 +87,8 @@ final class PetCoordinator {
         }
         workspaceObservers.removeAll()
 
+        ambientTask?.cancel()
+        ambientTask = nil
         runtime.stop()
     }
 
@@ -97,6 +107,12 @@ final class PetCoordinator {
         runtime.endSession()
     }
 
+    /// A tap on the nest asks the runtime for one short greeting. The desktop
+    /// pet plays the same transient, so both surfaces stay in sync.
+    func greetPet() {
+        _ = runtime.perform(.greeting)
+    }
+
     /// Mirrors the Settings do-not-disturb switch into the runtime.
     func setDoNotDisturb(_ enabled: Bool) {
         runtime.setDoNotDisturb(enabled)
@@ -104,6 +120,27 @@ final class PetCoordinator {
 
     func applyConfiguration(quietWindow: QuietWindow, rhythmMinutes: Int) {
         runtime.applyConfiguration(quietWindow: quietWindow, rhythmMinutes: rhythmMinutes)
+    }
+
+    /// Low-frequency ambient walks. Each pass is a single randomized sleep, so
+    /// there is no polling, display link or timer burst.
+    private func startAmbientSteps() {
+        ambientTask?.cancel()
+        ambientTask = Task { [weak self] in
+            while !Task.isCancelled {
+                guard let self else { return }
+                let delay = AmbientStepPolicy().nextDelay(
+                    lowPower: self.runtime.situation.isLowPowerMode
+                )
+                do {
+                    try await Task.sleep(for: .seconds(delay))
+                } catch {
+                    return
+                }
+                guard !Task.isCancelled else { return }
+                self.panelController.moveShortDistance()
+            }
+        }
     }
 
     private func observeAccessibility() {

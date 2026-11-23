@@ -44,48 +44,6 @@ struct PetPositionRecord: Codable, Equatable, Sendable {
     let savedVisibleFrame: PetPositionRect
 }
 
-enum PetDockEdge: Equatable, Sendable {
-    case left
-    case right
-}
-
-/// Docking numbers come from `joey_manifest.json` (`docking`).
-struct PetDockingPolicy: Equatable, Sendable {
-    var edgePt: Double
-    var collapseDelay: TimeInterval
-    var exposeRatio: Double
-    var minExposePt: Double
-    var hotZonePt: Double
-    var slideDuration: TimeInterval
-
-    init(
-        edgePt: Double = 24,
-        collapseDelay: TimeInterval = 0.6,
-        exposeRatio: Double = 0.4,
-        minExposePt: Double = 24,
-        hotZonePt: Double = 24,
-        slideDuration: TimeInterval = 0.18
-    ) {
-        self.edgePt = edgePt
-        self.collapseDelay = collapseDelay
-        self.exposeRatio = exposeRatio
-        self.minExposePt = minExposePt
-        self.hotZonePt = hotZonePt
-        self.slideDuration = slideDuration
-    }
-
-    init(spec: JoeyDockingSpec) {
-        self.init(
-            edgePt: Double(spec.edgePt),
-            collapseDelay: TimeInterval(spec.collapseDelayMs) / 1000,
-            exposeRatio: spec.exposeRatio,
-            minExposePt: Double(spec.minExposePt),
-            hotZonePt: Double(spec.hotZonePt),
-            slideDuration: TimeInterval(spec.slideMs) / 1000
-        )
-    }
-}
-
 /// Panel placement rules from the domain contract §10.
 enum PetPanelGeometry {
     static let defaultSize = PetPositionPoint(x: 168, y: 210)
@@ -134,42 +92,6 @@ enum PetPanelGeometry {
                 upper: visibleFrame.maxY - windowSize.y - margin
             )
         )
-    }
-
-    static func dockEdge(
-        for origin: PetPositionPoint,
-        in visibleFrame: PetPositionRect,
-        windowSize: PetPositionPoint,
-        edgePt: Double
-    ) -> PetDockEdge? {
-        if origin.x - visibleFrame.minX <= edgePt {
-            return .left
-        }
-        if visibleFrame.maxX - (origin.x + windowSize.x) <= edgePt {
-            return .right
-        }
-        return nil
-    }
-
-    /// The collapsed frame keeps `exposeRatio` of the panel (at least `minExposePt`)
-    /// inside the screen so the hot zone stays reachable.
-    static func collapsedOrigin(
-        edge: PetDockEdge,
-        expandedOrigin: PetPositionPoint,
-        in visibleFrame: PetPositionRect,
-        windowSize: PetPositionPoint,
-        exposeRatio: Double,
-        minExposePt: Double
-    ) -> PetPositionPoint {
-        let exposed = max(windowSize.x * exposeRatio, minExposePt)
-        let x: Double
-        switch edge {
-        case .left:
-            x = visibleFrame.minX - (windowSize.x - exposed)
-        case .right:
-            x = visibleFrame.maxX - exposed
-        }
-        return PetPositionPoint(x: x, y: expandedOrigin.y)
     }
 
     private static func clamp(_ value: Double, lower: Double, upper: Double) -> Double {
