@@ -90,6 +90,7 @@ Do not use deleted legacy UI specs (`docs/product/ui-spec.md`), the old three-si
 | Handoff and next steps | [开发交接文档.md](开发交接文档.md) |
 | UI / UX (native) | [DESIGN.md](DESIGN.md) (V0 design contract; authority rules in this file) |
 | Frozen UI design | [docs/reference/joeypet-ui-v0.html](docs/reference/joeypet-ui-v0.html) |
+| Nest animation spec | [docs/reference/joeypet-nest-animations-v0.html](docs/reference/joeypet-nest-animations-v0.html) |
 | Pet domain & state model | [docs/pet-domain-model.md](docs/pet-domain-model.md) (engineering contract for states, poses, clips, timers) |
 | Pet runtime | [docs/pet-runtime.md](docs/pet-runtime.md) |
 | Tech stack | [docs/tech-stack.md](docs/tech-stack.md) |

@@ -496,14 +496,16 @@ Rules:
 The main window, and it should feel like entering Joey's home.
 
 - Title: **Joey 的家**. Traffic lights, title, one gear.
-- Room scene fills the content area; Joey breathes in the nest.
+- Room scene fills the content area. Joey lives in the nest through a quiet day loop: sleep and doze (the desktop pet's existing `sleep` loaf pose — small bunny, closed eyes, slow breathing, two or three `Z`s that fade in place with the breath), `wake_blink`, `greet` (sit up, stretch, wave), `settle` (yawn, turn, lie back down), `groom`, and brief `nap_twitch`. Sitting, greet, and groom follow the rig in [docs/reference/joeypet-nest-animations-v0.html](docs/reference/joeypet-nest-animations-v0.html); its `nest_sleep` wide-blob layer is intentionally not used.
+- Joey stays in the nest. The room pet is not draggable; a click wakes him and runs the greet sequence.
+- While a companionship session is running (`陪伴中`), Joey stays awake and upright in the nest — sitting calmly with one slow breath cycle and an occasional blink, no tail sway or other busy motion — and he never sleeps. The day loop resumes only after the session ends.
+- The wall clock shows the real local time with hour and minute hands; clicking it opens `JoeyPet 设置` on **节奏与提醒**. The hover hint is `调整提醒时间`.
 - Three object-bound facts, nothing else:
   - Clock label: `Joey 大约每 45 分钟来叫你一次`
   - Notebook label: `今天陪了 2 小时 10 分`
   - Plant label: `今天休息 2 次`
 - Primary action centred near the floor: **开始一起工作**; while running it becomes **结束陪伴** with a status chip `陪伴中 · mm:ss` above it.
 - Starting a session never requires showing the desktop pet. If Joey is hidden, he stays hidden between reminders and surfaces only for an invitation.
-- While a session runs, Joey looks toward the user (`look`); at rest he sits (`sit`).
 - No cards, no charts, no streaks, no "Today's productivity".
 
 ### 10.5 Rhythm reflection
