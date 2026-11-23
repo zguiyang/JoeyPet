@@ -42,6 +42,8 @@
 		D7F00000000000000000000F /* RoomSceneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000010 /* RoomSceneView.swift */; };
 		D7F000000000000000000011 /* ReflectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000012 /* ReflectionView.swift */; };
 		D7F000000000000000000013 /* SettingsRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000014 /* SettingsRootView.swift */; };
+		D7F000000000000000000015 /* NestPetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000016 /* NestPetView.swift */; };
+		D7F000000000000000000017 /* NestPetArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000018 /* NestPetArt.swift */; };
 		D7F000000000000000000030 /* SessionSurfacePresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000031 /* SessionSurfacePresentation.swift */; };
 		D7F000000000000000000032 /* CompanionStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000033 /* CompanionStatus.swift */; };
 		D7F000000000000000000034 /* SessionSurfacesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000035 /* SessionSurfacesController.swift */; };
@@ -96,6 +98,8 @@
 		D7F000000000000000000010 /* RoomSceneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoomSceneView.swift; sourceTree = "<group>"; };
 		D7F000000000000000000012 /* ReflectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflectionView.swift; sourceTree = "<group>"; };
 		D7F000000000000000000014 /* SettingsRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsRootView.swift; sourceTree = "<group>"; };
+		D7F000000000000000000016 /* NestPetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NestPetView.swift; sourceTree = "<group>"; };
+		D7F000000000000000000018 /* NestPetArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NestPetArt.swift; sourceTree = "<group>"; };
 		D7F000000000000000000031 /* SessionSurfacePresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionSurfacePresentation.swift; sourceTree = "<group>"; };
 		D7F000000000000000000033 /* CompanionStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionStatus.swift; sourceTree = "<group>"; };
 		D7F000000000000000000035 /* SessionSurfacesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionSurfacesController.swift; sourceTree = "<group>"; };
@@ -274,6 +278,8 @@
 			children = (
 				D7F00000000000000000000E /* NestRootView.swift */,
 				D7F000000000000000000010 /* RoomSceneView.swift */,
+				D7F000000000000000000016 /* NestPetView.swift */,
+				D7F000000000000000000018 /* NestPetArt.swift */,
 				D7F000000000000000000012 /* ReflectionView.swift */,
 			);
 			path = Home;
@@ -448,6 +454,8 @@
 				D7F000000000000000000009 /* MainWindowController.swift in Sources */,
 				D7F00000000000000000000D /* NestRootView.swift in Sources */,
 				D7F00000000000000000000F /* RoomSceneView.swift in Sources */,
+				D7F000000000000000000015 /* NestPetView.swift in Sources */,
+				D7F000000000000000000017 /* NestPetArt.swift in Sources */,
 				D7F000000000000000000011 /* ReflectionView.swift in Sources */,
 				D7F000000000000000000013 /* SettingsRootView.swift in Sources */,
 				D7F000000000000000000030 /* SessionSurfacePresentation.swift in Sources */,

@@ -9,14 +9,7 @@ struct RoomSceneView: View {
     let onPrimaryAction: () -> Void
 
     @Environment(\.joeyAppearance) private var appearance
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isFrameHovering = false
-
-    @State private var petOffset = CGSize.zero
-    @State private var dragStartOffset: CGSize?
-    @State private var isDragging = false
-    @State private var isHappy = false
-    @State private var happyTask: Task<Void, Never>?
 
     private let designSize = CGSize(width: 1080, height: 680)
     private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
@@ -42,28 +35,11 @@ struct RoomSceneView: View {
                     RoomPainter(theme: theme).draw(in: &painterContext)
                 }
 
-                JoeyFigureView(isHappy: isHappy)
-                    .frame(width: 230 * scale, height: 300 * scale)
-                    .scaleEffect(isHappy && !reduceMotion ? 1.03 : 1, anchor: .bottom)
-                    .animation(
-                        reduceMotion ? nil : .spring(response: 0.34, dampingFraction: 0.62),
-                        value: isHappy
-                    )
-                    .contentShape(Rectangle())
-                    .gesture(petDragGesture(scale: scale))
-                    .onHover { isInside in
-                        if isInside {
-                            NSCursor.openHand.set()
-                        } else if !isDragging {
-                            NSCursor.arrow.set()
-                        }
-                    }
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel("Joey")
-                    .accessibilityHint("拖动可以移动 Joey，点一下它会回应你")
+                NestPetView(isCompanioning: status.isSessionActive)
+                    .frame(width: 288 * scale, height: 360 * scale)
                     .position(
-                        x: originX + (305 + petOffset.width) * scale,
-                        y: originY + (468 + petOffset.height) * scale
+                        x: originX + 340 * scale,
+                        y: originY + 436 * scale
                     )
 
                 clockLabel
@@ -95,7 +71,7 @@ struct RoomSceneView: View {
                 if status.isSessionActive, let startedAt = status.sessionStartedAt {
                     JoeyCompanionChipView(startedAt: startedAt)
                         .position(
-                            x: originX + 570 * scale,
+                            x: originX + 620 * scale,
                             y: originY + sceneHeight - 40 * scale - 71
                         )
                 }
@@ -106,7 +82,7 @@ struct RoomSceneView: View {
                     action: primaryAction
                 )
                 .position(
-                    x: originX + 570 * scale,
+                    x: originX + 620 * scale,
                     y: originY + sceneHeight - 40 * scale - 25
                 )
             }
@@ -114,7 +90,6 @@ struct RoomSceneView: View {
             .clipped()
         }
         .background(theme.roomWall)
-        .onDisappear { happyTask?.cancel() }
     }
 
     private var primaryTitle: String {
@@ -249,67 +224,6 @@ struct RoomSceneView: View {
         .accessibilityLabel(Text(JoeyCopy.reviewHint))
     }
 
-    private func petDragGesture(scale: CGFloat) -> some Gesture {
-        DragGesture(minimumDistance: 0)
-            .onChanged { value in
-                if dragStartOffset == nil {
-                    dragStartOffset = petOffset
-                    isDragging = false
-                }
-
-                let dx = value.translation.width / scale
-                let dy = value.translation.height / scale
-
-                if !isDragging, hypot(dx, dy) > 4 {
-                    isDragging = true
-                    happyTask?.cancel()
-                    isHappy = false
-                    NSCursor.closedHand.set()
-                }
-
-                guard isDragging, let start = dragStartOffset else { return }
-                petOffset = CGSize(
-                    width: min(max(start.width + dx, -150), 310),
-                    height: min(max(start.height + dy, -40), 22)
-                )
-            }
-            .onEnded { _ in
-                if isDragging {
-                    NSCursor.openHand.set()
-                } else {
-                    reactHappy()
-                }
-                dragStartOffset = nil
-                isDragging = false
-            }
-    }
-
-    private func reactHappy() {
-        happyTask?.cancel()
-        isHappy = true
-        happyTask = Task {
-            try? await Task.sleep(for: .seconds(1.1))
-            guard !Task.isCancelled else { return }
-            isHappy = false
-        }
-    }
-}
-
-// MARK: - Joey in the room
-
-private struct JoeyFigureView: View {
-    let isHappy: Bool
-
-    @Environment(\.joeyAppearance) private var appearance
-
-    var body: some View {
-        Canvas { context, size in
-            var figureContext = context
-            figureContext.scaleBy(x: size.width / 320, y: size.height / 400)
-            RoomPainter(theme: JoeyTheme(appearance: appearance))
-                .drawJoey(&figureContext, isHappy: isHappy)
-        }
-    }
 }
 
 // MARK: - Room illustration
@@ -784,7 +698,12 @@ private struct RoomPainter {
         fillEllipse(&context, center: CGPoint(x: potOrigin.x + 2, y: potOrigin.y + 14), rx: 8, ry: 12, color: theme.roomLeaf, opacity: 0.9)
     }
 
-    func drawJoey(_ context: inout GraphicsContext, isHappy: Bool) {
+    func drawJoey(
+        _ context: inout GraphicsContext,
+        isHappy: Bool,
+        isAwake: Bool,
+        isEarTwitching: Bool
+    ) {
         context.drawLayer { layer in
             layer.fill(
                 Path(ellipseIn: CGRect(x: 66, y: 340, width: 188, height: 24)),
@@ -814,8 +733,17 @@ private struct RoomPainter {
                 style: StrokeStyle(lineWidth: 23, lineCap: .round)
             )
 
-            drawEar(&layer, mirrored: false)
-            drawEar(&layer, mirrored: true)
+            let restingTilt: Double = (isAwake || isHappy) ? 0 : 5
+            drawEar(
+                &layer,
+                mirrored: false,
+                twitch: -restingTilt + (isEarTwitching ? -3 : 0)
+            )
+            drawEar(
+                &layer,
+                mirrored: true,
+                twitch: restingTilt + (isEarTwitching ? 3 : 0)
+            )
             drawJoeyBody(&layer)
 
             fillEllipse(&layer, center: CGPoint(x: 128, y: 337), rx: 27, ry: 13, color: theme.joeyPaw)
@@ -841,14 +769,23 @@ private struct RoomPainter {
             fillEllipse(&layer, center: CGPoint(x: 84, y: 262), rx: 18, ry: 28, rotation: 10, color: theme.joeyArm)
             fillEllipse(&layer, center: CGPoint(x: 236, y: 262), rx: 18, ry: 28, rotation: -10, color: theme.joeyArm)
 
-            drawJoeyFace(&layer, isHappy: isHappy)
+            drawJoeyFace(&layer, isHappy: isHappy, isAwake: isAwake)
         }
     }
 
-    private func drawEar(_ context: inout GraphicsContext, mirrored: Bool) {
-        let transform = CGAffineTransform.identity
+    private func drawEar(
+        _ context: inout GraphicsContext,
+        mirrored: Bool,
+        twitch: Double
+    ) {
+        let mirror = CGAffineTransform.identity
             .translatedBy(x: mirrored ? 320 : 0, y: 0)
             .scaledBy(x: mirrored ? -1 : 1, y: 1)
+        let baseX: CGFloat = mirrored ? 202 : 118
+        let rotation = CGAffineTransform(translationX: baseX, y: 148)
+            .rotated(by: .pi * twitch / 180)
+            .translatedBy(x: -baseX, y: -148)
+        let transform = mirror.concatenating(rotation)
 
         var outer = Path()
         outer.move(to: CGPoint(x: 118, y: 148))
@@ -953,7 +890,11 @@ private struct RoomPainter {
         context.fill(shade, with: .color(theme.joeyShade.opacity(0.5)))
     }
 
-    private func drawJoeyFace(_ context: inout GraphicsContext, isHappy: Bool) {
+    private func drawJoeyFace(
+        _ context: inout GraphicsContext,
+        isHappy: Bool,
+        isAwake: Bool
+    ) {
         guard !isHappy else {
             fillEllipse(&context, center: CGPoint(x: 111, y: 228), rx: 18, ry: 9, color: theme.joeyBlush, opacity: 0.36)
             fillEllipse(&context, center: CGPoint(x: 209, y: 228), rx: 18, ry: 9, color: theme.joeyBlush, opacity: 0.36)
@@ -1009,13 +950,32 @@ private struct RoomPainter {
             return
         }
 
-        fillEllipse(&context, center: CGPoint(x: 111, y: 226), rx: 18, ry: 9, color: theme.joeyBlush, opacity: 0.26)
-        fillEllipse(&context, center: CGPoint(x: 209, y: 226), rx: 18, ry: 9, color: theme.joeyBlush, opacity: 0.26)
+        fillEllipse(&context, center: CGPoint(x: 111, y: 226), rx: 18, ry: 9, color: theme.joeyBlush, opacity: isAwake ? 0.26 : 0.2)
+        fillEllipse(&context, center: CGPoint(x: 209, y: 226), rx: 18, ry: 9, color: theme.joeyBlush, opacity: isAwake ? 0.26 : 0.2)
 
-        fillEllipse(&context, center: CGPoint(x: 134, y: 204), rx: 8.5, ry: 11, color: theme.joeyEye)
-        fillEllipse(&context, center: CGPoint(x: 186, y: 204), rx: 8.5, ry: 11, color: theme.joeyEye)
-        fillEllipse(&context, center: CGPoint(x: 131, y: 200), rx: 2.8, ry: 2.8, color: .white)
-        fillEllipse(&context, center: CGPoint(x: 183, y: 200), rx: 2.8, ry: 2.8, color: .white)
+        if isAwake {
+            fillEllipse(&context, center: CGPoint(x: 134, y: 204), rx: 8.5, ry: 11, color: theme.joeyEye)
+            fillEllipse(&context, center: CGPoint(x: 186, y: 204), rx: 8.5, ry: 11, color: theme.joeyEye)
+            fillEllipse(&context, center: CGPoint(x: 131, y: 200), rx: 2.8, ry: 2.8, color: .white)
+            fillEllipse(&context, center: CGPoint(x: 183, y: 200), rx: 2.8, ry: 2.8, color: .white)
+        } else {
+            var eyes = Path()
+            eyes.move(to: CGPoint(x: 124, y: 205))
+            eyes.addQuadCurve(
+                to: CGPoint(x: 144, y: 205),
+                control: CGPoint(x: 134, y: 212)
+            )
+            eyes.move(to: CGPoint(x: 176, y: 205))
+            eyes.addQuadCurve(
+                to: CGPoint(x: 196, y: 205),
+                control: CGPoint(x: 186, y: 212)
+            )
+            context.stroke(
+                eyes,
+                with: .color(theme.joeyEye),
+                style: StrokeStyle(lineWidth: 3.2, lineCap: .round)
+            )
+        }
 
         var nose = Path()
         nose.move(to: CGPoint(x: 160, y: 216))
