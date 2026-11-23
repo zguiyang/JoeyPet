@@ -41,6 +41,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         let panel = PetPanelController()
         let coordinator = PetCoordinator(panelController: panel)
+        panel.onHideRequested = { [weak self] in
+            self?.settings.showsDesktopPet = false
+        }
         panelController = panel
         self.coordinator = coordinator
         panel.setVisible(settings.showsDesktopPet)

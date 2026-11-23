@@ -49,6 +49,9 @@ final class PetRuntime {
     private(set) var renderedPose: PetPose
     private(set) var currentTransientBehavior: PetTransientBehavior?
 
+    /// Notifies the host after every reduced event so UI labels can follow the state.
+    var onSituationChanged: ((PetSituation) -> Void)?
+
     private var persisted: PetPersistedState
     private var lastCompanionshipSampleAt: Date?
     private var transientPose: PetPose?
@@ -150,6 +153,7 @@ final class PetRuntime {
         renderer.setReduceMotion(situation.isReduceMotion)
         execute(transition.effects, at: date)
         rescheduleTick()
+        onSituationChanged?(situation)
     }
 
     func startSession() {

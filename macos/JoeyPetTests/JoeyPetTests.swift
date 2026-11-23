@@ -13,9 +13,117 @@ struct JoeyPetTests {
             visibleFrame: PetPositionRect(minX: 0, minY: 0, width: 1440, height: 900),
             isMain: true
         )]
-        let point = PetPositionGeometry.restore(nil, on: screens, windowSize: PetPositionPoint(x: 160, y: 160))
-        #expect(point.x >= 0)
-        #expect(point.y >= 0)
+        let point = PetPositionGeometry.restore(nil, on: screens, windowSize: PetPositionPoint(x: 168, y: 210))
+        #expect(point.x == 1440 - 168 - 40)
+        #expect(point.y == 92)
+    }
+
+    @Test func panelUsesTheDocumentedSize() {
+        #expect(PetPanelController.panelSize == NSSize(width: 168, height: 210))
+    }
+
+    @Test func restoredPositionKeepsTheDragMargin() {
+        let screens = [PetScreenGeometry(
+            identifier: "main",
+            visibleFrame: PetPositionRect(minX: 0, minY: 0, width: 1440, height: 900),
+            isMain: true
+        )]
+        let saved = PetPositionRecord(
+            screenIdentifier: nil,
+            absoluteOrigin: PetPositionPoint(x: 0, y: 0),
+            normalizedOrigin: PetPositionPoint(x: 0, y: 0),
+            savedVisibleFrame: PetPositionRect(minX: 0, minY: 0, width: 1440, height: 900)
+        )
+
+        let point = PetPositionGeometry.restore(
+            saved,
+            on: screens,
+            windowSize: PetPositionPoint(x: 168, y: 210)
+        )
+        #expect(point == PetPositionPoint(x: 8, y: 8))
+    }
+
+    @Test func draggingClampsToTheEightPointMargin() {
+        let visible = PetPositionRect(minX: 0, minY: 0, width: 1440, height: 900)
+
+        let topLeft = PetPanelGeometry.clampedOrigin(
+            PetPositionPoint(x: -500, y: 5000),
+            in: visible,
+            windowSize: PetPanelGeometry.defaultSize
+        )
+        #expect(topLeft.x == 8)
+        #expect(topLeft.y == 900 - 210 - 8)
+    }
+
+    @Test func dockEdgeUsesTheTwentyFourPointThreshold() {
+        let visible = PetPositionRect(minX: 0, minY: 0, width: 1440, height: 900)
+        let size = PetPanelGeometry.defaultSize
+
+        #expect(
+            PetPanelGeometry.dockEdge(
+                for: PetPositionPoint(x: 20, y: 300),
+                in: visible,
+                windowSize: size,
+                edgePt: 24
+            ) == .left
+        )
+        #expect(
+            PetPanelGeometry.dockEdge(
+                for: PetPositionPoint(x: 1440 - 168 - 20, y: 300),
+                in: visible,
+                windowSize: size,
+                edgePt: 24
+            ) == .right
+        )
+        #expect(
+            PetPanelGeometry.dockEdge(
+                for: PetPositionPoint(x: 600, y: 300),
+                in: visible,
+                windowSize: size,
+                edgePt: 24
+            ) == nil
+        )
+    }
+
+    @Test func collapsedDockExposesFortyPercent() {
+        let visible = PetPositionRect(minX: 0, minY: 0, width: 1440, height: 900)
+        let size = PetPanelGeometry.defaultSize
+        let exposed = 168 * 0.4
+
+        let left = PetPanelGeometry.collapsedOrigin(
+            edge: .left,
+            expandedOrigin: PetPositionPoint(x: 8, y: 300),
+            in: visible,
+            windowSize: size,
+            exposeRatio: 0.4,
+            minExposePt: 24
+        )
+        #expect(abs(left.x - (0 - (168 - exposed))) < 0.0001)
+        #expect(left.y == 300)
+
+        let right = PetPanelGeometry.collapsedOrigin(
+            edge: .right,
+            expandedOrigin: PetPositionPoint(x: 1000, y: 300),
+            in: visible,
+            windowSize: size,
+            exposeRatio: 0.4,
+            minExposePt: 24
+        )
+        #expect(abs(right.x - (1440 - exposed)) < 0.0001)
+    }
+
+    @Test func collapsedDockKeepsAtLeastTwentyFourPoints() {
+        let visible = PetPositionRect(minX: 0, minY: 0, width: 1440, height: 900)
+
+        let narrow = PetPanelGeometry.collapsedOrigin(
+            edge: .right,
+            expandedOrigin: PetPositionPoint(x: 1000, y: 300),
+            in: visible,
+            windowSize: PetPositionPoint(x: 40, y: 100),
+            exposeRatio: 0.4,
+            minExposePt: 24
+        )
+        #expect(narrow.x == 1440 - 24)
     }
 
     @Test func appWindowBuildsWithV0Title() {
@@ -901,5 +1009,25 @@ struct PetRuntimeTests {
         #expect(tracker.update(idleSeconds: 0.5) == .presenceReturned)
         #expect(tracker.update(idleSeconds: 3) == nil)
         #expect(tracker.update(idleSeconds: nil) == nil)
+    }
+
+    @Test func runtimeReportsDragAndMenuSituations() {
+        let calendar = testCalendar()
+        let now = testDate(2026, 11, 23, 9, 0)
+        let (runtime, renderer, _) = makeRuntime(now: now, calendar: calendar)
+
+        var seen: [DesktopState] = []
+        runtime.onSituationChanged = { situation in
+            seen.append(situation.resolvedDesktop(at: now))
+        }
+
+        runtime.send(.menuOpened)
+        runtime.send(.dragBegan)
+        #expect(runtime.renderedPose == .look)
+        runtime.send(.dragEnded)
+        runtime.send(.menuClosed)
+
+        #expect(seen == [.alone, .dragging, .alone, .alone])
+        #expect(renderer.shownPoses.contains(.look))
     }
 }
