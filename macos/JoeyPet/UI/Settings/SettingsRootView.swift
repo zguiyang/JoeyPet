@@ -6,6 +6,7 @@ struct SettingsRootView: View {
     @State private var selection: SettingsSection = .rhythm
     @State private var hoveredSection: SettingsSection?
     @State private var isFeedbackOpen = false
+    @ScaledMetric(relativeTo: .body) private var feedbackFontSize: CGFloat = 13
 
     private var theme: JoeyTheme { JoeyTheme(appearance: settings.appearance) }
 
@@ -195,7 +196,7 @@ struct SettingsRootView: View {
         ZStack(alignment: .topLeading) {
             if settings.feedback.isEmpty {
                 Text("说给 Joey 听…")
-                    .font(.system(size: 13))
+                    .font(.system(size: feedbackFontSize))
                     .foregroundStyle(theme.muted)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 16)
@@ -203,7 +204,7 @@ struct SettingsRootView: View {
             }
 
             TextEditor(text: $settings.feedback)
-                .font(.system(size: 13))
+                .font(.system(size: feedbackFontSize))
                 .foregroundStyle(theme.ink)
                 .scrollContentBackground(.hidden)
                 .padding(12)
@@ -332,17 +333,19 @@ private struct SettingsRow<Control: View>: View {
     }
 
     @Environment(\.joeyAppearance) private var appearance
+    @ScaledMetric(relativeTo: .body) private var titleSize: CGFloat = 13.5
+    @ScaledMetric(relativeTo: .caption) private var subtitleSize: CGFloat = 12
     private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
 
     var body: some View {
         HStack(alignment: .center, spacing: 20) {
             VStack(alignment: .leading, spacing: 1) {
                 Text(title)
-                    .font(.system(size: 13.5, weight: .semibold))
+                    .font(.system(size: titleSize, weight: .semibold))
                     .foregroundStyle(theme.ink)
                 if !subtitle.isEmpty {
                     Text(subtitle)
-                        .font(.system(size: 12))
+                        .font(.system(size: subtitleSize))
                         .foregroundStyle(theme.muted)
                 }
             }

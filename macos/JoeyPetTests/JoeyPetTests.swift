@@ -158,6 +158,21 @@ struct JoeyPetTests {
         #expect(navigation.route == .reflection)
     }
 
+    @Test func appearanceSwitchUpdatesThemeAndNotifies() {
+        let testDefaults = TestDefaults("JoeyPetTestsAppearance")
+        defer { testDefaults.remove() }
+        let settings = AppSettings(defaults: testDefaults.defaults)
+        var notified: JoeyAppearance?
+        settings.onAppearanceChanged = { notified = $0 }
+
+        settings.appearance = .dusk
+
+        #expect(notified == .dusk)
+        #expect(settings.appearance == .dusk)
+        #expect(JoeyAppearance.light.nsAppearance?.name == .aqua)
+        #expect(JoeyAppearance.dusk.nsAppearance?.name == .darkAqua)
+    }
+
     @Test func desktopPetIsHiddenByDefault() {
         let testDefaults = TestDefaults("JoeyPetTestsDefaults")
         defer { testDefaults.remove() }
