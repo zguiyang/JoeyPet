@@ -130,6 +130,16 @@ struct SettingsRootView: View {
                     .accessibilityLabel("外观")
                 }
 
+                SettingsRow("显示位置", subtitle: "拖动后以你放的位置为准") {
+                    JoeySegmentedControl(
+                        titles: PetCorner.allCases.map(\.title),
+                        selectedIndex: PetCorner.allCases.firstIndex(of: settings.petCorner) ?? 0
+                    ) { index in
+                        settings.petCorner = PetCorner.allCases[index]
+                    }
+                    .accessibilityLabel("显示位置")
+                }
+
                 SettingsRow("在桌面上显示 Joey", subtitle: "关掉不会结束陪伴，到点仍会短暂露面提醒") {
                     JoeySwitch(isOn: $settings.showsDesktopPet, label: "在桌面上显示 Joey")
                 }

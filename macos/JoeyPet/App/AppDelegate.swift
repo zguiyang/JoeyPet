@@ -34,6 +34,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         settings.onAppearanceChanged = { [weak self] _ in
             self?.applyAppearanceToWindows()
         }
+        settings.onPetCornerChanged = { [weak self] corner in
+            self?.panelController?.applyCorner(corner)
+        }
         settings.onScheduleChanged = { [weak self] quietWindow, rhythmMinutes in
             self?.coordinator?.applyConfiguration(
                 quietWindow: quietWindow,
@@ -44,7 +47,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             self?.coordinator?.setDoNotDisturb(enabled)
         }
 
-        let panel = PetPanelController()
+        let panel = PetPanelController(corner: settings.petCorner)
         let coordinator = PetCoordinator(panelController: panel)
         coordinator.onSituationChanged = { [weak self] situation, summary in
             guard let self else { return }

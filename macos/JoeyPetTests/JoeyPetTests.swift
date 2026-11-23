@@ -18,6 +18,22 @@ struct JoeyPetTests {
         #expect(point.y == 92)
     }
 
+    @Test func restoredPositionFallsBackToTheChosenCorner() {
+        let screens = [PetScreenGeometry(
+            identifier: "main",
+            visibleFrame: PetPositionRect(minX: 0, minY: 0, width: 1440, height: 900),
+            isMain: true
+        )]
+        let point = PetPositionGeometry.restore(
+            nil,
+            on: screens,
+            windowSize: PetPositionPoint(x: 168, y: 210),
+            corner: .bottomLeft
+        )
+        #expect(point.x == 40)
+        #expect(point.y == 92)
+    }
+
     @Test func panelUsesTheDocumentedSize() {
         #expect(PetPanelController.panelSize == NSSize(width: 168, height: 210))
     }
@@ -177,6 +193,21 @@ struct JoeyPetTests {
         defer { testDefaults.remove() }
         let settings = AppSettings(defaults: testDefaults.defaults)
         #expect(settings.showsDesktopPet == false)
+    }
+
+    @Test func petCornerDefaultsToBottomRightAndPersists() {
+        let testDefaults = TestDefaults("JoeyPetTestsCorner")
+        defer { testDefaults.remove() }
+        let settings = AppSettings(defaults: testDefaults.defaults)
+        #expect(settings.petCorner == .bottomRight)
+
+        var notified: PetCorner?
+        settings.onPetCornerChanged = { notified = $0 }
+        settings.petCorner = .bottomLeft
+        #expect(notified == .bottomLeft)
+
+        let reloaded = AppSettings(defaults: testDefaults.defaults)
+        #expect(reloaded.petCorner == .bottomLeft)
     }
 }
 

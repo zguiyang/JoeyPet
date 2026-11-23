@@ -25,6 +25,18 @@ struct PetScreenGeometry: Equatable, Sendable {
     let isMain: Bool
 }
 
+enum PetCorner: String, CaseIterable, Codable, Sendable {
+    case bottomRight
+    case bottomLeft
+
+    var title: String {
+        switch self {
+        case .bottomRight: return "右下角"
+        case .bottomLeft: return "左下角"
+        }
+    }
+}
+
 struct PetPositionRecord: Codable, Equatable, Sendable {
     let screenIdentifier: String?
     let absoluteOrigin: PetPositionPoint
@@ -83,11 +95,19 @@ enum PetPanelGeometry {
 
     static func initialOrigin(
         in visibleFrame: PetPositionRect,
-        windowSize: PetPositionPoint = defaultSize
+        windowSize: PetPositionPoint = defaultSize,
+        corner: PetCorner = .bottomRight
     ) -> PetPositionPoint {
-        clampedOrigin(
+        let x: Double
+        switch corner {
+        case .bottomRight:
+            x = visibleFrame.maxX - windowSize.x - initialRightMargin
+        case .bottomLeft:
+            x = visibleFrame.minX + initialRightMargin
+        }
+        return clampedOrigin(
             PetPositionPoint(
-                x: visibleFrame.maxX - windowSize.x - initialRightMargin,
+                x: x,
                 y: visibleFrame.minY + initialBottomMargin
             ),
             in: visibleFrame,
@@ -175,7 +195,8 @@ enum PetPositionGeometry {
     static func restore(
         _ saved: PetPositionRecord?,
         on screens: [PetScreenGeometry],
-        windowSize: PetPositionPoint
+        windowSize: PetPositionPoint,
+        corner: PetCorner = .bottomRight
     ) -> PetPositionPoint {
         guard !screens.isEmpty else {
             return PetPositionPoint(x: 120, y: 120)
@@ -212,7 +233,8 @@ enum PetPositionGeometry {
         let screen = screens.first(where: \.isMain) ?? screens[0]
         return PetPanelGeometry.initialOrigin(
             in: screen.visibleFrame,
-            windowSize: windowSize
+            windowSize: windowSize,
+            corner: corner
         )
     }
 

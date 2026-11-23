@@ -12,6 +12,7 @@ final class AppSettings {
         static let quietStart = "joey.quietStartMinutes"
         static let quietEnd = "joey.quietEndMinutes"
         static let appearance = "joey.appearance"
+        static let petCorner = "joey.petCorner"
         static let feedback = "joey.feedback"
         static let showsDesktopPet = PetPreferences.showsDesktopPetKey
     }
@@ -21,6 +22,7 @@ final class AppSettings {
     @ObservationIgnored private let defaults: UserDefaults
     @ObservationIgnored var onShowsDesktopPetChanged: ((Bool) -> Void)?
     @ObservationIgnored var onAppearanceChanged: ((JoeyAppearance) -> Void)?
+    @ObservationIgnored var onPetCornerChanged: ((PetCorner) -> Void)?
     @ObservationIgnored var onScheduleChanged: ((QuietWindow, Int) -> Void)?
     @ObservationIgnored var onDoNotDisturbChanged: ((Bool) -> Void)?
 
@@ -61,6 +63,14 @@ final class AppSettings {
         }
     }
 
+    /// Where Joey starts when no dragged position has been saved.
+    var petCorner: PetCorner {
+        didSet {
+            defaults.set(petCorner.rawValue, forKey: Key.petCorner)
+            onPetCornerChanged?(petCorner)
+        }
+    }
+
     /// The desktop pet is hidden by default in this phase.
     var showsDesktopPet: Bool {
         didSet {
@@ -86,6 +96,9 @@ final class AppSettings {
         self.appearance = JoeyAppearance(
             rawValue: defaults.string(forKey: Key.appearance) ?? ""
         ) ?? .light
+        self.petCorner = PetCorner(
+            rawValue: defaults.string(forKey: Key.petCorner) ?? ""
+        ) ?? .bottomRight
         self.showsDesktopPet = defaults.object(forKey: Key.showsDesktopPet) as? Bool ?? false
         self.feedback = defaults.string(forKey: Key.feedback) ?? ""
     }

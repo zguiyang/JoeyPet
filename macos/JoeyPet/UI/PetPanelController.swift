@@ -36,16 +36,26 @@ final class PetPanelController {
     private var collapseTask: Task<Void, Never>?
     private var dockState: DockState = .free
     private var isDockedCollapsed = false
+    private var corner: PetCorner
 
-    convenience init() {
-        self.init(positionStore: PetPositionStore())
+    convenience init(corner: PetCorner = .bottomRight) {
+        self.init(positionStore: PetPositionStore(), corner: corner)
     }
 
-    init(positionStore: PetPositionStore, docking: PetDockingPolicy? = nil) {
+    init(
+        positionStore: PetPositionStore,
+        docking: PetDockingPolicy? = nil,
+        corner: PetCorner = .bottomRight
+    ) {
         self.positionStore = positionStore
         self.docking = docking ?? Self.manifestDockingPolicy()
+        self.corner = corner
 
-        let frame = Self.restoredFrame(size: Self.panelSize, savedPosition: positionStore.load())
+        let frame = Self.restoredFrame(
+            size: Self.panelSize,
+            savedPosition: positionStore.load(),
+            corner: corner
+        )
         panel = PetPanel(contentRect: NSRect(origin: frame.origin, size: Self.panelSize))
 
         spriteView = PetSpriteView(frame: NSRect(origin: .zero, size: Self.panelSize))
@@ -215,8 +225,33 @@ final class PetPanelController {
         dockState = .free
         isDockedCollapsed = false
         positionStore.clear()
-        let frame = Self.initialFrame(size: Self.panelSize)
+        let frame = Self.initialFrame(size: Self.panelSize, corner: corner)
         panel.setFrameOrigin(frame.origin)
+    }
+
+    /// Moves Joey to the chosen corner and forgets any dragged position so the
+    /// choice also applies on the next launch.
+    func applyCorner(_ corner: PetCorner) {
+        self.corner = corner
+        positionStore.clear()
+        cancelDockingTasks()
+        dockState = .free
+        isDockedCollapsed = false
+
+        guard let screen = screenForPanel() ?? NSScreen.main else { return }
+        let visible = screen.visibleFrame
+        let origin = PetPanelGeometry.initialOrigin(
+            in: PetPositionRect(
+                minX: visible.minX,
+                minY: visible.minY,
+                width: visible.width,
+                height: visible.height
+            ),
+            windowSize: Self.panelSizePoint,
+            corner: corner
+        )
+        panel.setFrameOrigin(NSPoint(x: origin.x, y: origin.y))
+        sessionSurfaces.update(situation: petRuntime.situation)
     }
 
     // MARK: - Drag and docking
@@ -458,7 +493,10 @@ final class PetPanelController {
         collapseTask?.cancel()
     }
 
-    private static func initialFrame(size: NSSize) -> NSRect {
+    private static func initialFrame(
+        size: NSSize,
+        corner: PetCorner = .bottomRight
+    ) -> NSRect {
         guard let screen = NSScreen.main else {
             return NSRect(x: 120, y: 120, width: size.width, height: size.height)
         }
@@ -471,12 +509,17 @@ final class PetPanelController {
                 width: visible.width,
                 height: visible.height
             ),
-            windowSize: PetPositionPoint(x: size.width, y: size.height)
+            windowSize: PetPositionPoint(x: size.width, y: size.height),
+            corner: corner
         )
         return NSRect(origin: NSPoint(x: origin.x, y: origin.y), size: size)
     }
 
-    private static func restoredFrame(size: NSSize, savedPosition: PetPositionRecord?) -> NSRect {
+    private static func restoredFrame(
+        size: NSSize,
+        savedPosition: PetPositionRecord?,
+        corner: PetCorner
+    ) -> NSRect {
         let sizePoint = PetPositionPoint(x: size.width, y: size.height)
         let screens = NSScreen.screens.map { screen in
             PetScreenGeometry(
@@ -490,7 +533,12 @@ final class PetPanelController {
                 isMain: screen == NSScreen.main
             )
         }
-        let origin = PetPositionGeometry.restore(savedPosition, on: screens, windowSize: sizePoint)
+        let origin = PetPositionGeometry.restore(
+            savedPosition,
+            on: screens,
+            windowSize: sizePoint,
+            corner: corner
+        )
         return NSRect(origin: NSPoint(x: origin.x, y: origin.y), size: size)
     }
 
