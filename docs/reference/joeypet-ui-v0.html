@@ -1068,7 +1068,7 @@
                 <button id="menuEnd"><svg viewBox="0 0 24 24"><path d="M18 6 L6 18"/><path d="M6 6 L18 18"/></svg>结束陪伴</button>
                 <button id="menuHide"><svg viewBox="0 0 24 24"><path d="M3 12 C 5 8 8.5 6.5 12 6.5 C 15.5 6.5 19 8 21 12 C 19 16 15.5 17.5 12 17.5 C 8.5 17.5 5 16 3 12 Z"/><path d="M9.5 12 A 2.5 2.5 0 1 0 14.5 12 A 2.5 2.5 0 1 0 9.5 12 Z"/><path d="M4 20 L20 4"/></svg>隐藏 Joey</button>
                 <div class="divider"></div>
-                <button class="muted" id="menuPause"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8 V12 L15 14"/></svg>暂停一小时</button>
+                <button class="muted" id="menuPause"><svg viewBox="0 0 24 24"><path d="M20 14.5 A 8 8 0 1 1 9.5 4 A 6.5 6.5 0 0 0 20 14.5 Z"/></svg>勿扰模式</button>
               </div>
             </div>
             <div class="spec" style="right: 30px; bottom: 318px;"><span class="t">状态标签</span> · 12.5px / 鼠尾草叶点</div>
@@ -1090,7 +1090,7 @@
                   <button class="btn btn--primary" id="inviteAccept">休息一下</button>
                   <div class="row">
                     <button class="btn btn--secondary btn--sm" id="inviteLater">稍后提醒</button>
-                    <button class="btn btn--quiet btn--sm" id="invitePause">暂停一会儿</button>
+                    <button class="btn btn--quiet btn--sm" id="invitePause">进入勿扰</button>
                   </div>
                 </div>
               </div>
@@ -1233,25 +1233,25 @@
                   <h3>节奏与提醒</h3>
                   <p class="desc">只在你开始工作后提醒。</p>
                   <div class="set-row">
-                    <div class="k"><b>提醒节奏</b><span>两次邀请之间的安静时间</span></div>
+                    <div class="k"><b>提醒节奏</b><span>开始陪伴后才计时</span></div>
                     <div class="seg" id="rhythmSeg">
                       <button class="on">45 分钟</button><button>60 分钟</button><button>90 分钟</button>
                     </div>
                   </div>
                   <div class="set-row">
-                    <div class="k"><b>暂停一小时</b><span>到 16:24 自动恢复</span></div>
+                    <div class="k"><b>勿扰模式</b><span>开启后不会再有邀请或提示，需要恢复时手动关闭</span></div>
                     <div class="switch" id="swPause" role="switch" aria-checked="false" tabindex="0"></div>
                   </div>
                   <div class="set-row">
-                    <div class="k"><b>安静时段</b><span>22:00 到 08:00，Joey 会安静下来</span></div>
+                    <div class="k"><b>安静时段</b><span>这段时间不会邀请；正在进行的休息会先走完</span></div>
                     <div class="timefield">22:00 <em>–</em> 08:00</div>
                   </div>
                   <div class="set-row">
-                    <div class="k"><b>在桌面上显示 Joey</b><span>停在屏幕右下角</span></div>
+                    <div class="k"><b>在桌面上显示 Joey</b><span>关掉不会结束陪伴，到点仍会短暂露面提醒</span></div>
                     <div class="switch on" id="swShow" role="switch" aria-checked="true" tabindex="0"></div>
                   </div>
                   <div class="set-row">
-                    <div class="k"><b>反馈</b><span>哪里觉得打扰，写在这里</span></div>
+                    <div class="k"><b>反馈</b><span>只保存在这台 Mac，不会上传</span></div>
                     <button class="set-btn" id="feedbackBtn">写一句</button>
                   </div>
                   <div class="feedback-box" id="feedbackBox" hidden>
@@ -1428,7 +1428,7 @@
     });
   }
 
-  /* 设置 · 暂停一小时 */
+  /* 设置 · 勿扰模式 */
   bindSwitch(document.getElementById("swPause"));
   /* 设置 · 显示 Joey */
   bindSwitch(document.getElementById("swShow"), function (on) {
@@ -1525,7 +1525,7 @@
   });
   document.getElementById("menuPause").addEventListener("click", function () {
     petMenu.hidden = true;
-    showToast("暂停一小时。16:24 恢复。");
+    showToast("勿扰模式已开启。想恢复时再点一下。");
   });
 
   /* ============ 休息邀请 ============ */
@@ -1537,7 +1537,7 @@
     showToast("好，过一阵再问你。");
   });
   document.getElementById("invitePause").addEventListener("click", function () {
-    showToast("先安静一会儿。");
+    showToast("好，先不打扰你。");
   });
 
   /* ============ 恢复倒计时 ============ */

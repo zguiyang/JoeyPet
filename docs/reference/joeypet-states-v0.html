@@ -958,7 +958,7 @@
         <div class="pose-stage"><svg viewBox="0 0 320 400" aria-label="Joey 安静坐着"><use href="#joey-sit"/></svg></div>
         <span class="pose-code">sit</span><span class="pose-name">安静坐着</span>
         <span class="pose-desc">默认待机。呼吸和眨眼就够，别再加摆动。</span>
-        <span class="pose-use">独自待着 · 巢居 · 暂停</span>
+        <span class="pose-use">独自待着 · 巢居 · 勿扰</span>
       </figure>
       <figure class="pose">
         <div class="pose-stage"><svg viewBox="0 0 320 400" aria-label="Joey 看向用户"><use href="#joey-look"/></svg></div>
@@ -1188,8 +1188,8 @@
         <span class="ladder-guard">本地时间进入设定区间（默认 22:00–08:00）</span><span class="ladder-cool">区间结束</span>
       </div>
       <div class="ladder-row">
-        <span class="ladder-pos">4</span><span class="ladder-name">暂停</span><code>sit</code>
-        <span class="ladder-guard">邀请里点「暂停一会儿」或菜单「暂停一小时」</span><span class="ladder-cool">60 分钟</span>
+        <span class="ladder-pos">4</span><span class="ladder-name">勿扰模式</span><code>doze</code>
+        <span class="ladder-guard">设置或桌面菜单开启「勿扰模式」；不邀请、不弹面板</span><span class="ladder-cool">手动关闭</span>
       </div>
       <div class="ladder-row">
         <span class="ladder-pos">5</span><span class="ladder-name">稍后提醒</span><code>sit</code>
@@ -1256,7 +1256,7 @@
             <path d="M700 150 V272 H115 V156" marker-end="url(#arr)"/>
           </g>
           <g font-size="10.5" fill="var(--muted)">
-            <text x="300" y="232" text-anchor="middle">稍后 / 暂停 / 结束会话</text>
+            <text x="300" y="232" text-anchor="middle">稍后 / 勿扰 / 结束会话</text>
             <text x="410" y="264" text-anchor="middle">跳过恢复</text>
           </g>
         </g>
@@ -1272,7 +1272,7 @@
           <tr><td>会话来源</td><td>只有用户点「开始一起工作」才建立会话。系统无法从键鼠活动推断工作状态。</td><td>否则保持独自待着</td></tr>
           <tr><td>邀请间隔</td><td>距上次邀请被关闭或完成后 ≥ 45 分钟，才允许下一次邀请。</td><td>不满足则不进入 invite</td></tr>
           <tr><td>稍后提醒</td><td>点「稍后提醒」后 10 分钟再试；本次会话只允许一次稍后。</td><td>到期回到陪伴中</td></tr>
-          <tr><td>暂停</td><td>暂停 60 分钟内不发出任何邀请，姿态保持 sit，菜单仍可用。</td><td>60 分钟后恢复节奏</td></tr>
+          <tr><td>勿扰</td><td>勿扰模式内不发出任何邀请、不弹面板，姿态保持 doze，菜单仍可用；由用户手动关闭。</td><td>关闭后立即重排邀请</td></tr>
           <tr><td>安静时段</td><td>进入区间立即 sleep，不排邀请；已在恢复中的倒计时允许走完。</td><td>区间结束回到 sit</td></tr>
           <tr><td>单次邀请</td><td>同一时刻只有一个邀请卡；卡片存在时不重复触发 sign。</td><td>多余请求丢弃</td></tr>
           <tr><td>恢复中的退出</td><td>用户关闭恢复面板视为跳过，不扣次数、不写失败。</td><td>安静回到桌面</td></tr>
@@ -1300,7 +1300,7 @@
           <tr><td><code>yawn</code> → <code>look</code></td><td>哈欠结束</td><td>400 ms</td><td>ease-out</td><td>视情况进入 look 或 sit</td></tr>
           <tr><td><code>sit</code> → <code>sleep</code></td><td>安静时段开始</td><td>600 ms</td><td>ease-out</td><td>身体下沉，尾巴收拢</td></tr>
           <tr><td><code>sleep</code> → <code>sit</code></td><td>安静时段结束</td><td>500 ms</td><td>ease-out</td><td>先睁眼，再坐起</td></tr>
-          <tr><td><code>sign</code> → <code>sit</code></td><td>稍后 / 暂停 / 关闭</td><td>240 ms</td><td>ease-out</td><td>牌先落下，卡片随后淡出</td></tr>
+          <tr><td><code>sign</code> → <code>sit</code></td><td>稍后 / 勿扰 / 关闭</td><td>240 ms</td><td>ease-out</td><td>牌先落下，卡片随后淡出</td></tr>
           <tr><td><code>look</code> → <code>sit</code></td><td>结束会话</td><td>240 ms</td><td>ease-out</td><td>视线回落</td></tr>
         </tbody>
       </table>
@@ -1319,7 +1319,7 @@
         <tbody>
           <tr><td>悬停</td><td>影子加深一点，身体抬起 1 px；不放大整只宠物。</td><td>140 ms</td></tr>
           <tr><td>悬停停留</td><td>浮出提示「拖动移动 · 点击菜单」，不抢焦点。</td><td>220 ms</td></tr>
-          <tr><td>点击</td><td>打开 3 项菜单：结束陪伴 / 隐藏 Joey / 分隔 / 暂停一小时。</td><td>160 ms</td></tr>
+          <tr><td>点击</td><td>打开 3 项菜单：结束陪伴 / 隐藏 Joey / 分隔 / 勿扰模式。</td><td>160 ms</td></tr>
           <tr><td>拖动开始</td><td>整体缩到 0.98，阴影扩散，跟手移动，不播放走路帧。</td><td>0 ms</td></tr>
           <tr><td>拖动中</td><td>限制在可见屏幕内，避开菜单栏与 Dock；靠近屏幕边缘时显示可停靠提示。</td><td>持续</td></tr>
           <tr><td>放置</td><td>回弹到 1.0，保存位置；贴边则停靠，不自动隐藏。</td><td>180 ms</td></tr>
@@ -1328,7 +1328,7 @@
         </tbody>
       </table>
     </div>
-    <p class="foot-note">隐藏只改变可见性，不重置会话、不丢掉今天的次数。恢复可见的唯一入口是设置里的「显示 Joey」，菜单里的隐藏也提供撤销提示。</p>
+    <p class="foot-note">隐藏只改变可见性，不重置会话、不丢掉今天的次数；到点仍会短暂露面提醒。恢复可见的入口是设置里的「显示 Joey」或桌面菜单。</p>
   </section>
 
   <!-- 08 桌面实景 -->
@@ -1374,7 +1374,7 @@
               <div class="scene-card">
                 <b>坐久啦，我们一起<br>伸个懒腰？</b>
                 <span class="mini-btn">休息一下</span>
-                <span class="mini-quiet">稍后提醒 · 暂停一会儿</span>
+                <span class="mini-quiet">稍后提醒 · 进入勿扰</span>
               </div>
             </div>
           </div>
@@ -1485,7 +1485,7 @@
       <li>十二个姿态都从同一套身体和脸派生，剪影一致；没有多余描边。</li>
       <li>同一时刻最多两个微动效，邀请、恢复、拖动期间不叠加瞬态。</li>
       <li>状态优先级按 1–7 覆盖，低优先级里的时间与次数不被清空。</li>
-      <li>邀请间隔 ≥ 45 分钟，稍后 10 分钟，暂停 60 分钟；安静时段完全不邀请。</li>
+      <li>邀请间隔 ≥ 45 分钟，稍后 10 分钟，勿扰手动关闭；安静时段完全不邀请，隐藏仍会到点临时露面。</li>
       <li>减弱动态下，所有姿态仍是可读的静态帧，信息不丢失。</li>
       <li>黄昏配色独立复核对比度，宠物身体不随主题变色。</li>
     </ul>
@@ -1582,13 +1582,13 @@
         <thead><tr><th style="width:120px">触发源</th><th style="width:20%">事件</th><th style="width:150px">目标</th><th>条件 / 防抖</th></tr></thead>
         <tbody>
           <tr><td>本地时钟</td><td>每分钟检查一次安静区间</td><td><code>quiet</code> → <code>sleep</code></td><td>进入 22:00–08:00 立即生效；已在恢复中的 30 秒允许走完</td></tr>
-          <tr><td>本地时钟</td><td>无指针/键盘活动满 90 秒</td><td><code>doze</code></td><td>仅在 alone / paused / snoozed；菜单打开、拖动中、会话邀请卡在场时不计</td></tr>
-          <tr><td>本地时钟</td><td>邀请到点</td><td><code>invite</code> → <code>sign</code></td><td>距上次关闭或完成 ≥ 45 分钟；不在 quiet / paused / hidden；同一时刻仅一张卡</td></tr>
+          <tr><td>本地时钟</td><td>无指针/键盘活动满 90 秒</td><td><code>doze</code></td><td>仅在 alone / doNotDisturb / snoozed；菜单打开、拖动中、会话邀请卡在场时不计</td></tr>
+          <tr><td>本地时钟</td><td>邀请到点</td><td><code>invite</code> → <code>sign</code></td><td>距上次关闭或完成 ≥ 45 分钟；不在 quiet / doNotDisturb；同一时刻仅一张卡；隐藏时仍会临时露面提醒</td></tr>
           <tr><td>会话</td><td>用户点「开始一起工作」</td><td><code>companion</code> → <code>look</code></td><td>唯一建立会话的入口；系统键鼠活动不得推断工作状态</td></tr>
           <tr><td>会话</td><td>菜单「结束陪伴」</td><td><code>alone</code> → <code>sit</code></td><td>清空本次「稍后」标记，不扣次数</td></tr>
           <tr><td>邀请卡</td><td>点「休息一下」</td><td><code>recover</code> → <code>stretch</code></td><td>启动 30 秒倒计时；同时只允许一个恢复面板</td></tr>
           <tr><td>邀请卡</td><td>点「稍后提醒」</td><td><code>snoozed</code> → <code>sit</code></td><td>10 分钟后再评估；本次会话仅一次</td></tr>
-          <tr><td>邀请卡</td><td>点「暂停一会儿」</td><td><code>paused</code> → <code>sit</code></td><td>60 分钟内不邀请；菜单保持可用</td></tr>
+          <tr><td>邀请卡</td><td>点「进入勿扰」</td><td><code>doNotDisturb</code> → <code>doze</code></td><td>直到用户手动关闭；期间不邀请、不弹面板</td></tr>
           <tr><td>指针</td><td>悬停满 600 ms</td><td>提示气泡</td><td>不抢焦点；拖动中、卡片在场时不触发</td></tr>
           <tr><td>指针</td><td>按下并移动 ≥ 4 px</td><td><code>dragging</code> → <code>look</code></td><td>4 px 阈值防误触；未过阈值按单击处理</td></tr>
           <tr><td>指针</td><td>单击宠物本体</td><td>打开 3 项菜单</td><td>160 ms 入场；点菜单外或 Esc 关闭</td></tr>
@@ -1606,7 +1606,7 @@
       <li><b>单击 = 菜单，拖动 = 移动，悬停 = 提示。</b>双击与右键不作为必需路径；右键如绑定，行为等同单击。</li>
       <li><b>拖动阈值 4 px。</b>小于 4 px 的移动在释放时按单击处理，避免手抖误开菜单。</li>
       <li><b>所有交互可撤销：</b>菜单 Esc 或点外关闭；位置可再次拖回；隐藏提供撤销提示。没有不可逆的单击。</li>
-      <li><b>交互不改变冷却计数。</b>悬停、拖动、开关菜单都不重置 45 / 10 / 60 分钟计时。</li>
+      <li><b>交互不改变冷却计数。</b>悬停、拖动、开关菜单都不重置 45 / 10 分钟计时。</li>
       <li><b>拖动中不播放走路帧，</b>也不触发邀请；释放后 600 ms 再评估是否补发。</li>
     </ul>
   </section>
@@ -1622,7 +1622,7 @@
         <tbody>
           <tr><td>拖动中 × 邀请到点</td><td>拖动优先（#1）</td><td>邀请延后到释放后 600 ms 再评估；仍满足 45 分钟才发</td></tr>
           <tr><td>隐藏 × 安静时段</td><td>隐藏优先（#2）</td><td>不渲染 sleep；恢复可见时按当前时间重新判定，不补播</td></tr>
-          <tr><td>暂停 × 稍后提醒</td><td>暂停优先（#4 &gt; #5）</td><td>60 分钟内不邀请；稍后标记保留，不叠加计时</td></tr>
+          <tr><td>勿扰 × 稍后提醒</td><td>勿扰优先（#4 &gt; #5）</td><td>勿扰期间不邀请；稍后标记保留，不叠加计时</td></tr>
           <tr><td>安静时段 × 恢复中</td><td>安静时段优先（#3）</td><td>当前 30 秒允许走完，完成后直接睡；新邀请不排</td></tr>
           <tr><td>邀请 × 环境瞬态</td><td>邀请优先</td><td>瞬态立即收尾，不硬切；卡片关闭后重新从 12 秒间隔起算</td></tr>
           <tr><td>完成 × 邀请到点</td><td>完成优先</td><td>2.6 秒播完回 sit，再评估邀请；间隔仍 ≥ 45 分钟</td></tr>
@@ -1636,7 +1636,7 @@
 
     <h3>不可同时成立<span class="h-note">硬互斥</span></h3>
     <ul class="rules">
-      <li><b>hidden 与任何可见姿态互斥。</b>hidden 下没有姿态、没有环境循环，也不接收邀请。</li>
+      <li><b>hidden 与任何常驻姿态互斥。</b>hidden 下没有常驻姿态、没有环境循环；但邀请到点仍会临时露面，处理完再回 hidden。</li>
       <li><b>sign 与 stretch / happy / step 互斥。</b>一张邀请卡对应一个 sign，不接受第二个。</li>
       <li><b>groom、yawn、step 两两互斥；</b>peek 与 step 互斥。</li>
       <li><b>同一 clip 不重入，</b>直到上一段结束（循环 clip 除外）；重入请求直接丢弃。</li>
@@ -1946,7 +1946,7 @@
     { "id": "dragging", "priority": 1, "pose": "look", "cooldownMin": 0 },
     { "id": "hidden", "priority": 2, "pose": null, "cooldownMin": null },
     { "id": "quiet", "priority": 3, "pose": "sleep", "window": ["22:00", "08:00"] },
-    { "id": "paused", "priority": 4, "pose": "sit", "cooldownMin": 60 },
+    { "id": "doNotDisturb", "priority": 4, "pose": "doze", "cooldownMin": null },
     { "id": "snoozed", "priority": 5, "pose": "sit", "cooldownMin": 10 },
     { "id": "companion", "priority": 6, "pose": "look", "inviteGapMin": 45 },
     { "id": "alone", "priority": 7, "pose": "sit" }

@@ -447,8 +447,9 @@ Rules:
 - Idle breath 4.2 s, scale 1 → 1.012, origin at the base.
 - While a session runs, a chip above him reads `陪伴中 · mm:ss`.
 - Hover reveals `拖动换位置 · 点击打开菜单`; the cursor is a grab hand; dragging clamps to the screen with an 8 px margin and persists after drag end.
-- Click opens a small menu: **结束陪伴** / **隐藏 Joey** / divider / **暂停一小时**.
+- Click opens a small menu: **结束陪伴** / **隐藏 Joey** / divider / **勿扰模式**.
 - Quiet hours: pose becomes `sleep`; no chip, no menu prompt, no motion beyond breathing.
+- Hidden mode: Joey leaves the desktop but keeps the rhythm. When an invitation is due he surfaces briefly, delivers it, then slips away again. The user can still hide at any time; hiding never ends the session.
 
 ### 10.2 Rest invitation
 
@@ -463,12 +464,13 @@ Rules:
 不用走开，半分钟就够。
 
 [ 休息一下 ]        ← primary
-[ 稍后提醒 ] [ 暂停一会儿 ]
+[ 稍后提醒 ] [ 进入勿扰 ]
 ```
 
 - It is an invitation from a pet, never an alert: no title bar, no icon-warning, no modal scrim over the whole screen, no system beep.
-- Dismissing is always available and never punished. Toasts: `好，过一阵再问你。` / `先安静一会儿。`
+- Dismissing is always available and never punished. Toasts: `好，过一阵再问你。` / `好，先不打扰你。`
 - Only one reminder per interval; never re-prompt immediately.
+- When Joey is hidden, the card appears with him for at most 60 seconds. If it is ignored, both slip away and the invitation counts as "later" once.
 
 ### 10.3 30-second recovery
 
@@ -500,6 +502,7 @@ The main window, and it should feel like entering Joey's home.
   - Notebook label: `今天陪了 2 小时 10 分`
   - Plant label: `今天休息 2 次`
 - Primary action centred near the floor: **开始一起工作**; while running it becomes **结束陪伴** with a status chip `陪伴中 · mm:ss` above it.
+- Starting a session never requires showing the desktop pet. If Joey is hidden, he stays hidden between reminders and surfaces only for an invitation.
 - While a session runs, Joey looks toward the user (`look`); at rest he sits (`sit`).
 - No cards, no charts, no streaks, no "Today's productivity".
 
@@ -523,11 +526,13 @@ Native, quieter, more functional than the room. No illustration, no hero copy, n
 
 | Row | Control | Copy |
 |-----|---------|------|
-| 提醒节奏 | Segmented 45 / 60 / 90 分钟 | 两次邀请之间的安静时间 |
-| 暂停一小时 | Switch | 到 16:24 自动恢复 |
-| 安静时段 | Time-range field: two editable halves, centre dash, double-click selects all | 22:00 到 08:00，Joey 会安静下来 |
-| 在桌面上显示 Joey | Switch | 停在屏幕右下角 |
-| 反馈 | Button → textarea | 哪里觉得打扰，写在这里 |
+| 提醒节奏 | Segmented 45 / 60 / 90 分钟 | 开始陪伴后才计时 |
+| 勿扰模式 | Switch | 开启后不会再有邀请或提示，需要恢复时手动关闭 |
+| 安静时段 | Time-range field: two editable halves, centre dash, double-click selects all | 这段时间不会邀请；正在进行的休息会先走完 |
+| 在桌面上显示 Joey | Switch | 关掉不会结束陪伴，到点仍会短暂露面提醒 |
+| 反馈 | Button → textarea | 只保存在这台 Mac，不会上传 |
+
+- Each row gets at most one incidental line under the title. Do not stack a subtitle and a second note layer.
 
 - Section description: `只在你开始工作后提醒。` — this is a product rule, not marketing.
 - Time inputs use direct typing. Focus shows a caret and sage selection, never a blue outline.
@@ -594,12 +599,12 @@ Rules:
 | No session | Chip hidden; CTA `开始一起工作`; Joey `sit` |
 | Session running | Chip `陪伴中 · mm:ss`; CTA `结束陪伴`; Joey `look` |
 | Invitation due | Joey `sign` + card; one invitation only |
-| Invitation deferred | Toast, schedule one later invitation, no repeat nagging |
-| Invitation paused | Toast `先安静一会儿。`, no further invitations until resume |
+| Invitation deferred | Toast `好，过一阵再问你。`, schedule one later invitation, no repeat nagging |
+| Entered do-not-disturb | Toast `好，先不打扰你。`, no further invitations until the user turns it off |
 | Recovery running | Real countdown; no skip penalty |
 | Recovery completed | Break count +1, Joey `happy` ~2.6 s, one leaf added |
 | Recovery skipped | Return to desktop silently; count unchanged |
-| Hidden Joey | Pet invisible but state preserved; Settings switch is the way back |
+| Hidden Joey | Pet invisible but rhythm continues; an invitation surfaces him for at most 60 s, then he returns to hidden |
 | Quiet hours | Joey `sleep`, no invitations, no motion beyond breath |
 | Empty reflection day | Show a visible seed in the soil; never a zero-score or a "failure" |
 
@@ -612,14 +617,18 @@ Seven states, highest wins. A higher state overrides pose and interaction only; 
 | # | State | Pose | Enters when | Cooldown |
 |---|-------|------|-------------|----------|
 | 1 | Dragging | `look` | Pointer is down and moving; follows the cursor, no ambient loop | None |
-| 2 | Hidden | — | Menu **隐藏 Joey**, or the Settings switch is off | Persistent |
+| 2 | Hidden | — | Menu **隐藏 Joey**, or the Settings switch is off | Persistent; invitations still surface Joey briefly |
 | 3 | Quiet hours | `sleep` | Local time enters the window (default 22:00–08:00) | Until window ends |
-| 4 | Paused | `sit` | Invite **暂停一会儿**, or menu **暂停一小时** | 60 min |
+| 4 | Do not disturb | `doze` | Settings switch or desktop menu **勿扰模式** | Until the user turns it off |
 | 5 | Snoozed | `sit` | Invite **稍后提醒**; current session only | 10 min |
 | 6 | In session | `look` | User starts a session | Invitation interval ≥ 45 min |
 | 7 | Alone | `sit` | App is running and there is no session | None |
 
 Snooze is a temporary substate of a session, not a new session. When it expires Joey returns to **In session**; it never produces a second invitation inside 45 minutes.
+
+Do not disturb is manual and persistent: it never expires on its own, and turning it off recalculates the next invitation immediately.
+
+Hidden is about presence, not permission: the rhythm keeps running, an invitation may surface Joey for at most 60 seconds, and the card returning counts as **Snoozed** once.
 
 ### 13.2 Companion substates
 
@@ -631,7 +640,7 @@ idle ──5 min to go──▶ approach ──due──▶ invite ──accept�
   └──────────────────────────── 2.6 s, then back to idle ───────────────────────────┘
 ```
 
-- `invite` and `recover` can exit to `idle` on snooze / pause / dismiss.
+- `invite` and `recover` can exit to `idle` on snooze / do not disturb / dismiss.
 - `complete` holds `happy` for 2.6 s, adds one leaf, then returns to `idle`.
 - When the session ends, the desktop returns to **Alone**.
 
@@ -642,7 +651,8 @@ idle ──5 min to go──▶ approach ──due──▶ invite ──accept�
 | Session source | Only **开始一起工作** establishes a session; never infer work from keyboard or mouse activity | Otherwise stay **Alone** |
 | Invitation interval | ≥ 45 min since the last invitation was dismissed or completed | Otherwise do not enter `invite` |
 | Snooze | 10 min retry; only one snooze per session | Expiry returns to **In session** |
-| Pause | No invitations for 60 min, pose stays `sit`, menu still works | Resume rhythm after 60 min |
+| Do not disturb | No invitations, panels or toasts; pose stays `doze`, menu still works | Resume rhythm when the user turns it off |
+| Hidden reminder | Invitation is due while hidden | Surface Joey and the card; after 60 seconds return to hidden and treat as snoozed once |
 | Quiet hours | Enter `sleep` immediately, schedule no invitations; a running recovery countdown may finish | Return to `sit` when the window ends |
 | Single invitation | At most one invitation card; no repeated `sign` while it exists | Extra requests are dropped |
 | Exit during recovery | Closing the recovery panel counts as a skip; no count, no failure | Return to the desktop quietly |
