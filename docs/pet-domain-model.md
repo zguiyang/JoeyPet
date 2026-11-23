@@ -453,7 +453,7 @@ shadow → tail → body → ears → backArm → face → frontArm → prop
 | 菜单 | 3 项 + 分隔；160 ms；Esc/点外关闭；悬停 600 ms 提示 |
 | 键盘 | 方向键 1 px，Shift 10 px；回车开菜单；Esc 收起 |
 | 命中区 | 最小 44×44；透明区不拦截 |
-| 焦点环 | 鼠尾草；不裁切 |
+| 选中边框 | 宠物本体不绘制；点击只打开菜单 |
 
 Mission Control 用 `NSWorkspace` 空间切换 + App 失活做 best-effort 冻结；不碰私有 API。无法可靠检测时，不新增假状态。
 
@@ -513,7 +513,7 @@ Mission Control 用 `NSWorkspace` 空间切换 + App 失活做 best-effort 冻�
 - 12 姿态 × 3 尺寸 × 明/暗。
 - 200% 下无像素台阶、无 1 px 白缝。
 - 8 张脸 × 眨眼三帧；抑制姿态。
-- VoiceOver 每个状态/姿态的标签；键盘全流程；焦点环不被裁切。
+- VoiceOver 每个状态/姿态的标签；键盘全流程；宠物本体不绘制选中边框。
 
 ### 12.5 命令
 

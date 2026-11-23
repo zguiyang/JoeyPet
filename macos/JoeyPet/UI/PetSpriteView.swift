@@ -2,7 +2,6 @@ import AppKit
 import OSLog
 import QuartzCore
 import SpriteKit
-import SwiftUI
 
 final class PetSpriteView: SKView {
     /// Pet clips are single-frame animations at 1–6 fps; 30 fps rendering burned ~15% CPU.
@@ -27,13 +26,11 @@ final class PetSpriteView: SKView {
         didSet { setAccessibilityValue(accessibilityStatus) }
     }
 
-    private let focusRing = FocusRingView()
     private var dragStartMouseLocation: NSPoint?
     private var dragStartWindowOrigin: NSPoint?
     private var isDragging = false
     private var hintTask: Task<Void, Never>?
     private var hoverTrackingArea: NSTrackingArea?
-    private var keyObservers: [NSObjectProtocol] = []
 
 #if DEBUG
     private static let interactionLogger = Logger(
@@ -47,15 +44,15 @@ final class PetSpriteView: SKView {
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         preferredFramesPerSecond = Self.renderFramesPerSecond
+        focusRingType = .none
         configureAccessibility()
-        configureFocusRing()
     }
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         preferredFramesPerSecond = Self.renderFramesPerSecond
+        focusRingType = .none
         configureAccessibility()
-        configureFocusRing()
     }
 
     override func hitTest(_ point: NSPoint) -> NSView? {
@@ -91,32 +88,6 @@ final class PetSpriteView: SKView {
         )
         addTrackingArea(area)
         hoverTrackingArea = area
-    }
-
-    override func viewDidMoveToWindow() {
-        super.viewDidMoveToWindow()
-
-        let center = NotificationCenter.default
-        for observer in keyObservers {
-            center.removeObserver(observer)
-        }
-        keyObservers.removeAll()
-
-        guard let window else {
-            focusRing.isHidden = true
-            return
-        }
-
-        for name in [NSWindow.didBecomeKeyNotification, NSWindow.didResignKeyNotification] {
-            keyObservers.append(
-                center.addObserver(forName: name, object: window, queue: .main) { [weak self] _ in
-                    Task { @MainActor [weak self] in
-                        self?.updateFocusRing()
-                    }
-                }
-            )
-        }
-        updateFocusRing()
     }
 
     // MARK: - Pointer
@@ -296,46 +267,5 @@ final class PetSpriteView: SKView {
         setAccessibilityLabel("Joey")
         setAccessibilityHelp(Self.hintText)
         setAccessibilityValue(accessibilityStatus)
-    }
-
-    private func configureFocusRing() {
-        focusRing.frame = bounds
-        focusRing.autoresizingMask = [.width, .height]
-        focusRing.isHidden = true
-        addSubview(focusRing)
-    }
-
-    private func updateFocusRing() {
-        focusRing.isHidden = !(window?.isKeyWindow ?? false)
-        focusRing.ringColor = NSColor(
-            JoeyTheme(
-                appearance: effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
-                    ? .dusk
-                    : .light
-            ).focus
-        )
-        focusRing.needsDisplay = true
-    }
-}
-
-/// Sage focus ring drawn above the SpriteKit content; pointer events pass through.
-private final class FocusRingView: NSView {
-    var ringColor: NSColor = NSColor(JoeyTheme(appearance: .light).focus) {
-        didSet { needsDisplay = true }
-    }
-
-    override var isOpaque: Bool { false }
-
-    override func hitTest(_ point: NSPoint) -> NSView? { nil }
-
-    override func draw(_ dirtyRect: NSRect) {
-        let ring = NSBezierPath(
-            roundedRect: bounds.insetBy(dx: 3, dy: 3),
-            xRadius: 14,
-            yRadius: 14
-        )
-        ring.lineWidth = 2
-        ringColor.setStroke()
-        ring.stroke()
     }
 }

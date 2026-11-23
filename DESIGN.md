@@ -99,7 +99,7 @@ Every surface colour comes from a token. Never hardcode a hex in a view.
 | `clay` | `#C9B08C` | `#C9B08C` | Paper, wood, tape, illustration props |
 | `hairline` | `rgba(63,58,53,.14)` | `rgba(233,227,215,.14)` | 1 px strokes, dividers |
 | `hairline-strong` | `rgba(63,58,53,.24)` | `rgba(233,227,215,.24)` | Secondary button border, fields |
-| `focus` | `#4F6D54` | `#86A98A` | Sage focus ring; never system blue |
+| `focus` | `#4F6D54` | `#86A98A` | Sage focus for native controls; never system blue |
 
 ### 4.2 Surfaces
 
@@ -687,7 +687,7 @@ Add a new pose to the state graph before adding it to the runtime. Clip ids are 
 | Contrast | Body ≥ 4.5:1, large text ≥ 3:1, essential graphics ≥ 3:1; audit dusk independently |
 | Colour | Never the only channel; pair with text, icon, or shape |
 | VoiceOver | One combined label for composite surfaces; decorative SVG hidden; every custom control named |
-| Keyboard | Full Keyboard Access; visible sage focus ring; primary action as default button; menu reachable |
+| Keyboard | Full Keyboard Access; sage focus on native controls; primary action as default button; menu reachable |
 | Hit targets | ≥ 28 × 28 pt, never below 20 × 20 pt; ≥ 8 pt between adjacent targets; the hit region may exceed the glyph |
 | Text scaling | Settings and feedback survive system text size; illustration-side captions may stay fixed |
 | Motion | Reduce Motion honoured everywhere, including breathing and hover |
