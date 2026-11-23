@@ -21,9 +21,13 @@ final class AppSettings {
     @ObservationIgnored private let defaults: UserDefaults
     @ObservationIgnored var onShowsDesktopPetChanged: ((Bool) -> Void)?
     @ObservationIgnored var onAppearanceChanged: ((JoeyAppearance) -> Void)?
+    @ObservationIgnored var onScheduleChanged: ((QuietWindow, Int) -> Void)?
 
     var rhythmMinutes: Int {
-        didSet { defaults.set(rhythmMinutes, forKey: Key.rhythm) }
+        didSet {
+            defaults.set(rhythmMinutes, forKey: Key.rhythm)
+            notifyScheduleChanged()
+        }
     }
 
     var pauseUntil: Date? {
@@ -33,11 +37,17 @@ final class AppSettings {
     }
 
     var quietStartMinutes: Int {
-        didSet { defaults.set(quietStartMinutes, forKey: Key.quietStart) }
+        didSet {
+            defaults.set(quietStartMinutes, forKey: Key.quietStart)
+            notifyScheduleChanged()
+        }
     }
 
     var quietEndMinutes: Int {
-        didSet { defaults.set(quietEndMinutes, forKey: Key.quietEnd) }
+        didSet {
+            defaults.set(quietEndMinutes, forKey: Key.quietEnd)
+            notifyScheduleChanged()
+        }
     }
 
     var appearance: JoeyAppearance {
@@ -80,9 +90,17 @@ final class AppSettings {
         self.feedback = defaults.string(forKey: Key.feedback) ?? ""
     }
 
+    var quietWindow: QuietWindow {
+        QuietWindow(startMinutes: quietStartMinutes, endMinutes: quietEndMinutes)
+    }
+
     var isPaused: Bool {
         guard let pauseUntil else { return false }
         return pauseUntil > .now
+    }
+
+    private func notifyScheduleChanged() {
+        onScheduleChanged?(quietWindow, rhythmMinutes)
     }
 
     var pauseResumeText: String {

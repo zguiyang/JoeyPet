@@ -10,16 +10,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var statusItem: NSStatusItem?
     private var togglePetItem: NSMenuItem?
     private var homeWindowController: MainWindowController?
+    #if DEBUG
+    private var posePreviewWindowController: JoeyPosePreviewWindowController?
+    #endif
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)
         configureMainMenu()
 
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-JoeyPetDebugPoses") {
+            showPosePreview()
+            return
+        }
+        #endif
+
         settings.onShowsDesktopPetChanged = { [weak self] isVisible in
             self?.panelController?.setVisible(isVisible)
+            self?.coordinator?.setVisible(isVisible)
         }
         settings.onAppearanceChanged = { [weak self] _ in
             self?.applyAppearanceToWindows()
+        }
+        settings.onScheduleChanged = { [weak self] quietWindow, rhythmMinutes in
+            self?.coordinator?.applyConfiguration(
+                quietWindow: quietWindow,
+                rhythmMinutes: rhythmMinutes
+            )
         }
 
         let panel = PetPanelController()
@@ -28,6 +45,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         self.coordinator = coordinator
         panel.setVisible(settings.showsDesktopPet)
         coordinator.start()
+        coordinator.applyConfiguration(
+            quietWindow: settings.quietWindow,
+            rhythmMinutes: settings.rhythmMinutes
+        )
 
         configureStatusItem()
         showHome()
@@ -185,4 +206,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func applyAppearanceToWindows() {
         homeWindowController?.applyAppearance()
     }
+
+    #if DEBUG
+    private func showPosePreview() {
+        guard let controller = JoeyPosePreviewWindowController.make() else {
+            return
+        }
+        posePreviewWindowController = controller
+        controller.showWindow(nil)
+        controller.window?.makeKeyAndOrderFront(nil)
+        NSApp.activate()
+    }
+    #endif
 }

@@ -11,15 +11,6 @@ enum PetTransientBehavior: String, Equatable, Sendable, CaseIterable {
         rawValue
     }
 
-    var isAmbient: Bool {
-        switch self {
-        case .blink, .walking, .sleeping:
-            return true
-        case .celebrating, .notifying:
-            return false
-        }
-    }
-
     /// Looping transient clips need a finite session so they can return to the
     /// underlying state. This is behavior cadence, not clip frame rate.
     var sessionDuration: TimeInterval? {

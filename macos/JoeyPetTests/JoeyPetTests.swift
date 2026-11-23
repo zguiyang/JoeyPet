@@ -18,12 +18,6 @@ struct JoeyPetTests {
         #expect(point.y >= 0)
     }
 
-    @Test func ambientDelayStaysWithinConfiguredBounds() {
-        let configuration = AmbientBehaviorScheduler.Configuration(minimumDelay: 12, maximumDelay: 35)
-        #expect(AmbientBehaviorScheduler.boundedDelay(1, configuration: configuration) == 12)
-        #expect(AmbientBehaviorScheduler.boundedDelay(99, configuration: configuration) == 35)
-    }
-
     @Test func appWindowBuildsWithV0Title() {
         let defaults = UserDefaults(suiteName: "JoeyPetTests")!
         defaults.removePersistentDomain(forName: "JoeyPetTests")
@@ -658,6 +652,22 @@ struct JoeyRenderTests {
         #expect(texture.size() == CGSize(width: 320, height: 400))
     }
 
+    @Test func desktopSceneFitsTheCurrentPanel() throws {
+        let package = try JoeyAssetPackage.load(resourceRoot: joeyResourceRootURL, scale: .x1)
+        let smallPanel = JoeyDesktopScene(
+            size: CGSize(width: 160, height: 160),
+            package: package
+        )
+        let smallFit = min(160.0 / 168.0, 160.0 / 210.0)
+        #expect(abs(smallPanel.fittedScale - CGFloat(168.0 / 320.0 * smallFit)) < 0.0001)
+
+        let documentedPanel = JoeyDesktopScene(
+            size: CGSize(width: 168, height: 210),
+            package: package
+        )
+        #expect(abs(documentedPanel.fittedScale - CGFloat(168.0 / 320.0)) < 0.0001)
+    }
+
     @Test func characterAppliesPoseAndSize() throws {
         let package = try JoeyAssetPackage.load(resourceRoot: joeyResourceRootURL, scale: .x1)
         let character = JoeyCharacterNode(package: package, sizeID: "m", reduceMotion: true)
@@ -665,6 +675,10 @@ struct JoeyRenderTests {
 
         character.applyPose("sit")
         #expect(character.poseID == "sit")
+        #expect(character.isLayerVisible("body"))
+        #expect(character.isLayerVisible("ears"))
+        #expect(character.isLayerVisible("tail"))
+        #expect(character.isLayerVisible("face"))
         character.applyPose("look")
         #expect(character.poseID == "look")
         character.applyPose("sleep")
@@ -676,3 +690,216 @@ struct JoeyRenderTests {
     }
 }
 
+// MARK: - Runtime
+
+@MainActor
+private final class TestPoseRenderer: PetPoseRendering {
+    let skScene = SKScene(size: CGSize(width: 160, height: 160))
+    private(set) var shownPoses: [PetPose] = []
+
+    func show(pose: PetPose) {
+        shownPoses.append(pose)
+    }
+
+    func setReduceMotion(_ enabled: Bool) {}
+}
+
+@MainActor
+private final class TestSessionStore: PetSessionStoring {
+    private(set) var state: PetPersistedState
+
+    init(_ state: PetPersistedState) {
+        self.state = state
+    }
+
+    func load(now: Date, calendar: Calendar) -> PetPersistedState {
+        state.normalized(now: now, calendar: calendar)
+    }
+
+    func save(_ state: PetPersistedState) {
+        self.state = state
+    }
+}
+
+@MainActor
+struct PetRuntimeTests {
+    private func makePersisted(now: Date, calendar: Calendar) -> PetPersistedState {
+        var state = PetPersistedState.empty(now: now, calendar: calendar)
+        state.showsDesktopPet = true
+        return state
+    }
+
+    private func makeRuntime(
+        now: Date,
+        calendar: Calendar,
+        persisted: PetPersistedState? = nil
+    ) -> (PetRuntime, TestPoseRenderer, TestSessionStore) {
+        let store = TestSessionStore(persisted ?? makePersisted(now: now, calendar: calendar))
+        let renderer = TestPoseRenderer()
+        let runtime = PetRuntime(
+            renderer: renderer,
+            store: store,
+            now: { now },
+            calendar: calendar
+        )
+        return (runtime, renderer, store)
+    }
+
+    @Test func runtimeStartsAloneAndRendersSit() {
+        let calendar = testCalendar()
+        let now = testDate(2026, 11, 23, 9, 0)
+        let (runtime, renderer, _) = makeRuntime(now: now, calendar: calendar)
+
+        #expect(runtime.situation.resolvedDesktop(at: now) == .alone)
+        #expect(runtime.renderedPose == .sit)
+        #expect(renderer.shownPoses == [.sit])
+    }
+
+    @Test func runtimeRunsInvitationThroughTicks() {
+        let calendar = testCalendar()
+        let start = testDate(2026, 11, 23, 9, 0)
+        var current = start
+        let store = TestSessionStore(makePersisted(now: start, calendar: calendar))
+        let renderer = TestPoseRenderer()
+        let runtime = PetRuntime(
+            renderer: renderer,
+            store: store,
+            now: { current },
+            calendar: calendar
+        )
+
+        runtime.startSession()
+        #expect(runtime.situation.companion == .idle)
+        #expect(runtime.renderedPose == .look)
+
+        current = start.addingTimeInterval(40 * 60 + 1)
+        runtime.send(.tick)
+        #expect(runtime.situation.companion == .approach)
+
+        current = start.addingTimeInterval(45 * 60)
+        runtime.send(.tick)
+        #expect(runtime.situation.companion == .invite)
+        #expect(runtime.renderedPose == .sign)
+        #expect(renderer.shownPoses.contains(.sign))
+    }
+
+    @Test func runtimePersistsInvitationClosure() {
+        let calendar = testCalendar()
+        let start = testDate(2026, 11, 23, 9, 0)
+        var current = start
+        let store = TestSessionStore(makePersisted(now: start, calendar: calendar))
+        let runtime = PetRuntime(
+            renderer: TestPoseRenderer(),
+            store: store,
+            now: { current },
+            calendar: calendar
+        )
+
+        runtime.startSession()
+        current = start.addingTimeInterval(45 * 60)
+        runtime.send(.tick)
+        runtime.send(.inviteDismissed)
+
+        #expect(runtime.situation.companion == .idle)
+        #expect(store.state.lastInvitationClosedAt == current)
+        #expect(runtime.situation.invitationDueDate() == current.addingTimeInterval(45 * 60))
+    }
+
+    @Test func runtimeRecordsCompletedBreak() {
+        let calendar = testCalendar()
+        let start = testDate(2026, 11, 23, 9, 0)
+        var current = start
+        let store = TestSessionStore(makePersisted(now: start, calendar: calendar))
+        let runtime = PetRuntime(
+            renderer: TestPoseRenderer(),
+            store: store,
+            now: { current },
+            calendar: calendar
+        )
+
+        runtime.startSession()
+        current = start.addingTimeInterval(45 * 60)
+        runtime.send(.tick)
+        runtime.send(.inviteAccepted)
+
+        current = start.addingTimeInterval(45 * 60 + 30)
+        runtime.send(.tick)
+
+        #expect(runtime.situation.companion == .complete)
+        #expect(store.state.todayBreaks == 1)
+        let index = PetDayKey.weekdayIndex(for: current, calendar: calendar)
+        #expect(store.state.weekBreakCounts[index] == 1)
+    }
+
+    @Test func runtimePersistsVisibility() {
+        let calendar = testCalendar()
+        let now = testDate(2026, 11, 23, 9, 0)
+        let (runtime, _, store) = makeRuntime(now: now, calendar: calendar)
+
+        runtime.setVisible(false)
+        #expect(runtime.situation.isHidden)
+        #expect(store.state.showsDesktopPet == false)
+
+        runtime.setVisible(true)
+        #expect(!runtime.situation.isHidden)
+        #expect(store.state.showsDesktopPet == true)
+    }
+
+    @Test func runtimeRestoresPauseUntilItExpires() {
+        let calendar = testCalendar()
+        let start = testDate(2026, 11, 23, 9, 0)
+        var persisted = makePersisted(now: start, calendar: calendar)
+        persisted.pauseUntil = start.addingTimeInterval(60 * 60)
+
+        var current = start
+        let runtime = PetRuntime(
+            renderer: TestPoseRenderer(),
+            store: TestSessionStore(persisted),
+            now: { current },
+            calendar: calendar
+        )
+        #expect(runtime.situation.resolvedDesktop(at: start) == .paused)
+        #expect(runtime.renderedPose == .sit)
+
+        current = start.addingTimeInterval(60 * 60)
+        runtime.send(.tick)
+        #expect(runtime.situation.pauseUntil == nil)
+        #expect(runtime.situation.resolvedDesktop(at: current) == .alone)
+    }
+
+    @Test func runtimeSchedulesTicksOnlyWhenWorkRemains() {
+        let calendar = testCalendar()
+        let start = testDate(2026, 11, 23, 9, 0)
+        var persisted = makePersisted(now: start, calendar: calendar)
+        persisted.quietWindow = QuietWindow(startMinutes: 0, endMinutes: 0)
+        let runtime = PetRuntime(
+            renderer: TestPoseRenderer(),
+            store: TestSessionStore(persisted),
+            now: { start },
+            calendar: calendar
+        )
+
+        #expect(runtime.nextWakeDate(after: start) == nil)
+
+        runtime.startSession()
+        #expect(runtime.nextWakeDate(after: start) != nil)
+
+        runtime.send(.systemSleep)
+        #expect(runtime.nextWakeDate(after: start) == nil)
+
+        runtime.send(.systemWake)
+        #expect(runtime.nextWakeDate(after: start) != nil)
+    }
+
+    @Test func presenceTrackerReportsEachThresholdOnce() {
+        var tracker = PetPresenceTracker()
+        #expect(tracker.update(idleSeconds: 89) == nil)
+        #expect(tracker.update(idleSeconds: 90) == .presenceIdle90)
+        #expect(tracker.update(idleSeconds: 120) == nil)
+        #expect(tracker.update(idleSeconds: 30 * 60) == .presenceAway30)
+        #expect(tracker.update(idleSeconds: 30 * 60 + 1) == nil)
+        #expect(tracker.update(idleSeconds: 0.5) == .presenceReturned)
+        #expect(tracker.update(idleSeconds: 3) == nil)
+        #expect(tracker.update(idleSeconds: nil) == nil)
+    }
+}

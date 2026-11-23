@@ -7,9 +7,13 @@ final class SleepWakeMonitor {
 
     var onSleep: (() -> Void)?
     var onWake: (() -> Void)?
+    var onScreenLocked: (() -> Void)?
+    var onScreenUnlocked: (() -> Void)?
 
     private var observers: [NSObjectProtocol] = []
+    private var distributedObservers: [NSObjectProtocol] = []
     private var isSleeping = false
+    private var isScreenLocked = false
 
     func start() {
         guard observers.isEmpty else { return }
@@ -38,6 +42,30 @@ final class SleepWakeMonitor {
             }
         )
 
+        let distributedCenter = DistributedNotificationCenter.default()
+        distributedObservers.append(
+            distributedCenter.addObserver(
+                forName: Notification.Name("com.apple.screenIsLocked"),
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    self?.handleScreenLocked()
+                }
+            }
+        )
+        distributedObservers.append(
+            distributedCenter.addObserver(
+                forName: Notification.Name("com.apple.screenIsUnlocked"),
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    self?.handleScreenUnlocked()
+                }
+            }
+        )
+
         Self.logger.info("SleepWakeMonitor started")
     }
 
@@ -47,6 +75,12 @@ final class SleepWakeMonitor {
             center.removeObserver(observer)
         }
         observers.removeAll()
+
+        let distributedCenter = DistributedNotificationCenter.default()
+        for observer in distributedObservers {
+            distributedCenter.removeObserver(observer)
+        }
+        distributedObservers.removeAll()
         Self.logger.info("SleepWakeMonitor stopped")
     }
 
@@ -54,6 +88,10 @@ final class SleepWakeMonitor {
         let center = NSWorkspace.shared.notificationCenter
         for observer in observers {
             center.removeObserver(observer)
+        }
+        let distributedCenter = DistributedNotificationCenter.default()
+        for observer in distributedObservers {
+            distributedCenter.removeObserver(observer)
         }
     }
 
@@ -69,5 +107,19 @@ final class SleepWakeMonitor {
         isSleeping = false
         Self.logger.info("System wake detected")
         onWake?()
+    }
+
+    private func handleScreenLocked() {
+        guard !isScreenLocked else { return }
+        isScreenLocked = true
+        Self.logger.info("Screen locked")
+        onScreenLocked?()
+    }
+
+    private func handleScreenUnlocked() {
+        guard isScreenLocked else { return }
+        isScreenLocked = false
+        Self.logger.info("Screen unlocked")
+        onScreenUnlocked?()
     }
 }

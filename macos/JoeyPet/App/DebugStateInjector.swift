@@ -26,6 +26,15 @@ enum DebugStateInjector {
         #endif
     }
 
+    /// `-JoeyPetDebugSession` starts a companion session without the PR5 UI.
+    static func startsCompanionSession() -> Bool {
+        #if DEBUG
+        ProcessInfo.processInfo.arguments.contains("-JoeyPetDebugSession")
+        #else
+        false
+        #endif
+    }
+
     #if DEBUG
     private static func value(for prefix: String) -> String? {
         let arguments = ProcessInfo.processInfo.arguments
