@@ -261,6 +261,19 @@ struct NestPetArt {
         }
     }
 
+    /// Rotates an already-built ear path around its base so sleep and doze can
+    /// relax the ears without a second set of shapes.
+    private func rotateEar(
+        _ context: inout GraphicsContext,
+        pivot: CGPoint,
+        by angle: Double
+    ) {
+        guard angle != 0 else { return }
+        context.translateBy(x: pivot.x, y: pivot.y)
+        context.rotate(by: .degrees(angle))
+        context.translateBy(x: -pivot.x, y: -pivot.y)
+    }
+
     private func drawLoafOpenEyes(_ context: inout GraphicsContext) {
         fillEllipse(
             &context,
@@ -699,6 +712,7 @@ struct NestPetArt {
         arms: NestArms,
         armsOpacity: Double = 1,
         waveAngle: Double = 0,
+        earTilt: Double = 0,
         bodyRotation: Double = 0,
         bodyOffset: CGSize = .zero,
         bodyScaleY: CGFloat = 1,
@@ -721,7 +735,7 @@ struct NestPetArt {
                 layer.translateBy(x: -160, y: -388)
             }
 
-            drawSittingBody(&layer, tailAngle: tailAngle)
+            drawSittingBody(&layer, tailAngle: tailAngle, earTilt: earTilt)
             drawSittingArms(
                 in: &layer,
                 arms: arms,
@@ -732,7 +746,11 @@ struct NestPetArt {
         }
     }
 
-    private func drawSittingBody(_ context: inout GraphicsContext, tailAngle: Double) {
+    private func drawSittingBody(
+        _ context: inout GraphicsContext,
+        tailAngle: Double,
+        earTilt: Double
+    ) {
         fillEllipse(
             &context,
             cx: 160,
@@ -789,7 +807,10 @@ struct NestPetArt {
             control2: CGPoint(x: 144, y: 116)
         )
         leftEar.closeSubpath()
-        context.fill(leftEar, with: .color(theme.joeyBody))
+        context.drawLayer { ear in
+            rotateEar(&ear, pivot: CGPoint(x: 118, y: 148), by: -earTilt)
+            ear.fill(leftEar, with: .color(theme.joeyBody))
+        }
 
         var leftInner = Path()
         leftInner.move(to: CGPoint(x: 120, y: 136))
@@ -809,7 +830,10 @@ struct NestPetArt {
             control2: CGPoint(x: 134, y: 114)
         )
         leftInner.closeSubpath()
-        context.fill(leftInner, with: .color(theme.joeyInnerEar))
+        context.drawLayer { ear in
+            rotateEar(&ear, pivot: CGPoint(x: 118, y: 148), by: -earTilt)
+            ear.fill(leftInner, with: .color(theme.joeyInnerEar))
+        }
 
         var rightEar = Path()
         rightEar.move(to: CGPoint(x: 202, y: 148))
@@ -829,7 +853,10 @@ struct NestPetArt {
             control2: CGPoint(x: 176, y: 116)
         )
         rightEar.closeSubpath()
-        context.fill(rightEar, with: .color(theme.joeyBody))
+        context.drawLayer { ear in
+            rotateEar(&ear, pivot: CGPoint(x: 202, y: 148), by: earTilt)
+            ear.fill(rightEar, with: .color(theme.joeyBody))
+        }
 
         var rightInner = Path()
         rightInner.move(to: CGPoint(x: 200, y: 136))
@@ -849,7 +876,10 @@ struct NestPetArt {
             control2: CGPoint(x: 186, y: 114)
         )
         rightInner.closeSubpath()
-        context.fill(rightInner, with: .color(theme.joeyInnerEar))
+        context.drawLayer { ear in
+            rotateEar(&ear, pivot: CGPoint(x: 202, y: 148), by: earTilt)
+            ear.fill(rightInner, with: .color(theme.joeyInnerEar))
+        }
 
         var body = Path()
         body.move(to: CGPoint(x: 160, y: 116))
@@ -1375,7 +1405,7 @@ struct NestPetArt {
         if reduceMotion {
             drawZGlyph(
                 in: &context,
-                at: CGPoint(x: 214, y: 212),
+                at: CGPoint(x: 268, y: 141),
                 scale: 0.7,
                 opacity: 0.35,
                 rotation: 0
@@ -1384,9 +1414,9 @@ struct NestPetArt {
         }
 
         let anchors: [CGPoint] = [
-            CGPoint(x: 194, y: 230),
-            CGPoint(x: 214, y: 212),
-            CGPoint(x: 236, y: 195)
+            CGPoint(x: 250, y: 166),
+            CGPoint(x: 268, y: 141),
+            CGPoint(x: 286, y: 116)
         ]
         let sizes: [Double] = [0.62, 0.8, 1.0]
         let rotations: [Double] = [-4, -2, 0]

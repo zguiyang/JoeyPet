@@ -56,6 +56,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 self.settings.isDoNotDisturb = situation.isDoNotDisturb
             }
         }
+        coordinator.onPoseChanged = { [weak self] pose in
+            self?.companionStatus.update(pose: pose)
+        }
         panel.onHideRequested = { [weak self] in
             self?.settings.showsDesktopPet = false
         }
@@ -211,7 +214,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             homeWindowController = MainWindowController(
                 settings: settings,
                 status: companionStatus,
-                onPrimaryAction: { [weak self] in self?.toggleCompanionship() }
+                onPrimaryAction: { [weak self] in self?.toggleCompanionship() },
+                onGreetPet: { [weak self] in self?.coordinator?.greetPet() }
             )
         }
         homeWindowController?.applyAppearance()

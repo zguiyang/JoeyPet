@@ -8,6 +8,7 @@ struct RoomSceneView: View {
     let onOpenReflection: () -> Void
     let onOpenClockSettings: () -> Void
     let onPrimaryAction: () -> Void
+    let onGreetPet: () -> Void
 
     @Environment(\.joeyAppearance) private var appearance
     @State private var isFrameHovering = false
@@ -51,7 +52,7 @@ struct RoomSceneView: View {
                         y: originY + 140 * scale
                     )
 
-                NestPetView(isCompanioning: status.isSessionActive)
+                NestPetView(pose: status.pose, onGreet: onGreetPet)
                     .frame(width: 288 * scale, height: 360 * scale)
                     .position(
                         x: originX + 340 * scale,
