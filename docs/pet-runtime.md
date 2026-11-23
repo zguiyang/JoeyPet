@@ -28,15 +28,32 @@ when they disagree, the domain model wins.
 | Behavior | Kind | Runtime rule |
 |---|---|---|
 | `idle` | Sustained state | Default fallback |
-| `blink` | Ambient transient | Random ambient pick, most frequent |
-| `walking` | Ambient transient | Moves the panel 40–120 pt inside the visible screen, then returns to idle |
+| `blink` | Ambient transient | In-node random blink; suppressed in `sign`, `stretch`, `happy`, `sleep`, `groom`, `yawn`, `peek` |
+| `walking` | Ambient transient | Runtime-gated short walk: `step` for 2.4 s while the panel moves 40–120 pt; only in `alone` / `doNotDisturb` / `snoozed`, never hidden, dozing or in a session |
+| `carrying` | Explicit transient | `carry` for 3.6 s after a break completes and `happy` ends; skipped when hidden, quiet, DND or Reduce Motion |
 | `sleeping` | Ambient transient | Timed session, then returns to idle |
 | `celebrating` | Explicit transient | One-shot positive feedback; reserved for V0 recovery completion |
 | `notifying` | Explicit transient | One-shot attention cue; reserved for V0 break invitation |
+| `greeting` | Explicit transient | `happy` for 2.8 s when the user taps the nest; allowed while the desktop pet is hidden |
 
-Ambient scheduling waits one randomized interval (12–35 seconds, clamped) per
-event. It does not poll, use a display link, or run a high-frequency timer. The
-scheduler stops on system sleep and restarts at most once after wake.
+Ambient scheduling uses one randomized sleep per event, never polling or a
+display link. In-node blink/ear loops keep their manifest ranges. Ambient
+walking is scheduled by `PetCoordinator` every 90–180 s (×1.5 in low power
+mode); every attempt is re-gated by `PetSituation.canWalkAmbiently(at:)`, so a
+hidden, dozing or companioning pet simply skips it. The scheduler stops
+on system sleep and restarts at most once after wake.
+
+The runtime also exposes `onRenderedPoseChanged` after every real pose switch,
+transients included. `PetCoordinator` forwards it to `CompanionStatus.pose`, and
+the nest window renders that stored pose with its own drawing rather than
+running a separate day loop, so the desktop pet and the nest always agree.
+
+Edge docking and `peek` are deferred from V0: the panel stays where the user
+drops it, and `peek` is not reachable yet.
+
+An in-flight ambient transient is cut immediately when a pose with higher
+priority appears (hidden, drag, menu, quiet, dozing, yawn or any session), so
+invitations and recovery are never painted over a walking or carrying frame.
 
 `PetRuntime.perform(_:)` is the entry point for ambient and explicit transient
 behaviors; callers do not play animation ids directly. If a transient is already

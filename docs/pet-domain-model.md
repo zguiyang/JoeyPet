@@ -126,7 +126,7 @@ AmbientEvent                       叠加在姿态上的小循环/瞬态
 | `sign` | `notify_sign` | `notifying` | 否 | 一次性，停最后一帧 |
 | `stretch` | `recover_stretch` | `idle` | 是 | 恢复中 |
 | `happy` | `complete_happy` | `celebrating` | 否 | 2.6 秒 |
-| `sleep` | `sleep_curl` | `sleeping` | 是 | 安静时段 |
+| `sleep` | `sleep_curl` | `sleeping` | 是 | 安静时段；站立闭眼，耳朵放松 |
 | `groom` | `idle_groom` | `idle` | 否 | 环境瞬态 |
 | `yawn` | `idle_yawn` | `idle` | 否 | 环境瞬态 |
 | `doze` | `doze_short` | `sleeping` | 是 | 浅睡 |
@@ -175,6 +175,7 @@ clip id 一经交付不再改名。未知 clip → `idle/idle_sit`，记一次�
 |---|---|
 | `schedule(deadline, event)` / `cancel(event)` | Coordinator |
 | `play(pose)` / `playAmbient(event)` / `stopAmbient` | PetRuntime |
+| `playCarry` | PetRuntime（完成动画结束后叼叶子 3.6 秒） |
 | `showInviteCard` / `dismissInviteCard` | PanelCoordinator |
 | `startRecovery` / `finishRecovery` / `skipRecovery` | PanelCoordinator |
 | `setHidden(Bool)` / `setDocked(Bool)` | PetPanelController |
@@ -215,7 +216,7 @@ reduce(situation: PetSituation, event: PetEvent, now: Date) -> (PetSituation, [P
 | `hideRequested` | `hidden`；关闭当前邀请/恢复；保留会话与计时 |
 | `showRequested` | 重算：quiet > doNotDisturb > snoozed > companion > alone |
 | `dragBegan` | `dragging`；暂停环境瞬态 |
-| `dragEnded` | 600 ms 后重算 |
+| `dragEnded` | 重算悬浮状态；停在释放位置 |
 | `systemSleep` | 冻结所有计时与动画 |
 | `systemWake` | 恢复计时；2 秒内不触发瞬态 |
 
@@ -422,7 +423,7 @@ shadow → tail → body → ears → backArm → face → frontArm → prop
 }
 ```
 
-- `sleep` 与 `peek` 允许使用专用 body/face；其余姿态复用通用层。
+- `sleep` 复用通用站立身体与手臂，只替换耳朵（放松外倾）和闭眼脸；`doze` 复用通用层并加轻微倾斜。`peek` 仍使用专用 body/face（V0 不可达）。
 - 旋转轴心由 `render.poseLayers.<id>.pivot` 声明（SVG 坐标），未声明时使用呼吸原点 (160, 340)；数值必须与图谱 symbol 的 `rotate` 轴心一致。
 - 具体组合由图谱 symbol 在 P0 生成，不与图谱冲突。
 - 眨眼只替换 `face` 为 `face_<id>_blink2/3`；`happy`/`yawn`/`sleep` 不眨眼。
@@ -446,8 +447,7 @@ shadow → tail → body → ears → backArm → face → frontArm → prop
 | 初始位置 | 主屏右下，距右 40，距底 92 |
 | 拖动夹取 | 距可见区 8 px；不压菜单栏/Dock |
 | 拖动 | 4 px 阈值；0.98 缩放；释放 180 ms 回 1.0 |
-| 贴边 | 左/右 24 pt 触发；600 ms 后收进 40%，最小 24 pt；热区 24 pt；180 ms 滑回 |
-| 停靠 | 停靠 ≠ 隐藏；仍呼吸；邀请先滑出；拖动可离边 |
+| 贴边 | V0 暂缓：不做自动收起/探头，拖动后停在释放位置并持久化 |
 | 窗口 | `.floating`，低于菜单栏/Dock；默认不进全屏；只渲染一份 |
 | 多屏 | 屏 UUID + 归一化位置；断屏回主屏右下 |
 | 菜单 | 3 项 + 分隔；160 ms；Esc/点外关闭；悬停 600 ms 提示 |
@@ -505,7 +505,7 @@ Mission Control 用 `NSWorkspace` 空间切换 + App 失活做 best-effort 冻�
 
 - 168×210、132×165、216×270 的缩放与锚点。
 - 初始位置、8 px 夹取、多屏恢复、断屏回退。
-- 贴边 24 pt、40%/24 pt、热区 24 pt、180 ms。
+- V0 不做贴边停靠；只保留拖动释放位置与四角初始位置。
 - 拖动阈值与点击/拖动区分。
 
 ### 12.4 视觉与无障碍
@@ -566,3 +566,7 @@ P1 与 P2 可并行；P3 必须等两者完成。每个 PR 保持可构建、可
 | 2026-11-23 | PR5：会话反馈 UI 落地；`SessionSurfacePresentation` 从 situation 派生胶囊/邀请卡/恢复面板/完成反馈，`SessionSurfacesController` 只渲染并回传用户意图；桌面 `陪伴中 · mm:ss` 胶囊、邀请卡（休息一下/稍后提醒/进入勿扰）、真实 30 秒恢复环（好了/先跳过）与完成/稍后/勿扰 toast；小窝主按钮接通开始/结束陪伴，`CompanionStatus` 同步主窗口状态 |
 | 2026-11-23 | PR6：移除旧 spritesheet 管线与资产（`pet.json`、spritesheet、runtime/source 源图、旧 `.py` 生成脚本及各旧渲染类）；`PetRuntime` 只加载分层 `JoeyAssetPackage`，加载失败时使用 `EmptyPoseRenderer` 并记录日志；文档统一到 ADR 013 |
 | 2026-11-23 | P7：设置页「暂停一小时」改为手动「勿扰模式」；新增 `doNotDisturbChanged(Bool)` 与持久化键 `doNotDisturb`，勿扰中关闭邀请/恢复，关闭勿扰立即重排；可见性与打扰许可解耦，`hidden` 仍排邀请，到点临时显示 Joey + 邀请卡，60 秒未处理按稍后一次并回隐；面板可见性由 situation 派生，自动出现不抢键盘焦点 |
+| 2026-11-23 | P8：接入 `peek` / `step` / `carry` 驱动。新增 `dockChanged(Bool)` 与 `isDocked`，贴边收起进入 `peek`、悬停/拖离回 `sit`；`step` 由 `PetCoordinator` 以 90–180 秒（低电量 ×1.5）低频调度，经 `canWalkAmbiently(at:)` 门控并移动面板 40–120 pt、播 2.4 秒；休息自然完成后新增 `playCarry` 效果，播 3.6 秒叼叶子，安静/勿扰/隐藏/减弱动态不播；高优先级姿态会立即打断进行中的环境瞬态 |
+| 2026-11-23 | P8 调整：贴边收起露出比例由 40% 改为 48%（168 档 81 pt），修复 40% 时屏幕边缘切断 peek 眼睛的问题；manifest、默认策略、几何测试与图谱同步。 |
+| 2026-11-23 | P8 素材：peek 重绘为左边缘构图（头部朝画布右侧让出 48% 可见区），右边缘通过 `PetDockEdge.right` 做静态水平镜像；`dockChanged` 改为携带 `PetDockEdge?`，`PetPoseRendering` 新增 `setDockEdge`；只翻转 peek，不产生水平位移动画。 |
+| 2026-11-23 | P8 回退：贴边停靠、收起与 `peek` 暂缓接入 V0。移除 `dockChanged`、`isDocked`、镜像渲染、停靠几何与 manifest `docking`；拖动只保留释放位置持久化。`step` 与 `carry` 保留。 |

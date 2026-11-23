@@ -369,11 +369,11 @@ Twelve poses. The first six are the V0 state set; the last six cover ambient, lo
 | `sign` | Holding a small handwritten sign | Rest invitation |
 | `stretch` | Arms up, eyes closed, small mouth | Recovery demo |
 | `happy` | Arc eyes, open smile, brighter blush | After a completed break |
-| `sleep` | Curled, closed arc eyes, sage blanket line | Quiet hours, hidden attention |
+| `sleep` | Standing, ears relaxed outward, eyes closed in soft arcs | Quiet hours, hidden attention |
 | `groom` | Paw to the ear, eyes half-closed | Idle, when the room is quiet |
 | `yawn` | Eyes squeezed shut, wide small mouth, head back | Waking up, or after long sitting |
 | `doze` | Head low, eyes flat lines, loose shoulders | Light sleep, after 90 s without interaction |
-| `peek` | Only ears and two paws at the screen edge | Docked at the edge, hovering out of view |
+| `peek` | Head leaning out from the screen edge, eyes and paws inside the visible strip, near edge tucked behind the panel | Not wired in V0 — edge docking is deferred |
 | `step` | One paw forward, slight lean, low lift | Short 40–120 pt move |
 | `carry` | Leaf in mouth, returning to the nest | After a completed break |
 
@@ -396,8 +396,8 @@ Transitions run 240–420 ms, ease-out; exits are ~65 % of entrance; no bounce, 
 | `sit` → `doze` | 90 s without interaction | 600 ms | Head lowers first, eyes close last |
 | `doze` → `yawn` | User returns to the desk | 400 ms | Wake with a yawn |
 | `yawn` → `look` | Yawn ends | 400 ms | Then `look` or `sit` by context |
-| `sit` → `sleep` | Quiet hours begin | 600 ms | Body sinks, tail tucks |
-| `sleep` → `sit` | Quiet hours end | 500 ms | Eyes open before sitting up |
+| `sit` → `sleep` | Quiet hours begin | 600 ms | Body sinks a little, ears relax |
+| `sleep` → `sit` | Quiet hours end | 500 ms | Eyes open before the head lifts |
 | `sign` → `sit` | Snooze / pause / dismiss | 240 ms | Sign drops, card fades after |
 | `look` → `sit` | Session ends | 240 ms | Gaze falls back |
 
@@ -496,9 +496,9 @@ Rules:
 The main window, and it should feel like entering Joey's home.
 
 - Title: **Joey 的家**. Traffic lights, title, one gear.
-- Room scene fills the content area. Joey lives in the nest through a quiet day loop: sleep and doze (the desktop pet's existing `sleep` loaf pose — small bunny, closed eyes, slow breathing, two or three `Z`s that fade in place with the breath), `wake_blink`, `greet` (sit up, stretch, wave), `settle` (yawn, turn, lie back down), `groom`, and brief `nap_twitch`. Sitting, greet, and groom follow the rig in [docs/reference/joeypet-nest-animations-v0.html](docs/reference/joeypet-nest-animations-v0.html); its `nest_sleep` wide-blob layer is intentionally not used.
-- Joey stays in the nest. The room pet is not draggable; a click wakes him and runs the greet sequence.
-- While a companionship session is running (`陪伴中`), Joey stays awake and upright in the nest — sitting calmly with one slow breath cycle and an occasional blink, no tail sway or other busy motion — and he never sleeps. The day loop resumes only after the session ends.
+- Room scene fills the content area. The nest is not a separate day loop: it renders the exact pose `PetRuntime` is showing on the desktop, transients included, so the room and the desktop never disagree. `sleep` is the standing closed-eye pose with relaxed ears; `doze` is the lighter, slightly tilted nap.
+- Joey stays in the nest. The room pet is not draggable; a click asks the runtime for one short greeting (`happy` for ~2.8 s), and both the nest and the desktop pet play it.
+- While a companionship session is running (`陪伴中`), the runtime drives `look`, then `sign`, `stretch` and `happy` at the matching moments, and the nest follows. Quiet hours show the same `sleep` pose in both places.
 - The wall clock shows the real local time with hour and minute hands; clicking it opens `JoeyPet 设置` on **节奏与提醒**. The hover hint is `调整提醒时间`.
 - Three object-bound facts, nothing else:
   - Clock label: `Joey 大约每 45 分钟来叫你一次`
@@ -676,7 +676,7 @@ Design poses are for people. At runtime they land on `PetPose`; `JoeyDesktopScen
 | `groom` | `idle` | `idle_groom` | Once; ambient transient |
 | `yawn` | `idle` | `idle_yawn` | Once; waking or long sitting |
 | `doze` | `sleeping` | `doze_short` | Loop; light sleep, interruptible |
-| `peek` | `notifying` | `peek_edge` | Once; while docked at the edge |
+| `peek` | `notifying` | `peek_edge` | Reserved; not reachable in V0 |
 | `step` | `walking` | `walk_step` | Once; after 40–120 pt of movement |
 | `carry` | `idle` | `idle_carry` | Loop; return-to-nest segment |
 
@@ -794,3 +794,6 @@ Git history and the archive branch explain why they were replaced.
 | 2026-10-27 | Introduced layered authority; documented dock + hover mode switch; Current/Legacy/Pending status. |
 | 2026-11-22 | Replaced the Calm Space contract with the V0 desktop-companion design: new tokens (ivory / ink / sage / apricot / mist), single-room window with in-scene navigation, six states, copy voice, motion and review rules; frozen HTML reference added; Calm Space moved to Legacy. |
 | 2026-11-22 | Extended Joey to twelve poses and added the pose/state graph: ambient loops, pose transitions, seven-state desktop priority, five companion substates, guards and cooldowns, and the pose → behavior/clip mapping via `PetStateAnimationMapping`. Frozen graph added at `docs/reference/joeypet-states-v0.html`. |
+| 2026-11-23 | `peek` now renders while the panel is docked-collapsed; dock exposure raised from 40% to 48% so one full eye stays inside the screen edge. The frozen graph and the dock geometry tests follow the same number. |
+| 2026-11-23 | `peek` art recomposed for the edge: the head leans toward the right of the canvas so the 48% docked strip keeps both eyes and both paws in view. The right edge uses the same art mirrored; the pose itself still has no horizontal motion. |
+| 2026-11-23 | V0 defers edge docking, collapse and `peek`. Dragging still clamps on screen and persists the release position; the edge-dock geometry and peek wiring are removed. `step` and `carry` remain. |
