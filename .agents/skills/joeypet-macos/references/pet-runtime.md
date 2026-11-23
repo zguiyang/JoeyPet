@@ -1,13 +1,13 @@
 # Pet Runtime Rule Checklist
 
-V0 runtime: `AppDelegate → PetCoordinator → AmbientBehaviorScheduler → PetRuntime → PetScene`.
+V0 runtime: `AppDelegate → PetCoordinator → AmbientBehaviorScheduler → PetRuntime → JoeyDesktopScene`.
 
 ## Responsibilities
 
-- `PetRuntime` owns the active transient behavior and maps it to an animation id.
-- `PetScene` only plays animation ids; it does not select behaviors or read app state.
-- `PetStateAnimationMapping` is the only place that maps `PetState` → animation id.
-- Callers never call `SKScene.run` directly for behavior changes.
+- `PetRuntime` owns the active transient behavior and maps it to a `PetPose`.
+- `JoeyDesktopScene` only plays poses; it does not select behaviors or read app state.
+- `JoeyDesktopScene` / `JoeyCharacterNode` are the only place that maps `PetPose` → layered pose.
+- Callers never drive the scene directly for behavior changes.
 
 ## Ambient scheduling
 
@@ -19,7 +19,7 @@ V0 runtime: `AppDelegate → PetCoordinator → AmbientBehaviorScheduler → Pet
 ## Transient behavior
 
 - `PetTransientBehavior` is the allowlist of runtime behaviors.
-- Each behavior has an animation id, `isAmbient`, and duration.
+- Each behavior has a `PetPose`, `isAmbient`, and duration.
 - Completion returns the pet to `idle`.
 - Re-applying the same animation id must not restart playback from frame 0.
 

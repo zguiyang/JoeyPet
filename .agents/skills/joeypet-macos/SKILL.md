@@ -29,7 +29,7 @@ Use when working on JoeyPet implementation or review. **Do not duplicate [AGENTS
 | Presentation | `UI/`, `Pet/Sprite/` | Play animation ids outside `PetRuntime` |
 | Utilities | `Utilities/` | Bypass user approval for data changes |
 
-Flow: `AppDelegate → PetCoordinator → AmbientBehaviorScheduler → PetRuntime → PetScene`
+Flow: `AppDelegate → PetCoordinator → AmbientBehaviorScheduler → PetRuntime → JoeyDesktopScene`
 
 ## UI work (intent → ambiguity → implementation)
 
@@ -55,19 +55,20 @@ Platform guardrails (official pages are `https://developer.apple.com/design/huma
 
 1. Define the behavior in `PetTransientBehavior` with a pet-centric name.
 2. Decide whether it is ambient or explicit-only (`isAmbient`) and its session duration.
-3. Add the animation id to the Joey `pet.json` and frames to `spritesheet.png`.
-4. Keep playback centralized in `PetRuntime`; callers never play animation ids directly.
+3. Add the pose to `Resources/Pets/Joey/joey_manifest.json` and its PNGs under `poses/png/` + `layers/png/`; regenerate with `python3 macos/scripts/build_joey_pose_assets.py`.
+4. Keep playback centralized in `PetRuntime`; callers never drive the scene directly.
 5. Add focused tests for timing/selection logic where it is pure.
 6. Verify sleep/wake cancellation and no animation restart when the id is unchanged.
 
-## Add or change a sprite animation
+## Add or change a sprite pose
 
-1. Edit `macos/JoeyPet/Resources/Pets/Joey/spritesheet.png` — keep row-major layout matching `columns` × `rows` in `pet.json`.
-2. Add or update an entry under `animations` (`frames`, `fps`, `loop`).
-3. If it maps to a `PetState`, update `PetStateAnimationMapping.swift` only.
-4. Run `PetManifestValidator` tests (dimensions, in-bounds frames, fallback).
-5. Build and verify in the app; use `-JoeyPetDebugAnimation <id>` or `-JoeyPetDebugBehavior <id>` in Debug.
-6. Confirm the same animation id does not restart when re-applied unchanged.
+1. Edit the SVG symbols in `docs/reference/joeypet-states-v0.html`.
+2. Run `python3 macos/scripts/build_joey_pose_assets.py` to regenerate `layers/png/` and `poses/png/`.
+3. Add or update the pose entry in `Resources/Pets/Joey/joey_manifest.json` with its layer files, face and anchors.
+4. If it maps to a `PetPose`, update `JoeyDesktopScene` / `JoeyCharacterNode` only.
+5. Run the layered package tests (manifest version, required layers/poses, texture presence, fallback).
+6. Build and verify in the app; use `-JoeyPetDebugAnimation <id>`, `-JoeyPetDebugBehavior <id>` or `-JoeyPetDebugPoses` in Debug.
+7. Confirm the same pose does not restart when re-applied unchanged.
 
 ## Panel and lifecycle rules
 

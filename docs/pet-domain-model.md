@@ -448,7 +448,7 @@ Mission Control 用 `NSWorkspace` 空间切换 + App 失活做 best-effort 冻�
 
 1. 同一时刻只有一个 `PetSituation`、一个姿态、一个主 clip。
 2. 状态只能通过事件变化；视图不能直接改状态。
-3. `PetScene` / `CharacterNode` 不读系统状态、不决定优先级、不拼 clip 名。
+3. `JoeyDesktopScene` / `JoeyCharacterNode` 不读系统状态、不决定优先级、不拼 pose 名。
 4. `AmbientBehaviorScheduler` 不直接操作 `SKScene`。
 5. 高优先级状态只覆盖姿态与可见元素，不销毁低优先级的计时、计数、会话。
 6. 环境事件与邀请不排队；不满足条件直接丢弃。
@@ -549,3 +549,4 @@ P1 与 P2 可并行；P3 必须等两者完成。每个 PR 保持可构建、可
 | 2026-11-23 | PR3：`PetRuntime` 接入纯 reducer 与截止时间 tick；新增在场检测、系统睡眠/锁屏协调、可见性与节奏配置持久化；桌面宠物改用 `JoeyCharacterNode` 分层渲染，旧 `PetScene` 仅作回退 |
 | 2026-11-23 | PR4：面板改为 168×210，初始位置 40/92 并保留 8 pt 拖动夹取；拖动阈值 4 pt、0.98 缩放与 `dragBegan/dragEnded` 接线；贴边 24 pt 停靠、600 ms 收起、40%/24 pt 露出与热区滑回；桌面菜单（结束陪伴/隐藏/暂停一小时）、键盘移动、悬停提示、VoiceOver 标签与鼠尾草焦点环 |
 | 2026-11-23 | PR5：会话反馈 UI 落地；`SessionSurfacePresentation` 从 situation 派生胶囊/邀请卡/恢复面板/完成反馈，`SessionSurfacesController` 只渲染并回传用户意图；桌面 `陪伴中 · mm:ss` 胶囊、邀请卡（休息一下/稍后提醒/暂停一会儿）、真实 30 秒恢复环（好了/先跳过）与完成/稍后/暂停 toast；小窝主按钮接通开始/结束陪伴，`CompanionStatus` 同步主窗口状态 |
+| 2026-11-23 | PR6：移除旧 spritesheet 管线与资产（`pet.json`、spritesheet、runtime/source 源图、旧 `.py` 生成脚本及各旧渲染类）；`PetRuntime` 只加载分层 `JoeyAssetPackage`，加载失败时使用 `EmptyPoseRenderer` 并记录日志；文档统一到 ADR 013 |

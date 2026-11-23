@@ -12,22 +12,18 @@ protocol PetPoseRendering: AnyObject {
     func setReduceMotion(_ enabled: Bool)
 }
 
-/// Fallback renderer for the legacy spritesheet package.
+/// Renderer used only when the bundled layered package cannot load. It keeps
+/// the runtime alive and logs the failure instead of showing placeholder art.
 @MainActor
-final class LegacyPoseRenderer: PetPoseRendering {
-    private let scene: PetScene
+final class EmptyPoseRenderer: PetPoseRendering {
+    let skScene: SKScene
 
-    var skScene: SKScene { scene }
-
-    init(size: CGSize, package: LoadedPetPackage) {
-        scene = PetScene(size: size, package: package)
-        scene.applyAnimation(PetStateAnimationMapping.animationID(for: .idle))
+    init(size: CGSize) {
+        skScene = SKScene(size: size)
+        skScene.scaleMode = .aspectFill
     }
 
-    func show(pose: PetPose) {
-        scene.applyAnimation(PetStateAnimationMapping.animationID(for: pose))
-    }
-
+    func show(pose: PetPose) {}
     func setReduceMotion(_ enabled: Bool) {}
 }
 
@@ -72,9 +68,9 @@ final class PetRuntime {
         )
     }
 
-    convenience init(sceneSize: CGSize, package: LoadedPetPackage? = nil) {
+    convenience init(sceneSize: CGSize) {
         self.init(
-            renderer: Self.makeRenderer(sceneSize: sceneSize, legacyPackage: package),
+            renderer: Self.makeRenderer(sceneSize: sceneSize),
             store: UserDefaultsPetSessionStore(),
             now: Date.init,
             calendar: .autoupdatingCurrent,
@@ -441,64 +437,12 @@ final class PetRuntime {
         }
     }
 
-    private static func makeRenderer(
-        sceneSize: CGSize,
-        legacyPackage: LoadedPetPackage?
-    ) -> PetPoseRendering {
-        if let legacyPackage {
-            return LegacyPoseRenderer(size: sceneSize, package: legacyPackage)
-        }
+    private static func makeRenderer(sceneSize: CGSize) -> PetPoseRendering {
         if let package = JoeyAssetPackage.load() {
             return JoeyDesktopScene(size: sceneSize, package: package)
         }
 
-        logger.error("Layered pet package unavailable; falling back to the spritesheet")
-        let fallback = PetAssetLoader.loadBundledPackage() ?? fallbackPackage()
-        return LegacyPoseRenderer(size: sceneSize, package: fallback)
-    }
-
-    private static func fallbackPackage() -> LoadedPetPackage {
-        logger.error("Using in-memory fallback pet package")
-
-        let manifest = PetManifest(
-            id: "fallback",
-            name: "Fallback",
-            spriteSheet: "spritesheet.png",
-            frameWidth: 1,
-            frameHeight: 1,
-            columns: 1,
-            rows: 1,
-            defaultScale: 1,
-            displayPointSize: nil,
-            textureFiltering: nil,
-            fallbackAnimation: "idle",
-            animations: [
-                "idle": AnimationClip(frames: [0], fps: 1, loop: true)
-            ]
-        )
-
-        return LoadedPetPackage(
-            manifest: manifest,
-            frameTextures: [makeSolidTexture(color: NSColor.systemGray)],
-            clipsByID: manifest.animations
-        )
-    }
-
-    private static func makeSolidTexture(color: NSColor) -> SKTexture {
-        let image = NSImage(size: NSSize(width: 1, height: 1))
-        image.lockFocus()
-        color.setFill()
-        NSBezierPath(rect: NSRect(x: 0, y: 0, width: 1, height: 1)).fill()
-        image.unlockFocus()
-
-        guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
-            let texture = SKTexture()
-            texture.filteringMode = .nearest
-            return texture
-        }
-
-        let texture = SKTexture(cgImage: cgImage)
-        texture.filteringMode = .nearest
-        return texture
+        logger.error("Layered pet package unavailable; the desktop pet will stay empty")
+        return EmptyPoseRenderer(size: sceneSize)
     }
 }

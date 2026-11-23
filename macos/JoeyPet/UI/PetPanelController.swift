@@ -53,7 +53,7 @@ final class PetPanelController {
         spriteView.wantsLayer = true
         spriteView.layer?.backgroundColor = NSColor.clear.cgColor
 
-        petRuntime = PetRuntime(sceneSize: Self.panelSize, package: Self.debugOverridePackage())
+        petRuntime = PetRuntime(sceneSize: Self.panelSize)
         spriteView.presentScene(petRuntime.scene)
         sessionSurfaces = SessionSurfacesController(petPanel: panel, appearance: .light)
 
@@ -121,21 +121,6 @@ final class PetPanelController {
             return PetDockingPolicy()
         }
         return PetDockingPolicy(spec: spec)
-    }
-
-    /// Loads a Debug launch-argument package when present and valid; otherwise `nil` (default Joey).
-    private static func debugOverridePackage() -> LoadedPetPackage? {
-        guard let packageID = DebugStateInjector.injectedPackageID() else {
-            return nil
-        }
-
-        if let package = PetAssetLoader.loadBundledPackage(packageID: packageID) {
-            logger.info("Using debug pet package \(packageID, privacy: .public)")
-            return package
-        }
-
-        logger.error("Debug pet package \(packageID, privacy: .public) failed to load; falling back to default")
-        return nil
     }
 
     private(set) var isVisible = false

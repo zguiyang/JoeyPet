@@ -35,7 +35,7 @@ Electron, Tauri, KMP, Avalonia, Live2D, 3D, Unity, database, LLM runtime, LangCh
 ## Architecture boundaries
 
 ```
-AppDelegate → PetCoordinator → AmbientBehaviorScheduler → PetRuntime → PetScene
+AppDelegate → PetCoordinator → AmbientBehaviorScheduler → PetRuntime → JoeyDesktopScene
 ```
 
 - AppKit owns the panel, status item and lifecycle; do not migrate window ownership to SwiftUI scenes.

@@ -649,7 +649,7 @@ idle ──5 min to go──▶ approach ──due──▶ invite ──accept�
 
 ### 13.4 Pose to runtime mapping
 
-Design poses are for people. At runtime they land on the existing behavior ids; `PetStateAnimationMapping` is the single entry point, and scenes must not hardcode clips.
+Design poses are for people. At runtime they land on `PetPose`; `JoeyDesktopScene` maps each pose to its layered pose and is the single entry point, and scenes must not hardcode layer files.
 
 | Pose | Behavior id | Clip id | Playback |
 |------|-------------|---------|----------|

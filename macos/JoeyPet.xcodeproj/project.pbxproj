@@ -12,7 +12,6 @@
 		D7BABD6C305978E70070926E /* JoeyPetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7BABD6A305978E70070926E /* JoeyPetTests.swift */; };
 		D7PET102305978720070926E /* PetState.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET002305978720070926E /* PetState.swift */; };
 		D7PET10C305978720070926E /* PetRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET00C305978720070926E /* PetRuntime.swift */; };
-		D7PET10D305978720070926E /* PetScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET00D305978720070926E /* PetScene.swift */; };
 		D7PET10E305978720070926E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET00E305978720070926E /* AppDelegate.swift */; };
 		D7PET10F305978720070926E /* PetCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET00F305978720070926E /* PetCoordinator.swift */; };
 		D7PET110305978720070926E /* SleepWakeMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET010305978720070926E /* SleepWakeMonitor.swift */; };
@@ -20,12 +19,6 @@
 		D7PET112305978720070926E /* PetPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET012305978720070926E /* PetPanel.swift */; };
 		D7PET113305978720070926E /* PetSpriteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET013305978720070926E /* PetSpriteView.swift */; };
 		D7PET114305978720070926E /* PetPanelController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET014305978720070926E /* PetPanelController.swift */; };
-		D7PET115305978720070926E /* AnimationClip.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET015305978720070926E /* AnimationClip.swift */; };
-		D7PET116305978720070926E /* PetManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET016305978720070926E /* PetManifest.swift */; };
-		D7PET117305978720070926E /* PetStateAnimationMapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET017305978720070926E /* PetStateAnimationMapping.swift */; };
-		D7PET118305978720070926E /* PetAssetLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET018305978720070926E /* PetAssetLoader.swift */; };
-		D7PET119305978720070926E /* CharacterNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET019305978720070926E /* CharacterNode.swift */; };
-		D7PET11A305978720070926E /* PetRootNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET01A305978720070926E /* PetRootNode.swift */; };
 		D7PET11E305978720070926E /* PetTransientBehavior.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET01B305978720070926E /* PetTransientBehavior.swift */; };
 		D7PET11D305978720070926E /* Pets in Resources */ = {isa = PBXBuildFile; fileRef = D7PET20C305978720070926E /* Pets */; };
 		D7PET127305978720070926E /* PetPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET027305978720070926E /* PetPreferences.swift */; };
@@ -73,7 +66,6 @@
 		D7BABD6A305978E70070926E /* JoeyPetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeyPetTests.swift; sourceTree = "<group>"; };
 		D7PET002305978720070926E /* PetState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetState.swift; sourceTree = "<group>"; };
 		D7PET00C305978720070926E /* PetRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetRuntime.swift; sourceTree = "<group>"; };
-		D7PET00D305978720070926E /* PetScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetScene.swift; sourceTree = "<group>"; };
 		D7PET00E305978720070926E /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		D7PET00F305978720070926E /* PetCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetCoordinator.swift; sourceTree = "<group>"; };
 		D7PET010305978720070926E /* SleepWakeMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepWakeMonitor.swift; sourceTree = "<group>"; };
@@ -81,12 +73,6 @@
 		D7PET012305978720070926E /* PetPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetPanel.swift; sourceTree = "<group>"; };
 		D7PET013305978720070926E /* PetSpriteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetSpriteView.swift; sourceTree = "<group>"; };
 		D7PET014305978720070926E /* PetPanelController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetPanelController.swift; sourceTree = "<group>"; };
-		D7PET015305978720070926E /* AnimationClip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationClip.swift; sourceTree = "<group>"; };
-		D7PET016305978720070926E /* PetManifest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetManifest.swift; sourceTree = "<group>"; };
-		D7PET017305978720070926E /* PetStateAnimationMapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetStateAnimationMapping.swift; sourceTree = "<group>"; };
-		D7PET018305978720070926E /* PetAssetLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetAssetLoader.swift; sourceTree = "<group>"; };
-		D7PET019305978720070926E /* CharacterNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacterNode.swift; sourceTree = "<group>"; };
-		D7PET01A305978720070926E /* PetRootNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetRootNode.swift; sourceTree = "<group>"; };
 		D7PET01B305978720070926E /* PetTransientBehavior.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetTransientBehavior.swift; sourceTree = "<group>"; };
 		D7PET20C305978720070926E /* Pets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Pets; path = JoeyPet/Resources/Pets; sourceTree = SOURCE_ROOT; };
 		D7PET027305978720070926E /* PetPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetPreferences.swift; sourceTree = "<group>"; };
@@ -182,9 +168,7 @@
 		D7PET201305978720070926E /* Domain */ = {
 			isa = PBXGroup;
 			children = (
-				D7PET015305978720070926E /* AnimationClip.swift */,
 				D7F000000000000000000006 /* CompanionSummary.swift */,
-				D7PET016305978720070926E /* PetManifest.swift */,
 				D7PET01B305978720070926E /* PetTransientBehavior.swift */,
 				D7PET002305978720070926E /* PetState.swift */,
 				D7PET027305978720070926E /* PetPreferences.swift */,
@@ -209,9 +193,7 @@
 		D7PET205305978720070926E /* Runtime */ = {
 			isa = PBXGroup;
 			children = (
-				D7PET018305978720070926E /* PetAssetLoader.swift */,
 				D7PET00C305978720070926E /* PetRuntime.swift */,
-				D7PET017305978720070926E /* PetStateAnimationMapping.swift */,
 			);
 			path = Runtime;
 			sourceTree = "<group>";
@@ -219,13 +201,10 @@
 		D7PET206305978720070926E /* Sprite */ = {
 			isa = PBXGroup;
 			children = (
-				D7PET019305978720070926E /* CharacterNode.swift */,
 				D7PET02D305978720070926E /* JoeyAssetLoader.swift */,
 				D7PET02E305978720070926E /* JoeyCharacterNode.swift */,
 				D7PET032305978720070926E /* JoeyDesktopScene.swift */,
 				D7PET02F305978720070926E /* JoeyPosePreviewScene.swift */,
-				D7PET00D305978720070926E /* PetScene.swift */,
-				D7PET01A305978720070926E /* PetRootNode.swift */,
 			);
 			path = Sprite;
 			sourceTree = "<group>";
@@ -439,20 +418,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D7PET115305978720070926E /* AnimationClip.swift in Sources */,
 				D7PET10E305978720070926E /* AppDelegate.swift in Sources */,
-				D7PET119305978720070926E /* CharacterNode.swift in Sources */,
 						D7PET111305978720070926E /* DebugStateInjector.swift in Sources */,
 		D7BABD67305978720070926E /* JoeyPetApp.swift in Sources */,
 				D7PET10F305978720070926E /* PetCoordinator.swift in Sources */,
 				D7PET112305978720070926E /* PetPanel.swift in Sources */,
 				D7PET114305978720070926E /* PetPanelController.swift in Sources */,
-				D7PET118305978720070926E /* PetAssetLoader.swift in Sources */,
-				D7PET116305978720070926E /* PetManifest.swift in Sources */,
 				D7PET10C305978720070926E /* PetRuntime.swift in Sources */,
-				D7PET10D305978720070926E /* PetScene.swift in Sources */,
-				D7PET11A305978720070926E /* PetRootNode.swift in Sources */,
-				D7PET117305978720070926E /* PetStateAnimationMapping.swift in Sources */,
 				D7PET102305978720070926E /* PetState.swift in Sources */,
 				D7PET11E305978720070926E /* PetTransientBehavior.swift in Sources */,
 				D7PET113305978720070926E /* PetSpriteView.swift in Sources */,

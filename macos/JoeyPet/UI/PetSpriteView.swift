@@ -11,7 +11,7 @@ final class PetSpriteView: SKView {
     private static let hintText = "拖动换位置 · 点击打开菜单"
     private static let hintDelay: TimeInterval = 0.6
 
-    var interactiveRadius: CGFloat = PetScene.interactiveRadius {
+    var interactiveRadius: CGFloat = 44 {
         didSet { window?.invalidateCursorRects(for: self) }
     }
     var onLeftClick: (() -> Void)?

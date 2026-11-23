@@ -8,7 +8,7 @@ Fixed direction for JoeyPet V0. Deviations require a new ADR and explicit approv
 |------|--------|
 | Language | Swift |
 | UI shell | SwiftUI + AppKit (e.g. `NSPanel`, menu extras as needed) |
-| Pet rendering | SpriteKit (2D sprites, config-driven `pet.json` + spritesheet packages) |
+| Pet rendering | SpriteKit (layered HD PNG atlas driven by `joey_manifest.json`, ADR 013) |
 | Concurrency | Swift Concurrency (`async`/`await`, actors where appropriate) |
 | Frameworks | Apple first: Foundation, Combine only if needed |
 | Persistence | UserDefaults, `@AppStorage` |

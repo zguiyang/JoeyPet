@@ -2,14 +2,6 @@ import Foundation
 
 /// Narrow Debug-only hooks for checking real pet assets without product fixtures.
 enum DebugStateInjector {
-    static func injectedPackageID() -> String? {
-        #if DEBUG
-        value(for: "-JoeyPetDebugPet")
-        #else
-        nil
-        #endif
-    }
-
     static func injectedAnimationID() -> String? {
         #if DEBUG
         value(for: "-JoeyPetDebugAnimation")

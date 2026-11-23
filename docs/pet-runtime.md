@@ -9,20 +9,19 @@ when they disagree, the domain model wins.
 
 ## Responsibilities
 
-- Hold the current `PetState` and active animation id.
-- Map `PetState` → animation id via `PetStateAnimationMapping` (single source of truth).
-- Forward animation requests to `PetScene`; never interpret manifest business rules in the scene.
+- Hold the current `PetState` and active pose.
+- Map `PetPose` → layered pose inside `JoeyDesktopScene` (single source of truth).
+- Forward pose requests to `JoeyDesktopScene`; never interpret manifest business rules in the scene.
 - Keep animation playback stable when the same behavior is re-applied.
 - Complete one-shot and timed clips, then restore `idle`.
 - Stop cleanly on system sleep and app teardown.
 
 ## Asset loading
 
-- `PetAssetLoader` reads bundled `pet.json` + spritesheet from `Resources/Pets/<PackageID>/`.
-- Validates JSON, sheet dimensions, layout, non-empty clips, in-bounds frame indices, and fallback animation.
-- Caches manifest, sliced frame textures, and clips after first load.
-- Release logs and falls back on load failure; it never crashes.
-- Unknown animation ids resolve to `fallbackAnimation` from the manifest.
+- `JoeyAssetPackage` reads `Resources/Pets/Joey/joey_manifest.json` plus the 1x PNGs under `layers/png/` and `poses/png/`.
+- It validates the manifest version, required layers, required poses, and the presence of every referenced PNG.
+- Missing pose or clip falls back to `pose_sit` / `idle_sit` in `JoeyCharacterNode`.
+- Release logs a load failure and uses `EmptyPoseRenderer`, which keeps the runtime alive without placeholder art.
 
 ## V0 behaviors
 
@@ -45,22 +44,22 @@ active, the new request is dropped rather than queued.
 
 ## Anti-flicker
 
-- Do not re-trigger animation restart when the requested animation id is unchanged.
-- Same animation id → keep the current `SKAction` running; do not restart from frame 0.
+- Do not re-trigger animation restart when the requested pose is unchanged.
+- Same pose → keep the current layer animation running; do not restart from frame 0.
 - Keep one-shot clips short and readable.
 - Respect Reduce Motion for any UI-level motion; ambient sprite playback remains low-frequency.
 
 ## Sprite presentation
 
-- `PetScene` hosts `PetRootNode` → `CharacterNode` (`SKSpriteNode`); optional `EffectNode` children.
+- `JoeyDesktopScene` hosts a single `JoeyCharacterNode` built from eight layers (back to front): shadow → tail → body → ears → backArm → face → frontArm → prop.
 - Scene does not create sensors, read system state, or interpret product rules.
-- Frame textures use **nearest** filtering.
-- `defaultScale` from the manifest is an **integer logical multiplier**: `CharacterNode` applies it with `setScale(CGFloat(defaultScale))`.
+- Layer and pose textures use **linear** filtering.
+- The 320×400 canvas is displayed at 132×165 / 168×210 / 216×270 points, so the scale is fractional by design.
 - **Points vs backing pixels:** logical points are AppKit / SpriteKit units. Physical pixels also depend on `NSScreen.backingScaleFactor`.
-- Animation playback uses `SKAction.animate` (no per-frame timers or display links).
-- Debug builds may hold a manifest clip via `-JoeyPetDebugAnimation <id>` or request `-JoeyPetDebugBehavior <id>`. Release ignores both.
+- Pose playback swaps textures; Reduce Motion freezes breathing, blinking and prop loops at their end state.
+- Debug builds may request `-JoeyPetDebugAnimation <id>`, `-JoeyPetDebugBehavior <id>`, `-JoeyPetDebugSession` or `-JoeyPetDebugPoses`. Release ignores them.
 
-See [ADR 008](decisions/008-pixel-perfect-display-scaling.md).
+See [ADR 013](decisions/013-hd-layered-rendering.md).
 
 ## Out of scope (V0)
 

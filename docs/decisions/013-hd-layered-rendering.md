@@ -41,5 +41,5 @@ filtering produces aliasing instead of crisp edges.
   hardcode them.
 - Visual QA must check 200% scaling for pixel steps and 1 px seams, which the old
   pixel pipeline did not need.
-- The old 6-frame spritesheet and `joey-front/side/back` sources are removed in
-  PR6 after the new path is verified.
+- The old 6-frame spritesheet and `joey-front/side/back` sources were removed
+  in PR6 (2026-11-23) after the layered path was verified.
