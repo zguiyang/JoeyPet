@@ -9,6 +9,7 @@ enum JoeyCopy {
     static let endCompanionship = "结束陪伴"
     static let returnHome = "回巢"
     static let reviewHint = "回顾这周"
+    static let clockHint = "调整提醒时间"
 
     static let emptyToday = "今天还没开始"
     static let emptyBreaks = "今天还没有休息"

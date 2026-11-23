@@ -69,6 +69,7 @@ struct NestRootView: View {
                         showsDesktopPet: settings.showsDesktopPet,
                         status: status,
                         onOpenReflection: { navigation.showReflection() },
+                        onOpenClockSettings: { navigation.openSettings() },
                         onPrimaryAction: onPrimaryAction
                     )
                     .transition(.opacity)

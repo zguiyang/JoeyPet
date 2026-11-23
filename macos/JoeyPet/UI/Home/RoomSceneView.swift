@@ -6,10 +6,12 @@ struct RoomSceneView: View {
     let showsDesktopPet: Bool
     let status: CompanionStatus
     let onOpenReflection: () -> Void
+    let onOpenClockSettings: () -> Void
     let onPrimaryAction: () -> Void
 
     @Environment(\.joeyAppearance) private var appearance
     @State private var isFrameHovering = false
+    @State private var isClockHovering = false
 
     private let designSize = CGSize(width: 1080, height: 680)
     private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
@@ -34,6 +36,20 @@ struct RoomSceneView: View {
                     painterContext.scaleBy(x: scale, y: scale)
                     RoomPainter(theme: theme).draw(in: &painterContext)
                 }
+
+                RoomClockHandsView(theme: theme)
+                    .frame(width: 88 * scale, height: 88 * scale)
+                    .position(
+                        x: originX + 250 * scale,
+                        y: originY + 140 * scale
+                    )
+                    .allowsHitTesting(false)
+
+                clockButton(scale: scale)
+                    .position(
+                        x: originX + 250 * scale,
+                        y: originY + 140 * scale
+                    )
 
                 NestPetView(isCompanioning: status.isSessionActive)
                     .frame(width: 288 * scale, height: 360 * scale)
@@ -224,6 +240,107 @@ struct RoomSceneView: View {
         .accessibilityLabel(Text(JoeyCopy.reviewHint))
     }
 
+    private func clockButton(scale: CGFloat) -> some View {
+        Button(action: onOpenClockSettings) {
+            Color.clear
+                .frame(width: 104 * scale, height: 104 * scale)
+                .overlay(alignment: .top) {
+                    if isClockHovering {
+                        Text(JoeyCopy.clockHint)
+                            .font(JoeyType.caption)
+                            .foregroundStyle(theme.ink)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .fill(theme.popover)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .stroke(theme.hairline, lineWidth: 1)
+                            )
+                            .joeyShadowMD()
+                            .offset(y: -34)
+                    }
+                }
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .focusEffectDisabled()
+        .onHover { isClockHovering = $0 }
+        .accessibilityLabel(Text(JoeyCopy.clockHint))
+    }
+
+}
+
+// MARK: - Wall clock
+
+/// Draws the clock hands from the real local time. Only this small canvas
+/// refreshes each second; the room illustration stays static.
+private struct RoomClockHandsView: View {
+    let theme: JoeyTheme
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { timeline in
+            Canvas { context, size in
+                var canvas = context
+                let center = CGPoint(x: size.width / 2, y: size.height / 2)
+                let unit = size.width / 88
+                let components = Calendar.current.dateComponents(
+                    [.hour, .minute, .second],
+                    from: timeline.date
+                )
+                let minutes = Double(components.minute ?? 0)
+                    + Double(components.second ?? 0) / 60
+                let hours = Double((components.hour ?? 0) % 12) + minutes / 60
+
+                drawHand(
+                    in: &canvas,
+                    center: center,
+                    angle: hours / 12 * 2 * .pi,
+                    length: 21 * unit,
+                    width: 4 * unit
+                )
+                drawHand(
+                    in: &canvas,
+                    center: center,
+                    angle: minutes / 60 * 2 * .pi,
+                    length: 32 * unit,
+                    width: 3 * unit
+                )
+                canvas.fill(
+                    Path(ellipseIn: CGRect(
+                        x: center.x - 3.5 * unit,
+                        y: center.y - 3.5 * unit,
+                        width: 7 * unit,
+                        height: 7 * unit
+                    )),
+                    with: .color(theme.roomHand)
+                )
+            }
+        }
+        .allowsHitTesting(false)
+    }
+
+    private func drawHand(
+        in canvas: inout GraphicsContext,
+        center: CGPoint,
+        angle: Double,
+        length: CGFloat,
+        width: CGFloat
+    ) {
+        var hand = Path()
+        hand.move(to: center)
+        hand.addLine(to: CGPoint(
+            x: center.x + sin(angle) * length,
+            y: center.y - cos(angle) * length
+        ))
+        canvas.stroke(
+            hand,
+            with: .color(theme.roomHand),
+            style: StrokeStyle(lineWidth: width, lineCap: .round)
+        )
+    }
 }
 
 // MARK: - Room illustration
@@ -405,21 +522,8 @@ private struct RoomPainter {
             with: .color(theme.roomClockTick),
             style: StrokeStyle(lineWidth: 2, lineCap: .round)
         )
-
-        var hands = Path()
-        hands.move(to: center)
-        hands.addLine(to: CGPoint(x: center.x, y: center.y - 25))
-        hands.move(to: center)
-        hands.addLine(to: CGPoint(x: center.x + 18, y: center.y + 8))
-        context.stroke(
-            hands,
-            with: .color(theme.roomHand),
-            style: StrokeStyle(lineWidth: 3.5, lineCap: .round)
-        )
-        context.fill(
-            Path(ellipseIn: CGRect(x: center.x - 3.5, y: center.y - 3.5, width: 7, height: 7)),
-            with: .color(theme.roomHand)
-        )
+        // The hands are drawn by `RoomClockHandsView` so they can follow the
+        // real time without repainting the whole room.
     }
 
     private func drawPictureFrame(_ context: inout GraphicsContext) {
