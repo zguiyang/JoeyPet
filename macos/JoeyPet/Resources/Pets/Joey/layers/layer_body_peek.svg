@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 400" width="320" height="400"><ellipse cx="160" cy="248" rx="86" ry="78" fill="#F3E3CD" />
-      <ellipse cx="160" cy="306" rx="70" ry="20" fill="#EBD7BE" opacity="0.45" />
-      <ellipse cx="104" cy="320" rx="26" ry="14" fill="#F8ECDA" />
-      <ellipse cx="216" cy="320" rx="26" ry="14" fill="#F8ECDA" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 400" width="320" height="400"><ellipse transform="translate(62,0)" cx="160" cy="248" rx="86" ry="78" fill="#F3E3CD" />
+      <ellipse transform="translate(62,0)" cx="160" cy="306" rx="70" ry="20" fill="#EBD7BE" opacity="0.45" />
+      <ellipse transform="translate(62,0)" cx="104" cy="320" rx="26" ry="14" fill="#F8ECDA" />
+      <ellipse transform="translate(62,0)" cx="216" cy="320" rx="26" ry="14" fill="#F8ECDA" />
       </svg>

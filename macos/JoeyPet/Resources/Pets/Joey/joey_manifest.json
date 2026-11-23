@@ -147,10 +147,11 @@
         "tail": "tail.sleep",
         "body": "body.sleep",
         "ears": "ears.sleep",
-        "backArm": null,
+        "backArm": "arm.backRest",
         "face": "face.sleep",
-        "frontArm": null,
-        "prop": null
+        "frontArm": "arm.frontRest",
+        "prop": null,
+        "translateY": 10
       },
       "groom": {
         "shadow": "shadow.default",
@@ -188,7 +189,7 @@
         "translateY": 6
       },
       "peek": {
-        "shadow": "shadow.default",
+        "shadow": "shadow.peek",
         "tail": null,
         "body": "body.peek",
         "ears": "ears.peek",
