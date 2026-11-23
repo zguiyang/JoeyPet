@@ -51,7 +51,7 @@
 
 - 7 个桌面状态、5 个陪伴子状态。
 - 12 个姿态、5 个行为桶、9 个环境微动效。
-- 邀请、恢复、完成、稍后、暂停、安静时段、隐藏、拖动。
+- 邀请、恢复、完成、稍后、勿扰、安静时段、隐藏、拖动。
 - 90 秒/30 分钟在场检测。
 - 面板位置、拖动、贴边停靠、窗口层级、多屏恢复。
 - 会话计时、每日陪伴时长、休息次数、持久化。
@@ -94,14 +94,16 @@ AmbientEvent                       叠加在姿态上的小循环/瞬态
 | 优先级 | id | 姿态 | 进入条件 | 退出/冷却 |
 |---|---|---|---|---|
 | 1 | `dragging` | `look` | 指针按下并移动超过 4 px | 释放后 600 ms 重算 |
-| 2 | `hidden` | 无 | 菜单/设置隐藏 | 只能由用户恢复 |
+| 2 | `hidden` | 无 | 菜单/设置隐藏 | 只能由用户恢复；到点仍会临时露面提醒 |
 | 3 | `quiet` | `sleep` | 本地时间落在安静时段 | 时段结束立即退出 |
-| 4 | `paused` | `sit` | 用户暂停 | 60 分钟或用户恢复 |
+| 4 | `doNotDisturb` | `doze` | 用户在设置或桌面菜单开启勿扰 | 用户手动关闭 |
 | 5 | `snoozed` | `sit` | 邀请卡点“稍后提醒” | 10 分钟或会话结束 |
 | 6 | `companion` | `look` | 用户开始陪伴 | 用户结束会话 |
 | 7 | `alone` | `sit` | 兜底 | 被更高优先级覆盖 |
 
 优先级只决定**姿态与可见元素**；低优先级状态的计时、计数、会话不被销毁。
+
+`hidden` 只决定是否留在桌面上，不再决定是否排邀请。隐藏时邀请到点会临时显示 Joey 与邀请卡；最多 60 秒后自动回隐，并按「稍后提醒」处理一次。
 
 ### 4.2 CompanionSubstate（5）
 
@@ -111,7 +113,7 @@ AmbientEvent                       叠加在姿态上的小循环/瞬态
 |---|---|---|---|
 | `idle` | `look` | 会话进行中，未到邀请窗口 | 到点进入 `approach` |
 | `approach` | `look` | 距邀请还有 5 分钟 | 到点进入 `invite` |
-| `invite` | `sign` | 邀请到点 | 接受→`recover`；稍后→`snoozed`；暂停→`paused`；关闭→`idle` |
+| `invite` | `sign` | 邀请到点 | 接受→`recover`；稍后→`snoozed`；进入勿扰→`doNotDisturb`；关闭→`idle` |
 | `recover` | `stretch` | 用户接受邀请 | 30 秒结束或“先跳过” |
 | `complete` | `happy` | 恢复完成 | 2.6 秒后回当前桌面姿态 |
 
@@ -145,7 +147,7 @@ clip id 一经交付不再改名。未知 clip → `idle/idle_sit`，记一次�
 | `shift` | 持续 | 6–9 s，±2 px，0.5°，800 ms | 按图谱第 12 章矩阵 |
 | `groom` | 瞬态 | 3.8 s，3 次 | 仅 `sit`，非邀请/恢复 |
 | `yawn` | 瞬态 | 1.8 s | 离开 ≥30 分钟或刚醒；非邀请/恢复 |
-| `step` | 瞬态 | 2.4 s，移动 40–120 pt | 仅独自/暂停/稍后；非贴边/隐藏 |
+| `step` | 瞬态 | 2.4 s，移动 40–120 pt | 仅独自/勿扰/稍后；非贴边/隐藏 |
 | `peek` | 持续 | 3.6 s，单次 4 px | 仅贴边停靠 |
 
 完整的 12 姿态 × 9 事件矩阵以图谱第 12 章为准。实现必须把矩阵写成数据（manifest 或 `AmbientMatrix`），不允许散落在 if/switch 里。
@@ -202,21 +204,22 @@ reduce(situation: PetSituation, event: PetEvent, now: Date) -> (PetSituation, [P
 | `sessionStart` | `companion`，子态 `idle` |
 | `sessionEnd` | `alone`；关闭邀请卡/恢复面板 |
 | `inviteSnoozed` | `snoozed`；会话保留；10 分钟后重算 |
-| `invitePaused` | `paused`；会话保留；60 分钟后重算 |
-| `pauseExpired` | 若会话仍在→`companion`；否则 `alone` |
+| `doNotDisturbChanged(true)` | `doNotDisturb`；关闭邀请/恢复；会话保留 |
+| `doNotDisturbChanged(false)` | 重算：安静 > 稍后/同伴 > 独自 |
+| `hiddenInviteTimedOut` | 回 `hidden`；按稍后处理一次 |
 | `snoozeExpired` | 若会话仍在→`companion` 并立即评估邀请（跳过 `approach`）；否则 `alone` |
 | `quietWindowChanged(true)` | `quiet`；关闭邀请卡；恢复倒计时允许走完 |
 | `quietWindowChanged(false)` | 会话在→`companion`；否则 `alone` |
 | `screenLocked` | 冻结计时与动画；状态不变 |
 | `screenUnlocked` | 恢复计时；2 秒内不触发瞬态 |
-| `hideRequested` | `hidden`；保留会话与计时 |
-| `showRequested` | 重算：quiet > paused > snoozed > companion > alone |
+| `hideRequested` | `hidden`；关闭当前邀请/恢复；保留会话与计时 |
+| `showRequested` | 重算：quiet > doNotDisturb > snoozed > companion > alone |
 | `dragBegan` | `dragging`；暂停环境瞬态 |
 | `dragEnded` | 600 ms 后重算 |
 | `systemSleep` | 冻结所有计时与动画 |
 | `systemWake` | 恢复计时；2 秒内不触发瞬态 |
 
-`pauseExpired` / `snoozeExpired` 到期后立即重排邀请：若 `nextDue` 已过且守卫通过，直接进入 `invite`（不补 `approach`）。
+`doNotDisturbChanged(false)` 或 `snoozeExpired` 到期后立即重排邀请：若 `nextDue` 已过且守卫通过，直接进入 `invite`（不补 `approach`）。
 
 ### 5.5 陪伴流程
 
@@ -225,9 +228,19 @@ idle --(距邀请 5 分钟)--> approach
 approach --(到点)--> invite
 invite --接受--> recover --30 秒--> complete --2.6 秒--> idle
 invite --稍后--> snoozed --10 分钟--> idle（一次重试，见 §6.3）
-invite --暂停--> paused --60 分钟--> idle
+invite --进入勿扰--> doNotDisturb --用户关闭--> idle
 invite --关闭--> idle（45 分钟冷却）
+invite --隐藏中 60 秒未处理--> hidden + 稍后一次
 recover --先跳过--> idle（不扣次数）
+```
+
+隐藏时的提醒不会改变会话：
+
+```
+hidden --邀请到点--> 临时显示 Joey + 邀请卡
+临时显示 --接受--> recover --完成--> complete --2.6 秒--> hidden
+临时显示 --稍后/关闭--> hidden
+临时显示 --60 秒超时--> hidden（按稍后一次）
 ```
 
 邀请到点的计算：
@@ -247,14 +260,14 @@ nextDue  = lastInvitationClosedAt + effectiveGap
 | 组合 | 结果 |
 |---|---|
 | 拖动 × 任何 | 拖动赢；姿态 `look`；不弹卡；环境瞬态停 |
-| 隐藏 × 任何 | 隐藏赢；不渲染；会话与计时继续 |
-| 安静 × 暂停/稍后 | 安静赢；姿态 `sleep`；计时继续 |
+| 隐藏 × 任何 | 隐藏赢；不常驻渲染；会话与计时继续；邀请到点可临时露面 |
+| 安静 × 勿扰/稍后 | 安静赢；姿态 `sleep`；计时继续 |
 | 安静 × 恢复中 | 恢复倒计时允许走完；期间 `stretch`；完成后再 `sleep` |
 | 安静 × 完成动画 | 2.6 秒 `happy` 允许走完，再 `sleep` |
 | 安静 × 邀请卡已开 | 关闭邀请卡，无惩罚，`sleep` |
-| 暂停 × 稍后 | 暂停赢；稍后标记保留 |
-| 暂停 × 会话 | 会话继续；专注时间继续累计 |
-| 隐藏 × 会话 | 会话继续；不补发邀请 |
+| 勿扰 × 稍后 | 勿扰赢；稍后标记保留 |
+| 勿扰 × 会话 | 会话继续；专注时间继续累计；不弹任何面板 |
+| 隐藏 × 会话 | 会话继续；到点临时露面提醒，处理后回 `hidden` |
 | 拖动 × 邀请 | 邀请卡不弹出；释放后重算 |
 | 会话结束 × 恢复中 | 关闭恢复面板；不计数；回 `sit` |
 | 系统睡眠 × 拖动 | 睡眠赢；释放后按静止位置恢复 |
@@ -272,10 +285,11 @@ nextDue  = lastInvitationClosedAt + effectiveGap
 
 | 守卫 | 规则 |
 |---|---|
-| 会话 | 必须 `companion` 且子态允许 |
+| 会话 | 必须存在会话且子态允许 |
 | 安静 | 安静时段内一律不邀请 |
-| 暂停/稍后 | 到期前不邀请 |
-| 隐藏/拖动/菜单 | 不邀请 |
+| 勿扰 | 勿扰模式内一律不邀请、不弹面板 |
+| 稍后 | 到期前不邀请 |
+| 拖动/菜单 | 不邀请；隐藏不再是拒绝条件 |
 | 间隔 | `effectiveGap` 内不重复邀请 |
 | 卡片 | 同一时刻只有一张 |
 | 恢复 | 恢复未结束时不再邀请 |
@@ -295,8 +309,8 @@ nextDue  = lastInvitationClosedAt + effectiveGap
 
 | 键 | 类型 | 说明 |
 |---|---|---|
-| `pauseUntil` | Date? | 暂停截止 |
-| `snoozeUntil` | Date? | 稍后截止 |
+| `doNotDisturb` | Bool | 勿扰模式，手动开关，跨启动保留 |
+| `snoozeUntil` | Date? | 稍后截止（仅内存，不跨启动） |
 | `lastInvitationClosedAt` | Date? | 上次邀请关闭/完成时间（全局） |
 | `todayKey` | String | `yyyy-MM-dd` 本地日 |
 | `todayCompanionshipSeconds` | Int | 当日陪伴时长 |
@@ -310,8 +324,8 @@ nextDue  = lastInvitationClosedAt + effectiveGap
 
 规则：
 
-- 会话在 App 退出时结束；`sessionStartedAt`、`snoozeUsedThisSession` 只存在内存。
-- 暂停、安静、上次邀请关闭时间、每日统计跨启动保留。
+- 会话在 App 退出时结束；`sessionStartedAt`、`snoozeUsedThisSession`、`inviteShownAt` 只存在内存。
+- 勿扰、安静、上次邀请关闭时间、每日统计跨启动保留。
 - 完成一次休息：`todayBreaks +1`、`weekBreakCounts` 当日 +1、加一片叶子。
 - 跳过/关闭：不扣次数、不扣叶子、不惩罚。
 - 会话进行中每分钟把当日陪伴秒数写入 store；会话结束/退出时再写一次，避免崩溃丢失整天数据。
@@ -324,9 +338,10 @@ nextDue  = lastInvitationClosedAt + effectiveGap
 
 - 用户点“稍后提醒” → `snoozeUntil = now + 10 分钟`，`snoozeUsedThisSession = true`。
 - 到点后允许**一次**邀请，绕过 45 分钟冷却。
-- 这次重试被关闭/完成/暂停/结束后，`lastInvitationClosedAt = now`，重新按 `effectiveGap` 计算。
-- 重试到点时若会话已结束、处于安静时段、暂停、隐藏或拖动，直接丢弃，不排队；清除稍后标记。
+- 这次重试被关闭/完成/进入勿扰/隐藏/结束后，`lastInvitationClosedAt = now`，重新按 `effectiveGap` 计算。
+- 重试到点时若会话已结束、处于安静时段、勿扰或拖动，直接丢弃，不排队；清除稍后标记。
 - 每会话最多一次；第二次点“稍后”不再延长，只关闭卡片并回到 `idle`。
+- 隐藏时邀请 60 秒未处理，等价于一次「稍后」：清除临时显示、写入 10 分钟重试、回隐。
 
 DESIGN §13.1 的相应措辞在实现时同步修正。
 
@@ -338,7 +353,7 @@ DESIGN §13.1 的相应措辞在实现时同步修正。
 | 长离开 | 满 30 分钟记为 `wasAwayLong` |
 | 回到电脑前 | 任意输入；先 `yawn` 1.8 秒，再回当前桌面姿态 |
 | 唤醒保护 | 系统唤醒/解锁后 2 秒内不触发任何瞬态 |
-| 允许 doze 的状态 | `alone`、`paused`、`snoozed` |
+| 允许 doze 的状态 | `alone`、`doNotDisturb`、`snoozed` |
 | 禁止 doze 的状态 | `companion`、`dragging`、`hidden`、邀请卡/恢复面板打开、菜单打开 |
 | 数据源 | 系统空闲时长（`CGEventSource.secondsSinceLastEventType`） |
 | 隐私 | 只读时长，不读内容；不申请权限；不可用时关闭 doze |
@@ -470,7 +485,7 @@ Mission Control 用 `NSWorkspace` 空间切换 + App 失活做 best-effort 冻�
 - 7 个桌面状态 × 所有事件的目标状态。
 - 45/60/90 分钟节奏、45 分钟下限、首次邀请、跨会话 `lastInvitationClosedAt`。
 - 稍后的一次重试、绕过 45 分钟、重试被阻止时丢弃。
-- 暂停 60 分钟、暂停中会话继续、暂停到期回陪伴。
+- 勿扰不邀请、关闭进行中的邀请/恢复、关闭后立即重排；隐藏仍邀请，60 秒超时按稍后一次。
 - 安静跨午夜、安静×恢复、安静×完成、安静×邀请卡。
 - 隐藏×会话、隐藏×安静、隐藏恢复。
 - 拖动×邀请、拖动×瞬态。
@@ -528,7 +543,7 @@ P1 与 P2 可并行；P3 必须等两者完成。每个 PR 保持可构建、可
 | D1 | 稍后提醒允许一次 10 分钟重试，绕过 45 分钟冷却；重试后重新起算 | “稍后 10 分钟”必须真实，且每会话仅一次 |
 | D2 | V0 不新增“在全屏上显示”设置，默认不进全屏 | 控制在 V0 设置清单内，避免边缘场景扩范围 |
 | D3 | 素材由开发期脚本从图谱 SVG 拆分并栅格化，运行时不依赖 Chrome/第三方 | 保持零运行时依赖 |
-| D4 | 会话在 App 退出时结束；暂停、安静、上次邀请、每日统计持久化 | 简单、可预测、无幽灵会话 |
+| D4 | 会话在 App 退出时结束；勿扰、安静、上次邀请、每日统计持久化 | 简单、可预测、无幽灵会话 |
 | D5 | Mission Control best-effort 冻结；emotion 烘焙进 face；V0 不做侧/背视图 | 不碰私有 API，不引入低收益复杂度 |
 
 ## 15. 待裁定 / 未来项
@@ -547,7 +562,7 @@ P1 与 P2 可并行；P3 必须等两者完成。每个 PR 保持可构建、可
 | 2026-11-23 | PR1：ADR 012/013 建立；manifest 入库并补渲染层契约；领域模型、纯 reducer、持久化与 21 条测试落地 |
 | 2026-11-23 | PR2：素材管线与分层渲染落地；46 组层/姿态资产 ×3 尺寸；`JoeyCharacterNode` 与 `-JoeyPetDebugPoses` 预览；修复耳朵/尾巴 pivot 图层初始隐藏的问题 |
 | 2026-11-23 | PR3：`PetRuntime` 接入纯 reducer 与截止时间 tick；新增在场检测、系统睡眠/锁屏协调、可见性与节奏配置持久化；桌面宠物改用 `JoeyCharacterNode` 分层渲染，旧 `PetScene` 仅作回退 |
-| 2026-11-23 | PR4：面板改为 168×210，初始位置 40/92 并保留 8 pt 拖动夹取；拖动阈值 4 pt、0.98 缩放与 `dragBegan/dragEnded` 接线；贴边 24 pt 停靠、600 ms 收起、40%/24 pt 露出与热区滑回；桌面菜单（结束陪伴/隐藏/暂停一小时）、键盘移动、悬停提示、VoiceOver 标签与鼠尾草焦点环 |
-| 2026-11-23 | PR5：会话反馈 UI 落地；`SessionSurfacePresentation` 从 situation 派生胶囊/邀请卡/恢复面板/完成反馈，`SessionSurfacesController` 只渲染并回传用户意图；桌面 `陪伴中 · mm:ss` 胶囊、邀请卡（休息一下/稍后提醒/暂停一会儿）、真实 30 秒恢复环（好了/先跳过）与完成/稍后/暂停 toast；小窝主按钮接通开始/结束陪伴，`CompanionStatus` 同步主窗口状态 |
+| 2026-11-23 | PR4：面板改为 168×210，初始位置 40/92 并保留 8 pt 拖动夹取；拖动阈值 4 pt、0.98 缩放与 `dragBegan/dragEnded` 接线；贴边 24 pt 停靠、600 ms 收起、40%/24 pt 露出与热区滑回；桌面菜单（结束陪伴/隐藏/勿扰模式）、键盘移动、悬停提示、VoiceOver 标签与鼠尾草焦点环 |
+| 2026-11-23 | PR5：会话反馈 UI 落地；`SessionSurfacePresentation` 从 situation 派生胶囊/邀请卡/恢复面板/完成反馈，`SessionSurfacesController` 只渲染并回传用户意图；桌面 `陪伴中 · mm:ss` 胶囊、邀请卡（休息一下/稍后提醒/进入勿扰）、真实 30 秒恢复环（好了/先跳过）与完成/稍后/勿扰 toast；小窝主按钮接通开始/结束陪伴，`CompanionStatus` 同步主窗口状态 |
 | 2026-11-23 | PR6：移除旧 spritesheet 管线与资产（`pet.json`、spritesheet、runtime/source 源图、旧 `.py` 生成脚本及各旧渲染类）；`PetRuntime` 只加载分层 `JoeyAssetPackage`，加载失败时使用 `EmptyPoseRenderer` 并记录日志；文档统一到 ADR 013 |
-| 2026-11-23 | P7：设置页「暂停一小时」与运行时双向同步；新增 `pauseChanged(until:)` 事件与 `PetRuntime.setPause(until:)`，暂停会取消进行中的邀请或恢复面板，恢复会立即清除暂停；菜单/邀请触发的暂停实时回写设置开关 |
+| 2026-11-23 | P7：设置页「暂停一小时」改为手动「勿扰模式」；新增 `doNotDisturbChanged(Bool)` 与持久化键 `doNotDisturb`，勿扰中关闭邀请/恢复，关闭勿扰立即重排；可见性与打扰许可解耦，`hidden` 仍排邀请，到点临时显示 Joey + 邀请卡，60 秒未处理按稍后一次并回隐；面板可见性由 situation 派生，自动出现不抢键盘焦点 |
