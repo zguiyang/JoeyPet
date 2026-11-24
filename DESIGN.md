@@ -377,7 +377,7 @@ Eleven poses. The first six are the V0 state set; the rest cover ambient and low
 | `yawn` | Eyes squeezed shut, wide small mouth, head back; 1.8 s one-shot tip (+2° → +3.8°) | Waking / long sit — see [`joeypet-yawn-spritesheet-v0.svg`](docs/reference/joeypet-yawn-spritesheet-v0.svg) |
 | `doze` | Head low, eyes flat lines, loose shoulders; 7.2 s breath+sway (±1.1°, peak 1.011) + random ear/head/tail micros | Light sleep / DND — see [`joeypet-doze-spritesheet-v0.svg`](docs/reference/joeypet-doze-spritesheet-v0.svg) |
 | `peek` | Head leaning out from the screen edge, eyes and paws inside the visible strip, near edge tucked behind the panel | Not wired in V0 — edge docking is deferred |
-| `carry` | Leaf in mouth, returning to the nest | After a completed break |
+| `carry` | Leaf in mouth, returning to the nest; 3.6 s soft breath (peak 1.018) + rare leaf nudge | After a completed break — see [`joeypet-carry-spritesheet-v0.svg`](docs/reference/joeypet-carry-spritesheet-v0.svg) |
 
 Pose layer rules:
 

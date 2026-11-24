@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 880" width="880" height="880">
+  <defs>
+    <!-- Joey carry-leaf parts, sprite coordinates (320 x 400). Source: pose_carry.svg (open eyes, leaf in mouth). -->
+    <g id="cTail">
+      <path d="M228 314 C 268 324 294 300 290 272 C 287 250 266 244 256 256 C 248 266 256 280 269 277" fill="none" stroke="#F0DFC8" stroke-width="23" stroke-linecap="round"/>
+    </g>
+    <g id="cEarL">
+      <path d="M118 148 C 100 126 88 90 93 68 C 97 50 116 46 126 62 C 138 80 144 116 146 140 Z" fill="#F3E3CD"/>
+      <path d="M120 136 C 108 118 101 94 105 80 C 108 70 117 69 122 78 C 129 90 134 114 136 132 Z" fill="#EFC8AA"/>
+    </g>
+    <g id="cEarR">
+      <path d="M202 148 C 220 126 232 90 227 68 C 223 50 204 46 194 62 C 182 80 176 116 174 140 Z" fill="#F3E3CD"/>
+      <path d="M200 136 C 212 118 219 94 215 80 C 212 70 203 69 198 78 C 191 90 186 114 184 132 Z" fill="#EFC8AA"/>
+    </g>
+    <g id="cBody">
+      <ellipse cx="160" cy="352" rx="94" ry="12" fill="#3F3A35" opacity="0.08"/>
+      <path d="M160 116 C 209 116 242 167 242 231 C 242 299 208 342 160 342 C 112 342 78 299 78 231 C 78 167 111 116 160 116 Z" fill="#F3E3CD"/>
+      <path d="M160 342 C 112 342 78 299 78 231 C 78 224 78 218 79 212 C 93 298 118 322 160 322 C 202 322 227 298 241 212 C 242 218 242 224 242 231 C 242 299 208 342 160 342 Z" fill="#EBD7BE" opacity="0.5"/>
+      <ellipse cx="128" cy="337" rx="27" ry="13" fill="#F8ECDA"/>
+      <ellipse cx="192" cy="337" rx="27" ry="13" fill="#F8ECDA"/>
+      <path d="M122 244 C 142 258 178 258 198 244" fill="none" stroke="#86A98A" stroke-width="9" stroke-linecap="round"/>
+      <circle cx="200" cy="247" r="7" fill="#86A98A"/>
+      <ellipse cx="84" cy="262" rx="18" ry="28" fill="#EDDAC1" transform="rotate(10 84 262)"/>
+      <ellipse cx="236" cy="262" rx="18" ry="28" fill="#EDDAC1" transform="rotate(-10 236 262)"/>
+    </g>
+    <!-- Carry face: open eyes (dark ellipse + white glint), warm small mouth. Blush 0.26. -->
+    <g id="cFace">
+      <ellipse cx="111" cy="226" rx="18" ry="9" fill="#EFAE7D" opacity="0.26"/>
+      <ellipse cx="209" cy="226" rx="18" ry="9" fill="#EFAE7D" opacity="0.26"/>
+      <ellipse cx="134" cy="204" rx="8.5" ry="11" fill="#3F3A35"/>
+      <ellipse cx="186" cy="204" rx="8.5" ry="11" fill="#3F3A35"/>
+      <circle cx="131" cy="200" r="2.8" fill="#FFFFFF"/>
+      <circle cx="183" cy="200" r="2.8" fill="#FFFFFF"/>
+      <path d="M160 216 C 166 216 169 220 166.5 223 C 164.5 225.5 155.5 225.5 153.5 223 C 151 220 154 216 160 216 Z" fill="#C98F6E"/>
+      <path d="M160 224 C 158 230 153 232 150 228 M160 224 C 162 230 167 232 170 228" fill="none" stroke="#6F5F53" stroke-width="2.3" stroke-linecap="round"/>
+    </g>
+    <!-- Leaf, in the mouth at 168,224, lifted about 12 deg. -->
+    <g id="cLeaf">
+      <path d="M0 0 C 16 -12 38 -12 52 0 C 38 12 16 12 0 0 Z" fill="#86A98A"/>
+      <path d="M4 0 C 18 -4 34 -2 48 0" fill="none" stroke="#4F6D54" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M0 0 L -7 4" stroke="#4F6D54" stroke-width="2" stroke-linecap="round"/>
+    </g>
+  </defs>
+
+  <rect x="0" y="0" width="880" height="880" fill="#F7F3EB"/>
+
+  <!-- A. Carry breathing loop, 4 x 2, frames 01-08 (cell 160 x 200, sprite scale 0.5). Feet pinned at y 352.
+       Breath = small scaleY (peak about 1.02, less than idle). Body sway at most about 0.2 deg. Leaf near-static. -->
+  <!-- 01 rest -->
+  <g transform="translate(40 40) scale(.5)"><g><use href="#cTail"/><use href="#cEarL"/><use href="#cEarR"/><g transform="translate(160 352) scale(1 1.000) translate(-160 -352)"><use href="#cBody"/><use href="#cFace"/></g><g transform="translate(168 224) rotate(12)"><use href="#cLeaf"/></g></g></g>
+  <!-- 02 breathe in -->
+  <g transform="translate(200 40) scale(.5)"><g><use href="#cTail"/><use href="#cEarL"/><use href="#cEarR"/><g transform="translate(160 352) scale(1 1.005) translate(-160 -352)"><use href="#cBody"/><use href="#cFace"/></g><g transform="translate(168 224) rotate(12)"><use href="#cLeaf"/></g></g></g>
+  <!-- 03 higher breath -->
+  <g transform="translate(360 40) scale(.5)"><g><use href="#cTail"/><use href="#cEarL"/><use href="#cEarR"/><g transform="translate(160 352) rotate(0.1) scale(1 1.012) translate(-160 -352)"><use href="#cBody"/><use href="#cFace"/></g><g transform="translate(168 224) rotate(12.5)"><use href="#cLeaf"/></g></g></g>
+  <!-- 04 peak breath -->
+  <g transform="translate(520 40) scale(.5)"><g><use href="#cTail"/><use href="#cEarL"/><use href="#cEarR"/><g transform="translate(160 352) rotate(0.2) scale(1 1.018) translate(-160 -352)"><use href="#cBody"/><use href="#cFace"/></g><g transform="translate(168 224) rotate(13)"><use href="#cLeaf"/></g></g></g>
+  <!-- 05 coming down -->
+  <g transform="translate(40 240) scale(.5)"><g><use href="#cTail"/><use href="#cEarL"/><use href="#cEarR"/><g transform="translate(160 352) rotate(0.1) scale(1 1.010) translate(-160 -352)"><use href="#cBody"/><use href="#cFace"/></g><g transform="translate(168 224) rotate(12.5)"><use href="#cLeaf"/></g></g></g>
+  <!-- 06 lower breath -->
+  <g transform="translate(200 240) scale(.5)"><g><use href="#cTail"/><use href="#cEarL"/><use href="#cEarR"/><g transform="translate(160 352) scale(1 1.004) translate(-160 -352)"><use href="#cBody"/><use href="#cFace"/></g><g transform="translate(168 224) rotate(12)"><use href="#cLeaf"/></g></g></g>
+  <!-- 07 nearly rest -->
+  <g transform="translate(360 240) scale(.5)"><g><use href="#cTail"/><use href="#cEarL"/><use href="#cEarR"/><g transform="translate(160 352) scale(1 1.001) translate(-160 -352)"><use href="#cBody"/><use href="#cFace"/></g><g transform="translate(168 224) rotate(12)"><use href="#cLeaf"/></g></g></g>
+  <!-- 08 rest (joins back to 01) -->
+  <g transform="translate(520 240) scale(.5)"><g><use href="#cTail"/><use href="#cEarL"/><use href="#cEarR"/><g transform="translate(160 352) scale(1 1.000) translate(-160 -352)"><use href="#cBody"/><use href="#cFace"/></g><g transform="translate(168 224) rotate(12)"><use href="#cLeaf"/></g></g></g>
+
+  <!-- B. Occasional leaf nudge, 1 group x 4 frames. Leaf rotates a touch more, then returns. -->
+  <!-- B1 rest -->
+  <g transform="translate(120 480) scale(.5)"><g><use href="#cTail"/><use href="#cEarL"/><use href="#cEarR"/><use href="#cBody"/><use href="#cFace"/><g transform="translate(168 224) rotate(12)"><use href="#cLeaf"/></g></g></g>
+  <!-- B2 nudge down -->
+  <g transform="translate(280 480) scale(.5)"><g><use href="#cTail"/><use href="#cEarL"/><use href="#cEarR"/><use href="#cBody"/><use href="#cFace"/><g transform="translate(168 224) rotate(10)"><use href="#cLeaf"/></g></g></g>
+  <!-- B3 nudge up -->
+  <g transform="translate(440 480) scale(.5)"><g><use href="#cTail"/><use href="#cEarL"/><use href="#cEarR"/><use href="#cBody"/><use href="#cFace"/><g transform="translate(168 224) rotate(14)"><use href="#cLeaf"/></g></g></g>
+  <!-- B4 back to rest -->
+  <g transform="translate(600 480) scale(.5)"><g><use href="#cTail"/><use href="#cEarL"/><use href="#cEarR"/><use href="#cBody"/><use href="#cFace"/><g transform="translate(168 224) rotate(12)"><use href="#cLeaf"/></g></g></g>
+</svg>
