@@ -79,6 +79,7 @@ struct SettingsRootView: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .focusEffectDisabled()
         .onHover { hoveredSection = $0 ? section : nil }
         .accessibilityLabel(Text(section.title))
         .accessibilityAddTraits(isSelected ? .isSelected : [])
@@ -720,6 +721,7 @@ private struct JoeySegmentedControl: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .focusEffectDisabled()
                 .accessibilityAddTraits(selectedIndex == index ? .isSelected : [])
             }
         }
@@ -761,6 +763,7 @@ private struct JoeySwitch: View {
             .animation(reduceMotion ? nil : .easeOut(duration: 0.16), value: isOn)
         }
         .buttonStyle(.plain)
+        .focusEffectDisabled()
         .onHover { isInside in
             if isInside {
                 NSCursor.pointingHand.set()
@@ -959,6 +962,7 @@ private struct SettingsSmallButton: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .focusEffectDisabled()
         .onHover { isHovering = $0 }
         .accessibilityLabel(Text(title))
     }
