@@ -19,10 +19,10 @@ explicit actions as `PetTransientBehavior`. Route both through `PetRuntime`,
 where explicit requests may be dropped if a transient is active, and completion
 resumes `idle`.
 
-Ambient scheduling remains a small low-frequency task with no queue. The
-product definition permits `walking` to move the desktop panel a short
-distance. Explicit cues such as `notifying` and `celebrating` are runtime hooks
-until V0 supplies a real approved product event.
+Ambient scheduling remains a small low-frequency task with no queue.
+Explicit cues such as `notifying` and `celebrating` are runtime hooks
+until V0 supplies a real approved product event. (Historical note: an ambient
+`walking` panel-travel experiment was later removed from V0.)
 
 ## Consequences
 

@@ -83,7 +83,7 @@ AmbientEvent                       叠加在姿态上的小循环/瞬态
 四条硬规则：
 
 1. **状态 ≠ 姿态 ≠ clip ≠ 行为桶。** 一个行为桶可以承载多个 clip；一个姿态只对应一个 clip。
-2. `BehaviorBucket` 只有 5 个：`idle`、`notifying`、`sleeping`、`walking`、`celebrating`。
+2. `BehaviorBucket` 只有 4 个：`idle`、`notifying`、`sleeping`、`celebrating`。
 3. 运行时键是 `behavior/clip`，例如 `idle/idle_sit`、`sleeping/doze_short`。只有 `behavior` 无法区分姿态。
 4. 场景层只负责渲染；它不读系统状态、不决定优先级、不拼 clip 名字。
 
@@ -117,7 +117,7 @@ AmbientEvent                       叠加在姿态上的小循环/瞬态
 | `recover` | `stretch` | 用户接受邀请 | 30 秒结束或“先跳过” |
 | `complete` | `happy` | 恢复完成 | 2.6 秒后回当前桌面姿态 |
 
-### 4.3 PetPose（12）
+### 4.3 PetPose（11）
 
 | pose | clip id | behavior | 循环 | 说明 |
 |---|---|---|---|---|
@@ -130,27 +130,25 @@ AmbientEvent                       叠加在姿态上的小循环/瞬态
 | `groom` | `idle_groom` | `idle` | 否 | 环境瞬态 |
 | `yawn` | `idle_yawn` | `idle` | 否 | 环境瞬态 |
 | `doze` | `doze_short` | `sleeping` | 是 | 浅睡 |
-| `peek` | `peek_edge` | `idle` | 是 | 贴边探头 |
-| `step` | `walk_step` | `walking` | 否 | 走两步 |
+| `peek` | `peek_edge` | `idle` | 是 | 贴边探头（V0 未接线） |
 | `carry` | `idle_carry` | `idle` | 是 | 回窝带叶子 |
 
-clip id 一经交付不再改名。未知 clip → `idle/idle_sit`，记一次日志，不崩溃。
+clip id 一经交付不再改名。未知 clip → `idle/idle_sit`，记一次日志，不崩溃。V0 **不含** `step` / ambient walking。
 
-### 4.4 AmbientEvent（9）
+### 4.4 AmbientEvent（8）
 
 | id | 类型 | 关键参数 | 允许条件摘要 |
 |---|---|---|---|
-| `breathe` | 持续 | 4.2–6.0 s，基准 4.8 s，睡眠 6.0 s，缩放 1.012 | 按图谱第 12 章矩阵 |
+| `breathe` | 持续 | 4.2–6.0 s，基准 4.8 s，睡眠 6.0 s，缩放 1.046 | 按图谱第 12 章矩阵 |
 | `blink` | 瞬态 | 2.5–6 s 随机，180 ms，3 帧 | `sit`/`look`/`carry`；`happy`/`yawn`/`sleep` 抑制 |
 | `ear` | 瞬态 | 12–35 s，−7°→4°，240 ms | 按图谱第 12 章矩阵 |
 | `tail` | 持续 | ±8°，与呼吸同拍，绕尾根旋转 | 按图谱第 12 章矩阵 |
 | `shift` | 持续 | 6–9 s，±2 px，0.5°，800 ms | 按图谱第 12 章矩阵 |
 | `groom` | 瞬态 | 3.8 s，3 次 | 仅 `sit`，非邀请/恢复 |
 | `yawn` | 瞬态 | 1.8 s | 离开 ≥30 分钟或刚醒；非邀请/恢复 |
-| `step` | 瞬态 | 2.4 s，移动 40–120 pt | 仅独自/勿扰/稍后；非贴边/隐藏 |
-| `peek` | 持续 | 3.6 s，单次 4 px | 仅贴边停靠 |
+| `peek` | 持续 | 3.6 s，单次 4 px | 仅贴边停靠（V0 未接线） |
 
-完整的 12 姿态 × 9 事件矩阵以图谱第 12 章为准。实现必须把矩阵写成数据（manifest 或 `AmbientMatrix`），不允许散落在 if/switch 里。
+完整的姿态 × 事件矩阵以图谱第 12 章为准（其中 `step` 行已退役）。实现必须把矩阵写成数据（manifest 或 `AmbientMatrix`），不允许散落在 if/switch 里。
 
 ## 5. 状态机
 
@@ -278,9 +276,9 @@ nextDue  = lastInvitationClosedAt + effectiveGap
 - 同一时刻只有一张邀请卡、一个恢复面板。
 - 同一时刻只有一个姿态、一个主 clip。
 - `sign`、`stretch`、`happy` 期间不叠加环境瞬态。
-- `groom`、`yawn`、`step` 三选一，不并存。
+- `groom`、`yawn` 互斥，不并存。
 - 贴边停靠 ≠ 隐藏；停靠时仍呼吸。
-- 邀请/恢复/拖动/菜单期间不播 `step`、`groom`、`yawn`。
+- 邀请/恢复/拖动/菜单期间不播 `groom`、`yawn`。
 
 ### 5.7 邀请守卫
 
@@ -566,6 +564,7 @@ P1 与 P2 可并行；P3 必须等两者完成。每个 PR 保持可构建、可
 | 2026-11-23 | PR5：会话反馈 UI 落地；`SessionSurfacePresentation` 从 situation 派生胶囊/邀请卡/恢复面板/完成反馈，`SessionSurfacesController` 只渲染并回传用户意图；桌面 `陪伴中 · mm:ss` 胶囊、邀请卡（休息一下/稍后提醒/进入勿扰）、真实 30 秒恢复环（好了/先跳过）与完成/稍后/勿扰 toast；小窝主按钮接通开始/结束陪伴，`CompanionStatus` 同步主窗口状态 |
 | 2026-11-23 | PR6：移除旧 spritesheet 管线与资产（`pet.json`、spritesheet、runtime/source 源图、旧 `.py` 生成脚本及各旧渲染类）；`PetRuntime` 只加载分层 `JoeyAssetPackage`，加载失败时使用 `EmptyPoseRenderer` 并记录日志；文档统一到 ADR 013 |
 | 2026-11-23 | P7：设置页「暂停一小时」改为手动「勿扰模式」；新增 `doNotDisturbChanged(Bool)` 与持久化键 `doNotDisturb`，勿扰中关闭邀请/恢复，关闭勿扰立即重排；可见性与打扰许可解耦，`hidden` 仍排邀请，到点临时显示 Joey + 邀请卡，60 秒未处理按稍后一次并回隐；面板可见性由 situation 派生，自动出现不抢键盘焦点 |
+| 2026-11-24 | 移除 `step` / `walking` / ambient 走动（产品语义弱、身份不一致）。 |
 | 2026-11-23 | P8：接入 `peek` / `step` / `carry` 驱动。新增 `dockChanged(Bool)` 与 `isDocked`，贴边收起进入 `peek`、悬停/拖离回 `sit`；`step` 由 `PetCoordinator` 以 90–180 秒（低电量 ×1.5）低频调度，经 `canWalkAmbiently(at:)` 门控并移动面板 40–120 pt、播 2.4 秒；休息自然完成后新增 `playCarry` 效果，播 3.6 秒叼叶子，安静/勿扰/隐藏/减弱动态不播；高优先级姿态会立即打断进行中的环境瞬态 |
 | 2026-11-23 | P8 调整：贴边收起露出比例由 40% 改为 48%（168 档 81 pt），修复 40% 时屏幕边缘切断 peek 眼睛的问题；manifest、默认策略、几何测试与图谱同步。 |
 | 2026-11-23 | P8 素材：peek 重绘为左边缘构图（头部朝画布右侧让出 48% 可见区），右边缘通过 `PetDockEdge.right` 做静态水平镜像；`dockChanged` 改为携带 `PetDockEdge?`，`PetPoseRendering` 新增 `setDockEdge`；只翻转 peek，不产生水平位移动画。 |

@@ -360,7 +360,7 @@ Silhouette rules: no neck (head and body merge), long upright ears, round belly,
 
 ### 9.2 Poses
 
-Twelve poses. The first six are the V0 state set; the last six cover ambient, low-attention moments. All twelve derive from the same body, arms, and face layers — never redraw the silhouette per pose, and never scale the whole pet to fake one.
+Eleven poses. The first six are the V0 state set; the rest cover ambient and low-attention moments. All derive from the same body, arms, and face layers — never redraw the silhouette per pose, and never scale the whole pet to fake one.
 
 | Pose | Reads as | Used in |
 |------|----------|---------|
@@ -374,7 +374,6 @@ Twelve poses. The first six are the V0 state set; the last six cover ambient, lo
 | `yawn` | Eyes squeezed shut, wide small mouth, head back | Waking up, or after long sitting |
 | `doze` | Head low, eyes flat lines, loose shoulders | Light sleep, after 90 s without interaction |
 | `peek` | Head leaning out from the screen edge, eyes and paws inside the visible strip, near edge tucked behind the panel | Not wired in V0 — edge docking is deferred |
-| `step` | One paw forward, slight lean, low lift | Short 40–120 pt move |
 | `carry` | Leaf in mouth, returning to the nest | After a completed break |
 
 Pose layer rules:
@@ -418,21 +417,20 @@ Small, low-contrast loops are what make Joey feel alive. They must stay quiet, p
 
 | Loop | Cycle | Property | Note |
 |------|-------|----------|------|
-| Breath | 4.2–6 s | scale 1 → 1.012 | Origin at the base; the floor line never moves |
+| Breath | 4.2–6 s | scaleY 1 → 1.046 | Origin at the base; the floor line never moves; see idle breathing frames HTML |
 | Blink | 2.5–6 s, 180 ms per blink | 3 frames | Never two blinks back to back |
 | Ear flick | Random 12–35 s, 240 ms | −7° → 4° | Ears only; head stays still |
 | Tail sway | In phase with breath | ±8° | Tip lags the base |
 | Weight shift | 6–9 s | ±2 px, 0.5° tilt | Body only, feet planted |
 | Groom | Spread ~3.8 s | One paw, −15° | Plays as a short transient |
 | Yawn | 1.8 s | Head 10.5°, nose | Only after idle or waking |
-| Step | 2.4 s | 40–120 pt displacement | Replaces walk keys; no leg cycle |
 | Peek | 3.6 s | 4 px down, ears up | Docked-edge only |
 
 Rules:
 
 - At most two loops at once: one sustained (breath) plus one transient (blink, ear flick, groom).
 - Transient events are ≥ 12 s apart; the same transient repeats no sooner than 60 s.
-- Groom, yawn, and step are mutually exclusive; none plays during invitation, recovery, or drag.
+- Groom and yawn are mutually exclusive; none plays during invitation, recovery, or drag.
 - Pause ambient loops when the window is hidden, minimised, occluded, or the app is inactive; resume from the last frame.
 - `prefers-reduced-motion` / Reduce Motion freezes every loop at a readable static frame. No pose may depend on motion to be understood.
 
@@ -444,7 +442,7 @@ Rules:
 
 - Joey sits in the bottom-right corner of the desktop: 168 × 210, 40 px from the right, 92 px above the bottom, clear of the Dock.
 - No window, no container, no card behind him. He is the interface.
-- Idle breath 4.2 s, scale 1 → 1.012, origin at the base.
+- Idle breath 4.8 s, scaleY 1 → 1.046 with a tiny tilt, origin at the base (aligned with `joeypet-idle-breathing-frames-v0.html`).
 - While a session runs, a chip above him reads `陪伴中 · mm:ss`.
 - Hover reveals `拖动换位置 · 点击打开菜单`; the cursor is a grab hand; dragging clamps to the screen with an 8 px margin and persists after drag end.
 - Click opens a small menu: **结束陪伴** / **隐藏 Joey** / divider / **勿扰模式**.
@@ -583,7 +581,7 @@ Length: invitation headline ≤ 12 characters per line; helper ≤ 18; toast ≤
 | Press | 120 ms | ease-out | translateY 1 px |
 | Theme switch | 350 ms | ease | background / border / colour |
 | Ring | 1 s linear per tick | linear | stroke-dashoffset |
-| Breath | 4.2–6 s loop | ease-in-out | scale 1→1.012 |
+| Breath | 4.2–6 s loop | ease-in-out | scaleY 1→1.046 |
 
 Rules:
 
@@ -676,8 +674,7 @@ Design poses are for people. At runtime they land on `PetPose`; `JoeyDesktopScen
 | `groom` | `idle` | `idle_groom` | Once; ambient transient |
 | `yawn` | `idle` | `idle_yawn` | Once; waking or long sitting |
 | `doze` | `sleeping` | `doze_short` | Loop; light sleep, interruptible |
-| `peek` | `notifying` | `peek_edge` | Reserved; not reachable in V0 |
-| `step` | `walking` | `walk_step` | Once; after 40–120 pt of movement |
+| `peek` | `idle` | `peek_edge` | Reserved; not reachable in V0 |
 | `carry` | `idle` | `idle_carry` | Loop; return-to-nest segment |
 
 Add a new pose to the state graph before adding it to the runtime. Clip ids are stable once shipped.
@@ -796,4 +793,5 @@ Git history and the archive branch explain why they were replaced.
 | 2026-11-22 | Extended Joey to twelve poses and added the pose/state graph: ambient loops, pose transitions, seven-state desktop priority, five companion substates, guards and cooldowns, and the pose → behavior/clip mapping via `PetStateAnimationMapping`. Frozen graph added at `docs/reference/joeypet-states-v0.html`. |
 | 2026-11-23 | `peek` now renders while the panel is docked-collapsed; dock exposure raised from 40% to 48% so one full eye stays inside the screen edge. The frozen graph and the dock geometry tests follow the same number. |
 | 2026-11-23 | `peek` art recomposed for the edge: the head leans toward the right of the canvas so the 48% docked strip keeps both eyes and both paws in view. The right edge uses the same art mirrored; the pose itself still has no horizontal motion. |
-| 2026-11-23 | V0 defers edge docking, collapse and `peek`. Dragging still clamps on screen and persists the release position; the edge-dock geometry and peek wiring are removed. `step` and `carry` remain. |
+| 2026-11-23 | V0 defers edge docking, collapse and `peek`. Dragging still clamps on screen and persists the release position; the edge-dock geometry and peek wiring are removed. `carry` remains. |
+| 2026-11-24 | Removed `step` / ambient walking from V0 (product meaning weak; walk art broke character identity). |

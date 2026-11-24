@@ -251,7 +251,6 @@
   .m-shift { animation: mShift 7s var(--ease-inout) infinite; transform-box: view-box; transform-origin: 160px 342px; }
   .m-groom-arm { animation: mGroom 3.8s var(--ease-inout) infinite; transform-box: view-box; transform-origin: 230px 254px; }
   .m-yawn-head { animation: mYawn 4.6s var(--ease-inout) infinite; transform-box: view-box; transform-origin: 160px 240px; }
-  .m-step { animation: mStep 2.4s var(--ease-inout) infinite; }
   .m-peek { animation: mPeek 3.6s var(--ease-inout) infinite; }
   .m-ear { animation: mEar 4.8s var(--ease-inout) infinite; transform-box: view-box; transform-origin: 160px 150px; }
   .m-tail { animation: mTail 4.6s var(--ease-inout) infinite; transform-box: view-box; transform-origin: 250px 286px; }
@@ -703,15 +702,6 @@
       <ellipse transform="translate(62,0)" cx="216" cy="320" rx="26" ry="14" fill="#F8ECDA"/>
       <g transform="translate(62,22)"><use href="#j-face-peek"/></g>
     </symbol>
-    <symbol id="joey-step" viewBox="0 0 320 400">
-      <g transform="rotate(-3 160 344)">
-        <use href="#j-body"/>
-        <use href="#j-arms-rest"/>
-        <use href="#j-face-look"/>
-      </g>
-      <path d="M112 300 C 104 312 102 322 104 330" fill="none" stroke="#EDDAC1" stroke-width="20" stroke-linecap="round"/>
-      <ellipse cx="104" cy="334" rx="19" ry="10" fill="#F8ECDA"/>
-    </symbol>
     <symbol id="joey-carry" viewBox="0 0 320 400">
       <use href="#j-body"/><use href="#j-arms-rest"/><use href="#j-face-calm"/>
       <g transform="translate(168,224) rotate(12)">
@@ -1037,12 +1027,6 @@
         <span class="pose-use">贴边隐藏</span>
       </figure>
       <figure class="pose">
-        <div class="pose-stage"><svg viewBox="0 0 320 400" aria-label="Joey 走两步"><use href="#joey-step"/></svg></div>
-        <span class="pose-code">step</span><span class="pose-name">走两步</span>
-        <span class="pose-desc">一只前爪抬起，身体轻倾。只在 40–120 pt 内移动。</span>
-        <span class="pose-use">换位置 · 靠近</span>
-      </figure>
-      <figure class="pose">
         <div class="pose-stage"><svg viewBox="0 0 320 400" aria-label="Joey 叼着一片叶子"><use href="#joey-carry"/></svg></div>
         <span class="pose-code">carry</span><span class="pose-name">叼着叶子</span>
         <span class="pose-desc">嘴里衔一片鼠尾草叶。完成休息后回窝途中。</span>
@@ -1156,14 +1140,6 @@
 
       <figure class="motion">
         <div class="motion-stage">
-          <svg viewBox="0 0 320 400" aria-label="走两步"><g class="m-step"><use href="#joey-step"/></g></svg>
-        </div>
-        <b>走两步</b>
-        <span class="m-param">随机 · 2.4 s · 位移 40–120 pt</span>
-      </figure>
-
-      <figure class="motion">
-        <div class="motion-stage">
           <svg viewBox="0 0 320 400" aria-label="贴边探头"><g class="m-peek"><use href="#joey-peek"/></g></svg>
         </div>
         <b>探头</b>
@@ -1178,7 +1154,7 @@
         <tbody>
           <tr><td>并行上限</td><td>同一时刻最多两个微动效：一个持续（呼吸），一个瞬态（眨眼、耳抖、理毛）。</td></tr>
           <tr><td>随机间隔</td><td>瞬态事件之间至少间隔 12 秒；同一种瞬态 60 秒内不重复第三次。</td></tr>
-          <tr><td>互斥</td><td>理毛、打哈欠、走两步互斥；邀请、恢复与拖动期间暂停所有瞬态。</td></tr>
+          <tr><td>互斥</td><td>理毛、打哈欠互斥；邀请、恢复与拖动期间暂停所有瞬态。</td></tr>
           <tr><td>隐藏时</td><td>窗口不可见、最小化、被遮挡或 App 不活跃时，环境循环全部暂停，恢复后从当前帧继续。</td></tr>
           <tr><td>减弱动态</td><td>保留静态姿态；呼吸停在缩放 1，瞬态不触发，转场直接落在终态。</td></tr>
         </tbody>
@@ -1341,7 +1317,6 @@
           <tr><td>悬停</td><td>影子加深一点，身体抬起 1 px；不放大整只宠物。</td><td>140 ms</td></tr>
           <tr><td>悬停停留</td><td>浮出提示「拖动移动 · 点击菜单」，不抢焦点。</td><td>220 ms</td></tr>
           <tr><td>点击</td><td>打开 3 项菜单：结束陪伴 / 隐藏 Joey / 分隔 / 勿扰模式。</td><td>160 ms</td></tr>
-          <tr><td>拖动开始</td><td>整体缩到 0.98，阴影扩散，跟手移动，不播放走路帧。</td><td>0 ms</td></tr>
           <tr><td>拖动中</td><td>限制在可见屏幕内，避开菜单栏与 Dock；靠近屏幕边缘时显示可停靠提示。</td><td>持续</td></tr>
           <tr><td>放置</td><td>回弹到 1.0，保存位置；贴边则停靠，不自动隐藏。</td><td>180 ms</td></tr>
           <tr><td>贴边隐藏</td><td>停靠 600 ms 后滑出到露出 48%（168 档约 81 pt）；指针靠近时滑回。</td><td>180 ms</td></tr>
@@ -1495,7 +1470,6 @@
           <tr><td><code>yawn</code></td><td><code>idle</code></td><td><code>idle_yawn</code></td><td>一次；醒来或久坐</td></tr>
           <tr><td><code>doze</code></td><td><code>sleeping</code></td><td><code>doze_short</code></td><td>持续；浅睡，可被交互打断</td></tr>
           <tr><td><code>peek</code></td><td><code>notifying</code></td><td><code>peek_edge</code></td><td>一次；贴边停留时</td></tr>
-          <tr><td><code>step</code></td><td><code>walking</code></td><td><code>walk_step</code></td><td>一次；位移 40–120 pt 后回 idle</td></tr>
           <tr><td><code>carry</code></td><td><code>idle</code></td><td><code>idle_carry</code></td><td>持续；完成休息后的回窝段</td></tr>
         </tbody>
       </table>
@@ -1576,7 +1550,6 @@
           <tr><td><code>yawn</code></td><td class="c part">◐</td><td class="c no">—</td><td class="c no">—</td><td class="c no">—</td><td class="c no">—</td><td class="c no">—</td><td>头在放大，尾巴先停</td></tr>
           <tr><td><code>doze</code></td><td class="c yes">✓</td><td class="c part">◐</td><td class="c part">◐</td><td class="c no">—</td><td class="c part">◐</td><td class="c no">—</td><td>眨眼周期 ×2，耳抖仅在本姿态内</td></tr>
           <tr><td><code>peek</code></td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c no">—</td><td class="c no">—</td><td class="c part">◐</td><td class="c no">—</td><td>贴边探头，不做左右位移</td></tr>
-          <tr><td><code>step</code></td><td class="c yes">✓</td><td class="c part">◐</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c part">◐</td><td class="c no">—</td><td>行走期间重心参与换脚</td></tr>
           <tr><td><code>carry</code></td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c part">◐</td><td class="c part">◐</td><td class="c part">◐</td><td class="c no">—</td><td>回窝段，位移由外部路径驱动</td></tr>
         </tbody>
       </table>
@@ -1628,7 +1601,6 @@
       <li><b>拖动阈值 4 px。</b>小于 4 px 的移动在释放时按单击处理，避免手抖误开菜单。</li>
       <li><b>所有交互可撤销：</b>菜单 Esc 或点外关闭；位置可再次拖回；隐藏提供撤销提示。没有不可逆的单击。</li>
       <li><b>交互不改变冷却计数。</b>悬停、拖动、开关菜单都不重置 45 / 10 分钟计时。</li>
-      <li><b>拖动中不播放走路帧，</b>也不触发邀请；释放后 600 ms 再评估是否补发。</li>
     </ul>
   </section>
 
@@ -1647,7 +1619,6 @@
           <tr><td>安静时段 × 恢复中</td><td>安静时段优先（#3）</td><td>当前 30 秒允许走完，完成后直接睡；新邀请不排</td></tr>
           <tr><td>邀请 × 环境瞬态</td><td>邀请优先</td><td>瞬态立即收尾，不硬切；卡片关闭后重新从 12 秒间隔起算</td></tr>
           <tr><td>完成 × 邀请到点</td><td>完成优先</td><td>2.6 秒播完回 sit，再评估邀请；间隔仍 ≥ 45 分钟</td></tr>
-          <tr><td>探头 × 走两步</td><td>互斥</td><td>停靠期间不排 walk；离开停靠后再进入随机队列</td></tr>
           <tr><td>系统睡眠 × 拖动中</td><td>系统优先</td><td>冻结并保存拖动前位置；唤醒后回到拖动前状态，不继续跟手</td></tr>
           <tr><td>同帧多个瞬态</td><td>按优先级取一</td><td>只开始一个；其余丢弃，不排队，避免醒来后连播</td></tr>
           <tr><td>低优先级计时 × 覆盖</td><td>保留不清空</td><td>覆盖只改姿态与可见元素；45 / 10 / 60 分钟计时继续走</td></tr>
@@ -1658,8 +1629,6 @@
     <h3>不可同时成立<span class="h-note">硬互斥</span></h3>
     <ul class="rules">
       <li><b>hidden 与任何常驻姿态互斥。</b>hidden 下没有常驻姿态、没有环境循环；但邀请到点仍会临时露面，处理完再回 hidden。</li>
-      <li><b>sign 与 stretch / happy / step 互斥。</b>一张邀请卡对应一个 sign，不接受第二个。</li>
-      <li><b>groom、yawn、step 两两互斥；</b>peek 与 step 互斥。</li>
       <li><b>同一 clip 不重入，</b>直到上一段结束（循环 clip 除外）；重入请求直接丢弃。</li>
       <li><b>任何时刻只存在一个 Joey 面板、一个邀请卡、一个恢复面板。</b></li>
     </ul>
@@ -1848,7 +1817,6 @@
           <tr><td><code>idle</code></td><td><code>idle_sit</code> / <code>idle_look</code> / <code>idle_groom</code> / <code>idle_yawn</code> / <code>idle_carry</code> / <code>peek_edge</code> / <code>recover_stretch</code></td><td>持续 + 瞬态</td><td>是；按第 12 章矩阵</td></tr>
           <tr><td><code>notifying</code></td><td><code>notify_sign</code></td><td>一次性</td><td>否</td></tr>
           <tr><td><code>sleeping</code></td><td><code>sleep_curl</code> / <code>doze_short</code></td><td>持续</td><td>否</td></tr>
-          <tr><td><code>walking</code></td><td><code>walk_step</code></td><td>一次性</td><td>否</td></tr>
           <tr><td><code>celebrating</code></td><td><code>complete_happy</code></td><td>一次性（2.6 s）</td><td>否</td></tr>
         </tbody>
       </table>
@@ -1946,7 +1914,6 @@
     { "id": "shift", "everyMs": [6000, 9000], "px": 2, "tilt": 0.5 },
     { "id": "groom", "durationMs": 3800, "armDeg": -15 },
     { "id": "yawn", "durationMs": 1800, "headScale": 1.035 },
-    { "id": "step", "durationMs": 2400, "travelPt": [40, 120] },
     { "id": "peek", "durationMs": 3600, "bobPx": 4 }
   ],
   "poses": [
@@ -1960,7 +1927,6 @@
     { "id": "yawn", "clipId": "idle_yawn", "behavior": "idle", "loop": false },
     { "id": "doze", "clipId": "doze_short", "behavior": "sleeping", "loop": true },
     { "id": "peek", "clipId": "peek_edge", "behavior": "idle", "loop": true },
-    { "id": "step", "clipId": "walk_step", "behavior": "walking", "loop": false },
     { "id": "carry", "clipId": "idle_carry", "behavior": "idle", "loop": true }
   ],
   "faces": { "ids": ["calm", "look", "sign", "stretch", "happy", "sleep", "groom", "yawn"], "blinkFaces": "all" },
@@ -1995,7 +1961,6 @@
       "idle": ["idle_sit", "idle_look", "idle_groom", "idle_yawn", "idle_carry", "peek_edge", "recover_stretch"],
       "notifying": ["notify_sign"],
       "sleeping": ["sleep_curl", "doze_short"],
-      "walking": ["walk_step"],
       "celebrating": ["complete_happy"]
     }
   },
