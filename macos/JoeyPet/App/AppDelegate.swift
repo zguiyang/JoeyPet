@@ -18,6 +18,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)
+        // Do not assign NSApp.applicationIconImage — a raw square PNG bypasses
+        // the system squircle mask and shows sharp corners in the Dock.
         configureMainMenu()
 
         #if DEBUG

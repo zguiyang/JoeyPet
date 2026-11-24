@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="1024"
+     height="1024"
+     viewBox="0 0 1024 1024">
+  <!--
+    Dock / App Icon · D1 Front portrait
+    Source: pose_sit ear/body/face/scarf (brand-mark exploration v1).
+    Square canvas — system applies macOS squircle. Do not bake corner radius.
+    Fill: DESIGN sage-deep (#4F6D54) — cream fur + sage scarf both read on light/dark Dock.
+  -->
+  <rect width="1024" height="1024" fill="#4F6D54"/>
+
+  <!-- Map Joey crop (50,40)→(270,260) into padded 880×880 square -->
+  <g transform="translate(72 72) scale(4) translate(-50 -40)">
+    <path d="M228 314 C 268 324 294 300 290 272 C 287 250 266 244 256 256 C 248 266 256 280 269 277"
+          fill="none" stroke="#F0DFC8" stroke-width="23" stroke-linecap="round"/>
+    <path d="M118 148 C100 126 88 90 93 68 C97 50 116 46 126 62 C138 80 144 116 146 140 Z" fill="#F3E3CD"/>
+    <path d="M120 136 C108 118 101 94 105 80 C108 70 117 69 122 78 C129 90 134 114 136 132 Z" fill="#EFC8AA"/>
+    <path d="M202 148 C220 126 232 90 227 68 C223 50 204 46 194 62 C182 80 176 116 174 140 Z" fill="#F3E3CD"/>
+    <path d="M200 136 C212 118 219 94 215 80 C212 70 203 69 198 78 C191 90 186 114 184 132 Z" fill="#EFC8AA"/>
+    <path d="M160 116 C209 116 242 167 242 231 C242 299 208 342 160 342 C112 342 78 299 78 231 C78 167 111 116 160 116 Z" fill="#F3E3CD"/>
+    <path d="M160 342 C112 342 78 299 78 231 C78 224 78 218 79 212 C93 298 118 322 160 322 C202 322 227 298 241 212 C242 218 242 224 242 231 C242 299 208 342 160 342 Z" fill="#EBD7BE" opacity="0.5"/>
+    <ellipse cx="128" cy="337" rx="27" ry="13" fill="#F8ECDA"/>
+    <ellipse cx="192" cy="337" rx="27" ry="13" fill="#F8ECDA"/>
+    <path d="M122 244 C 142 258 178 258 198 244" fill="none" stroke="#86A98A" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="200" cy="247" r="7" fill="#86A98A"/>
+    <ellipse cx="111" cy="226" rx="18" ry="9" fill="#EFAE7D" opacity="0.26"/>
+    <ellipse cx="209" cy="226" rx="18" ry="9" fill="#EFAE7D" opacity="0.26"/>
+    <ellipse cx="134" cy="204" rx="8.5" ry="11" fill="#3F3A35"/>
+    <ellipse cx="186" cy="204" rx="8.5" ry="11" fill="#3F3A35"/>
+    <circle cx="131" cy="200" r="2.8" fill="#FFFFFF"/>
+    <circle cx="183" cy="200" r="2.8" fill="#FFFFFF"/>
+    <path d="M160 216 C 166 216 169 220 166.5 223 C 164.5 225.5 155.5 225.5 153.5 223 C 151 220 154 216 160 216 Z" fill="#C98F6E"/>
+    <path d="M160 224 C 158 230 153 232 150 228 M160 224 C 162 230 167 232 170 228"
+          fill="none" stroke="#6F5F53" stroke-width="2.3" stroke-linecap="round"/>
+  </g>
+</svg>
