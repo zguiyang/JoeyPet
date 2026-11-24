@@ -375,7 +375,7 @@ Eleven poses. The first six are the V0 state set; the rest cover ambient and low
 | `sleep` | Standing, ears relaxed outward, eyes closed in soft arcs | Quiet hours, hidden attention |
 | `groom` | Paw to the ear, eyes half-closed | Idle, when the room is quiet |
 | `yawn` | Eyes squeezed shut, wide small mouth, head back | Waking up, or after long sitting |
-| `doze` | Head low, eyes flat lines, loose shoulders | Light sleep, after 90 s without interaction |
+| `doze` | Head low, eyes flat lines, loose shoulders; 7.2 s breath+sway (±1.1°, peak 1.011) + random ear/head/tail micros | Light sleep / DND — see [`joeypet-doze-spritesheet-v0.svg`](docs/reference/joeypet-doze-spritesheet-v0.svg) |
 | `peek` | Head leaning out from the screen edge, eyes and paws inside the visible strip, near edge tucked behind the panel | Not wired in V0 — edge docking is deferred |
 | `carry` | Leaf in mouth, returning to the nest | After a completed break |
 
