@@ -273,7 +273,7 @@ The main window is **one room**, not a container of pages.
 
 ### 7.4 Safe area
 
-Keep Joey, the primary action, and all text ≥ 40 px from the window edge. The invitation card and recovery panel must never cover Joey's face or the sign. Desktop Joey sits clear of the Dock and menu bar geometry.
+Keep Joey, the primary action, and all text ≥ 40 px from the window edge. The invitation card and recovery panel must never cover Joey's face. Desktop Joey sits clear of the Dock and menu bar geometry.
 
 ### 7.5 Desktop composition
 
@@ -366,7 +366,7 @@ Eleven poses. The first six are the V0 state set; the rest cover ambient and low
 |------|----------|---------|
 | `sit` | Quiet company, breathing | Idle, nest |
 | `look` | Turned toward the user, attentive | Session active, nearly time to rest |
-| `sign` | Holding a small handwritten sign | Rest invitation |
+| `sign` | Holding a small handwritten sign | Kept as atlas art; V0 invitation no longer uses it |
 | `stretch` | Arms up, eyes closed, small mouth | Recovery demo |
 | `happy` | Arc eyes, open smile, brighter blush | After a completed break |
 | `sleep` | Standing, ears relaxed outward, eyes closed in soft arcs | Quiet hours, hidden attention |
@@ -388,8 +388,8 @@ Transitions run 240–420 ms, ease-out; exits are ~65 % of entrance; no bounce, 
 | From → to | Trigger | Duration | Note |
 |-----------|---------|----------|------|
 | `sit` → `look` | Invitation 5 min away, or session start | 300 ms | Eyes lift only, body still |
-| `look` → `sign` | Invitation due | 340 ms | Arm rises first, sign turns upright after |
-| `sign` → `stretch` | User accepts | 300 ms | Sign retracts as arms go up |
+| `look` (hold) | Invitation due | — | Joey stays attentive; the invitation card carries the copy |
+| `look` → `stretch` | User accepts | 300 ms | Arms rise into the recovery stretch |
 | `stretch` → `happy` | 30 s completed | 300 ms | Eyes arc first, then mouth opens |
 | `happy` → `sit` | Hold 2.6 s | 420 ms | Breathing restarts on the way down |
 | `sit` → `doze` | 90 s without interaction | 600 ms | Head lowers first, eyes close last |
@@ -397,7 +397,7 @@ Transitions run 240–420 ms, ease-out; exits are ~65 % of entrance; no bounce, 
 | `yawn` → `look` | Yawn ends | 400 ms | Then `look` or `sit` by context |
 | `sit` → `sleep` | Quiet hours begin | 600 ms | Body sinks a little, ears relax |
 | `sleep` → `sit` | Quiet hours end | 500 ms | Eyes open before the head lifts |
-| `sign` → `sit` | Snooze / pause / dismiss | 240 ms | Sign drops, card fades after |
+| `look` → `sit` / `look` | Snooze / pause / dismiss | 240 ms | Card fades; pose returns with the situation |
 | `look` → `sit` | Session ends | 240 ms | Gaze falls back |
 
 Panels, cards, and menus keep the 300–420 ms UI timing. Do not run the pose through one shared CSS transition — drive it per row above, or arm and sign will smear together.
@@ -451,20 +451,19 @@ Rules:
 
 ### 10.2 Rest invitation
 
-- Joey emerges with a handwritten sign reading **坐久啦**.
-- The card sits at his sign's height (not floating in the middle of the screen), 400 px wide, radius 22, `shadow-lg`, 26/28/24 padding, with a small clay tape strip at the top.
-- Copy:
+- Joey stays in `look` (attentive). Copy and actions live on a compact floating paper note — not on a handheld wooden sign.
+- The card anchors beside Joey (left or right by free space; prefer the side toward screen centre), at about shoulder height — not floating in the middle of the screen. Desktop ≈ **236** wide (≈1.4× Joey), nest ≈ **200**; radius 15 / 13; padding ~14. A small caret on the Joey-facing edge makes the note feel attached to the pet. No clay tape.
+- Title only (no helper subtitle). Actions are a **right-aligned compact row**: quiet text chips + a small sage primary with **square soft corners** (radius 8), not full-bleed pills.
 
 ```text
 坐久啦，
 我们一起伸个懒腰？
 
-不用走开，半分钟就够。
-
-[ 休息一下 ]        ← primary
-[ 稍后提醒 ] [ 进入勿扰 ]
+              [稍后提醒] [进入勿扰] [休息一下]
 ```
 
+- The same card family appears in the nest beside Joey when invite is active.
+- Companion chip and greeting「你好。」share one paper tip chrome (`JoeyPetTipView`).
 - It is an invitation from a pet, never an alert: no title bar, no icon-warning, no modal scrim over the whole screen, no system beep.
 - Dismissing is always available and never punished. Toasts: `好，过一阵再问你。` / `好，先不打扰你。`
 - Only one reminder per interval; never re-prompt immediately.
@@ -496,7 +495,7 @@ The main window, and it should feel like entering Joey's home.
 - Title: **Joey 的家**. Traffic lights, title, one gear.
 - Room scene fills the content area. The nest is not a separate renderer: it hosts the same layered `JoeyDesktopScene` with the same `JoeyAssetPackage` as the desktop pet, feeds it the pose `PetRuntime` resolved, and therefore matches faces, props, breathing, blinks and ear/tail motion exactly. `sleep` is the standing closed-eye pose with relaxed ears; `doze` is the lighter, slightly tilted nap. At dusk the room applies a 0.18 sage-grey wash (`nestPetTint`) to the layered pet so it sits in the dim light; the desktop pet stays untinted.
 - Joey stays in the nest. The room pet is not draggable; a click asks the runtime for one short greeting (`happy` for ~2.8 s), and both the nest and the desktop pet play it.
-- While a companionship session is running (`陪伴中`), the runtime drives `look`, then `sign`, `stretch` and `happy` at the matching moments, and the nest follows. Quiet hours show the same `sleep` pose in both places.
+- While a companionship session is running (`陪伴中`), the runtime drives `look` (including during the invitation card), then `stretch` and `happy` at the matching moments, and the nest follows. Quiet hours show the same `sleep` pose in both places.
 - The wall clock shows the real local time with hour and minute hands; clicking it opens `JoeyPet 设置` on **节奏与提醒**. The hover hint is `调整提醒时间`.
 - Three object-bound facts, nothing else:
   - Clock label: `Joey 大约每 45 分钟来叫你一次`
@@ -600,7 +599,7 @@ Rules:
 |-----------|----------|
 | No session | Chip hidden; CTA `开始一起工作`; Joey `sit` |
 | Session running | Chip `陪伴中 · mm:ss`; CTA `结束陪伴`; Joey `look` |
-| Invitation due | Joey `sign` + card; one invitation only |
+| Invitation due | Joey `look` + invitation card; one invitation only |
 | Invitation deferred | Toast `好，过一阵再问你。`, schedule one later invitation, no repeat nagging |
 | Entered do-not-disturb | Toast `好，先不打扰你。`, no further invitations until the user turns it off |
 | Recovery running | Real countdown; no skip penalty |
@@ -656,7 +655,7 @@ idle ──5 min to go──▶ approach ──due──▶ invite ──accept�
 | Do not disturb | No invitations, panels or toasts; pose stays `doze`, menu still works | Resume rhythm when the user turns it off |
 | Hidden reminder | Invitation is due while hidden | Surface Joey and the card; after 60 seconds return to hidden and treat as snoozed once |
 | Quiet hours | Enter `sleep` immediately, schedule no invitations; a running recovery countdown may finish | Return to `sit` when the window ends |
-| Single invitation | At most one invitation card; no repeated `sign` while it exists | Extra requests are dropped |
+| Single invitation | At most one invitation card; no repeated invite while it exists | Extra requests are dropped |
 | Exit during recovery | Closing the recovery panel counts as a skip; no count, no failure | Return to the desktop quietly |
 
 ### 13.4 Pose to runtime mapping
@@ -667,7 +666,7 @@ Design poses are for people. At runtime they land on `PetPose`; `JoeyDesktopScen
 |------|-------------|---------|----------|
 | `sit` | `idle` | `idle_sit` | Loop; default fallback |
 | `look` | `idle` | `idle_look` | Loop; used in session |
-| `sign` | `notifying` | `notify_sign` | Once; parks on the sign frame |
+| `sign` | `notifying` | `notify_sign` | Atlas only in V0; invitation uses `look` + card |
 | `stretch` | `idle` | `recover_stretch` | Sustained; holds while the recovery panel counts down |
 | `happy` | `celebrating` | `complete_happy` | Once; returns to idle after 2.6 s |
 | `sleep` | `sleeping` | `sleep_curl` | Loop; quiet hours and extended idle |
@@ -726,7 +725,7 @@ Before marking any UI task done:
 3. Light **and** dusk checked, separately.
 4. CJK line height ≥ 1.35 on display text; no negative tracking on Chinese.
 5. No uppercase micro-labels, no emoji icons, no pill-shaped everything.
-6. Spacing follows the 4/8 rhythm; nothing overlaps the pet, the sign, or the CTA.
+6. Spacing follows the 4/8 rhythm; nothing overlaps the pet, the invitation card, or the CTA.
 7. Copy passes the voice rules in §11 — factual, short, no praise, no guilt.
 8. Numbers are self-consistent (today ≤ week; clock matches the "resume at" time).
 9. Real states only; nothing simulated that the product cannot detect.

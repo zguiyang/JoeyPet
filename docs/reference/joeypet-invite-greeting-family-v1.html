@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="light" />
+<meta name="theme-color" content="#F7F3EB" />
+<title>JoeyPet · 休息邀请与问候 · 轻纸片版 v1</title>
+<style>
+  :root{
+    --ivory:#F7F3EB;
+    --ivory-2:#F1E9DA;
+    --panel:#FFFDF7;
+    --panel-2:#F8F3E9;
+    --ink:#3F3A35;
+    --ink-2:#6B6259;
+    --muted:#6E6459;
+    --sage:#86A98A;
+    --sage-deep:#4F6D54;
+    --sage-ink:#263227;
+    --apricot:#EFAE7D;
+    --hairline:rgba(63,58,53,.14);
+    --hairline-strong:rgba(63,58,53,.24);
+    --shadow-card:0 9px 22px -12px rgba(63,58,53,.30), 0 1px 2px rgba(63,58,53,.05);
+    --shadow-tip:0 5px 14px -8px rgba(63,58,53,.26), 0 1px 2px rgba(63,58,53,.05);
+    --font-ui:"PingFang SC","Hiragino Sans GB",-apple-system,BlinkMacSystemFont,"Helvetica Neue","Segoe UI",sans-serif;
+    --font-mono:ui-monospace,"SF Mono",Menlo,monospace;
+  }
+
+  .dusk{
+    --ivory:#313A3B;
+    --ivory-2:#2C3435;
+    --panel:#37403F;
+    --panel-2:#2F3838;
+    --ink:#E9E3D7;
+    --ink-2:#BFB8AB;
+    --muted:#B0A89C;
+    --sage-ink:#1E2A20;
+    --hairline:rgba(233,227,215,.14);
+    --hairline-strong:rgba(233,227,215,.24);
+    --shadow-card:0 14px 30px -16px rgba(0,0,0,.6), 0 1px 3px rgba(0,0,0,.3);
+    --shadow-tip:0 7px 16px -8px rgba(0,0,0,.55), 0 1px 3px rgba(0,0,0,.3);
+  }
+
+  *{ box-sizing:border-box; }
+  html{ background:var(--ivory); }
+  body{
+    margin:0;
+    min-height:100vh;
+    background:var(--ivory);
+    color:var(--ink);
+    font-family:var(--font-ui);
+    font-size:15px;
+    line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    overflow-x:hidden;
+  }
+  ::selection{ background:rgba(134,169,138,.26); }
+
+  .board{
+    width:min(100%,1140px);
+    margin:0 auto;
+    padding:52px 32px 64px;
+  }
+
+  .eyebrow{
+    display:flex; align-items:center; gap:11px;
+    margin:0 0 18px;
+    color:var(--sage-deep);
+    font-family:var(--font-mono);
+    font-size:11px; font-weight:600;
+    letter-spacing:.14em; text-transform:uppercase;
+  }
+  .eyebrow::before{ content:""; width:26px; height:1px; background:var(--sage); }
+
+  h1{
+    margin:0 0 14px;
+    font-size:clamp(29px,3.4vw,40px);
+    line-height:1.34;
+    font-weight:600;
+    letter-spacing:0;
+    text-wrap:balance;
+  }
+  .dek{
+    max-width:62ch;
+    margin:0 0 22px;
+    color:var(--ink-2);
+    font-size:15px;
+    line-height:1.78;
+  }
+  .keyline{
+    display:flex; flex-wrap:wrap; gap:8px 18px;
+    margin:0 0 40px; padding:14px 0 0;
+    border-top:1px solid var(--hairline);
+    list-style:none;
+  }
+  .keyline li{
+    display:flex; align-items:baseline; gap:7px;
+    color:var(--muted); font-size:12px;
+  }
+  .keyline b{
+    font-family:var(--font-mono); font-weight:600; font-size:11px;
+    color:var(--ink-2); letter-spacing:.02em;
+  }
+
+  .frames{ display:flex; flex-direction:column; gap:22px; }
+
+  .frame{
+    margin:0;
+    padding:18px;
+    background:var(--panel);
+    border:1px solid var(--hairline);
+    border-radius:16px;
+  }
+  .frame-head{
+    display:flex; align-items:baseline; gap:12px;
+    margin:0 4px 14px;
+  }
+  .frame-no{
+    font-family:var(--font-mono); font-size:11px; font-weight:600;
+    letter-spacing:.08em; color:var(--sage-deep);
+  }
+  .frame-title{ font-size:15px; font-weight:600; color:var(--ink); }
+  .frame-note{ margin-left:auto; font-size:12px; color:var(--muted); }
+  .frame-legend{
+    margin:12px 4px 2px;
+    color:var(--muted);
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    line-height:1.7;
+    letter-spacing:.01em;
+  }
+
+  /* ---------- Joey ---------- */
+  .joey{ display:block; }
+  .joey--desktop{ width:168px; height:210px; }
+  .joey--nest{ position:absolute; left:70px; bottom:46px; width:116px; height:146px; z-index:3; }
+  .joey--greet{ width:132px; height:165px; }
+  .joey--cmp{ width:140px; height:175px; }
+
+  /* ---------- Stage shells ---------- */
+  .stage{
+    position:relative;
+    overflow:hidden;
+    background:var(--ivory);
+    border:1px solid var(--hairline);
+    border-radius:12px;
+  }
+  .stage--desktop{
+    display:flex; align-items:center; justify-content:center;
+    min-height:320px; padding:28px 24px;
+  }
+  .scene-row{
+    display:flex; align-items:center; justify-content:center;
+    flex-wrap:wrap; gap:26px;
+  }
+
+  /* ---------- The note ---------- */
+  .invite{
+    position:relative;
+    background:var(--panel);
+    border:1px solid var(--hairline);
+    border-radius:15px;
+    box-shadow:var(--shadow-card);
+    color:var(--ink);
+  }
+  .invite--desk{ width:236px; padding:14px 14px 12px; }
+  .invite--nest{ width:200px; padding:12px 12px 10px; border-radius:13px; }
+
+  .invite__title{
+    margin:0;
+    font-weight:600;
+    color:var(--ink);
+    letter-spacing:0;
+  }
+  .invite--desk .invite__title{ font-size:16.5px; line-height:1.45; }
+  .invite--nest .invite__title{ font-size:14.5px; line-height:1.45; }
+
+  .invite__actions{
+    display:flex; align-items:center; justify-content:flex-end; gap:6px;
+    margin-top:10px;
+  }
+  .invite--nest .invite__actions{ gap:4px; margin-top:8px; }
+
+  .btn{
+    font-family:inherit;
+    cursor:pointer;
+    border:1px solid transparent;
+    background:none;
+    display:inline-flex; align-items:center; justify-content:center;
+    white-space:nowrap;
+    transition:background .15s ease, border-color .15s ease, color .15s ease;
+  }
+  .btn:focus-visible{ outline:2px solid var(--sage-deep); outline-offset:2px; }
+
+  .btn--quiet{
+    color:var(--ink-2);
+    font-size:11px;
+    height:28px; padding:0 6px;
+    border-radius:8px;
+  }
+  .invite--nest .btn--quiet{ font-size:10.5px; height:25px; padding:0 4px; }
+  .btn--quiet:hover{ background:var(--panel-2); color:var(--ink); }
+
+  .btn--primary{
+    background:var(--sage);
+    color:var(--sage-ink);
+    font-weight:600;
+    font-size:12.5px;
+    height:29px; padding:0 13px;
+    border-radius:8px;
+  }
+  .invite--nest .btn--primary{ font-size:11.5px; height:26px; padding:0 8px; }
+  .btn--primary:hover{ background:#7CA281; }
+
+  /* caret: left edge, pointing toward Joey on the right */
+  .invite::before{
+    content:"";
+    position:absolute;
+    width:10px; height:10px;
+    background:var(--panel);
+  }
+  .invite--caret-l::before{
+    left:-5.5px; top:40%;
+    border-left:1px solid var(--hairline);
+    border-bottom:1px solid var(--hairline);
+    transform:rotate(45deg);
+  }
+  /* caret: right edge, pointing toward Joey on the left */
+  .invite--caret-r::before{
+    right:-5.5px; top:40%;
+    border-right:1px solid var(--hairline);
+    border-top:1px solid var(--hairline);
+    transform:rotate(45deg);
+  }
+
+  /* ---------- Size measure ---------- */
+  .measure{ position:relative; }
+  .measure__line{
+    position:absolute; left:0; right:0; top:-15px; height:1px;
+    border-top:1px dashed var(--hairline-strong);
+  }
+  .measure__line::before, .measure__line::after{
+    content:""; position:absolute; top:-3px; width:1px; height:7px;
+    background:var(--hairline-strong);
+  }
+  .measure__line::before{ left:0; }
+  .measure__line::after{ right:0; }
+  .measure__label{
+    position:absolute; top:-29px; left:50%; transform:translateX(-50%);
+    padding:0 6px;
+    background:var(--ivory);
+    color:var(--muted);
+    font-family:var(--font-mono);
+    font-size:10px; letter-spacing:.02em;
+    white-space:nowrap;
+  }
+  .measure-tag{
+    display:inline-block; margin:0 0 6px;
+    font-family:var(--font-mono); font-size:10px; letter-spacing:.02em;
+    color:var(--muted);
+  }
+
+  /* ---------- Nest room ---------- */
+  .stage--room{
+    width:100%; max-width:440px; height:330px;
+    margin:0 auto;
+  }
+  .room-window{
+    position:absolute; left:24px; top:24px; width:104px; height:74px;
+    background:var(--panel); border:1px solid var(--hairline); border-radius:11px;
+    box-shadow:inset 0 0 0 6px var(--panel-2);
+    z-index:0;
+  }
+  .room-floor{
+    position:absolute; left:0; right:0; bottom:0; height:82px;
+    background:var(--ivory-2); z-index:0;
+  }
+  .room-plant{
+    position:absolute; left:34px; bottom:66px; width:32px; height:42px; z-index:1;
+  }
+  .room-nest{
+    position:absolute; left:30px; bottom:26px; width:196px; height:54px;
+    background:#EDE3D2; border-radius:50%;
+    box-shadow:inset 0 6px 14px rgba(201,176,140,.30);
+    z-index:2;
+  }
+  .room-card{ position:absolute; right:20px; top:142px; z-index:4; }
+
+  /* ---------- Greeting tip ---------- */
+  .tip{
+    position:relative;
+    background:var(--panel);
+    border:1px solid var(--hairline);
+    border-radius:11px;
+    box-shadow:var(--shadow-tip);
+    color:var(--ink);
+    font-size:12.5px; line-height:1;
+    padding:7px 12px;
+    white-space:nowrap;
+  }
+  .tip::after{
+    content:""; position:absolute; left:50%; bottom:-5.5px;
+    margin-left:-5px;
+    width:10px; height:10px;
+    background:var(--panel);
+    border-right:1px solid var(--hairline);
+    border-bottom:1px solid var(--hairline);
+    transform:rotate(45deg);
+  }
+
+  .greet{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  .greet-cell{
+    position:relative; height:300px; overflow:hidden;
+    background:var(--ivory);
+    border:1px solid var(--hairline);
+    border-radius:12px;
+  }
+  .greet-cell--room::after{
+    content:""; position:absolute; left:0; right:0; bottom:0; height:66px;
+    background:var(--ivory-2); z-index:0;
+  }
+  .greet-stack{
+    position:relative; z-index:1;
+    height:100%;
+    display:flex; flex-direction:column; align-items:center; justify-content:flex-end;
+    gap:9px; padding:24px 18px 26px;
+  }
+  .greet-stack .tip{ z-index:2; margin-bottom:-12px; }
+  .greet-cap{
+    position:absolute; left:14px; top:11px; z-index:2;
+    font-family:var(--font-mono); font-size:10px; letter-spacing:.06em;
+    color:var(--muted);
+  }
+
+  /* ---------- Dusk ---------- */
+  .dusk-grid{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  .dusk-cell{ display:flex; flex-direction:column; gap:10px; }
+  .dusk-cell .stage--desktop{ min-height:310px; padding:26px 20px; }
+  .dusk-cell .greet-cell{ height:310px; }
+  .dusk-cap{ font-family:var(--font-mono); font-size:10px; letter-spacing:.04em; color:var(--muted); }
+
+  /* ---------- Comparison ---------- */
+  .compare{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  .compare-cell{ display:flex; flex-direction:column; gap:8px; }
+  .compare-scene{
+    position:relative; height:300px; overflow:hidden;
+    background:var(--ivory);
+    border:1px solid var(--hairline);
+    border-radius:12px;
+    display:flex; align-items:center; justify-content:center;
+    gap:22px; padding:18px;
+  }
+  .compare-scene .joey--cmp{ position:static; }
+
+  .invite--old{ width:264px; padding:18px 18px 16px; border-radius:17px; }
+  .invite--old .invite__title{ font-size:19px; line-height:1.45; }
+  .invite--old .invite__sub{ font-size:12.5px; color:var(--muted); line-height:1.6; margin:7px 0 14px; }
+  .invite--old .btn--primary{
+    width:100%; height:38px; padding:0; font-size:13px; border-radius:11px;
+  }
+  .invite--old .invite__secondary{
+    display:flex; align-items:center; justify-content:flex-end; gap:6px; margin-top:10px;
+  }
+  .invite--old .btn--secondary{
+    height:32px; padding:0 12px; font-size:12px;
+    border:1px solid var(--hairline-strong); border-radius:9px; color:var(--ink-2);
+  }
+
+  .compare-label{
+    margin:0 2px;
+    display:flex; align-items:baseline; gap:10px;
+    font-size:13px; font-weight:600; color:var(--ink);
+  }
+  .compare-label span{
+    font-family:var(--font-mono); font-weight:400; font-size:11px; color:var(--muted);
+  }
+
+  .colophon{
+    display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px 24px;
+    margin-top:28px; padding-top:16px;
+    border-top:1px solid var(--hairline);
+    color:var(--muted);
+    font-family:var(--font-mono);
+    font-size:10.5px; letter-spacing:.03em;
+  }
+
+  @media (max-width:1000px){
+    .greet, .dusk-grid, .compare{ grid-template-columns:1fr; }
+  }
+
+  @media (max-width:900px){
+    .board{ padding:40px 22px 52px; }
+    .frame{ padding:14px; }
+  }
+
+  @media (max-width:640px){
+    h1{ font-size:25px; }
+    .dek{ font-size:14px; }
+    .frame-note{ display:none; }
+    .scene-row{ flex-direction:column; gap:20px; }
+    .invite::before{ display:none; }
+    .stage--room{
+      height:auto; min-height:0; padding:20px;
+      display:flex; flex-direction:column; align-items:center; gap:18px;
+    }
+    .room-window, .room-floor, .room-nest, .room-plant{ display:none; }
+    .joey--nest, .room-card{ position:static; }
+    .compare-scene{ height:auto; flex-direction:column; padding:20px 16px; }
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{ transition:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<svg aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden">
+  <defs>
+    <symbol id="j-body" viewBox="0 0 320 400">
+      <ellipse cx="160" cy="352" rx="94" ry="12" fill="#3F3A35" opacity="0.08"/>
+      <path d="M228 314 C 268 324 294 300 290 272 C 287 250 266 244 256 256 C 248 266 256 280 269 277" fill="none" stroke="#F0DFC8" stroke-width="23" stroke-linecap="round"/>
+      <path d="M118 148 C 100 126 88 90 93 68 C 97 50 116 46 126 62 C 138 80 144 116 146 140 Z" fill="#F3E3CD"/>
+      <path d="M120 136 C 108 118 101 94 105 80 C 108 70 117 69 122 78 C 129 90 134 114 136 132 Z" fill="#EFC8AA"/>
+      <path d="M202 148 C 220 126 232 90 227 68 C 223 50 204 46 194 62 C 182 80 176 116 174 140 Z" fill="#F3E3CD"/>
+      <path d="M200 136 C 212 118 219 94 215 80 C 212 70 203 69 198 78 C 191 90 186 114 184 132 Z" fill="#EFC8AA"/>
+      <path d="M160 116 C 209 116 242 167 242 231 C 242 299 208 342 160 342 C 112 342 78 299 78 231 C 78 167 111 116 160 116 Z" fill="#F3E3CD"/>
+      <path d="M160 342 C 112 342 78 299 78 231 C 78 224 78 218 79 212 C 93 298 118 322 160 322 C 202 322 227 298 241 212 C 242 218 242 224 242 231 C 242 299 208 342 160 342 Z" fill="#EBD7BE" opacity="0.5"/>
+      <ellipse cx="128" cy="337" rx="27" ry="13" fill="#F8ECDA"/>
+      <ellipse cx="192" cy="337" rx="27" ry="13" fill="#F8ECDA"/>
+      <path d="M122 244 C 142 258 178 258 198 244" fill="none" stroke="#86A98A" stroke-width="9" stroke-linecap="round"/>
+      <circle cx="200" cy="247" r="7" fill="#86A98A"/>
+    </symbol>
+    <symbol id="j-face-look" viewBox="0 0 320 400">
+      <ellipse cx="111" cy="226" rx="18" ry="9" fill="#EFAE7D" opacity="0.28"/>
+      <ellipse cx="209" cy="226" rx="18" ry="9" fill="#EFAE7D" opacity="0.28"/>
+      <ellipse cx="133" cy="204" rx="8.5" ry="11" fill="#3F3A35"/>
+      <ellipse cx="185" cy="204" rx="8.5" ry="11" fill="#3F3A35"/>
+      <circle cx="128.5" cy="199.5" r="2.9" fill="#FFFFFF"/>
+      <circle cx="180.5" cy="199.5" r="2.9" fill="#FFFFFF"/>
+      <path d="M122 189 C 128 185 136 185 141 188" fill="none" stroke="#DCC3A6" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M160 216 C 166 216 169 220 166.5 223 C 164.5 225.5 155.5 225.5 153.5 223 C 151 220 154 216 160 216 Z" fill="#C98F6E"/>
+      <path d="M160 224 C 158 230 153 232 150 228 M160 224 C 162 230 167 232 170 228" fill="none" stroke="#6F5F53" stroke-width="2.3" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="j-face-happy" viewBox="0 0 320 400">
+      <ellipse cx="111" cy="228" rx="18" ry="9" fill="#EFAE7D" opacity="0.36"/>
+      <ellipse cx="209" cy="228" rx="18" ry="9" fill="#EFAE7D" opacity="0.36"/>
+      <path d="M124 207 C 130 198 141 198 147 207" fill="none" stroke="#3F3A35" stroke-width="4" stroke-linecap="round"/>
+      <path d="M173 207 C 179 198 190 198 196 207" fill="none" stroke="#3F3A35" stroke-width="4" stroke-linecap="round"/>
+      <path d="M160 214 C 165 214 168 217 166 220 C 164 222.5 156 222.5 154 220 C 152 217 155 214 160 214 Z" fill="#C98F6E"/>
+      <path d="M150 226 C 152 238 168 238 170 226 Z" fill="#6F5F53"/>
+    </symbol>
+    <symbol id="j-arms-rest" viewBox="0 0 320 400">
+      <ellipse cx="84" cy="262" rx="18" ry="28" fill="#EDDAC1" transform="rotate(10 84 262)"/>
+      <ellipse cx="236" cy="262" rx="18" ry="28" fill="#EDDAC1" transform="rotate(-10 236 262)"/>
+    </symbol>
+    <symbol id="j-arms-wave" viewBox="0 0 320 400">
+      <ellipse cx="84" cy="262" rx="18" ry="28" fill="#EDDAC1" transform="rotate(10 84 262)"/>
+      <path d="M226 258 C 244 224 251 196 251 174" fill="none" stroke="#EDDAC1" stroke-width="28" stroke-linecap="round"/>
+      <circle cx="251" cy="168" r="15" fill="#F8ECDA"/>
+    </symbol>
+    <symbol id="joey-look" viewBox="0 0 320 400">
+      <use href="#j-body" width="320" height="400"/>
+      <use href="#j-arms-rest" width="320" height="400"/>
+      <use href="#j-face-look" width="320" height="400"/>
+    </symbol>
+    <symbol id="joey-wave" viewBox="0 0 320 400">
+      <use href="#j-body" width="320" height="400"/>
+      <use href="#j-arms-wave" width="320" height="400"/>
+      <use href="#j-face-happy" width="320" height="400"/>
+    </symbol>
+  </defs>
+</svg>
+
+<main class="board">
+  <header>
+    <p class="eyebrow">JoeyPet · 休息邀请 · 问候 · v1</p>
+    <h1>一张更轻的纸条，长在 Joey 肩边</h1>
+    <p class="dek">去掉副标题，把动作收进右下角，用一枚小三角让纸片「贴着」Joey。桌面与巢边同一张纸、同一枚三角；问候提示跟它是亲兄妹。</p>
+    <ul class="keyline" aria-label="规格">
+      <li><span>纸面</span><b>#FFFDF7</b></li>
+      <li><span>发丝线</span><b>1px · 0.14</b></li>
+      <li><span>圆角</span><b>15 / 13</b></li>
+      <li><span>桌卡宽</span><b>236 pt</b></li>
+      <li><span>巢卡宽</span><b>200 pt</b></li>
+      <li><span>标题</span><b>16.5 / 14.5</b></li>
+      <li><span>动作</span><b>29 · 28</b></li>
+      <li><span>副标题</span><b>无</b></li>
+    </ul>
+  </header>
+
+  <section class="frames">
+
+    <!-- A · 桌面：卡在 Joey 右侧 -->
+    <figure class="frame">
+      <figcaption class="frame-head">
+        <span class="frame-no">A</span>
+        <span class="frame-title">桌面 · 卡在 Joey 右侧</span>
+        <span class="frame-note">三角在左缘、指向 Joey</span>
+      </figcaption>
+      <div class="stage stage--desktop">
+        <div class="scene-row">
+          <div>
+            <span class="measure-tag">Joey 168 × 210</span>
+            <svg class="joey joey--desktop" viewBox="0 0 320 400" role="img" aria-label="Joey 安静坐着"><use href="#joey-look" width="320" height="400"/></svg>
+          </div>
+          <div class="measure">
+            <span class="measure__line" aria-hidden="true"></span>
+            <span class="measure__label">236 pt 宽</span>
+            <article class="invite invite--desk invite--caret-l">
+              <p class="invite__title">坐久啦，<br>我们一起伸个懒腰？</p>
+              <div class="invite__actions">
+                <button class="btn btn--quiet" type="button">稍后提醒</button>
+                <button class="btn btn--quiet" type="button">进入勿扰</button>
+                <button class="btn btn--primary" type="button">休息一下</button>
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+      <p class="frame-legend">卡宽 236（≈1.4× Joey）· 标题 16.5/1.45 · 主按钮 29 · 次按钮 28 · 内边距 14/14/12 · 无副标题、动作单行右对齐。</p>
+    </figure>
+
+    <!-- B · 桌面：卡在 Joey 左侧 -->
+    <figure class="frame">
+      <figcaption class="frame-head">
+        <span class="frame-no">B</span>
+        <span class="frame-title">桌面 · 卡在 Joey 左侧</span>
+        <span class="frame-note">三角在右缘、方向翻转</span>
+      </figcaption>
+      <div class="stage stage--desktop">
+        <div class="scene-row">
+          <article class="invite invite--desk invite--caret-r">
+            <p class="invite__title">坐久啦，<br>我们一起伸个懒腰？</p>
+            <div class="invite__actions">
+              <button class="btn btn--quiet" type="button">稍后提醒</button>
+              <button class="btn btn--quiet" type="button">进入勿扰</button>
+              <button class="btn btn--primary" type="button">休息一下</button>
+            </div>
+          </article>
+          <svg class="joey joey--desktop" viewBox="0 0 320 400" role="img" aria-label="Joey 安静坐着"><use href="#joey-look" width="320" height="400"/></svg>
+        </div>
+      </div>
+      <p class="frame-legend">同一张卡镜像放置；三角仅换边，填充与发丝线不变，靠 Joey 的一侧始终是「纸的边缘」。</p>
+    </figure>
+
+    <!-- C · 家 / 巢边 -->
+    <figure class="frame">
+      <figcaption class="frame-head">
+        <span class="frame-no">C</span>
+        <span class="frame-title">家 · 巢边小卡</span>
+        <span class="frame-note">缩小同族、让开脸</span>
+      </figcaption>
+      <div class="stage stage--room">
+        <div class="room-window" aria-hidden="true"></div>
+        <div class="room-floor" aria-hidden="true"></div>
+        <div class="room-plant" aria-hidden="true">
+          <svg viewBox="0 0 40 48"><path d="M14 30 h12 l-2 12 h-8 Z" fill="#C9B08C"/><path d="M20 30 C 20 22 16 18 12 16 C 15 14 19 16 20 22 C 21 16 25 14 28 16 C 24 18 20 22 20 30 Z" fill="#86A98A"/><path d="M20 28 C 20 24 22 21 25 19" fill="none" stroke="#4F6D54" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </div>
+        <div class="room-nest" aria-hidden="true"></div>
+        <svg class="joey joey--nest" viewBox="0 0 320 400" role="img" aria-label="Joey 坐在巢里"><use href="#joey-look" width="320" height="400"/></svg>
+        <article class="invite invite--nest invite--caret-l room-card">
+          <p class="invite__title">坐久啦，<br>我们一起伸个懒腰？</p>
+          <div class="invite__actions">
+            <button class="btn btn--quiet" type="button">稍后提醒</button>
+            <button class="btn btn--quiet" type="button">进入勿扰</button>
+            <button class="btn btn--primary" type="button">休息一下</button>
+          </div>
+        </article>
+      </div>
+      <p class="frame-legend">巢边卡宽 200 · 标题 14.5 · 主按钮 26 · 次按钮 25 · 内边距 12/12/10；落在巢右侧、低于脸，三角指回 Joey 的肩。</p>
+    </figure>
+
+    <!-- D · 问候 -->
+    <figure class="frame">
+      <figcaption class="frame-head">
+        <span class="frame-no">D</span>
+        <span class="frame-title">问候 · 你好。</span>
+        <span class="frame-note">桌面与家、同族小纸条</span>
+      </figcaption>
+      <div class="greet">
+        <div class="greet-cell">
+          <span class="greet-cap">桌面</span>
+          <div class="greet-stack">
+            <div class="tip" role="note">你好。</div>
+            <svg class="joey joey--greet" viewBox="0 0 320 400" role="img" aria-label="Joey 挥手问候"><use href="#joey-wave" width="320" height="400"/></svg>
+          </div>
+        </div>
+        <div class="greet-cell greet-cell--room">
+          <span class="greet-cap">家</span>
+          <div class="greet-stack">
+            <div class="tip" role="note">你好。</div>
+            <svg class="joey joey--greet" viewBox="0 0 320 400" role="img" aria-label="Joey 在巢里挥手问候"><use href="#joey-wave" width="320" height="400"/></svg>
+          </div>
+        </div>
+      </div>
+      <p class="frame-legend">提示 12.5 / 内边距 7·12 / 圆角 11；纸面、发丝线、软阴影与邀请卡同源，三角朝下轻指头顶。运行时轻挥 2 次。</p>
+    </figure>
+
+    <!-- E · 暮色 -->
+    <figure class="frame">
+      <figcaption class="frame-head">
+        <span class="frame-no">E</span>
+        <span class="frame-title">暮色注记</span>
+        <span class="frame-note">A 与 D 的暗色同构</span>
+      </figcaption>
+      <div class="dusk-grid">
+        <div class="dusk-cell">
+          <div class="stage stage--desktop dusk">
+            <div class="scene-row">
+              <svg class="joey joey--desktop" viewBox="0 0 320 400" role="img" aria-label="暮色下安静坐着的 Joey"><use href="#joey-look" width="320" height="400"/></svg>
+              <article class="invite invite--desk invite--caret-l">
+                <p class="invite__title">坐久啦，<br>我们一起伸个懒腰？</p>
+                <div class="invite__actions">
+                  <button class="btn btn--quiet" type="button">稍后提醒</button>
+                  <button class="btn btn--quiet" type="button">进入勿扰</button>
+                  <button class="btn btn--primary" type="button">休息一下</button>
+                </div>
+              </article>
+            </div>
+          </div>
+          <span class="dusk-cap">桌面 · 暮色</span>
+        </div>
+        <div class="dusk-cell">
+          <div class="greet-cell dusk">
+            <span class="greet-cap">问候</span>
+            <div class="greet-stack">
+              <div class="tip" role="note">你好。</div>
+              <svg class="joey joey--greet" viewBox="0 0 320 400" role="img" aria-label="暮色下挥手问候的 Joey"><use href="#joey-wave" width="320" height="400"/></svg>
+            </div>
+          </div>
+          <span class="dusk-cap">问候 · 暮色</span>
+        </div>
+      </div>
+      <p class="frame-legend">暮色仅换色：面板 #37403F、墨 #E9E3D7、发丝线 0.14 浅色；尺寸、三角、动作位置与浅色完全一致。</p>
+    </figure>
+
+    <!-- F · 对照 -->
+    <figure class="frame">
+      <figcaption class="frame-head">
+        <span class="frame-no">F</span>
+        <span class="frame-title">对照 · 旧 264 vs 新 236</span>
+        <span class="frame-note">减的是视觉重量，不只是宽度</span>
+      </figcaption>
+      <div class="compare">
+        <div class="compare-cell">
+          <div class="compare-scene">
+            <svg class="joey joey--cmp" viewBox="0 0 320 400" role="img" aria-label="Joey"><use href="#joey-look" width="320" height="400"/></svg>
+            <article class="invite invite--old">
+              <p class="invite__title">坐久啦，<br>我们一起伸个懒腰？</p>
+              <p class="invite__sub">不用走开，半分钟就够。</p>
+              <button class="btn btn--primary" type="button">休息一下</button>
+              <div class="invite__secondary">
+                <button class="btn btn--secondary" type="button">稍后提醒</button>
+                <button class="btn btn--secondary" type="button">进入勿扰</button>
+              </div>
+            </article>
+          </div>
+          <p class="compare-label">旧 · 264 pt <span>副标题 · 通栏主按钮 38 · 已弃用</span></p>
+        </div>
+        <div class="compare-cell">
+          <div class="compare-scene">
+            <svg class="joey joey--cmp" viewBox="0 0 320 400" role="img" aria-label="Joey"><use href="#joey-look" width="320" height="400"/></svg>
+            <article class="invite invite--desk invite--caret-l">
+              <p class="invite__title">坐久啦，<br>我们一起伸个懒腰？</p>
+              <div class="invite__actions">
+                <button class="btn btn--quiet" type="button">稍后提醒</button>
+                <button class="btn btn--quiet" type="button">进入勿扰</button>
+                <button class="btn btn--primary" type="button">休息一下</button>
+              </div>
+            </article>
+          </div>
+          <p class="compare-label">新 · 236 pt <span>无副标题 · 右下动作 29 · 采用</span></p>
+        </div>
+      </div>
+      <p class="frame-legend">宽度只收 28 pt，纸片总高从约 212 降到约 112；卡片不再低于 Joey 的胸口，动作退成一角。</p>
+    </figure>
+
+  </section>
+
+  <footer class="colophon">
+    <span>JoeyPet · 休息邀请与问候 · v1</span>
+    <span>浅色主用 · 暮色注记</span>
+    <span>角色沿用既有 Joey SVG</span>
+  </footer>
+</main>
+</body>
+</html>
