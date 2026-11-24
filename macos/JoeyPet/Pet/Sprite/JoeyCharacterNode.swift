@@ -372,20 +372,30 @@ final class JoeyCharacterNode: SKNode {
         pivot.run(.sequence([oneWave, oneWave]), withKey: ActionKey.wave)
     }
 
-    private var breathDuration: TimeInterval {
+    /// Pose-specific breath: sit uses the idle sheet; look uses the quieter companion sheet.
+    private var breathProfile: (duration: TimeInterval, peakScale: CGFloat, tiltDegrees: CGFloat) {
         let spec = package.ambient("breathe")
+        if poseID == "look" {
+            // docs/reference/joeypet-look-frames-v0.html
+            return (5.4, 1.028, 0.6)
+        }
         let isSleeping = poseID == "sleep" || poseID == "doze"
         let milliseconds = isSleeping ? (spec?.sleepMs ?? 6000) : (spec?.loopMs ?? 4800)
-        return TimeInterval(milliseconds) / 1000
+        // docs/reference/joeypet-idle-breathing-frames-v0.html
+        return (
+            TimeInterval(milliseconds) / 1000,
+            CGFloat(spec?.scale ?? 1.046),
+            1.2
+        )
     }
 
+    private var breathDuration: TimeInterval { breathProfile.duration }
+
     private func startBreath() {
-        let spec = package.ambient("breathe")
-        // Matches docs/reference/joeypet-idle-breathing-frames-v0.html: foot-anchored
-        // scaleY peak (~1.046) plus a tiny body tilt (±1.2°), not uniform XY scale.
-        let targetScale = CGFloat(spec?.scale ?? 1.046)
-        let tiltRadians = 1.2 * CGFloat.pi / 180
-        let half = breathDuration / 2
+        let profile = breathProfile
+        let targetScale = profile.peakScale
+        let tiltRadians = profile.tiltDegrees * .pi / 180
+        let half = profile.duration / 2
 
         breathPivot.xScale = 1
         breathPivot.yScale = 1
@@ -418,7 +428,10 @@ final class JoeyCharacterNode: SKNode {
               case let .single(degrees)? = spec.degrees
         else { return }
 
-        let amplitude = CGFloat(degrees) * .pi / 180
+        // Look keeps a quieter wag so companionship does not steal focus
+        // (joeypet-look-frames-v0.html peaks near ±5°).
+        let degreeScale: CGFloat = poseID == "look" ? 5.0 / 12.0 : 1
+        let amplitude = CGFloat(degrees) * degreeScale * .pi / 180
         let quarter = breathDuration / 4
 
         pivot.zRotation = 0
@@ -505,11 +518,15 @@ final class JoeyCharacterNode: SKNode {
             return
         }
 
-        let degrees: (CGFloat, CGFloat)
+        var degrees: (CGFloat, CGFloat)
         if case let .range(lower, upper)? = package.ambient("ear")?.degrees {
             degrees = (CGFloat(lower), CGFloat(upper))
         } else {
             degrees = (-7, 4)
+        }
+        // Domain matrix: look ear amplitude halved vs sit.
+        if poseID == "look" {
+            degrees = (degrees.0 * 0.5, degrees.1 * 0.5)
         }
 
         let step = TimeInterval(package.ambient("ear")?.durationMs ?? 240) / 1000 / 3
