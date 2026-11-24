@@ -150,7 +150,8 @@ Display sizes may prefer SF Pro Display. Never bundle SF Pro, never install Inte
 | Role | Size | Weight | Line height | Tracking |
 |------|------|--------|-------------|----------|
 | Invitation message | 27 | 650 | 1.38 | 0 |
-| Recovery title / reflection emphasis | 23 | 650 | 1.35 | 0 |
+| Recovery title (panel) | 20 | 600 | 1.35 | 0 |
+| Reflection emphasis | 23 | 650 | 1.35 | 0 |
 | Reflection headline | 21 | 650 | 1.45 | 0 |
 | Settings page title | 17 | 650 | 1.4 | 0 |
 | Primary button label | 16 | 600 | 1.2 | 0.005em |
@@ -209,7 +210,8 @@ Recurring measures:
 | Token | Value | Use |
 |-------|-------|-----|
 | `r-lg` | 22 | Invitation card |
-| `r-xl` | 26 | Recovery panel |
+| `r-xl` | 26 | Large panels (legacy size token) |
+| Recovery card | 22 | 30-second recovery panel |
 | `r-md` | 16 | Primary button, room CTA, sign, secondary button |
 | `r-sm` | 12 | Popover menu, window |
 | nested | 6–10 | Rows, chips, fields, segmented items |
@@ -243,8 +245,9 @@ Allowed only as an extremely subtle background grain: 120 px noise tile at **1.8
 | Nest window (default) | 1080 × 720 | Min 880 × 560 |
 | Settings | 200 sidebar + detail inside the nest window | Shares the 1080 × 720 window; no second window |
 | Settings sidebar | 200 | Divider + detail |
-| Invitation card | 400 wide | Anchored beside Joey |
-| Recovery panel | 420 wide | Centred, top offset 100 |
+| Invitation card | Desktop ≈ 236 / nest ≈ 200 | Anchored beside Joey |
+| Recovery panel | ≈ 300 wide | Joey’s screen, dead centre (horizontal + vertical) |
+| Nest window | 1080 × 720 default | System primary display (`screens[0]`); remembers last frame |
 | Reflection copy | 388 wide | Top-left, directly on the garden; no panel |
 
 All layout derives from the live window size in code. The 1440 × 900 numbers describe proportion, not a fixed frame to hardcode.
@@ -471,17 +474,24 @@ Rules:
 
 ### 10.3 30-second recovery
 
-- Calm panel, 420 wide, radius 26, centred at 100 px from the top; Joey demonstrates the stretch to the right of it.
+- Calm paper panel ≈ **300** wide, radius 22, padding ~22 / 18. Always on **Joey’s screen** (same as the invite): **dead centre** of that screen’s visible frame (horizontal and vertical). Do not use `NSScreen.main` (key-window screen). Joey may demonstrate `stretch` wherever he already is; this pass does not relocate him beside the panel.
+- Layout is a **centered vertical stack** (not a left-leading HStack): title → hint → ring → breath copy → compact action row. No unused right gutter; the card width tracks content weight.
+- Actions match the invite control family: soft square corners (radius 8), compact sage primary + quiet text — not a full-bleed primary bar.
+- Frozen visual target: [`docs/reference/joeypet-recovery-panel-v0.html`](docs/reference/joeypet-recovery-panel-v0.html).
 - Copy:
 
 ```text
-望向远处
-找个六米外的点，肩膀放松。
+            望向远处
+     找个六米外的点，肩膀放松。
 
-[ring 00:30 · 剩余 30 秒]   吸气四拍，呼气六拍
-                            不用数得很准。
+              (ring)
+             00:30
+           剩余 30 秒
 
-[ 好了 ]  [ 先跳过 ]
+        吸气四拍，呼气六拍
+          不用数得很准。
+
+           [好了]  [先跳过]
 ```
 
 - Progress is honest: a real 30 s countdown drives the ring. No confetti, no score, no "achievement".
@@ -492,6 +502,7 @@ Rules:
 
 The main window, and it should feel like entering Joey's home.
 
+- Opens on the **system primary display** (`NSScreen.screens[0]` — menu bar / arrangement primary), not `NSScreen.main`. Remembers the last frame via AppKit autosave; if that frame is off-screen after a display change, re-centre on primary.
 - Title: **Joey 的家**. Traffic lights, title, one gear.
 - Room scene fills the content area. The nest is not a separate renderer: it hosts the same layered `JoeyDesktopScene` with the same `JoeyAssetPackage` as the desktop pet, feeds it the pose `PetRuntime` resolved, and therefore matches faces, props, breathing, blinks and ear/tail motion exactly. `sleep` is the standing closed-eye pose with relaxed ears; `doze` is the lighter, slightly tilted nap. At dusk the room applies a 0.18 sage-grey wash (`nestPetTint`) to the layered pet so it sits in the dim light; the desktop pet stays untinted.
 - Joey stays in the nest. The room pet is not draggable; a click asks the runtime for one short greeting (`happy` for ~2.8 s), and both the nest and the desktop pet play it.

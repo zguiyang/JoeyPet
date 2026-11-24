@@ -4,6 +4,9 @@ import SwiftUI
 /// AppKit owns the main window; SwiftUI owns its content.
 @MainActor
 final class MainWindowController: NSWindowController {
+    private static let frameAutosaveName = "JoeyPet.HomeWindow"
+    private static let defaultSize = NSSize(width: 1080, height: 720)
+
     private let settings: AppSettings
     private let navigation = NestNavigation()
     private var chromeButton: NSButton?
@@ -21,7 +24,7 @@ final class MainWindowController: NSWindowController {
         self.settings = settings
 
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 1080, height: 720),
+            contentRect: NSRect(origin: .zero, size: Self.defaultSize),
             styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
             backing: .buffered,
             defer: false
@@ -53,9 +56,45 @@ final class MainWindowController: NSWindowController {
         hostingView.safeAreaRegions = []
         window.contentView = hostingView
 
-        window.center()
+        placeHomeWindow(window)
         installChromeButton()
         applyAppearance()
+    }
+
+    /// Restores the last frame when possible; otherwise centres on the
+    /// system primary display (`screens[0]` / menu-bar screen) — never
+    /// `NSScreen.main`, which follows the key window across monitors.
+    private func placeHomeWindow(_ window: NSWindow) {
+        let restored = window.setFrameUsingName(Self.frameAutosaveName)
+        window.setFrameAutosaveName(Self.frameAutosaveName)
+
+        if restored, Self.frameIntersectsAnyScreen(window.frame) {
+            return
+        }
+
+        Self.centerOnPrimaryDisplay(window)
+    }
+
+    private static func primaryScreen() -> NSScreen? {
+        NSScreen.screens.first
+    }
+
+    private static func centerOnPrimaryDisplay(_ window: NSWindow) {
+        guard let screen = primaryScreen() else {
+            window.center()
+            return
+        }
+        let visible = screen.visibleFrame
+        let size = window.frame.size
+        let origin = NSPoint(
+            x: visible.midX - size.width / 2,
+            y: visible.midY - size.height / 2
+        )
+        window.setFrame(NSRect(origin: origin, size: size), display: false)
+    }
+
+    private static func frameIntersectsAnyScreen(_ frame: NSRect) -> Bool {
+        NSScreen.screens.contains { $0.visibleFrame.intersects(frame) }
     }
 
     @available(*, unavailable)

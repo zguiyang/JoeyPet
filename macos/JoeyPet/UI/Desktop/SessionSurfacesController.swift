@@ -129,7 +129,7 @@ final class SessionSurfacesController {
             present(
                 recoveryPanel,
                 host: recoveryHost,
-                fallback: NSSize(width: 420, height: 340),
+                fallback: NSSize(width: 300, height: 320),
                 origin: recoveryOrigin,
                 duration: 0.38,
                 rise: 10
@@ -374,11 +374,17 @@ final class SessionSurfacesController {
         )
     }
 
+    /// Dead-centre on Joey’s screen — never `NSScreen.main` (key-window screen).
     private func recoveryOrigin(size: NSSize) -> NSPoint {
         let visible = activeVisibleFrame
-        return clamped(
-            NSPoint(x: visible.midX - size.width / 2, y: visible.maxY - 100 - size.height),
-            size: size
+        let margin: CGFloat = 8
+        let origin = NSPoint(
+            x: visible.midX - size.width / 2,
+            y: visible.midY - size.height / 2
+        )
+        return NSPoint(
+            x: min(max(origin.x, visible.minX + margin), visible.maxX - size.width - margin),
+            y: min(max(origin.y, visible.minY + margin), visible.maxY - size.height - margin)
         )
     }
 
@@ -412,9 +418,14 @@ final class SessionSurfacesController {
             let placement = invitationPlacement(size: size)
             invitationPanel.setFrameOrigin(placement.origin)
         }
+        if recoveryPanel.isVisible {
+            let size = recoveryPanel.frame.size
+            recoveryPanel.setFrameOrigin(recoveryOrigin(size: size))
+        }
         repositionGreetingTip()
         chipPanel.invalidateShadow()
         invitationPanel.invalidateShadow()
+        recoveryPanel.invalidateShadow()
         greetingTipPanel.invalidateShadow()
     }
 
