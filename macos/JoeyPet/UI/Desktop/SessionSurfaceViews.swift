@@ -168,7 +168,7 @@ struct InvitationCardView: View {
     }
 }
 
-/// 30-second recovery panel from DESIGN §10.3. The ring follows the real deadline.
+/// 30-second recovery panel — centered vertical stack (recovery-panel v0).
 struct RecoveryPanelView: View {
     let endsAt: Date
     var total: TimeInterval = 30
@@ -177,8 +177,12 @@ struct RecoveryPanelView: View {
 
     @Environment(\.joeyAppearance) private var appearance
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var isHoveringDone = false
-    @State private var isHoveringSkip = false
+    @State private var hoveredAction: RecoveryAction?
+
+    private enum RecoveryAction: Hashable {
+        case done
+        case skip
+    }
 
     private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
 
@@ -186,78 +190,48 @@ struct RecoveryPanelView: View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
             let remaining = max(0, endsAt.timeIntervalSince(context.date))
 
-            VStack(alignment: .leading, spacing: 0) {
+            VStack(spacing: 0) {
                 Text("望向远处")
                     .font(JoeyType.recoveryTitle)
                     .foregroundStyle(theme.ink)
+                    .multilineTextAlignment(.center)
 
                 Text("找个六米外的点，肩膀放松。")
-                    .font(JoeyType.body)
-                    .lineSpacing(3)
+                    .font(JoeyType.recoveryHint)
+                    .lineSpacing(2)
                     .foregroundStyle(theme.muted)
+                    .multilineTextAlignment(.center)
                     .padding(.top, 6)
 
-                HStack(spacing: 22) {
-                    ring(remaining: remaining)
+                ring(remaining: remaining)
+                    .padding(.top, 18)
+                    .padding(.bottom, 14)
 
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("吸气四拍，呼气六拍")
-                            .font(JoeyType.rowTitle)
-                            .foregroundStyle(theme.ink)
-                        Text("不用数得很准。")
-                            .font(JoeyType.reflectionBody)
-                            .lineSpacing(2)
-                            .foregroundStyle(theme.muted)
-                    }
+                Text("吸气四拍，呼气六拍")
+                    .font(JoeyType.recoveryBreath)
+                    .foregroundStyle(theme.ink)
+                    .multilineTextAlignment(.center)
+
+                Text("不用数得很准。")
+                    .font(JoeyType.recoveryBreathHint)
+                    .foregroundStyle(theme.muted)
+                    .multilineTextAlignment(.center)
+                    .padding(.top, 3)
+
+                HStack(spacing: 8) {
+                    primaryButton
+                    quietButton
                 }
-                .padding(.top, 22)
-                .padding(.bottom, 24)
-
-                HStack(spacing: JoeySpacing.lg) {
-                    Button(action: onDone) {
-                        Text("好了")
-                            .font(JoeyType.primaryButton)
-                            .foregroundStyle(theme.sageInk)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 50)
-                            .background(
-                                RoundedRectangle(cornerRadius: JoeyRadius.md, style: .continuous)
-                                    .fill(theme.sage)
-                                    .brightness(isHoveringDone ? 0.03 : 0)
-                            )
-                            .contentShape(
-                                RoundedRectangle(cornerRadius: JoeyRadius.md, style: .continuous)
-                            )
-                    }
-                    .buttonStyle(JoeyPressButtonStyle())
-                    .onHover { isHoveringDone = $0 }
-                    .accessibilityLabel(Text("好了"))
-
-                    Button(action: onSkip) {
-                        Text("先跳过")
-                            .font(JoeyType.body)
-                            .foregroundStyle(isHoveringSkip ? theme.ink : theme.muted)
-                            .padding(.horizontal, 14)
-                            .frame(height: 50)
-                            .background(
-                                RoundedRectangle(cornerRadius: JoeyRadius.md, style: .continuous)
-                                    .fill(isHoveringSkip ? theme.panel2 : Color.clear)
-                            )
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(JoeyPressButtonStyle())
-                    .onHover { isHoveringSkip = $0 }
-                    .accessibilityLabel(Text("先跳过"))
-                }
+                .padding(.top, 16)
             }
-            .padding(EdgeInsets(top: 28, leading: 30, bottom: 26, trailing: 30))
-            .frame(width: 420, alignment: .leading)
+            .frame(width: 300)
+            .padding(EdgeInsets(top: 22, leading: 22, bottom: 18, trailing: 22))
             .background(
-                RoundedRectangle(cornerRadius: JoeyRadius.xl, style: .continuous)
+                RoundedRectangle(cornerRadius: JoeyRadius.recoveryCard, style: .continuous)
                     .fill(theme.panel)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: JoeyRadius.xl, style: .continuous)
+                RoundedRectangle(cornerRadius: JoeyRadius.recoveryCard, style: .continuous)
                     .stroke(theme.hairline, lineWidth: 1)
             )
             .tint(theme.focus)
@@ -265,30 +239,71 @@ struct RecoveryPanelView: View {
         }
     }
 
+    private var primaryButton: some View {
+        Button(action: onDone) {
+            Text("好了")
+                .font(JoeyType.inviteAction)
+                .foregroundStyle(theme.sageInk)
+                .padding(.horizontal, 16)
+                .frame(height: 29)
+                .background(
+                    RoundedRectangle(cornerRadius: JoeyRadius.inviteControl, style: .continuous)
+                        .fill(theme.sage)
+                        .brightness(hoveredAction == .done ? 0.03 : 0)
+                )
+                .contentShape(
+                    RoundedRectangle(cornerRadius: JoeyRadius.inviteControl, style: .continuous)
+                )
+        }
+        .buttonStyle(JoeyPressButtonStyle())
+        .onHover { hoveredAction = $0 ? .done : nil }
+        .accessibilityLabel(Text("好了"))
+    }
+
+    private var quietButton: some View {
+        Button(action: onSkip) {
+            Text("先跳过")
+                .font(JoeyType.inviteQuiet)
+                .foregroundStyle(hoveredAction == .skip ? theme.ink : theme.ink2)
+                .padding(.horizontal, 10)
+                .frame(height: 28)
+                .background(
+                    RoundedRectangle(cornerRadius: JoeyRadius.inviteControl, style: .continuous)
+                        .fill(hoveredAction == .skip ? theme.panel2 : Color.clear)
+                )
+                .contentShape(
+                    RoundedRectangle(cornerRadius: JoeyRadius.inviteControl, style: .continuous)
+                )
+        }
+        .buttonStyle(JoeyPressButtonStyle())
+        .onHover { hoveredAction = $0 ? .skip : nil }
+        .accessibilityLabel(Text("先跳过"))
+    }
+
     private func ring(remaining: TimeInterval) -> some View {
         let fraction = max(0, min(1, remaining / max(total, 1)))
 
         return ZStack {
             Circle()
-                .stroke(theme.panel2, lineWidth: 8)
+                .stroke(theme.panel2, lineWidth: 7.5)
 
             Circle()
                 .trim(from: 0, to: fraction)
-                .stroke(theme.sage, style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                .stroke(theme.sage, style: StrokeStyle(lineWidth: 7.5, lineCap: .round))
                 .rotationEffect(.degrees(-90))
                 .animation(reduceMotion ? nil : .linear(duration: 1), value: fraction)
 
             VStack(spacing: 4) {
                 Text(Self.clockText(remaining))
-                    .font(JoeyType.reflectionHeadline)
+                    .font(JoeyType.recoveryRingTime)
                     .monospacedDigit()
                     .foregroundStyle(theme.ink)
                 Text("剩余 \(Int(remaining.rounded(.up))) 秒")
-                    .font(JoeyType.caption)
+                    .font(JoeyType.recoveryRingCaption)
                     .foregroundStyle(theme.muted)
             }
         }
-        .frame(width: 104, height: 104)
+        .frame(width: 96, height: 96)
     }
 
     private static func clockText(_ remaining: TimeInterval) -> String {

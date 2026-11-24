@@ -487,38 +487,52 @@
   .btn--quiet:hover { color: var(--ink); background: var(--panel-2); }
   .btn--sm { height: 38px; }
 
-  /* ================= 恢复面板 ================= */
+  /* ================= 恢复面板（居中竖排 · recovery-panel v0） ================= */
   .recover-veil {
     position: absolute; inset: 0;
     background: radial-gradient(120% 80% at 50% 36%, rgba(63,58,53,0) 34%, rgba(63,58,53,0.09) 100%);
     pointer-events: none;
   }
   .recover-panel {
-    position: absolute; left: 50%; top: 100px; transform: translateX(-50%);
-    width: 420px;
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: 300px;
     background: var(--panel);
     border: 1px solid var(--hairline);
-    border-radius: 26px;
+    border-radius: 22px;
     box-shadow: var(--shadow-lg);
-    padding: 28px 30px 26px;
+    padding: 22px 22px 18px;
+    text-align: center;
     z-index: 12;
     animation: rise-in 0.34s var(--ease-out) both;
   }
-  .recover-panel h3 { font-family: var(--font-display); font-size: 23px; line-height: 1.35; font-weight: 650; letter-spacing: 0; color: var(--ink); margin: 0 0 6px; }
-  .recover-panel .hint { font-size: 13.5px; line-height: 1.65; color: var(--muted); }
-  .recover-timer { display: flex; align-items: center; gap: 22px; margin: 22px 0 24px; }
-  .ring { position: relative; width: 104px; height: 104px; flex: 0 0 104px; }
+  .recover-panel h3 { font-family: var(--font-display); font-size: 20px; line-height: 1.35; font-weight: 600; letter-spacing: 0; color: var(--ink); margin: 0; }
+  .recover-panel .hint { font-size: 12.5px; line-height: 1.55; color: var(--muted); margin: 6px 0 0; }
+  .recover-timer { display: flex; flex-direction: column; align-items: center; margin: 18px 0 14px; }
+  .ring { position: relative; width: 96px; height: 96px; flex: 0 0 96px; }
   .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-  .ring .track { fill: none; stroke: var(--panel-2); stroke-width: 8; }
-  .ring .prog { fill: none; stroke: var(--sage); stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
+  .ring .track { fill: none; stroke: var(--panel-2); stroke-width: 7.5; }
+  .ring .prog { fill: none; stroke: var(--sage); stroke-width: 7.5; stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
   body[data-theme="dusk"] .ring .track { stroke: rgba(233,227,215,0.12); }
   .ring .time { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; }
-  .ring .time b { display: block; font-family: var(--font-display); font-size: 22px; font-weight: 650; line-height: 1; font-variant-numeric: tabular-nums; }
-  .ring .time small { display: block; font-size: 10.5px; line-height: 1.3; color: var(--muted); margin-top: 4px; }
-  .recover-timer .copy b { font-size: 15px; line-height: 1.4; color: var(--ink); font-weight: 600; }
-  .recover-timer .copy p { font-size: 13px; line-height: 1.6; color: var(--muted); margin-top: 3px; }
-  .recover-actions { display: flex; gap: 10px; }
-  .recover-actions .btn--primary { flex: 1; }
+  .ring .time b { display: block; font-family: var(--font-display); font-size: 20px; font-weight: 650; line-height: 1; font-variant-numeric: tabular-nums; }
+  .ring .time small { display: block; font-size: 10px; line-height: 1.3; color: var(--muted); margin-top: 4px; }
+  .recover-timer .copy { margin-top: 14px; }
+  .recover-timer .copy b { display: block; font-size: 13px; line-height: 1.4; color: var(--ink); font-weight: 600; }
+  .recover-timer .copy p { font-size: 12px; line-height: 1.5; color: var(--muted); margin-top: 3px; }
+  .recover-actions { display: flex; justify-content: center; align-items: center; gap: 8px; }
+  .recover-actions .btn--primary {
+    flex: 0 0 auto;
+    height: 29px;
+    padding: 0 16px;
+    border-radius: 8px;
+    font-size: 12.5px;
+  }
+  .recover-actions .btn--quiet {
+    height: 28px;
+    padding: 0 10px;
+    border-radius: 8px;
+    font-size: 11.5px;
+  }
   .recover-joey { position: absolute; right: 118px; bottom: 108px; width: 224px; height: 280px; z-index: 9; }
   .recover-joey svg { width: 100%; height: 100%; animation: breathe 6s ease-in-out infinite; transform-origin: 50% 94%; }
   .recover-joey .shadow { position: absolute; left: 50%; bottom: 0; width: 160px; height: 20px; transform: translateX(-50%); background: radial-gradient(50% 50% at 50% 50%, rgba(63,58,53,0.2), transparent 70%); }
@@ -1126,9 +1140,9 @@
               <p class="hint">找个六米外的点，肩膀放松。</p>
               <div class="recover-timer">
                 <div class="ring">
-                  <svg viewBox="0 0 104 104">
-                    <circle class="track" cx="52" cy="52" r="46"/>
-                    <circle class="prog" id="ringProg" cx="52" cy="52" r="46" stroke-dasharray="289" stroke-dashoffset="0"/>
+                  <svg viewBox="0 0 96 96">
+                    <circle class="track" cx="48" cy="48" r="44"/>
+                    <circle class="prog" id="ringProg" cx="48" cy="48" r="44" stroke-dasharray="276.46" stroke-dashoffset="0"/>
                   </svg>
                   <div class="time"><b id="ringTime">00:30</b><small id="ringLeft">剩余 30 秒</small></div>
                 </div>
@@ -1142,7 +1156,7 @@
                 <button class="btn btn--quiet" id="recoverSkip">先跳过</button>
               </div>
             </div>
-            <div class="spec" style="left: 50%; top: 96px; transform: translateX(-50%);"><span class="t">恢复面板</span> · 420px · 圆角 26 · 进度环</div>
+            <div class="spec" style="left: 50%; top: 50%; transform: translate(-50%, calc(-50% - 170px));"><span class="t">恢复面板</span> · 300px · 屏正中 · 见 recovery-panel-v0</div>
           </section>
 
           <!-- ============ 状态 04 · Joey 的家（主窗口） ============ -->
@@ -1570,7 +1584,7 @@
   var ringProg = document.getElementById("ringProg");
   var ringTime = document.getElementById("ringTime");
   var ringLeft = document.getElementById("ringLeft");
-  var CIRC = 289; // 2πr, r=46
+  var CIRC = 276.46; // 2πr, r=44
 
   function startRecovery() {
     remain = TOTAL;
