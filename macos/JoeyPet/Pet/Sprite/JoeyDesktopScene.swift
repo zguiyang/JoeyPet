@@ -59,9 +59,8 @@ final class JoeyDesktopScene: SKScene, PetPoseRendering {
             size.width / CGFloat(spec.w),
             size.height / CGFloat(spec.h)
         )
-        // `setScale` is absolute, so include the size tier's own canvas scale.
         let totalScale = CGFloat(spec.w) / CGFloat(canvas.w) * fit
-        character.setScale(totalScale)
+        character.setContentScale(totalScale)
 
         character.position = CGPoint(
             x: size.width / 2,

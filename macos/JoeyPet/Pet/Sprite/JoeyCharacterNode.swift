@@ -53,6 +53,9 @@ final class JoeyCharacterNode: SKNode {
     private var currentFaceTexture: SKTexture?
     private var blinkTextures: [SKTexture] = []
     private var tint: JoeyPetTint = .none
+    private var contentScale: CGFloat = 1
+    private var restPosePivotPosition: CGPoint = .zero
+    private var restPosePivotRotation: CGFloat = 0
 
     private(set) var poseID: String?
     private(set) var sizeID: String
@@ -109,6 +112,7 @@ final class JoeyCharacterNode: SKNode {
         poseID = id
 
         cancelAmbient()
+
         guard let layers = package.manifest.render?.poseLayers[id] else {
             showFallback(poseID: id)
             return
@@ -156,7 +160,13 @@ final class JoeyCharacterNode: SKNode {
     func applySize(id: String) {
         guard let spec = package.sizeSpec(id: id) else { return }
         sizeID = spec.id
-        setScale(CGFloat(spec.w) / canvas.width)
+        setContentScale(CGFloat(spec.w) / canvas.width)
+    }
+
+    /// Absolute uniform scale. Used by the desktop scene fit pass.
+    func setContentScale(_ scale: CGFloat) {
+        contentScale = abs(scale)
+        applyContentTransform()
     }
 
     func setReduceMotion(_ enabled: Bool) {
@@ -167,6 +177,11 @@ final class JoeyCharacterNode: SKNode {
         } else {
             startAmbientIfNeeded()
         }
+    }
+
+    private func applyContentTransform() {
+        xScale = contentScale
+        yScale = contentScale
     }
 
     /// Applies a colour wash to every fur/face/arm layer. The shadow is left
@@ -270,6 +285,8 @@ final class JoeyCharacterNode: SKNode {
         let pivot = CGPoint(x: pivotSVG.x - anchor.x, y: anchor.y - pivotSVG.y)
         posePivot.position = pivot - breathAnchor
         posePivot.zRotation = -CGFloat(layers.rotate ?? 0) * .pi / 180
+        restPosePivotPosition = posePivot.position
+        restPosePivotRotation = posePivot.zRotation
         layerRoot.position = CGPoint(
             x: -pivot.x + CGFloat(layers.translateX ?? 0),
             y: -pivot.y - CGFloat(layers.translateY ?? 0)
@@ -334,17 +351,35 @@ final class JoeyCharacterNode: SKNode {
 
     private func startBreath() {
         let spec = package.ambient("breathe")
-        let targetScale = CGFloat(spec?.scale ?? 1.012)
+        // Matches docs/reference/joeypet-idle-breathing-frames-v0.html: foot-anchored
+        // scaleY peak (~1.046) plus a tiny body tilt (±1.2°), not uniform XY scale.
+        let targetScale = CGFloat(spec?.scale ?? 1.046)
+        let tiltRadians = 1.2 * CGFloat.pi / 180
         let half = breathDuration / 2
 
-        breathPivot.setScale(1)
+        breathPivot.xScale = 1
+        breathPivot.yScale = 1
+        breathPivot.zRotation = 0
         breathPivot.removeAction(forKey: ActionKey.breath)
 
-        let inhale = SKAction.scale(to: targetScale, duration: half)
-        inhale.timingMode = .easeInEaseOut
-        let exhale = SKAction.scale(to: 1, duration: half)
-        exhale.timingMode = .easeInEaseOut
-        breathPivot.run(.repeatForever(.sequence([inhale, exhale])), withKey: ActionKey.breath)
+        let inhaleScale = SKAction.scaleY(to: targetScale, duration: half)
+        inhaleScale.timingMode = .easeInEaseOut
+        let inhaleTilt = SKAction.rotate(toAngle: -tiltRadians, duration: half, shortestUnitArc: true)
+        inhaleTilt.timingMode = .easeInEaseOut
+        let exhaleScale = SKAction.scaleY(to: 1, duration: half)
+        exhaleScale.timingMode = .easeInEaseOut
+        let exhaleTilt = SKAction.rotate(toAngle: 0, duration: half, shortestUnitArc: true)
+        exhaleTilt.timingMode = .easeInEaseOut
+
+        breathPivot.run(
+            .repeatForever(
+                .sequence([
+                    .group([inhaleScale, inhaleTilt]),
+                    .group([exhaleScale, exhaleTilt])
+                ])
+            ),
+            withKey: ActionKey.breath
+        )
     }
 
     private func startTail() {
@@ -463,7 +498,11 @@ final class JoeyCharacterNode: SKNode {
         removeAction(forKey: ActionKey.blink)
         removeAction(forKey: ActionKey.ear)
 
-        breathPivot.setScale(1)
+        breathPivot.xScale = 1
+        breathPivot.yScale = 1
+        breathPivot.zRotation = 0
+        posePivot.position = restPosePivotPosition
+        posePivot.zRotation = restPosePivotRotation
         layerPivots["tail"]?.zRotation = 0
         layerPivots["ears"]?.zRotation = 0
         layerSprites["face"]?.texture = currentFaceTexture
