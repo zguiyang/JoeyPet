@@ -27,6 +27,7 @@ final class JoeyCharacterNode: SKNode {
         static let earAngle = "joey.earAngle"
         static let wave = "joey.wave"
         static let stretchReach = "joey.stretchReach"
+        static let happy = "joey.happy"
     }
 
     private static let blinkSuppressedPoses: Set<String> = [
@@ -171,6 +172,7 @@ final class JoeyCharacterNode: SKNode {
         startAmbientIfNeeded()
         startWaveIfNeeded()
         startStretchReachIfNeeded()
+        startHappyCelebrationIfNeeded()
     }
 
     func applySize(id: String) {
@@ -194,6 +196,7 @@ final class JoeyCharacterNode: SKNode {
             startAmbientIfNeeded()
             startWaveIfNeeded()
             startStretchReachIfNeeded()
+            startHappyCelebrationIfNeeded()
         }
     }
 
@@ -356,6 +359,8 @@ final class JoeyCharacterNode: SKNode {
 
     private func startAmbientIfNeeded() {
         guard !isReduceMotionEnabled, poseID != nil else { return }
+        // Happy is a one-shot celebration (joeypet-happy-frames-v0.html), not a loop.
+        guard poseID != "happy" else { return }
         startBreath()
         startTail()
         scheduleBlink()
@@ -408,6 +413,71 @@ final class JoeyCharacterNode: SKNode {
 
         front?.run(reachCycle(opening: peak), withKey: ActionKey.stretchReach)
         back?.run(reachCycle(opening: -peak), withKey: ActionKey.stretchReach)
+    }
+
+    /// Completed-break celebration: soft hop + squash over 2.6 s, then hold.
+    /// Matches docs/reference/joeypet-happy-frames-v0.html (base lift -5 → peak -11).
+    private func startHappyCelebrationIfNeeded() {
+        guard poseID == "happy" else { return }
+
+        posePivot.removeAction(forKey: ActionKey.happy)
+        breathPivot.removeAction(forKey: ActionKey.happy)
+        layerPivots["ears"]?.removeAction(forKey: ActionKey.happy)
+        layerPivots["tail"]?.removeAction(forKey: ActionKey.happy)
+        posePivot.position = restPosePivotPosition
+        breathPivot.xScale = 1
+        breathPivot.yScale = 1
+        breathPivot.zRotation = 0
+        layerPivots["ears"]?.zRotation = 0
+        layerPivots["tail"]?.zRotation = 0
+
+        guard !isReduceMotionEnabled else { return }
+
+        // Manifest already applies translateY -5; extra hop is +6 pt (SVG -5 → -11).
+        let rest = restPosePivotPosition
+        let peak = CGPoint(x: rest.x, y: rest.y + 6)
+
+        let rise = SKAction.move(to: peak, duration: 1.04)
+        rise.timingMode = .easeOut
+        let settle = SKAction.move(to: rest, duration: 1.56)
+        settle.timingMode = .easeInEaseOut
+        posePivot.run(.sequence([rise, settle]), withKey: ActionKey.happy)
+
+        let squashUp = SKAction.scaleY(to: 1.012, duration: 1.04)
+        squashUp.timingMode = .easeOut
+        let squashDown = SKAction.scaleY(to: 1.0, duration: 1.56)
+        squashDown.timingMode = .easeInEaseOut
+        let tiltOut = SKAction.rotate(toAngle: 0.6 * .pi / 180, duration: 1.04, shortestUnitArc: true)
+        tiltOut.timingMode = .easeOut
+        let tiltBack = SKAction.rotate(toAngle: 0, duration: 1.56, shortestUnitArc: true)
+        tiltBack.timingMode = .easeInEaseOut
+        breathPivot.run(
+            .sequence([
+                .group([squashUp, tiltOut]),
+                .group([squashDown, tiltBack])
+            ]),
+            withKey: ActionKey.happy
+        )
+
+        if let ears = layerPivots["ears"], !ears.isHidden {
+            let left = SKAction.rotate(toAngle: -2.0 * .pi / 180, duration: 0.35, shortestUnitArc: true)
+            left.timingMode = .easeInEaseOut
+            let right = SKAction.rotate(toAngle: 1.6 * .pi / 180, duration: 0.35, shortestUnitArc: true)
+            right.timingMode = .easeInEaseOut
+            let center = SKAction.rotate(toAngle: 0, duration: 0.4, shortestUnitArc: true)
+            center.timingMode = .easeInEaseOut
+            ears.run(.sequence([left, right, center]), withKey: ActionKey.happy)
+        }
+
+        if let tail = layerPivots["tail"], !tail.isHidden {
+            let out = SKAction.rotate(toAngle: 0.6 * .pi / 180, duration: 0.5, shortestUnitArc: true)
+            out.timingMode = .easeInEaseOut
+            let back = SKAction.rotate(toAngle: -2.0 * .pi / 180, duration: 0.7, shortestUnitArc: true)
+            back.timingMode = .easeInEaseOut
+            let settleTail = SKAction.rotate(toAngle: 0, duration: 0.6, shortestUnitArc: true)
+            settleTail.timingMode = .easeInEaseOut
+            tail.run(.sequence([out, back, settleTail]), withKey: ActionKey.happy)
+        }
     }
 
     /// Pose-specific breath: sit / look / stretch each follow their frame sheet.
@@ -585,8 +655,12 @@ final class JoeyCharacterNode: SKNode {
 
     private func cancelAmbient() {
         breathPivot.removeAction(forKey: ActionKey.breath)
+        breathPivot.removeAction(forKey: ActionKey.happy)
+        posePivot.removeAction(forKey: ActionKey.happy)
         layerPivots["tail"]?.removeAction(forKey: ActionKey.tail)
+        layerPivots["tail"]?.removeAction(forKey: ActionKey.happy)
         layerPivots["ears"]?.removeAction(forKey: ActionKey.earAngle)
+        layerPivots["ears"]?.removeAction(forKey: ActionKey.happy)
         layerPivots["frontArm"]?.removeAction(forKey: ActionKey.wave)
         layerPivots["frontArm"]?.removeAction(forKey: ActionKey.stretchReach)
         layerPivots["backArm"]?.removeAction(forKey: ActionKey.stretchReach)
