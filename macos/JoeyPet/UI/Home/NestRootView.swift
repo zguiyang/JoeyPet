@@ -65,6 +65,10 @@ struct NestRootView: View {
                 title: title(for: navigation.route),
                 height: topChromeHeight
             )
+            // Keep traffic-light chrome from being compressed when a tall
+            // settings pane (Debug) wants more height than the window.
+            .layoutPriority(1)
+            .fixedSize(horizontal: false, vertical: true)
 
             ZStack {
                 switch navigation.route {
@@ -96,10 +100,13 @@ struct NestRootView: View {
                     .transition(.opacity)
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .clipped()
             .animation(reduceMotion ? nil : JoeyMotion.stateEnter, value: navigation.route)
         }
         .environment(\.joeyAppearance, settings.appearance)
         .frame(minWidth: 880, minHeight: 560)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear { onRouteChange(navigation.route) }
         .onChange(of: navigation.route) { _, newRoute in
             onRouteChange(newRoute)

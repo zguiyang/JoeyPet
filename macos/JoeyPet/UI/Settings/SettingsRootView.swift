@@ -21,13 +21,19 @@ struct SettingsRootView: View {
             Rectangle()
                 .fill(theme.hairline)
                 .frame(width: 1)
-            VStack(alignment: .leading, spacing: 0) {
-                detail
-                Spacer(minLength: 0)
+                .frame(maxHeight: .infinity)
+            // Sidebar stays put; only the detail pane scrolls when Debug (or
+            // any future long pane) exceeds the window height.
+            ScrollView(.vertical, showsIndicators: true) {
+                VStack(alignment: .leading, spacing: 0) {
+                    detail
+                }
+                .padding(.init(top: 24, leading: 28, bottom: 24, trailing: 28))
+                .frame(maxWidth: .infinity, alignment: .topLeading)
             }
-            .padding(.init(top: 24, leading: 28, bottom: 24, trailing: 28))
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(theme.windowBg)
         .environment(\.joeyAppearance, settings.appearance)
         .onAppear {
@@ -49,6 +55,7 @@ struct SettingsRootView: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 12)
         .frame(width: 200)
+        .frame(maxHeight: .infinity, alignment: .top)
         .background(theme.windowChrome)
     }
 
