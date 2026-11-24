@@ -1,0 +1,144 @@
+{
+  "version": 1,
+  "status": "settings_wired_playback_active",
+  "aiGenerated": false,
+  "ambient": [
+    {
+      "id": "rain_soft_lynks",
+      "category": "rain",
+      "displayNameZh": "细雨",
+      "file": "Ambient/rain/rain_soft_lynks.mp3",
+      "license": "CC0",
+      "loop": true
+    },
+    {
+      "id": "rain_window_oga",
+      "category": "rain",
+      "displayNameZh": "窗边雨",
+      "file": "Ambient/rain/rain_window_oga.wav",
+      "license": "CC0",
+      "loop": true
+    },
+    {
+      "id": "rain_skylight_deadrobot",
+      "category": "rain",
+      "displayNameZh": "天窗雨",
+      "file": "Ambient/rain/rain_skylight_deadrobot.mp3",
+      "license": "CC0",
+      "loop": true
+    },
+    {
+      "id": "rain_pattering_henkonen",
+      "category": "rain",
+      "displayNameZh": "阳台雨",
+      "file": "Ambient/rain/rain_pattering_henkonen.mp3",
+      "license": "CC0",
+      "loop": true
+    },
+    {
+      "id": "rain_light_mixkit",
+      "category": "rain",
+      "displayNameZh": "轻雨",
+      "file": "Ambient/rain/rain_light_mixkit.mp3",
+      "license": "Mixkit-SFX-Free",
+      "loop": true
+    },
+    {
+      "id": "rain_roof_spritepilot",
+      "category": "rain",
+      "displayNameZh": "屋檐雨",
+      "file": "Ambient/rain/rain_roof_spritepilot.wav",
+      "license": "CC0",
+      "loop": true
+    },
+    {
+      "id": "wind_soft_spritepilot",
+      "category": "wind",
+      "displayNameZh": "软风",
+      "file": "Ambient/wind/wind_soft_spritepilot.wav",
+      "license": "CC0",
+      "loop": true
+    },
+    {
+      "id": "wind_leaves_nox",
+      "category": "wind",
+      "displayNameZh": "叶间风",
+      "file": "Ambient/wind/wind_leaves_nox.mp3",
+      "license": "CC0",
+      "loop": true
+    },
+    {
+      "id": "wind_autumn_nicktayloe",
+      "category": "wind",
+      "displayNameZh": "秋叶风",
+      "file": "Ambient/wind/wind_autumn_nicktayloe.mp3",
+      "license": "CC-BY",
+      "attributionRequired": true,
+      "loop": true
+    },
+    {
+      "id": "insects_night_crickets_owlstorm",
+      "category": "insects",
+      "displayNameZh": "夏夜虫鸣",
+      "file": "Ambient/insects/insects_night_crickets_owlstorm.mp3",
+      "license": "CC0",
+      "loop": true,
+      "notes": "Far cricket bed; soft enough after harshness filter."
+    },
+    {
+      "id": "fire_fireplace_oga",
+      "category": "fire",
+      "displayNameZh": "壁炉",
+      "file": "Ambient/fire/fire_fireplace_oga.wav",
+      "license": "CC0",
+      "loop": true
+    },
+    {
+      "id": "fire_campfire_spritepilot",
+      "category": "fire",
+      "displayNameZh": "篝火",
+      "file": "Ambient/fire/fire_campfire_spritepilot.wav",
+      "license": "CC0",
+      "loop": true
+    },
+    {
+      "id": "fire_crackling_nicktayloe",
+      "category": "fire",
+      "displayNameZh": "细火噼啪",
+      "file": "Ambient/fire/fire_crackling_nicktayloe.mp3",
+      "license": "CC0",
+      "loop": true
+    }
+  ],
+  "cues": [
+    {
+      "id": "cue_ceramic_cups",
+      "displayNameZh": "瓷杯轻碰",
+      "file": "Cues/cue_ceramic_cups.mp3",
+      "license": "CC0",
+      "loop": false
+    },
+    {
+      "id": "cue_bamboo",
+      "displayNameZh": "竹风铃",
+      "file": "Cues/cue_bamboo.mp3",
+      "license": "CC0",
+      "loop": false
+    },
+    {
+      "id": "cue_woodblock_soft",
+      "displayNameZh": "软木块",
+      "file": "Cues/cue_woodblock_soft.mp3",
+      "license": "CC0",
+      "loop": false
+    },
+    {
+      "id": "cue_wooden_chime_breeze",
+      "displayNameZh": "木风铃",
+      "file": "Cues/cue_wooden_chime_breeze.mp3",
+      "license": "CC0",
+      "loop": false,
+      "notes": "Trim to a single 0.8–2s strike before shipping playback."
+    }
+  ]
+}
