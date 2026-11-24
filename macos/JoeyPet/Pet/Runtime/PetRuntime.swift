@@ -475,9 +475,10 @@ final class PetRuntime {
         case .celebrating:
             return .happy
         case .greeting:
-            return .happy
+            return .wave
         case .notifying:
-            return .sign
+            // Rest invitation UI is the floating card; Joey stays attentive.
+            return .look
         }
     }
 

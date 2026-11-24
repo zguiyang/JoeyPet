@@ -15,6 +15,7 @@ enum PetPose: String, CaseIterable, Codable, Sendable {
     case sign
     case stretch
     case happy
+    case wave
     case sleep
     case groom
     case yawn
@@ -334,7 +335,7 @@ struct PetSituation: Equatable, Sendable {
             switch companion {
             case .recover: return .stretch
             case .complete: return .happy
-            case .invite: return .sign
+            case .invite: return .look
             case .approach, .idle, nil: return .look
             }
         case .alone:

@@ -8,7 +8,7 @@
   ],
   "ambient": [
     { "id": "breathe", "loopMs": 4800, "rangeMs": [4200, 6000], "scale": 1.046, "sleepMs": 6000 },
-    { "id": "blink", "everyMs": [2500, 6000], "durationMs": 180, "frames": 3, "suppressIn": ["happy", "yawn", "sleep"] },
+    { "id": "blink", "everyMs": [2500, 6000], "durationMs": 180, "frames": 3, "suppressIn": ["happy", "wave", "yawn", "sleep"] },
     { "id": "ear", "everyMs": [12000, 35000], "durationMs": 240, "degrees": [-8, 8] },
     { "id": "tail", "degrees": 12, "sync": "breathe" },
     { "id": "shift", "everyMs": [6000, 9000], "px": 2, "tilt": 0.5 },
@@ -22,6 +22,7 @@
     { "id": "sign", "clipId": "notify_sign", "behavior": "notifying", "loop": false, "holdLastFrame": true },
     { "id": "stretch", "clipId": "recover_stretch", "behavior": "idle", "loop": true },
     { "id": "happy", "clipId": "complete_happy", "behavior": "celebrating", "loop": false, "durationMs": 2600 },
+    { "id": "wave", "clipId": "greet_wave", "behavior": "idle", "loop": false, "durationMs": 2800 },
     { "id": "sleep", "clipId": "sleep_curl", "behavior": "sleeping", "loop": true },
     { "id": "groom", "clipId": "idle_groom", "behavior": "idle", "loop": false },
     { "id": "yawn", "clipId": "idle_yawn", "behavior": "idle", "loop": false },
@@ -57,7 +58,7 @@
   "mapping": {
     "key": "behavior/clip",
     "buckets": {
-      "idle": ["idle_sit", "idle_look", "idle_groom", "idle_yawn", "idle_carry", "peek_edge", "recover_stretch"],
+      "idle": ["idle_sit", "idle_look", "idle_groom", "idle_yawn", "idle_carry", "peek_edge", "recover_stretch", "greet_wave"],
       "notifying": ["notify_sign"],
       "sleeping": ["sleep_curl", "doze_short"],
       "celebrating": ["complete_happy"]
@@ -138,6 +139,16 @@
         "frontArm": "arm.frontRest",
         "prop": null,
         "translateY": -5
+      },
+      "wave": {
+        "shadow": "shadow.default",
+        "tail": "tail.default",
+        "body": "body.default",
+        "ears": "ears.default",
+        "backArm": "arm.backWave",
+        "face": "face.happy",
+        "frontArm": "arm.frontWave",
+        "prop": null
       },
       "sleep": {
         "shadow": "shadow.default",

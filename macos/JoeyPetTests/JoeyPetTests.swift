@@ -281,7 +281,7 @@ struct PetDomainTests {
             calendar: calendar
         )
         #expect(invited.state.companion == .invite)
-        #expect(invited.state.resolvedPose(at: due) == .sign)
+        #expect(invited.state.resolvedPose(at: due) == .look)
         #expect(invited.effects.contains(.showInviteCard))
 
         let accepted = PetStateMachine.reduce(
@@ -351,7 +351,7 @@ struct PetDomainTests {
             calendar: calendar
         )
         #expect(retry.state.companion == .invite)
-        #expect(retry.state.resolvedPose(at: due.addingTimeInterval(10 * 60)) == .sign)
+        #expect(retry.state.resolvedPose(at: due.addingTimeInterval(10 * 60)) == .look)
 
         let secondSnooze = PetStateMachine.reduce(
             retry.state,
@@ -988,14 +988,15 @@ struct JoeyManifestTests {
         #expect(issues.isEmpty, "\(issues)")
 
         #expect(manifest.schemaVersion == "0.1")
-        #expect(manifest.poses.count == 11)
+        #expect(manifest.poses.count == 12)
         #expect(manifest.states.count == 7)
         #expect(manifest.substates.count == 5)
         #expect(manifest.ambient.count == 8)
         #expect(manifest.transitions.count == 12)
         #expect(manifest.sizes.first(where: { $0.isDefault == true })?.w == 168)
         #expect(manifest.render?.layerOrder.count == 8)
-        #expect(manifest.render?.poseLayers.count == 11)
+        #expect(manifest.render?.poseLayers.count == 12)
+        #expect(manifest.render?.poseLayers["wave"]?.frontArm == "arm.frontWave")
     }
 }
 
@@ -1170,8 +1171,8 @@ struct PetRuntimeTests {
         current = start.addingTimeInterval(45 * 60)
         runtime.send(.tick)
         #expect(runtime.situation.companion == .invite)
-        #expect(runtime.renderedPose == .sign)
-        #expect(renderer.shownPoses.contains(.sign))
+        #expect(runtime.renderedPose == .look)
+        #expect(runtime.situation.isInviteCardVisible(at: current))
     }
 
     @Test func runtimePersistsInvitationClosure() {
@@ -1367,10 +1368,10 @@ struct PetRuntimeTests {
         runtime.onRenderedPoseChanged = { mirrored.append($0) }
 
         #expect(runtime.perform(.greeting))
-        #expect(runtime.renderedPose == .happy)
+        #expect(runtime.renderedPose == .wave)
         #expect(runtime.currentTransientBehavior == .greeting)
-        #expect(mirrored == [.happy])
-        #expect(renderer.shownPoses.last == .happy)
+        #expect(mirrored == [.wave])
+        #expect(renderer.shownPoses.last == .wave)
         #expect(PetTransientBehavior.greeting.sessionDuration == 2.8)
     }
 
@@ -1383,7 +1384,7 @@ struct PetRuntimeTests {
 
         #expect(runtime.situation.isHidden)
         #expect(runtime.perform(.greeting))
-        #expect(runtime.renderedPose == .happy)
+        #expect(runtime.renderedPose == .wave)
     }
 
     @Test func greetingSurvivesTicksDuringQuietHours() {
@@ -1395,10 +1396,10 @@ struct PetRuntimeTests {
 
         #expect(runtime.renderedPose == .sleep)
         #expect(runtime.perform(.greeting))
-        #expect(runtime.renderedPose == .happy)
+        #expect(runtime.renderedPose == .wave)
 
         runtime.send(.tick)
-        #expect(runtime.renderedPose == .happy)
+        #expect(runtime.renderedPose == .wave)
         #expect(runtime.currentTransientBehavior == .greeting)
     }
 }

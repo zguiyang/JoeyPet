@@ -25,13 +25,14 @@ final class JoeyCharacterNode: SKNode {
         static let blink = "joey.blink"
         static let ear = "joey.ear"
         static let earAngle = "joey.earAngle"
+        static let wave = "joey.wave"
     }
 
     private static let blinkSuppressedPoses: Set<String> = [
-        "sign", "stretch", "happy", "sleep", "groom", "yawn", "peek"
+        "sign", "stretch", "happy", "wave", "sleep", "groom", "yawn", "peek"
     ]
     private static let earSuppressedPoses: Set<String> = [
-        "sign", "stretch", "happy", "sleep", "groom", "yawn", "peek"
+        "sign", "stretch", "happy", "wave", "sleep", "groom", "yawn", "peek"
     ]
 
     private let package: JoeyAssetPackage
@@ -40,6 +41,7 @@ final class JoeyCharacterNode: SKNode {
     private let breathAnchor: CGPoint
     private let earAnchor: CGPoint
     private let tailAnchor: CGPoint
+    private let frontArmAnchor: CGPoint
     private let layerBasePosition: CGPoint
 
     private let breathPivot = SKNode()
@@ -81,10 +83,15 @@ final class JoeyCharacterNode: SKNode {
         let breathSVG = svgPoint("breath", fallback: CGPoint(x: 160, y: 340))
         let earSVG = svgPoint("ear", fallback: CGPoint(x: 160, y: 150))
         let tailSVG = svgPoint("tail", fallback: CGPoint(x: 250, y: 286))
+        let shoulderRightSVG = svgPoint("shoulderRight", fallback: CGPoint(x: 230, y: 254))
 
         breathAnchor = CGPoint(x: breathSVG.x - anchor.x, y: anchor.y - breathSVG.y)
         earAnchor = CGPoint(x: earSVG.x - anchor.x, y: anchor.y - earSVG.y)
         tailAnchor = CGPoint(x: tailSVG.x - anchor.x, y: anchor.y - tailSVG.y)
+        frontArmAnchor = CGPoint(
+            x: shoulderRightSVG.x - anchor.x,
+            y: anchor.y - shoulderRightSVG.y
+        )
         layerBasePosition = CGPoint(x: -anchor.x, y: anchor.y - canvas.height)
 
         let resolvedSize = sizeID.flatMap(package.sizeSpec(id:)) ?? package.defaultSizeSpec
@@ -155,6 +162,7 @@ final class JoeyCharacterNode: SKNode {
         }
 
         startAmbientIfNeeded()
+        startWaveIfNeeded()
     }
 
     func applySize(id: String) {
@@ -270,6 +278,7 @@ final class JoeyCharacterNode: SKNode {
         switch layer {
         case "tail": tailAnchor
         case "ears": earAnchor
+        case "frontArm": frontArmAnchor
         default: nil
         }
     }
@@ -340,6 +349,27 @@ final class JoeyCharacterNode: SKNode {
         startTail()
         scheduleBlink()
         scheduleEarTwitch()
+    }
+
+    /// Greeting hold: rotate the raised front arm twice around the right shoulder.
+    private func startWaveIfNeeded() {
+        guard poseID == "wave",
+              let pivot = layerPivots["frontArm"],
+              !pivot.isHidden
+        else { return }
+
+        pivot.zRotation = 0
+        pivot.removeAction(forKey: ActionKey.wave)
+        guard !isReduceMotionEnabled else { return }
+
+        let out = SKAction.rotate(toAngle: -14 * .pi / 180, duration: 0.28, shortestUnitArc: true)
+        out.timingMode = .easeInEaseOut
+        let back = SKAction.rotate(toAngle: 10 * .pi / 180, duration: 0.28, shortestUnitArc: true)
+        back.timingMode = .easeInEaseOut
+        let settle = SKAction.rotate(toAngle: 0, duration: 0.22, shortestUnitArc: true)
+        settle.timingMode = .easeInEaseOut
+        let oneWave = SKAction.sequence([out, back, settle])
+        pivot.run(.sequence([oneWave, oneWave]), withKey: ActionKey.wave)
     }
 
     private var breathDuration: TimeInterval {
@@ -495,6 +525,7 @@ final class JoeyCharacterNode: SKNode {
         breathPivot.removeAction(forKey: ActionKey.breath)
         layerPivots["tail"]?.removeAction(forKey: ActionKey.tail)
         layerPivots["ears"]?.removeAction(forKey: ActionKey.earAngle)
+        layerPivots["frontArm"]?.removeAction(forKey: ActionKey.wave)
         removeAction(forKey: ActionKey.blink)
         removeAction(forKey: ActionKey.ear)
 
@@ -505,6 +536,7 @@ final class JoeyCharacterNode: SKNode {
         posePivot.zRotation = restPosePivotRotation
         layerPivots["tail"]?.zRotation = 0
         layerPivots["ears"]?.zRotation = 0
+        layerPivots["frontArm"]?.zRotation = 0
         layerSprites["face"]?.texture = currentFaceTexture
     }
 }

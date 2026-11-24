@@ -20,6 +20,7 @@ final class JoeyPosePreviewScene: SKScene {
         "sign": "举牌",
         "stretch": "伸展",
         "happy": "开心",
+        "wave": "打招呼",
         "sleep": "睡觉",
         "groom": "理毛",
         "yawn": "打哈欠",

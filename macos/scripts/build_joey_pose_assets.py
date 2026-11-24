@@ -95,6 +95,7 @@ def build_sources() -> list[Path]:
     arms_rest = children("j-arms-rest")
     arms_up = children("j-arms-up")
     arms_sign = children("j-arms-sign")
+    arms_wave = children("j-arms-wave")
     arms_groom = children("j-arms-groom")
 
     sleep = children("joey-sleep")
@@ -120,6 +121,8 @@ def build_sources() -> list[Path]:
         "arm.frontUp": [arms_up[1], arms_up[3]],
         "arm.backSign": [arms_sign[0]],
         "arm.frontSign": arms_sign[1:3],
+        "arm.backWave": [arms_wave[0]],
+        "arm.frontWave": arms_wave[1:3],
         "arm.backGroom": [arms_groom[0]],
         "arm.frontGroom": arms_groom[1:3],
         "face.calm": children("j-face-calm"),
@@ -150,6 +153,7 @@ def build_sources() -> list[Path]:
         "sign",
         "stretch",
         "happy",
+        "wave",
         "sleep",
         "groom",
         "yawn",

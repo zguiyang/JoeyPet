@@ -525,6 +525,11 @@
       <path d="M226 258 C 240 226 245 202 247 182" fill="none" stroke="#EDDAC1" stroke-width="28" stroke-linecap="round"/>
       <circle cx="247" cy="178" r="14" fill="#F8ECDA"/>
     </symbol>
+    <symbol id="j-arms-wave" viewBox="0 0 320 400">
+      <ellipse cx="84" cy="262" rx="18" ry="28" fill="#EDDAC1" transform="rotate(10 84 262)"/>
+      <path d="M226 258 C 244 224 251 196 251 174" fill="none" stroke="#EDDAC1" stroke-width="28" stroke-linecap="round"/>
+      <circle cx="251" cy="168" r="15" fill="#F8ECDA"/>
+    </symbol>
     <symbol id="j-arms-groom" viewBox="0 0 320 400">
       <ellipse cx="84" cy="262" rx="18" ry="28" fill="#EDDAC1" transform="rotate(10 84 262)"/>
       <path d="M226 258 C 240 232 243 208 238 190" fill="none" stroke="#EDDAC1" stroke-width="28" stroke-linecap="round"/>
@@ -645,6 +650,9 @@
     </symbol>
     <symbol id="joey-happy" viewBox="0 0 320 400">
       <g transform="translate(0,-5)"><use href="#j-body"/><use href="#j-arms-rest"/><use href="#j-face-happy"/></g>
+    </symbol>
+    <symbol id="joey-wave" viewBox="0 0 320 400">
+      <use href="#j-body"/><use href="#j-arms-wave"/><use href="#j-face-happy"/>
     </symbol>
     <symbol id="joey-sleep" viewBox="0 0 320 400">
       <!-- Standing sleep: keeps the upright silhouette and the same contact
@@ -980,8 +988,8 @@
       <figure class="pose">
         <div class="pose-stage"><svg viewBox="0 0 320 400" aria-label="Joey 举起小牌"><use href="#joey-sign"/></svg></div>
         <span class="pose-code">sign</span><span class="pose-name">举起小牌</span>
-        <span class="pose-desc">右手把小牌从身后抬到肩高，牌面朝向用户。</span>
-        <span class="pose-use">休息邀请</span>
+        <span class="pose-desc">右手把小牌从身后抬到肩高，牌面朝向用户。V0 休息邀请已改用浮动邀请卡，不再依赖此姿态。</span>
+        <span class="pose-use">图谱保留 · 邀请不用</span>
       </figure>
       <figure class="pose">
         <div class="pose-stage"><svg viewBox="0 0 320 400" aria-label="Joey 伸懒腰"><use href="#joey-stretch"/></svg></div>
@@ -992,8 +1000,14 @@
       <figure class="pose">
         <div class="pose-stage"><svg viewBox="0 0 320 400" aria-label="Joey 开心"><use href="#joey-happy"/></svg></div>
         <span class="pose-code">happy</span><span class="pose-name">开心回应</span>
-        <span class="pose-desc">弯眼、张嘴、腮红加深。只停 2.6 秒。</span>
+        <span class="pose-desc">弯眼、张嘴、腮红加深。双手休息。只停 2.6 秒。</span>
         <span class="pose-use">完成休息之后</span>
+      </figure>
+      <figure class="pose">
+        <div class="pose-stage"><svg viewBox="0 0 320 400" aria-label="Joey 打招呼抬爪"><use href="#joey-wave"/></svg></div>
+        <span class="pose-code">wave</span><span class="pose-name">打招呼抬爪</span>
+        <span class="pose-desc">弯眼笑，左爪休息，右爪抬起开掌。运行时轻挥两下；头顶「你好。」是 tip UI，不画进图。</span>
+        <span class="pose-use">小窝点一下 · 桌面同步</span>
       </figure>
       <figure class="pose">
         <div class="pose-stage"><svg viewBox="0 0 320 400" aria-label="Joey 站着睡"><use href="#joey-sleep"/></svg></div>
@@ -1577,7 +1591,7 @@
         <tbody>
           <tr><td>本地时钟</td><td>每分钟检查一次安静区间</td><td><code>quiet</code> → <code>sleep</code></td><td>进入 22:00–08:00 立即生效；已在恢复中的 30 秒允许走完</td></tr>
           <tr><td>本地时钟</td><td>无指针/键盘活动满 90 秒</td><td><code>doze</code></td><td>仅在 alone / doNotDisturb / snoozed；菜单打开、拖动中、会话邀请卡在场时不计</td></tr>
-          <tr><td>本地时钟</td><td>邀请到点</td><td><code>invite</code> → <code>sign</code></td><td>距上次关闭或完成 ≥ 45 分钟；不在 quiet / doNotDisturb；同一时刻仅一张卡；隐藏时仍会临时露面提醒</td></tr>
+          <tr><td>本地时钟</td><td>邀请到点</td><td><code>invite</code> → <code>look</code> + 邀请卡</td><td>距上次关闭或完成 ≥ 45 分钟；不在 quiet / doNotDisturb；同一时刻仅一张卡；隐藏时仍会临时露面提醒</td></tr>
           <tr><td>会话</td><td>用户点「开始一起工作」</td><td><code>companion</code> → <code>look</code></td><td>唯一建立会话的入口；系统键鼠活动不得推断工作状态</td></tr>
           <tr><td>会话</td><td>菜单「结束陪伴」</td><td><code>alone</code> → <code>sit</code></td><td>清空本次「稍后」标记，不扣次数</td></tr>
           <tr><td>邀请卡</td><td>点「休息一下」</td><td><code>recover</code> → <code>stretch</code></td><td>启动 30 秒倒计时；同时只允许一个恢复面板</td></tr>

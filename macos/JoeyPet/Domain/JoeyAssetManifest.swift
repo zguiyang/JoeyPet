@@ -236,6 +236,9 @@ enum JoeyManifestValidator {
             if pose.id == "happy", pose.durationMs != 2600 {
                 fail("poses.happy.durationMs", "expected 2600")
             }
+            if pose.id == "wave", pose.durationMs != 2800 {
+                fail("poses.wave.durationMs", "expected 2800")
+            }
         }
 
         if manifest.faces.ids.count != 8 {

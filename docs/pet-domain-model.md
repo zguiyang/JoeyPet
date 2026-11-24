@@ -113,11 +113,11 @@ AmbientEvent                       叠加在姿态上的小循环/瞬态
 |---|---|---|---|
 | `idle` | `look` | 会话进行中，未到邀请窗口 | 到点进入 `approach` |
 | `approach` | `look` | 距邀请还有 5 分钟 | 到点进入 `invite` |
-| `invite` | `sign` | 邀请到点 | 接受→`recover`；稍后→`snoozed`；进入勿扰→`doNotDisturb`；关闭→`idle` |
+| `invite` | `look` | 邀请到点；文案与操作在浮动邀请卡上 | 接受→`recover`；稍后→`snoozed`；进入勿扰→`doNotDisturb`；关闭→`idle` |
 | `recover` | `stretch` | 用户接受邀请 | 30 秒结束或“先跳过” |
 | `complete` | `happy` | 恢复完成 | 2.6 秒后回当前桌面姿态 |
 
-### 4.3 PetPose（11）
+### 4.3 PetPose（12）
 
 | pose | clip id | behavior | 循环 | 说明 |
 |---|---|---|---|---|
@@ -125,7 +125,8 @@ AmbientEvent                       叠加在姿态上的小循环/瞬态
 | `look` | `idle_look` | `idle` | 是 | 陪伴/拖动 |
 | `sign` | `notify_sign` | `notifying` | 否 | 一次性，停最后一帧 |
 | `stretch` | `recover_stretch` | `idle` | 是 | 恢复中 |
-| `happy` | `complete_happy` | `celebrating` | 否 | 2.6 秒 |
+| `happy` | `complete_happy` | `celebrating` | 否 | 2.6 秒；双手休息，完成开心 |
+| `wave` | `greet_wave` | `idle` | 否 | 2.8 秒；抬爪打招呼；运行时轻挥两下；头顶 tip「你好。」 |
 | `sleep` | `sleep_curl` | `sleeping` | 是 | 安静时段；站立闭眼，耳朵放松 |
 | `groom` | `idle_groom` | `idle` | 否 | 环境瞬态 |
 | `yawn` | `idle_yawn` | `idle` | 否 | 环境瞬态 |
@@ -140,7 +141,7 @@ clip id 一经交付不再改名。未知 clip → `idle/idle_sit`，记一次�
 | id | 类型 | 关键参数 | 允许条件摘要 |
 |---|---|---|---|
 | `breathe` | 持续 | 4.2–6.0 s，基准 4.8 s，睡眠 6.0 s，缩放 1.046 | 按图谱第 12 章矩阵 |
-| `blink` | 瞬态 | 2.5–6 s 随机，180 ms，3 帧 | `sit`/`look`/`carry`；`happy`/`yawn`/`sleep` 抑制 |
+| `blink` | 瞬态 | 2.5–6 s 随机，180 ms，3 帧 | `sit`/`look`/`carry`；`happy`/`wave`/`yawn`/`sleep` 抑制 |
 | `ear` | 瞬态 | 12–35 s，−7°→4°，240 ms | 按图谱第 12 章矩阵 |
 | `tail` | 持续 | ±8°，与呼吸同拍，绕尾根旋转 | 按图谱第 12 章矩阵 |
 | `shift` | 持续 | 6–9 s，±2 px，0.5°，800 ms | 按图谱第 12 章矩阵 |
