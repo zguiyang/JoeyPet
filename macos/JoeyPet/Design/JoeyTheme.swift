@@ -129,6 +129,11 @@ struct JoeyTheme {
 
 enum JoeyType {
     static let invitation = Font.system(size: 27, weight: .semibold)
+    /// Compact rest-invite title beside Joey (~236 pt card).
+    static let inviteTitle = Font.system(size: 16.5, weight: .semibold)
+    static let inviteTitleNest = Font.system(size: 14.5, weight: .semibold)
+    static let inviteAction = Font.system(size: 12.5, weight: .semibold)
+    static let inviteQuiet = Font.system(size: 11)
     static let recoveryTitle = Font.system(size: 23, weight: .semibold)
     static let reflectionHeadline = Font.system(size: 21, weight: .semibold)
     static let settingsTitle = Font.system(size: 17, weight: .semibold)
@@ -158,6 +163,10 @@ enum JoeySpacing {
 }
 
 enum JoeyRadius {
+    static let tip: CGFloat = 11
+    static let inviteControl: CGFloat = 8
+    static let inviteCard: CGFloat = 15
+    static let inviteCardNest: CGFloat = 13
     static let sm: CGFloat = 12
     static let md: CGFloat = 16
     static let lg: CGFloat = 22

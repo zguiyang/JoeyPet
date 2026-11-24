@@ -29,6 +29,7 @@ final class PetCoordinator {
             self.onSituationChanged?(situation, self.runtime.summary)
         }
         panelController.petRuntime.onRenderedPoseChanged = { [weak self] pose in
+            self?.panelController.syncGreetingTip(for: pose)
             self?.onPoseChanged?(pose)
         }
     }
@@ -61,6 +62,7 @@ final class PetCoordinator {
         observeAccessibility()
 
         runtime.start()
+        panelController.syncGreetingTip(for: runtime.renderedPose)
         onPoseChanged?(runtime.renderedPose)
         presenceMonitor.start()
 
@@ -123,9 +125,14 @@ final class PetCoordinator {
         case .greeting:
             return runtime.perform(.greeting)
         case .notifying:
-            return runtime.perform(.notifying)
+            runtime.send(.debugForceInvite)
+            return true
+        case .recovering:
+            runtime.send(.debugForceRecover)
+            return true
         case .celebrating:
-            return runtime.perform(.celebrating)
+            runtime.send(.debugForceComplete)
+            return true
         case .carrying:
             return runtime.perform(.carrying)
         case .sleeping:

@@ -46,6 +46,11 @@ enum PetEvent: Equatable, Sendable {
     case reduceMotionChanged(Bool)
     case lowPowerChanged(Bool)
     case ambientBehaviorsChanged(Bool)
+    /// Debug / preview only: jump straight into a companion surface so the
+    /// matching card or panel can be reviewed with the pet pose.
+    case debugForceInvite
+    case debugForceRecover
+    case debugForceComplete
 }
 
 struct PetTransition: Equatable, Sendable {
@@ -109,6 +114,28 @@ enum PetStateMachine {
             next.isYawning = false
             next.yawnUntil = nil
             next.wasAwayLong = false
+            effects.append(.persist)
+
+        case .debugForceInvite:
+            prepareDebugCompanionSurface(&next, at: now)
+            presentInvite(&next, at: now)
+            effects.append(.persist)
+
+        case .debugForceRecover:
+            prepareDebugCompanionSurface(&next, at: now)
+            next.companion = .recover
+            next.recoveryEndsAt = now.addingTimeInterval(next.policy.recoveryDuration)
+            next.completeEndsAt = nil
+            next.inviteShownAt = nil
+            effects.append(.persist)
+
+        case .debugForceComplete:
+            prepareDebugCompanionSurface(&next, at: now)
+            next.companion = .complete
+            next.completeEndsAt = now.addingTimeInterval(next.policy.completeDuration)
+            next.recoveryEndsAt = nil
+            next.inviteShownAt = nil
+            // Skip `.completeRecovery` so Debug previews do not bump break counts.
             effects.append(.persist)
 
         case .sessionEnd:
@@ -483,6 +510,22 @@ enum PetStateMachine {
         state.isYawning = false
         state.yawnUntil = nil
         state.wasAwayLong = false
+    }
+
+    /// Clears blockers and ensures a session so Debug can open invite / recover / complete surfaces.
+    private static func prepareDebugCompanionSurface(_ state: inout PetSituation, at now: Date) {
+        state.isDoNotDisturb = false
+        state.snoozeUntil = nil
+        state.isDozing = false
+        state.isYawning = false
+        state.yawnUntil = nil
+        state.wasAwayLong = false
+        state.recoveryEndsAt = nil
+        state.completeEndsAt = nil
+        if state.session == nil {
+            state.session = CompanionSession(startedAt: now)
+            state.snoozeUsedThisSession = false
+        }
     }
 
     private static func finish(

@@ -119,6 +119,26 @@ final class PetPanelController {
         sessionSurfaces.applyAppearance(appearance)
     }
 
+    /// Keeps the shared greeting tip in step with the rendered pose.
+    func syncGreetingTip(for pose: PetPose) {
+        sessionSurfaces.setGreetingTipVisible(pose == .wave)
+    }
+
+    /// Nest invite card mirrors the desktop invitation actions.
+    func acceptInvitationFromNest() {
+        petRuntime.send(.inviteAccepted)
+    }
+
+    func snoozeInvitationFromNest() {
+        petRuntime.send(.snoozeRequested)
+        sessionSurfaces.showSnoozeToast()
+    }
+
+    func enterDoNotDisturbFromNest() {
+        petRuntime.send(.doNotDisturbChanged(true))
+        sessionSurfaces.showDoNotDisturbToast()
+    }
+
     private(set) var isVisible = false
 
     /// Hidden mode still surfaces briefly for an invitation; this keeps the

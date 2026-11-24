@@ -23,6 +23,14 @@ struct NestPetView: View {
             reduceMotion: reduceMotion,
             isPaused: !isWindowVisible
         )
+        .overlay(alignment: .top) {
+            if pose == .wave {
+                JoeyGreetingTipView()
+                    .padding(.top, 4)
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+            }
+        }
+        .animation(reduceMotion ? nil : JoeyMotion.stateEnter, value: pose)
         .overlay(alignment: .bottom) {
             Color.clear
                 .frame(maxWidth: .infinity)

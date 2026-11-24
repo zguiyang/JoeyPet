@@ -216,6 +216,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 status: companionStatus,
                 onPrimaryAction: { [weak self] in self?.toggleCompanionship() },
                 onGreetPet: { [weak self] in self?.coordinator?.greetPet() },
+                onInviteAccept: { [weak self] in
+                    self?.panelController?.acceptInvitationFromNest()
+                },
+                onInviteSnooze: { [weak self] in
+                    self?.panelController?.snoozeInvitationFromNest()
+                },
+                onInviteDoNotDisturb: { [weak self] in
+                    self?.settings.isDoNotDisturb = true
+                    self?.panelController?.enterDoNotDisturbFromNest()
+                },
                 onDebugAction: { [weak self] action in
                     self?.handleDebugPetAction(action)
                 }
@@ -267,9 +277,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             settings.showsDesktopPet = true
         case .posePreview:
             showPosePreview()
-        case .greeting, .notifying, .celebrating, .carrying, .sleeping,
+        case .greeting, .notifying, .recovering, .celebrating, .carrying, .sleeping,
              .startSession, .endSession:
-            if action == .notifying || action == .celebrating
+            if action == .notifying || action == .recovering || action == .celebrating
                 || action == .carrying || action == .sleeping || action == .greeting {
                 settings.showsDesktopPet = true
                 panelController?.setVisible(true)

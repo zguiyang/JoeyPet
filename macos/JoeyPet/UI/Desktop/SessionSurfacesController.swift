@@ -30,11 +30,15 @@ final class SessionSurfacesController {
     private let invitationPanel = SurfacePanel(interactive: true)
     private let recoveryPanel = SurfacePanel(interactive: true)
     private let toastPanel = SurfacePanel(interactive: false)
+    private let greetingTipPanel = SurfacePanel(interactive: false)
 
     private let chipHost = NSHostingView(rootView: AnyView(EmptyView()))
     private let invitationHost = NSHostingView(rootView: AnyView(EmptyView()))
     private let recoveryHost = NSHostingView(rootView: AnyView(EmptyView()))
     private let toastHost = NSHostingView(rootView: AnyView(EmptyView()))
+    private let greetingTipHost = NSHostingView(rootView: AnyView(EmptyView()))
+
+    private var isGreetingTipVisible = false
 
     init(petPanel: NSPanel, appearance: JoeyAppearance) {
         self.petPanel = petPanel
@@ -48,12 +52,15 @@ final class SessionSurfacesController {
         chipHost.translatesAutoresizingMaskIntoConstraints = true
         recoveryHost.translatesAutoresizingMaskIntoConstraints = true
         toastHost.translatesAutoresizingMaskIntoConstraints = true
+        greetingTipHost.translatesAutoresizingMaskIntoConstraints = true
 
         chipPanel.contentView = chipHost
         invitationPanel.contentView = invitationHost
         recoveryPanel.contentView = recoveryHost
         toastPanel.contentView = toastHost
         toastPanel.ignoresMouseEvents = true
+        greetingTipPanel.contentView = greetingTipHost
+        greetingTipPanel.ignoresMouseEvents = true
 
         observePetPanelMoves()
     }
@@ -86,19 +93,23 @@ final class SessionSurfacesController {
         }
 
         if presentation.showsInvitation {
+            let placement = invitationPlacement(size: NSSize(width: 236, height: 120))
             setRoot(
                 invitationHost,
                 InvitationCardView(
                     onAccept: { [weak self] in self?.onAcceptInvitation?() },
                     onSnooze: { [weak self] in self?.onSnooze?() },
-                    onDoNotDisturb: { [weak self] in self?.onEnterDoNotDisturb?() }
+                    onDoNotDisturb: { [weak self] in self?.onEnterDoNotDisturb?() },
+                    caretEdge: placement.caret
                 )
             )
             present(
                 invitationPanel,
                 host: invitationHost,
-                fallback: NSSize(width: 400, height: 292),
-                origin: invitationOrigin,
+                fallback: NSSize(width: 236, height: 120),
+                origin: { size in
+                    self.invitationPlacement(size: size).origin
+                },
                 duration: 0.38,
                 rise: 10
             )
@@ -148,6 +159,7 @@ final class SessionSurfacesController {
     func hideAll() {
         toastTask?.cancel()
         toastTask = nil
+        isGreetingTipVisible = false
         for panel in panels {
             panel.orderOut(nil)
             panel.alphaValue = 1
@@ -183,10 +195,32 @@ final class SessionSurfacesController {
         showToast(Self.doNotDisturbToast)
     }
 
+    /// Same object-label tip as the nest: appears above Joey while `wave` plays.
+    func setGreetingTipVisible(_ visible: Bool) {
+        guard visible != isGreetingTipVisible else {
+            if visible { repositionGreetingTip() }
+            return
+        }
+        isGreetingTipVisible = visible
+        if visible {
+            setRoot(greetingTipHost, JoeyGreetingTipView())
+            present(
+                greetingTipPanel,
+                host: greetingTipHost,
+                fallback: NSSize(width: 64, height: 28),
+                origin: chipOrigin,
+                duration: 0.24,
+                rise: 4
+            )
+        } else {
+            dismiss(greetingTipPanel, entrance: 0.24)
+        }
+    }
+
     // MARK: - Panels
 
     private var panels: [SurfacePanel] {
-        [chipPanel, invitationPanel, recoveryPanel, toastPanel]
+        [chipPanel, invitationPanel, recoveryPanel, toastPanel, greetingTipPanel]
     }
 
     private func setRoot(_ host: NSHostingView<AnyView>, _ view: some View) {
@@ -293,33 +327,50 @@ final class SessionSurfacesController {
         )
     }
 
-    private func invitationOrigin(size: NSSize) -> NSPoint {
+    private struct InvitationPlacement {
+        let origin: NSPoint
+        let caret: InvitationCaretEdge
+    }
+
+    /// Places the invite note beside Joey and aims the caret toward him.
+    private func invitationPlacement(size: NSSize) -> InvitationPlacement {
         let visible = activeVisibleFrame
         let pet = petPanel.frame
-        let gap: CGFloat = 12
+        let gap: CGFloat = 10
         let margin: CGFloat = 8
         let left = pet.minX - size.width - gap
         let right = pet.maxX + gap
 
-        // Keep the card next to Joey, on the side that has room. When both
-        // sides fit, prefer the side facing the middle of the screen.
         let fitsLeft = left >= visible.minX + margin
         let fitsRight = right + size.width <= visible.maxX - margin
 
         let x: CGFloat
+        let caret: InvitationCaretEdge
         if fitsLeft, fitsRight {
-            x = pet.midX >= visible.midX ? left : right
+            if pet.midX >= visible.midX {
+                x = left
+                caret = .trailing
+            } else {
+                x = right
+                caret = .leading
+            }
         } else if fitsLeft {
             x = left
+            caret = .trailing
         } else if fitsRight {
             x = right
+            caret = .leading
         } else {
             x = pet.midX - size.width / 2
+            caret = .none
         }
 
-        return clamped(
-            NSPoint(x: x, y: pet.midY - size.height / 2),
-            size: size
+        return InvitationPlacement(
+            origin: clamped(
+                NSPoint(x: x, y: pet.midY - size.height / 2),
+                size: size
+            ),
+            caret: caret
         )
     }
 
@@ -358,10 +409,19 @@ final class SessionSurfacesController {
         }
         if invitationPanel.isVisible {
             let size = invitationPanel.frame.size
-            invitationPanel.setFrameOrigin(invitationOrigin(size: size))
+            let placement = invitationPlacement(size: size)
+            invitationPanel.setFrameOrigin(placement.origin)
         }
+        repositionGreetingTip()
         chipPanel.invalidateShadow()
         invitationPanel.invalidateShadow()
+        greetingTipPanel.invalidateShadow()
+    }
+
+    private func repositionGreetingTip() {
+        guard greetingTipPanel.isVisible else { return }
+        let size = greetingTipPanel.frame.size
+        greetingTipPanel.setFrameOrigin(chipOrigin(size: size))
     }
 }
 

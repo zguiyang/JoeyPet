@@ -9,6 +9,9 @@ struct RoomSceneView: View {
     let onOpenClockSettings: () -> Void
     let onPrimaryAction: () -> Void
     let onGreetPet: () -> Void
+    var onInviteAccept: (() -> Void)?
+    var onInviteSnooze: (() -> Void)?
+    var onInviteDoNotDisturb: (() -> Void)?
 
     @Environment(\.joeyAppearance) private var appearance
     @State private var isFrameHovering = false
@@ -58,6 +61,20 @@ struct RoomSceneView: View {
                         x: originX + 340 * scale,
                         y: originY + 436 * scale
                     )
+
+                if status.situation.isInviteCardVisible(at: Date()) {
+                    InvitationCardView(
+                        onAccept: { onInviteAccept?() },
+                        onSnooze: { onInviteSnooze?() },
+                        onDoNotDisturb: { onInviteDoNotDisturb?() },
+                        caretEdge: .leading,
+                        scale: .nest
+                    )
+                    .position(
+                        x: originX + 560 * scale,
+                        y: originY + 400 * scale
+                    )
+                }
 
                 clockLabel
                     .position(

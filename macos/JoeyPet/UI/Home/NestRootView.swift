@@ -51,6 +51,9 @@ struct NestRootView: View {
     var topChromeHeight: CGFloat = 40
     let onPrimaryAction: () -> Void
     let onGreetPet: () -> Void
+    var onInviteAccept: (() -> Void)?
+    var onInviteSnooze: (() -> Void)?
+    var onInviteDoNotDisturb: (() -> Void)?
     var onDebugAction: ((DebugPetAction) -> Void)?
     let onRouteChange: (NestRoute) -> Void
 
@@ -73,7 +76,10 @@ struct NestRootView: View {
                         onOpenReflection: { navigation.showReflection() },
                         onOpenClockSettings: { navigation.openSettings() },
                         onPrimaryAction: onPrimaryAction,
-                        onGreetPet: onGreetPet
+                        onGreetPet: onGreetPet,
+                        onInviteAccept: onInviteAccept,
+                        onInviteSnooze: onInviteSnooze,
+                        onInviteDoNotDisturb: onInviteDoNotDisturb
                     )
                     .transition(.opacity)
                 case .reflection:

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// `陪伴中 · mm:ss` capsule shown above Joey on the desktop and in the nest.
+/// `陪伴中 · mm:ss` tip — same paper tip chrome as the greeting「你好。」.
 struct JoeyCompanionChipView: View {
     let startedAt: Date
 
@@ -10,32 +10,42 @@ struct JoeyCompanionChipView: View {
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
-            HStack(spacing: 7) {
-                RoundedRectangle(cornerRadius: 2, style: .continuous)
-                    .fill(theme.sage)
-                    .frame(width: 8, height: 8)
-                    .rotationEffect(.degrees(-45))
+            JoeyPetTipView(caret: .none) {
+                HStack(spacing: 7) {
+                    RoundedRectangle(cornerRadius: 2, style: .continuous)
+                        .fill(theme.sage)
+                        .frame(width: 8, height: 8)
+                        .rotationEffect(.degrees(-45))
 
-                Text("陪伴中 · \(CompanionTimeText.elapsedText(from: startedAt, to: context.date))")
-                    .font(JoeyType.roomLabel)
-                    .monospacedDigit()
-                    .foregroundStyle(theme.ink)
+                    Text("陪伴中 · \(CompanionTimeText.elapsedText(from: startedAt, to: context.date))")
+                        .monospacedDigit()
+                }
             }
-            .padding(.horizontal, 13)
-            .padding(.vertical, 7)
-            .background(Capsule().fill(theme.popover))
-            .overlay(Capsule().stroke(theme.hairline, lineWidth: 1))
-            .joeyShadowMD()
         }
-        .fixedSize()
     }
 }
 
-/// Rest invitation from DESIGN §10.2. A pet's note, never an alert.
+/// Which edge of the invite card sprouts the caret toward Joey.
+enum InvitationCaretEdge: Equatable, Sendable {
+    /// Caret on the left; Joey sits to the right of the card.
+    case leading
+    /// Caret on the right; Joey sits to the left of the card.
+    case trailing
+    case none
+}
+
+enum InvitationCardScale: Equatable, Sendable {
+    case desktop
+    case nest
+}
+
+/// Rest invitation — a quiet paper note beside Joey (invite-greeting family v1).
 struct InvitationCardView: View {
     let onAccept: () -> Void
     let onSnooze: () -> Void
     let onDoNotDisturb: () -> Void
+    var caretEdge: InvitationCaretEdge = .leading
+    var scale: InvitationCardScale = .desktop
 
     @Environment(\.joeyAppearance) private var appearance
     @State private var hoveredAction: CardAction?
@@ -47,96 +57,90 @@ struct InvitationCardView: View {
     }
 
     private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+    private var isNest: Bool { scale == .nest }
+    private var cardWidth: CGFloat { isNest ? 200 : 236 }
+    private var cardRadius: CGFloat { isNest ? JoeyRadius.inviteCardNest : JoeyRadius.inviteCard }
+    private var titleFont: Font { isNest ? JoeyType.inviteTitleNest : JoeyType.inviteTitle }
+    private var primaryHeight: CGFloat { isNest ? 26 : 29 }
+    private var quietHeight: CGFloat { isNest ? 25 : 28 }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("坐久啦，\n我们一起伸个懒腰？")
-                .font(JoeyType.invitation)
-                .lineSpacing(5)
+                .font(titleFont)
+                .lineSpacing(isNest ? 2 : 3)
                 .foregroundStyle(theme.ink)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Text("不用走开，半分钟就够。")
-                .font(JoeyType.body)
-                .lineSpacing(3)
-                .foregroundStyle(theme.muted)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 8)
-
-            VStack(spacing: JoeySpacing.lg) {
-                Button(action: onAccept) {
-                    Text("休息一下")
-                        .font(JoeyType.primaryButton)
-                        .foregroundStyle(theme.sageInk)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 50)
-                        .background(
-                            RoundedRectangle(cornerRadius: JoeyRadius.md, style: .continuous)
-                                .fill(theme.sage)
-                                .brightness(hoveredAction == .accept ? 0.03 : 0)
-                        )
-                        .contentShape(
-                            RoundedRectangle(cornerRadius: JoeyRadius.md, style: .continuous)
-                        )
-                }
-                .buttonStyle(JoeyPressButtonStyle())
-                .onHover { hoveredAction = $0 ? .accept : nil }
-                .accessibilityLabel(Text("休息一下"))
-
-                HStack(spacing: JoeySpacing.md) {
-                    secondaryButton("稍后提醒", action: .snooze, perform: onSnooze)
-                    quietButton("进入勿扰", action: .doNotDisturb, perform: onDoNotDisturb)
-                    Spacer(minLength: 0)
-                }
+            HStack(spacing: isNest ? 4 : 6) {
+                Spacer(minLength: 0)
+                quietButton("稍后提醒", action: .snooze, perform: onSnooze)
+                quietButton("进入勿扰", action: .doNotDisturb, perform: onDoNotDisturb)
+                primaryButton
             }
-            .padding(.top, 22)
+            .padding(.top, isNest ? 8 : 10)
         }
-        .padding(EdgeInsets(top: 26, leading: 28, bottom: 24, trailing: 28))
-        .frame(width: 400, alignment: .leading)
+        .padding(EdgeInsets(
+            top: isNest ? 12 : 14,
+            leading: isNest ? 12 : 14,
+            bottom: isNest ? 10 : 12,
+            trailing: isNest ? 12 : 14
+        ))
+        .frame(width: cardWidth, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: JoeyRadius.lg, style: .continuous)
+            RoundedRectangle(cornerRadius: cardRadius, style: .continuous)
                 .fill(theme.panel)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: JoeyRadius.lg, style: .continuous)
+            RoundedRectangle(cornerRadius: cardRadius, style: .continuous)
                 .stroke(theme.hairline, lineWidth: 1)
         )
-        .overlay(alignment: .top) {
-            RoundedRectangle(cornerRadius: 3, style: .continuous)
-                .fill(theme.clay.opacity(0.5))
-                .frame(width: 86, height: 22)
-                .rotationEffect(.degrees(-2.5))
-                .offset(y: -11)
+        .overlay(alignment: caretAlignment) {
+            if caretEdge != .none {
+                inviteCaret
+                    .offset(x: caretEdge == .leading ? -5 : 5)
+            }
         }
-        .padding(.top, 14)
         .tint(theme.focus)
         .joeyShadowMD()
     }
 
-    private func secondaryButton(
-        _ title: String,
-        action: CardAction,
-        perform: @escaping () -> Void
-    ) -> some View {
-        Button(action: perform) {
-            Text(title)
-                .font(JoeyType.body)
-                .foregroundStyle(theme.ink)
-                .padding(.horizontal, 16)
-                .frame(height: 38)
+    private var caretAlignment: Alignment {
+        switch caretEdge {
+        case .leading: .leading
+        case .trailing: .trailing
+        case .none: .center
+        }
+    }
+
+    private var inviteCaret: some View {
+        Rectangle()
+            .fill(theme.panel)
+            .frame(width: 10, height: 10)
+            .overlay(Rectangle().stroke(theme.hairline, lineWidth: 1))
+            .rotationEffect(.degrees(45))
+            .accessibilityHidden(true)
+    }
+
+    private var primaryButton: some View {
+        Button(action: onAccept) {
+            Text("休息一下")
+                .font(isNest ? JoeyType.caption.weight(.semibold) : JoeyType.inviteAction)
+                .foregroundStyle(theme.sageInk)
+                .padding(.horizontal, isNest ? 8 : 13)
+                .frame(height: primaryHeight)
                 .background(
-                    RoundedRectangle(cornerRadius: JoeyRadius.md, style: .continuous)
-                        .fill(hoveredAction == action ? theme.panel2 : Color.clear)
+                    RoundedRectangle(cornerRadius: JoeyRadius.inviteControl, style: .continuous)
+                        .fill(theme.sage)
+                        .brightness(hoveredAction == .accept ? 0.03 : 0)
                 )
-                .overlay(
-                    RoundedRectangle(cornerRadius: JoeyRadius.md, style: .continuous)
-                        .stroke(theme.hairlineStrong, lineWidth: 1)
+                .contentShape(
+                    RoundedRectangle(cornerRadius: JoeyRadius.inviteControl, style: .continuous)
                 )
-                .contentShape(RoundedRectangle(cornerRadius: JoeyRadius.md, style: .continuous))
         }
         .buttonStyle(JoeyPressButtonStyle())
-        .onHover { hoveredAction = $0 ? action : nil }
-        .accessibilityLabel(Text(title))
+        .onHover { hoveredAction = $0 ? .accept : nil }
+        .accessibilityLabel(Text("休息一下"))
     }
 
     private func quietButton(
@@ -146,15 +150,17 @@ struct InvitationCardView: View {
     ) -> some View {
         Button(action: perform) {
             Text(title)
-                .font(JoeyType.body)
-                .foregroundStyle(hoveredAction == action ? theme.ink : theme.muted)
-                .padding(.horizontal, 14)
-                .frame(height: 38)
+                .font(isNest ? .system(size: 10.5) : JoeyType.inviteQuiet)
+                .foregroundStyle(hoveredAction == action ? theme.ink : theme.ink2)
+                .padding(.horizontal, isNest ? 4 : 6)
+                .frame(height: quietHeight)
                 .background(
-                    RoundedRectangle(cornerRadius: JoeyRadius.md, style: .continuous)
+                    RoundedRectangle(cornerRadius: JoeyRadius.inviteControl, style: .continuous)
                         .fill(hoveredAction == action ? theme.panel2 : Color.clear)
                 )
-                .contentShape(Rectangle())
+                .contentShape(
+                    RoundedRectangle(cornerRadius: JoeyRadius.inviteControl, style: .continuous)
+                )
         }
         .buttonStyle(JoeyPressButtonStyle())
         .onHover { hoveredAction = $0 ? action : nil }

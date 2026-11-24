@@ -14,6 +14,9 @@ enum JoeyCopy {
     static let emptyToday = "今天还没开始"
     static let emptyBreaks = "今天还没有休息"
     static let emptyWeek = "今天还没开始，这一周还没有记录。"
+
+    /// Greeting tip above Joey on both the nest and the desktop pet.
+    static let greetingHello = "你好。"
 }
 
 struct JoeyPrimaryButton: View {
@@ -158,5 +161,68 @@ struct JoeyRoomLabel<Content: View>: View {
             )
             .joeyShadowSM()
             .fixedSize()
+    }
+}
+
+/// Shared paper tip chrome for pet-adjacent callouts: companion chip, greeting
+///「你好。」, and similar short notes. Same family as the invite card paper —
+/// soft rounded rect + hairline, never a bare capsule toast.
+struct JoeyPetTipView<Content: View>: View {
+    enum Caret: Equatable {
+        case none
+        /// Points down toward Joey’s head.
+        case bottom
+    }
+
+    var caret: Caret = .none
+    @ViewBuilder var content: () -> Content
+
+    @Environment(\.joeyAppearance) private var appearance
+
+    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+
+    var body: some View {
+        content()
+            .font(JoeyType.roomLabel)
+            .foregroundStyle(theme.ink)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 7)
+            .background(
+                RoundedRectangle(cornerRadius: JoeyRadius.tip, style: .continuous)
+                    .fill(theme.popover)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: JoeyRadius.tip, style: .continuous)
+                    .stroke(theme.hairline, lineWidth: 1)
+            )
+            .overlay(alignment: .bottom) {
+                if caret == .bottom {
+                    tipCaret
+                        .offset(y: 5)
+                        .allowsHitTesting(false)
+                }
+            }
+            .joeyShadowMD()
+            .fixedSize()
+    }
+
+    private var tipCaret: some View {
+        Rectangle()
+            .fill(theme.popover)
+            .frame(width: 10, height: 10)
+            .overlay(Rectangle().stroke(theme.hairline, lineWidth: 1))
+            .rotationEffect(.degrees(45))
+    }
+}
+
+/// Greeting tip above Joey. Same tip chrome as the companion chip.
+struct JoeyGreetingTipView: View {
+    var text: String = JoeyCopy.greetingHello
+
+    var body: some View {
+        JoeyPetTipView(caret: .bottom) {
+            Text(text)
+        }
+        .accessibilityHidden(true)
     }
 }
