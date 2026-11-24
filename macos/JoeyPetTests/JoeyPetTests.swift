@@ -676,49 +676,6 @@ struct PetDomainTests {
         #expect(idle.resolvedPose(at: start.addingTimeInterval(90)) == .look)
     }
 
-    @Test func ambientStepsOnlyWhileAloneOnScreen() {
-        let now = testDate(2026, 11, 23, 9, 0)
-
-        #expect(PetSituation().canWalkAmbiently(at: now))
-
-        var hidden = PetSituation()
-        hidden.isHidden = true
-        #expect(!hidden.canWalkAmbiently(at: now))
-
-        var dragging = PetSituation()
-        dragging.isDragging = true
-        #expect(!dragging.canWalkAmbiently(at: now))
-
-        var dozing = PetSituation()
-        dozing.isDozing = true
-        #expect(!dozing.canWalkAmbiently(at: now))
-
-        var quiet = PetSituation()
-        quiet.isQuietActive = true
-        #expect(!quiet.canWalkAmbiently(at: now))
-
-        var companion = PetSituation()
-        companion.session = CompanionSession(startedAt: now)
-        companion.companion = .idle
-        #expect(!companion.canWalkAmbiently(at: now))
-
-        var dnd = PetSituation()
-        dnd.isDoNotDisturb = true
-        #expect(dnd.canWalkAmbiently(at: now))
-
-        var reduced = PetSituation()
-        reduced.isReduceMotion = true
-        #expect(!reduced.canWalkAmbiently(at: now))
-
-        let policy = AmbientStepPolicy()
-        for _ in 0..<20 {
-            let delay = policy.nextDelay(lowPower: false)
-            #expect(delay >= 90 && delay <= 180)
-            let stretched = policy.nextDelay(lowPower: true)
-            #expect(stretched >= 135 && stretched <= 270)
-        }
-    }
-
     @Test func completedBreakCarriesALeafHome() {
         let calendar = testCalendar()
         let start = testDate(2026, 11, 23, 9, 0)
@@ -1031,14 +988,14 @@ struct JoeyManifestTests {
         #expect(issues.isEmpty, "\(issues)")
 
         #expect(manifest.schemaVersion == "0.1")
-        #expect(manifest.poses.count == 12)
+        #expect(manifest.poses.count == 11)
         #expect(manifest.states.count == 7)
         #expect(manifest.substates.count == 5)
-        #expect(manifest.ambient.count == 9)
+        #expect(manifest.ambient.count == 8)
         #expect(manifest.transitions.count == 12)
         #expect(manifest.sizes.first(where: { $0.isDefault == true })?.w == 168)
         #expect(manifest.render?.layerOrder.count == 8)
-        #expect(manifest.render?.poseLayers.count == 12)
+        #expect(manifest.render?.poseLayers.count == 11)
     }
 }
 
@@ -1048,8 +1005,8 @@ struct JoeyRenderTests {
         let manifest = try JoeyManifest.load(from: joeyManifestURL)
         #expect(manifest.render?.poseLayers["look"]?.pivot == [160, 330])
         #expect(manifest.render?.poseLayers["doze"]?.pivot == [160, 344])
-        #expect(manifest.render?.poseLayers["step"]?.pivot == [160, 344])
         #expect(manifest.render?.poseLayers["yawn"]?.pivot == [160, 334])
+        #expect(manifest.render?.poseLayers["step"] == nil)
     }
 
     @Test func everyPoseAndLayerResolvesToAPng() throws {

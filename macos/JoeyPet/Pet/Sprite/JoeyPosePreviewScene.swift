@@ -1,7 +1,7 @@
 import AppKit
 import SpriteKit
 
-/// Debug-only 4×3 grid used to review the twelve V0.1 poses on real assets.
+/// Debug-only grid used to review the V0 poses on real assets.
 /// Launch with `-JoeyPetDebugPoses`; keys 1/2/3 switch the size tier.
 @MainActor
 final class JoeyPosePreviewScene: SKScene {
@@ -25,7 +25,6 @@ final class JoeyPosePreviewScene: SKScene {
         "yawn": "打哈欠",
         "doze": "打盹",
         "peek": "探头",
-        "step": "走一步",
         "carry": "叼叶子"
     ]
 
@@ -109,7 +108,7 @@ final class JoeyPosePreviewScene: SKScene {
         }
 
         let title = SKLabelNode(fontNamed: "PingFangSC-Semibold")
-        title.text = "JoeyPet · 12 姿态预览"
+        title.text = "JoeyPet · 姿态预览"
         title.fontSize = 18
         title.fontColor = NSColor(srgbRed: 0.247, green: 0.227, blue: 0.208, alpha: 1)
         title.horizontalAlignmentMode = .left

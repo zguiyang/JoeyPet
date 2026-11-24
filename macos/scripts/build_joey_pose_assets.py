@@ -99,7 +99,6 @@ def build_sources() -> list[Path]:
 
     sleep = children("joey-sleep")
     peek = children("joey-peek")
-    step = children("joey-step")
     carry = children("joey-carry")
     sign = children("joey-sign")
 
@@ -112,7 +111,6 @@ def build_sources() -> list[Path]:
         "body.default": body_default,
         "body.sleep": [sleep[1], sleep[11]],
         "body.peek": peek[5:9],
-        "body.step": body_default + step[1:3],
         "ears.default": ears_default,
         "ears.sleep": sleep[3:5],
         "ears.peek": peek[1:5],
@@ -157,7 +155,6 @@ def build_sources() -> list[Path]:
         "yawn",
         "doze",
         "peek",
-        "step",
         "carry",
     ]
     for pose_id in pose_ids:

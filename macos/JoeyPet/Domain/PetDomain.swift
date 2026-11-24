@@ -6,7 +6,6 @@ enum PetBehaviorBucket: String, CaseIterable, Codable, Sendable {
     case idle
     case notifying
     case sleeping
-    case walking
     case celebrating
 }
 
@@ -21,7 +20,6 @@ enum PetPose: String, CaseIterable, Codable, Sendable {
     case yawn
     case doze
     case peek
-    case step
     case carry
 }
 
@@ -33,7 +31,6 @@ enum PetAmbientEvent: String, CaseIterable, Codable, Sendable {
     case shift
     case groom
     case yawn
-    case step
     case peek
 }
 
@@ -186,19 +183,6 @@ struct InvitationPolicy: Equatable, Sendable {
 
     func approachStart(due: Date) -> Date {
         due.addingTimeInterval(-TimeInterval(approachLeadMinutes) * 60)
-    }
-}
-
-/// Low-frequency ambient walking. The interval stays deliberately long so the
-/// pet never competes with work; low power stretches it further.
-struct AmbientStepPolicy: Equatable, Sendable {
-    var minimumInterval: TimeInterval = 90
-    var maximumInterval: TimeInterval = 180
-    var lowPowerMultiplier: Double = 1.5
-
-    func nextDelay(lowPower: Bool) -> TimeInterval {
-        let base = Double.random(in: minimumInterval...maximumInterval)
-        return lowPower ? base * lowPowerMultiplier : base
     }
 }
 
@@ -357,24 +341,6 @@ struct PetSituation: Equatable, Sendable {
             if isYawnActive(at: now) { return .yawn }
             if isDozing { return .doze }
             return .sit
-        }
-    }
-
-    /// Ambient walking is allowed only while the pet is awake and on screen —
-    /// never during prompts, dragging or a session.
-    func canWalkAmbiently(at now: Date) -> Bool {
-        guard isAmbientEnabled, !isReduceMotion else { return false }
-        guard !isHidden, !isDragging, !isMenuOpen else { return false }
-        guard !isSystemSleeping, !isScreenLocked else { return false }
-        guard !isDozing, !isYawning else { return false }
-        guard !isInviteCardVisible(at: now), !isRecoveryPanelVisible(at: now) else {
-            return false
-        }
-        switch resolvedDesktop(at: now) {
-        case .alone, .doNotDisturb, .snoozed:
-            return true
-        case .dragging, .hidden, .quiet, .companion:
-            return false
         }
     }
 

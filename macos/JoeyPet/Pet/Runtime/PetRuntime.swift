@@ -199,7 +199,7 @@ final class PetRuntime {
 
     // MARK: - Legacy compatibility
 
-    /// Kept for the Debug launch arguments and the still-unmigrated panel movement.
+    /// Kept for Debug launch arguments and explicit transient probes.
     @discardableResult
     func perform(_ behavior: PetTransientBehavior) -> Bool {
         guard transientPose == nil, currentTransientBehavior == nil else { return false }
@@ -208,9 +208,6 @@ final class PetRuntime {
         guard situation.resolvedDesktop(at: now()) != .hidden
             || behavior == .greeting
         else {
-            return false
-        }
-        if behavior == .walking, !situation.canWalkAmbiently(at: now()) {
             return false
         }
         switch situation.companion {
@@ -471,8 +468,6 @@ final class PetRuntime {
         switch behavior {
         case .blink:
             return nil
-        case .walking:
-            return .step
         case .carrying:
             return .carry
         case .sleeping:

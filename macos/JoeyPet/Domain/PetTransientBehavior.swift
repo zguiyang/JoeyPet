@@ -2,7 +2,6 @@ import Foundation
 
 enum PetTransientBehavior: String, Equatable, Sendable, CaseIterable {
     case blink
-    case walking
     case carrying
     case sleeping
     case celebrating
@@ -18,8 +17,6 @@ enum PetTransientBehavior: String, Equatable, Sendable, CaseIterable {
     /// underlying state. This is behavior cadence, not clip frame rate.
     var sessionDuration: TimeInterval? {
         switch self {
-        case .walking:
-            return 2.4
         case .carrying:
             return 3.6
         case .greeting:

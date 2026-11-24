@@ -71,7 +71,6 @@ struct JoeyAmbientSpec: Codable, Equatable, Sendable {
     let tilt: Double?
     let armDeg: Int?
     let headScale: Double?
-    let travelPt: [Int]?
     let bobPx: Int?
 }
 

@@ -1,6 +1,5 @@
 import AppKit
 import OSLog
-import QuartzCore
 import SpriteKit
 
 @MainActor
@@ -25,7 +24,6 @@ final class PetPanelController {
     /// Mirrors every reduced situation so the host can follow session state.
     var onSituationChanged: ((PetSituation) -> Void)?
 
-    private var movementTask: Task<Void, Never>?
     private var corner: PetCorner
 
     convenience init(corner: PetCorner = .bottomRight) {
@@ -66,7 +64,6 @@ final class PetPanelController {
         spriteView.onMenuRequested = { [weak self] in self?.showMenu() }
         spriteView.onDragBegan = { [weak self] in self?.dragBegan() }
         spriteView.onDragEnded = { [weak self] origin in self?.dragEnded(origin: origin) }
-        spriteView.onKeyboardMove = { [weak self] dx, dy in self?.movePanel(by: dx, dy: dy) }
 
         menuController.isSessionActive = { [weak self] in
             self?.petRuntime.situation.session != nil
@@ -142,7 +139,6 @@ final class PetPanelController {
             sessionSurfaces.update(situation: petRuntime.situation)
             Self.logger.info("Pet panel shown")
         } else {
-            stopMovement()
             panel.orderOut(nil)
             sessionSurfaces.hideAll()
             spriteView.isPaused = true
@@ -152,52 +148,6 @@ final class PetPanelController {
     }
 
     func currentFrame() -> NSRect { panel.frame }
-
-    /// One low-frequency ambient walk. The runtime owns the decision and the
-    /// pose; this method only moves the panel when the pet is free to roam.
-    func moveShortDistance() {
-        guard isVisible,
-              movementTask == nil,
-              petRuntime.currentTransientBehavior == nil,
-              petRuntime.perform(.walking) else { return }
-
-        guard let screen = screenForPanel() else {
-            petRuntime.finishTransientIfCurrent(.walking)
-            return
-        }
-        let visible = screen.visibleFrame
-        let margin: CGFloat = 20
-        let direction: CGFloat = Bool.random() ? 1 : -1
-        let distance = CGFloat(Int.random(in: 40...120)) * direction
-        let minX = visible.minX + margin
-        let maxX = visible.maxX - panel.frame.width - margin
-        let targetX = min(max(panel.frame.origin.x + distance, minX), maxX)
-        guard abs(targetX - panel.frame.origin.x) > 1 else {
-            petRuntime.finishTransientIfCurrent(.walking)
-            return
-        }
-
-        NSAnimationContext.runAnimationGroup { context in
-            context.duration = 1.2
-            context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-            panel.animator().setFrameOrigin(NSPoint(x: targetX, y: panel.frame.origin.y))
-        }
-        let duration = PetTransientBehavior.walking.sessionDuration ?? 2.4
-        movementTask = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(duration))
-            guard !Task.isCancelled, let self else { return }
-            self.petRuntime.finishTransientIfCurrent(.walking)
-            self.movementTask = nil
-        }
-    }
-
-    func stopMovement() {
-        movementTask?.cancel()
-        movementTask = nil
-        if petRuntime.currentTransientBehavior == .walking {
-            petRuntime.finishTransientIfCurrent(.walking)
-        }
-    }
 
     func resetPosition() {
         positionStore.clear()
@@ -230,7 +180,6 @@ final class PetPanelController {
     // MARK: - Drag
 
     private func dragBegan() {
-        stopMovement()
         petRuntime.send(.dragBegan)
     }
 
@@ -239,7 +188,7 @@ final class PetPanelController {
         saveUserPosition(origin: origin)
     }
 
-    // MARK: - Menu and keyboard
+    // MARK: - Menu
 
     private func showMenu() {
         spriteView.toolTip = nil
@@ -247,24 +196,6 @@ final class PetPanelController {
             in: spriteView,
             at: NSPoint(x: spriteView.bounds.midX, y: spriteView.bounds.midY)
         )
-    }
-
-    private func movePanel(by dx: CGFloat, dy: CGFloat) {
-        guard isVisible else { return }
-
-        guard let screen = screenForPanel() else { return }
-        let visible = petVisibleFrame(screen)
-        let clamped = PetPanelGeometry.clampedOrigin(
-            PetPositionPoint(
-                x: panel.frame.origin.x + dx,
-                y: panel.frame.origin.y + dy
-            ),
-            in: visible,
-            windowSize: Self.panelSizePoint
-        )
-        let origin = NSPoint(x: clamped.x, y: clamped.y)
-        panel.setFrameOrigin(origin)
-        saveUserPosition(origin: origin)
     }
 
     // MARK: - Accessibility
@@ -347,10 +278,6 @@ final class PetPanelController {
             normalizedOrigin: PetPositionGeometry.normalizedOrigin(point, in: visibleGeometry, windowSize: size),
             savedVisibleFrame: visibleGeometry
         ))
-    }
-
-    deinit {
-        movementTask?.cancel()
     }
 
     private static func initialFrame(

@@ -16,7 +16,6 @@ final class PetSpriteView: SKView {
     var onLeftClick: (() -> Void)?
     var onDragBegan: (() -> Void)?
     var onDragEnded: ((NSPoint) -> Void)?
-    var onKeyboardMove: ((CGFloat, CGFloat) -> Void)?
     var onMenuRequested: (() -> Void)?
 
     /// Mirrors the runtime situation for VoiceOver without the view reading state.
@@ -185,17 +184,8 @@ final class PetSpriteView: SKView {
     // MARK: - Keyboard
 
     override func keyDown(with event: NSEvent) {
-        let step: CGFloat = event.modifierFlags.contains(.shift) ? 10 : 1
-
+        // Arrow keys do not move Joey — position changes only via drag.
         switch event.keyCode {
-        case 123:
-            onKeyboardMove?(-step, 0)
-        case 124:
-            onKeyboardMove?(step, 0)
-        case 125:
-            onKeyboardMove?(0, -step)
-        case 126:
-            onKeyboardMove?(0, step)
         case 36, 76:
             onMenuRequested?()
         default:
