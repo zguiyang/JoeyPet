@@ -297,6 +297,15 @@ struct PetSituation: Equatable, Sendable {
             || isDozing || isYawning || session != nil
     }
 
+    /// Alone on `sit`, quiet desk — the only place ambient groom may start.
+    func canPlayAmbientGroom(at now: Date) -> Bool {
+        guard !isReduceMotion else { return false }
+        guard resolvedDesktop(at: now) == .alone else { return false }
+        guard !isDozing, !isYawnActive(at: now) else { return false }
+        guard !isDragging, !isMenuOpen else { return false }
+        return resolvedPose(at: now) == .sit
+    }
+
     /// Whether the desktop panel should be on screen. Hidden mode is silent
     /// except while an invitation, recovery or completion is on display.
     func shouldShowPanel(at now: Date) -> Bool {

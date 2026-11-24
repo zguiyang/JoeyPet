@@ -1444,4 +1444,76 @@ struct PetRuntimeTests {
         #expect(runtime.renderedPose == .wave)
         #expect(runtime.currentTransientBehavior == .greeting)
     }
+    @Test func carrySurvivesTicksWhileCompanionshipStaysIdle() {
+        let calendar = testCalendar()
+        let start = testDate(2026, 11, 23, 9, 0)
+        var current = start
+        let runtime = PetRuntime(
+            renderer: TestPoseRenderer(),
+            store: TestSessionStore(makePersisted(now: start, calendar: calendar)),
+            now: { current },
+            calendar: calendar
+        )
+
+        runtime.startSession()
+        current = start.addingTimeInterval(45 * 60)
+        runtime.send(.tick)
+        runtime.send(.inviteAccepted)
+
+        current = start.addingTimeInterval(45 * 60 + 30)
+        runtime.send(.tick)
+        #expect(runtime.situation.companion == .complete)
+
+        current = start.addingTimeInterval(45 * 60 + 32.6)
+        runtime.send(.tick)
+        #expect(runtime.currentTransientBehavior == .carrying)
+        #expect(runtime.renderedPose == .carry)
+
+        // Next wake while companionship stays idle must not kill the leaf beat.
+        current = start.addingTimeInterval(45 * 60 + 33)
+        runtime.send(.tick)
+        #expect(runtime.currentTransientBehavior == .carrying)
+        #expect(runtime.renderedPose == .carry)
+    }
+
+    @Test func ambientGroomOnlyWhileAloneSitting() {
+        let now = testDate(2026, 11, 23, 10, 0)
+        var alone = PetSituation()
+        #expect(alone.canPlayAmbientGroom(at: now))
+
+        alone.isDozing = true
+        #expect(!alone.canPlayAmbientGroom(at: now))
+
+        alone.isDozing = false
+        alone.session = CompanionSession(startedAt: now)
+        alone.companion = .idle
+        #expect(!alone.canPlayAmbientGroom(at: now))
+        #expect(alone.resolvedPose(at: now) == .look)
+    }
+
+    @Test func playAmbientGroomHoldsTheGroomPose() {
+        let calendar = testCalendar()
+        let now = testDate(2026, 11, 23, 10, 0)
+        let (runtime, _, _) = makeRuntime(now: now, calendar: calendar)
+
+        #expect(runtime.playAmbientGroom())
+        #expect(runtime.renderedPose == .groom)
+        #expect(runtime.currentTransientBehavior == .grooming)
+
+        runtime.startSession()
+        #expect(runtime.currentTransientBehavior == nil)
+        #expect(runtime.renderedPose == .look)
+    }
+
+    @Test func ambientGroomPlannerRespectsCooldown() {
+        let start = testDate(2026, 11, 23, 10, 0)
+        var planner = AmbientGroomPlanner()
+        planner.reset(at: start) { _ in 30 }
+        #expect(planner.isDue(at: start.addingTimeInterval(29)) == false)
+        #expect(planner.isDue(at: start.addingTimeInterval(30)))
+
+        planner.markFired(at: start.addingTimeInterval(30)) { _ in 60 }
+        #expect(planner.isDue(at: start.addingTimeInterval(89)) == false)
+        #expect(planner.isDue(at: start.addingTimeInterval(90)))
+    }
 }

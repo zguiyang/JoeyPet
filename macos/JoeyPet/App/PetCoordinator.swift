@@ -8,6 +8,7 @@ final class PetCoordinator {
 
     private let sleepWakeMonitor = SleepWakeMonitor()
     private let presenceMonitor: PetPresenceMonitor
+    private let ambientScheduler = AmbientBehaviorScheduler()
     private let panelController: PetPanelController
     private var workspaceObservers: [NSObjectProtocol] = []
 
@@ -23,6 +24,9 @@ final class PetCoordinator {
         )
         presenceMonitor.onEvent = { [weak self] event in
             self?.panelController.petRuntime.send(event)
+        }
+        ambientScheduler.onGroom = { [weak self] in
+            self?.panelController.petRuntime.playAmbientGroom() ?? false
         }
         panelController.onSituationChanged = { [weak self] situation in
             guard let self else { return }
@@ -40,22 +44,26 @@ final class PetCoordinator {
         sleepWakeMonitor.onSleep = { [weak self] in
             guard let self else { return }
             self.presenceMonitor.stop()
+            self.ambientScheduler.stop()
             self.runtime.send(.systemSleep)
         }
         sleepWakeMonitor.onWake = { [weak self] in
             guard let self else { return }
             self.runtime.send(.systemWake)
             self.presenceMonitor.start()
+            self.ambientScheduler.start()
         }
         sleepWakeMonitor.onScreenLocked = { [weak self] in
             guard let self else { return }
             self.presenceMonitor.stop()
+            self.ambientScheduler.stop()
             self.runtime.send(.screenLocked)
         }
         sleepWakeMonitor.onScreenUnlocked = { [weak self] in
             guard let self else { return }
             self.runtime.send(.screenUnlocked)
             self.presenceMonitor.start()
+            self.ambientScheduler.start()
         }
         sleepWakeMonitor.start()
 
@@ -65,6 +73,7 @@ final class PetCoordinator {
         panelController.syncGreetingTip(for: runtime.renderedPose)
         onPoseChanged?(runtime.renderedPose)
         presenceMonitor.start()
+        ambientScheduler.start()
 
         if let animationID = DebugStateInjector.injectedAnimationID() {
             runtime.applyDebugAnimation(animationID)
@@ -80,6 +89,7 @@ final class PetCoordinator {
     func stop() {
         sleepWakeMonitor.stop()
         presenceMonitor.stop()
+        ambientScheduler.stop()
 
         let center = NSWorkspace.shared.notificationCenter
         for observer in workspaceObservers {
@@ -142,7 +152,7 @@ final class PetCoordinator {
         case .yawning:
             return runtime.debugHoldPose(.yawn, duration: 1.8)
         case .grooming:
-            return runtime.debugHoldPose(.groom, duration: 2.8)
+            return runtime.perform(.grooming)
         case .startSession:
             runtime.startSession()
             return true

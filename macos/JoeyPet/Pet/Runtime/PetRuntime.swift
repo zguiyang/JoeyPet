@@ -150,11 +150,10 @@ final class PetRuntime {
         )
         situation = transition.state
 
-        // A pose that must win (sleep, drag, invitation, session) cuts any
-        // ambient transient short instead of letting it finish over it. A
-        // greeting is a direct response to the user, so it plays out.
-        if situation.interruptsAmbientTransient,
-           currentTransientBehavior != .greeting {
+        // Ambient clips (groom, …) yield to higher-priority situation poses.
+        // Product moments like carrying / greeting finish unless a hard interrupt
+        // hits them — otherwise `session != nil` would kill the post-break leaf.
+        if shouldClearTransientForSituation() {
             clearTransient()
         }
 
@@ -493,10 +492,37 @@ final class PetRuntime {
             return .happy
         case .greeting:
             return .wave
+        case .grooming:
+            return .groom
         case .notifying:
             // Rest invitation UI is the floating card; Joey stays attentive.
             return .look
         }
+    }
+
+    /// Ambient-only clips clear when the situation says so. Carrying survives
+    /// an active companionship session so the leaf beat can finish.
+    private func shouldClearTransientForSituation() -> Bool {
+        guard let behavior = currentTransientBehavior else { return false }
+        if behavior == .greeting { return false }
+        if behavior == .carrying {
+            return situation.isDragging
+                || situation.isHidden
+                || situation.isQuietActive
+                || situation.isSystemSleeping
+                || situation.isScreenLocked
+                || situation.companion == .invite
+                || situation.companion == .recover
+                || situation.companion == .complete
+        }
+        return behavior.isAmbient && situation.interruptsAmbientTransient
+    }
+
+    /// Scheduler entry: play a quiet-room groom when gates allow.
+    @discardableResult
+    func playAmbientGroom() -> Bool {
+        guard situation.canPlayAmbientGroom(at: now()) else { return false }
+        return perform(.grooming)
     }
 
     private static func makeRenderer(sceneSize: CGSize) -> PetPoseRendering {

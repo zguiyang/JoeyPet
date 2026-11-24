@@ -37,6 +37,7 @@
 		D7PET12F305978720070926E /* JoeyPosePreviewScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET02F305978720070926E /* JoeyPosePreviewScene.swift */; };
 		D7PET130305978720070926E /* JoeyPosePreviewWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET030305978720070926E /* JoeyPosePreviewWindowController.swift */; };
 		D7PET131305978720070926E /* PetPresenceMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET031305978720070926E /* PetPresenceMonitor.swift */; };
+		D7PET133305978720070926E /* AmbientBehaviorScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET033305978720070926E /* AmbientBehaviorScheduler.swift */; };
 		D7PET132305978720070926E /* JoeyDesktopScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET032305978720070926E /* JoeyDesktopScene.swift */; };
 		D7F000000000000000000001 /* JoeyTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000002 /* JoeyTheme.swift */; };
 		D7F000000000000000000003 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000004 /* AppSettings.swift */; };
@@ -97,6 +98,7 @@
 		D7PET02F305978720070926E /* JoeyPosePreviewScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeyPosePreviewScene.swift; sourceTree = "<group>"; };
 		D7PET030305978720070926E /* JoeyPosePreviewWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeyPosePreviewWindowController.swift; sourceTree = "<group>"; };
 		D7PET031305978720070926E /* PetPresenceMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetPresenceMonitor.swift; sourceTree = "<group>"; };
+		D7PET033305978720070926E /* AmbientBehaviorScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientBehaviorScheduler.swift; sourceTree = "<group>"; };
 		D7PET032305978720070926E /* JoeyDesktopScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeyDesktopScene.swift; sourceTree = "<group>"; };
 		D7F000000000000000000002 /* JoeyTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeyTheme.swift; sourceTree = "<group>"; };
 		D7F000000000000000000004 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
@@ -173,6 +175,7 @@
 			isa = PBXGroup;
 			children = (
 				D7PET031305978720070926E /* PetPresenceMonitor.swift */,
+				D7PET033305978720070926E /* AmbientBehaviorScheduler.swift */,
 			);
 			path = Behavior;
 			sourceTree = "<group>";
@@ -468,6 +471,7 @@
 				D7PET12F305978720070926E /* JoeyPosePreviewScene.swift in Sources */,
 				D7PET130305978720070926E /* JoeyPosePreviewWindowController.swift in Sources */,
 				D7PET131305978720070926E /* PetPresenceMonitor.swift in Sources */,
+				D7PET133305978720070926E /* AmbientBehaviorScheduler.swift in Sources */,
 				D7PET132305978720070926E /* JoeyDesktopScene.swift in Sources */,
 				D7F000000000000000000001 /* JoeyTheme.swift in Sources */,
 				D7F000000000000000000003 /* AppSettings.swift in Sources */,
