@@ -35,6 +35,7 @@ final class JoeyCharacterNode: SKNode {
         static let sleepMicro = "joey.sleepMicro"
         static let sleepHead = "joey.sleepHead"
         static let sleepEar = "joey.sleepEar"
+        static let yawn = "joey.yawn"
     }
 
     private static let blinkSuppressedPoses: Set<String> = [
@@ -180,6 +181,7 @@ final class JoeyCharacterNode: SKNode {
         startWaveIfNeeded()
         startStretchReachIfNeeded()
         startHappyCelebrationIfNeeded()
+        startYawnIfNeeded()
     }
 
     func applySize(id: String) {
@@ -204,6 +206,7 @@ final class JoeyCharacterNode: SKNode {
             startWaveIfNeeded()
             startStretchReachIfNeeded()
             startHappyCelebrationIfNeeded()
+            startYawnIfNeeded()
         }
     }
 
@@ -366,8 +369,8 @@ final class JoeyCharacterNode: SKNode {
 
     private func startAmbientIfNeeded() {
         guard !isReduceMotionEnabled, poseID != nil else { return }
-        // Happy is a one-shot celebration (joeypet-happy-frames-v0.html), not a loop.
-        guard poseID != "happy" else { return }
+        // Happy / yawn are one-shots, not breath loops.
+        guard poseID != "happy", poseID != "yawn" else { return }
         if poseID == "doze" {
             // docs/reference/joeypet-doze-spritesheet-v0.svg — breath+sway loop + random micro.
             startDozeLoop()
@@ -568,6 +571,53 @@ final class JoeyCharacterNode: SKNode {
         let settle = SKAction.move(to: rest, duration: 0.36)
         settle.timingMode = .easeInEaseOut
         face.run(.sequence([down, deeper, settle]), withKey: ActionKey.sleepHead)
+    }
+
+    /// Wake / long-sit yawn: one-shot head tip-back over 1.8 s.
+    /// Matches docs/reference/joeypet-yawn-spritesheet-v0.svg (base +2° → peak +3.8°).
+    private func startYawnIfNeeded() {
+        guard poseID == "yawn" else { return }
+
+        breathPivot.removeAction(forKey: ActionKey.yawn)
+        layerPivots["ears"]?.removeAction(forKey: ActionKey.yawn)
+        breathPivot.xScale = 1
+        breathPivot.yScale = 1
+        breathPivot.zRotation = 0
+        layerPivots["ears"]?.zRotation = 0
+
+        guard !isReduceMotionEnabled else { return }
+
+        // Manifest already applies rotate +2°; extra tip is up to +1.8° (SVG 2 → 3.8).
+        // posePivot stores SVG rotate as negative SK angle, so deepen with negative breathPivot.
+        let step: TimeInterval = 1.8 / 8
+        let tilts: [CGFloat] = [0, -0.5, -1.5, -1.8, -1.0, -0.5, -0.1, 0]
+        let earAngles: [CGFloat] = [0, 0, 1.0, 1.5, 0.6, 0, 0, 0]
+
+        var bodySteps: [SKAction] = []
+        for degrees in tilts {
+            let rotate = SKAction.rotate(
+                toAngle: degrees * .pi / 180,
+                duration: step,
+                shortestUnitArc: true
+            )
+            rotate.timingMode = .easeInEaseOut
+            bodySteps.append(rotate)
+        }
+        breathPivot.run(.sequence(bodySteps), withKey: ActionKey.yawn)
+
+        if let ears = layerPivots["ears"], !ears.isHidden {
+            var earSteps: [SKAction] = []
+            for degrees in earAngles {
+                let rotate = SKAction.rotate(
+                    toAngle: degrees * .pi / 180,
+                    duration: step,
+                    shortestUnitArc: true
+                )
+                rotate.timingMode = .easeInEaseOut
+                earSteps.append(rotate)
+            }
+            ears.run(.sequence(earSteps), withKey: ActionKey.yawn)
+        }
     }
 
     /// Greeting hold: rotate the raised front arm twice around the right shoulder.
@@ -872,12 +922,14 @@ final class JoeyCharacterNode: SKNode {
         breathPivot.removeAction(forKey: ActionKey.happy)
         breathPivot.removeAction(forKey: ActionKey.dozeLoop)
         breathPivot.removeAction(forKey: ActionKey.sleepLoop)
+        breathPivot.removeAction(forKey: ActionKey.yawn)
         posePivot.removeAction(forKey: ActionKey.happy)
         layerPivots["tail"]?.removeAction(forKey: ActionKey.tail)
         layerPivots["tail"]?.removeAction(forKey: ActionKey.happy)
         layerPivots["ears"]?.removeAction(forKey: ActionKey.earAngle)
         layerPivots["ears"]?.removeAction(forKey: ActionKey.happy)
         layerPivots["ears"]?.removeAction(forKey: ActionKey.sleepEar)
+        layerPivots["ears"]?.removeAction(forKey: ActionKey.yawn)
         layerPivots["frontArm"]?.removeAction(forKey: ActionKey.wave)
         layerPivots["frontArm"]?.removeAction(forKey: ActionKey.stretchReach)
         layerPivots["backArm"]?.removeAction(forKey: ActionKey.stretchReach)
