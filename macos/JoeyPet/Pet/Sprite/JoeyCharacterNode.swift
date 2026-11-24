@@ -31,6 +31,10 @@ final class JoeyCharacterNode: SKNode {
         static let dozeLoop = "joey.dozeLoop"
         static let dozeMicro = "joey.dozeMicro"
         static let dozeHead = "joey.dozeHead"
+        static let sleepLoop = "joey.sleepLoop"
+        static let sleepMicro = "joey.sleepMicro"
+        static let sleepHead = "joey.sleepHead"
+        static let sleepEar = "joey.sleepEar"
     }
 
     private static let blinkSuppressedPoses: Set<String> = [
@@ -370,6 +374,12 @@ final class JoeyCharacterNode: SKNode {
             scheduleDozeMicroAction()
             return
         }
+        if poseID == "sleep" {
+            // docs/reference/joeypet-sleep-spritesheet-v0.svg — quieter breath + rare micros.
+            startSleepLoop()
+            scheduleSleepMicroAction()
+            return
+        }
         startBreath()
         startTail()
         scheduleBlink()
@@ -473,6 +483,91 @@ final class JoeyCharacterNode: SKNode {
         let rest = SKAction.rotate(toAngle: 0, duration: 0.22, shortestUnitArc: true)
         rest.timingMode = .easeInEaseOut
         pivot.run(.sequence([out, settle, rest]), withKey: ActionKey.tail)
+    }
+
+    /// Quiet-hours deep sleep from the accepted sleep spritesheet (A: 10 frames / 8.0 s).
+    /// Peak scaleY 1.010, sway ≤ ±0.2°. Tail stays still; ears stay on baked splay.
+    private func startSleepLoop() {
+        breathPivot.removeAction(forKey: ActionKey.breath)
+        breathPivot.removeAction(forKey: ActionKey.sleepLoop)
+        breathPivot.xScale = 1
+        breathPivot.yScale = 1
+        breathPivot.zRotation = 0
+
+        let step: TimeInterval = 0.8
+        let frames: [(rotationDegrees: CGFloat, scaleY: CGFloat)] = [
+            (0, 1.000), (0, 1.003), (0.1, 1.007), (0.2, 1.009), (0.1, 1.010),
+            (0, 1.008), (-0.1, 1.005), (-0.2, 1.002), (-0.1, 0.999), (0, 1.000)
+        ]
+
+        var steps: [SKAction] = []
+        for frame in frames {
+            let rotate = SKAction.rotate(
+                toAngle: frame.rotationDegrees * .pi / 180,
+                duration: step,
+                shortestUnitArc: true
+            )
+            rotate.timingMode = .easeInEaseOut
+            let scale = SKAction.scaleY(to: frame.scaleY, duration: step)
+            scale.timingMode = .easeInEaseOut
+            steps.append(.group([rotate, scale]))
+        }
+
+        breathPivot.run(.repeatForever(.sequence(steps)), withKey: ActionKey.sleepLoop)
+    }
+
+    /// Rare sleep micros (B rows): ear settle, soft head dip. Longer gaps than doze.
+    private func scheduleSleepMicroAction() {
+        guard poseID == "sleep", !isReduceMotionEnabled else { return }
+
+        let wait = SKAction.wait(forDuration: .random(in: 22...45))
+        let fire = SKAction.run { [weak self] in self?.playSleepMicroAction() }
+        removeAction(forKey: ActionKey.sleepMicro)
+        run(.sequence([wait, fire]), withKey: ActionKey.sleepMicro)
+    }
+
+    private func playSleepMicroAction() {
+        guard poseID == "sleep", !isReduceMotionEnabled else { return }
+
+        if Bool.random() {
+            playSleepEarSettle()
+        } else {
+            playSleepHeadDip()
+        }
+        scheduleSleepMicroAction()
+    }
+
+    private func playSleepEarSettle() {
+        guard let pivot = layerPivots["ears"], !pivot.isHidden else { return }
+        // ears.sleep already bakes ±11° splay; true per-ear deepen isn't available on one
+        // texture. Approximate the B1 “settle” with a soft vertical dip of the ear layer.
+        let rest = pivot.position
+        let mid = CGPoint(x: rest.x, y: rest.y - 1.0)
+        let deep = CGPoint(x: rest.x, y: rest.y - 1.8)
+
+        let down = SKAction.move(to: mid, duration: 0.32)
+        down.timingMode = .easeInEaseOut
+        let deeper = SKAction.move(to: deep, duration: 0.28)
+        deeper.timingMode = .easeInEaseOut
+        let settle = SKAction.move(to: rest, duration: 0.36)
+        settle.timingMode = .easeInEaseOut
+        pivot.run(.sequence([down, deeper, settle]), withKey: ActionKey.sleepEar)
+    }
+
+    private func playSleepHeadDip() {
+        guard let face = layerSprites["face"], !face.isHidden else { return }
+        // Spritesheet B2: face/ears dip ~2.5 pt — quieter than doze.
+        let rest = face.position
+        let light = CGPoint(x: rest.x, y: rest.y - 1.5)
+        let deep = CGPoint(x: rest.x, y: rest.y - 2.5)
+
+        let down = SKAction.move(to: light, duration: 0.32)
+        down.timingMode = .easeInEaseOut
+        let deeper = SKAction.move(to: deep, duration: 0.28)
+        deeper.timingMode = .easeInEaseOut
+        let settle = SKAction.move(to: rest, duration: 0.36)
+        settle.timingMode = .easeInEaseOut
+        face.run(.sequence([down, deeper, settle]), withKey: ActionKey.sleepHead)
     }
 
     /// Greeting hold: rotate the raised front arm twice around the right shoulder.
@@ -602,12 +697,8 @@ final class JoeyCharacterNode: SKNode {
             // docs/reference/joeypet-doze-spritesheet-v0.svg — used by startDozeLoop().
             return (7.2, 1.011, 1.1)
         case "sleep":
-            let milliseconds = spec?.sleepMs ?? 6000
-            return (
-                TimeInterval(milliseconds) / 1000,
-                CGFloat(spec?.scale ?? 1.046),
-                0.5
-            )
+            // docs/reference/joeypet-sleep-spritesheet-v0.svg — used by startSleepLoop().
+            return (8.0, 1.010, 0.2)
         default:
             let milliseconds = spec?.loopMs ?? 4800
             // docs/reference/joeypet-idle-breathing-frames-v0.html
@@ -780,18 +871,22 @@ final class JoeyCharacterNode: SKNode {
         breathPivot.removeAction(forKey: ActionKey.breath)
         breathPivot.removeAction(forKey: ActionKey.happy)
         breathPivot.removeAction(forKey: ActionKey.dozeLoop)
+        breathPivot.removeAction(forKey: ActionKey.sleepLoop)
         posePivot.removeAction(forKey: ActionKey.happy)
         layerPivots["tail"]?.removeAction(forKey: ActionKey.tail)
         layerPivots["tail"]?.removeAction(forKey: ActionKey.happy)
         layerPivots["ears"]?.removeAction(forKey: ActionKey.earAngle)
         layerPivots["ears"]?.removeAction(forKey: ActionKey.happy)
+        layerPivots["ears"]?.removeAction(forKey: ActionKey.sleepEar)
         layerPivots["frontArm"]?.removeAction(forKey: ActionKey.wave)
         layerPivots["frontArm"]?.removeAction(forKey: ActionKey.stretchReach)
         layerPivots["backArm"]?.removeAction(forKey: ActionKey.stretchReach)
         layerSprites["face"]?.removeAction(forKey: ActionKey.dozeHead)
+        layerSprites["face"]?.removeAction(forKey: ActionKey.sleepHead)
         removeAction(forKey: ActionKey.blink)
         removeAction(forKey: ActionKey.ear)
         removeAction(forKey: ActionKey.dozeMicro)
+        removeAction(forKey: ActionKey.sleepMicro)
 
         breathPivot.xScale = 1
         breathPivot.yScale = 1
@@ -799,11 +894,18 @@ final class JoeyCharacterNode: SKNode {
         posePivot.position = restPosePivotPosition
         posePivot.zRotation = restPosePivotRotation
         layerPivots["tail"]?.zRotation = 0
-        layerPivots["ears"]?.zRotation = 0
+        if let ears = layerPivots["ears"] {
+            ears.removeAction(forKey: ActionKey.sleepEar)
+            ears.zRotation = 0
+            if let anchor = pivotAnchor(for: "ears") {
+                ears.position = anchor
+            }
+        }
         layerPivots["frontArm"]?.zRotation = 0
         layerPivots["backArm"]?.zRotation = 0
         if let face = layerSprites["face"] {
             face.removeAction(forKey: ActionKey.dozeHead)
+            face.removeAction(forKey: ActionKey.sleepHead)
             face.position = layerBasePosition
             face.texture = currentFaceTexture
         }

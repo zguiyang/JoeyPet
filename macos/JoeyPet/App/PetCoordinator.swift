@@ -137,6 +137,8 @@ final class PetCoordinator {
             return runtime.perform(.carrying)
         case .sleeping:
             return runtime.perform(.sleeping)
+        case .quietSleep:
+            return runtime.debugHoldPose(.sleep, duration: 24)
         case .startSession:
             runtime.startSession()
             return true

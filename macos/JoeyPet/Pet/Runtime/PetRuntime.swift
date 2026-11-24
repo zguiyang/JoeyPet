@@ -233,6 +233,23 @@ final class PetRuntime {
         endTransient(id: transientID)
     }
 
+    /// Debug-only: hold a pose without mapping through `PetTransientBehavior`.
+    /// Used when the product moment is a sustained state pose (e.g. quiet-hours `sleep`).
+    @discardableResult
+    func debugHoldPose(_ pose: PetPose, duration: TimeInterval) -> Bool {
+        guard transientPose == nil, currentTransientBehavior == nil else { return false }
+        guard situation.resolvedDesktop(at: now()) != .hidden else { return false }
+        switch situation.companion {
+        case .invite, .recover, .complete:
+            return false
+        default:
+            break
+        }
+        playTransient(pose: pose, duration: duration)
+        Self.logger.info("PetRuntime debugHoldPose -> \(pose.rawValue, privacy: .public)")
+        return true
+    }
+
     /// Direct asset playback hook for Debug builds; it never changes the domain state.
     func applyDebugAnimation(_ animationID: String) {
         if animationID == "idle" {
