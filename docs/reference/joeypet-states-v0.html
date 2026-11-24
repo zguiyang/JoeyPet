@@ -1309,8 +1309,8 @@
           <tr><td><code>sit</code> → <code>doze</code></td><td>无交互 90 秒</td><td>600 ms</td><td>ease-out</td><td>头先低，眼睛后闭</td></tr>
           <tr><td><code>doze</code> → <code>yawn</code></td><td>用户回到电脑前</td><td>400 ms</td><td>ease-out</td><td>醒来先打哈欠</td></tr>
           <tr><td><code>yawn</code> → <code>look</code></td><td>哈欠结束</td><td>400 ms</td><td>ease-out</td><td>视情况进入 look 或 sit</td></tr>
-          <tr><td><code>sit</code> → <code>sleep</code></td><td>安静时段开始</td><td>600 ms</td><td>ease-out</td><td>身体微微下沉，耳朵放松</td></tr>
-          <tr><td><code>sleep</code> → <code>sit</code></td><td>安静时段结束</td><td>500 ms</td><td>ease-out</td><td>先睁眼，再抬起头</td></tr>
+          <tr><td><code>sit</code> / <code>look</code> / <code>doze</code> → <code>yawn</code> → <code>sleep</code></td><td>安静时段开始</td><td>yawn 1.8 s，再 sleep</td><td>ease-out</td><td>先打哈欠再深睡（恢复/完成进行中则先走完）</td></tr>
+          <tr><td><code>sleep</code> → <code>yawn</code> → <code>sit</code> / <code>look</code></td><td>安静时段结束</td><td>yawn 1.8 s，再白天姿态</td><td>ease-out</td><td>醒来先打哈欠，再按情境回落</td></tr>
           <tr><td><code>sign</code> → <code>sit</code></td><td>稍后 / 勿扰 / 关闭</td><td>240 ms</td><td>ease-out</td><td>牌先落下，卡片随后淡出</td></tr>
           <tr><td><code>look</code> → <code>sit</code></td><td>结束会话</td><td>240 ms</td><td>ease-out</td><td>视线回落</td></tr>
         </tbody>
@@ -1589,7 +1589,7 @@
       <table>
         <thead><tr><th style="width:120px">触发源</th><th style="width:20%">事件</th><th style="width:150px">目标</th><th>条件 / 防抖</th></tr></thead>
         <tbody>
-          <tr><td>本地时钟</td><td>每分钟检查一次安静区间</td><td><code>quiet</code> → <code>sleep</code></td><td>进入 22:00–08:00 立即生效；已在恢复中的 30 秒允许走完</td></tr>
+          <tr><td>本地时钟</td><td>每分钟检查一次安静区间</td><td><code>quiet</code> → <code>yawn</code> → <code>sleep</code>；离开 → <code>yawn</code> → 白天姿态</td><td>进入 22:00–08:00 先打哈欠再深睡；已在恢复/完成中允许走完后再打哈欠入睡；离开时段同样先打哈欠</td></tr>
           <tr><td>本地时钟</td><td>无指针/键盘活动满 90 秒</td><td><code>doze</code></td><td>仅在 alone / doNotDisturb / snoozed；菜单打开、拖动中、会话邀请卡在场时不计</td></tr>
           <tr><td>本地时钟</td><td>邀请到点</td><td><code>invite</code> → <code>look</code> + 邀请卡</td><td>距上次关闭或完成 ≥ 45 分钟；不在 quiet / doNotDisturb；同一时刻仅一张卡；隐藏时仍会临时露面提醒</td></tr>
           <tr><td>会话</td><td>用户点「开始一起工作」</td><td><code>companion</code> → <code>look</code></td><td>唯一建立会话的入口；系统键鼠活动不得推断工作状态</td></tr>

@@ -95,7 +95,7 @@ AmbientEvent                       叠加在姿态上的小循环/瞬态
 |---|---|---|---|---|
 | 1 | `dragging` | `look` | 指针按下并移动超过 4 px | 释放后 600 ms 重算 |
 | 2 | `hidden` | 无 | 菜单/设置隐藏 | 只能由用户恢复；到点仍会临时露面提醒 |
-| 3 | `quiet` | `sleep` | 本地时间落在安静时段 | 时段结束立即退出 |
+| 3 | `quiet` | `yawn` → `sleep` | 本地时间落在安静时段；先打哈欠再深睡（恢复/完成进行中则先走完） | 时段结束先打哈欠再回白天姿态 |
 | 4 | `doNotDisturb` | `doze` | 用户在设置或桌面菜单开启勿扰 | 用户手动关闭 |
 | 5 | `snoozed` | `sit` | 邀请卡点“稍后提醒” | 10 分钟或会话结束 |
 | 6 | `companion` | `look` | 用户开始陪伴 | 用户结束会话 |
@@ -146,7 +146,7 @@ clip id 一经交付不再改名。未知 clip → `idle/idle_sit`，记一次�
 | `tail` | 持续 | ±8°，与呼吸同拍，绕尾根旋转 | 按图谱第 12 章矩阵 |
 | `shift` | 持续 | 6–9 s，±2 px，0.5°，800 ms | 按图谱第 12 章矩阵 |
 | `groom` | 瞬态 | 3.8 s，3 次 | 仅 `sit`，非邀请/恢复 |
-| `yawn` | 瞬态 | 1.8 s | 离开 ≥30 分钟或刚醒；非邀请/恢复 |
+| `yawn` | 瞬态 | 1.8 s | 离开 ≥30 分钟、刚醒、安静时段进出；非邀请/恢复进行中 |
 | `peek` | 持续 | 3.6 s，单次 4 px | 仅贴边停靠（V0 未接线） |
 
 完整的姿态 × 事件矩阵以图谱第 12 章为准（其中 `step` 行已退役）。实现必须把矩阵写成数据（manifest 或 `AmbientMatrix`），不允许散落在 if/switch 里。
@@ -208,8 +208,8 @@ reduce(situation: PetSituation, event: PetEvent, now: Date) -> (PetSituation, [P
 | `doNotDisturbChanged(false)` | 重算：安静 > 稍后/同伴 > 独自 |
 | `hiddenInviteTimedOut` | 回 `hidden`；按稍后处理一次 |
 | `snoozeExpired` | 若会话仍在→`companion` 并立即评估邀请（跳过 `approach`）；否则 `alone` |
-| `quietWindowChanged(true)` | `quiet`；关闭邀请卡；恢复倒计时允许走完 |
-| `quietWindowChanged(false)` | 会话在→`companion`；否则 `alone` |
+| `quietWindowChanged(true)` / 进入安静窗 | `quiet`；关闭邀请卡；恢复/完成允许走完；否则先 `yawn` 1.8 s 再 `sleep` |
+| `quietWindowChanged(false)` / 离开安静窗 | 先 `yawn` 1.8 s；然后会话在→`companion`，否则 `alone` |
 | `screenLocked` | 冻结计时与动画；状态不变 |
 | `screenUnlocked` | 恢复计时；2 秒内不触发瞬态 |
 | `hideRequested` | `hidden`；关闭当前邀请/恢复；保留会话与计时 |
@@ -261,10 +261,10 @@ nextDue  = lastInvitationClosedAt + effectiveGap
 |---|---|
 | 拖动 × 任何 | 拖动赢；姿态 `look`；不弹卡；环境瞬态停 |
 | 隐藏 × 任何 | 隐藏赢；不常驻渲染；会话与计时继续；邀请到点可临时露面 |
-| 安静 × 勿扰/稍后 | 安静赢；姿态 `sleep`；计时继续 |
-| 安静 × 恢复中 | 恢复倒计时允许走完；期间 `stretch`；完成后再 `sleep` |
-| 安静 × 完成动画 | 2.6 秒 `happy` 允许走完，再 `sleep` |
-| 安静 × 邀请卡已开 | 关闭邀请卡，无惩罚，`sleep` |
+| 安静 × 勿扰/稍后 | 安静赢；先 `yawn` 再 `sleep`；计时继续 |
+| 安静 × 恢复中 | 恢复倒计时允许走完；期间 `stretch`；完成后先 `yawn` 再 `sleep` |
+| 安静 × 完成动画 | 2.6 秒 `happy` 允许走完，再 `yawn` → `sleep` |
+| 安静 × 邀请卡已开 | 关闭邀请卡，无惩罚，先 `yawn` 再 `sleep` |
 | 勿扰 × 稍后 | 勿扰赢；稍后标记保留 |
 | 勿扰 × 会话 | 会话继续；专注时间继续累计；不弹任何面板 |
 | 隐藏 × 会话 | 会话继续；到点临时露面提醒，处理后回 `hidden` |

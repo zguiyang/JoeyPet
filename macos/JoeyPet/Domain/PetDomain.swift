@@ -331,6 +331,8 @@ struct PetSituation: Equatable, Sendable {
         case .quiet:
             if companion == .recover { return .stretch }
             if companion == .complete { return .happy }
+            // Quiet enter/exit bridge: yawn once, then settle into deep sleep.
+            if isYawnActive(at: now) { return .yawn }
             return .sleep
         case .doNotDisturb:
             return .doze

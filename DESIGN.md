@@ -398,8 +398,8 @@ Transitions run 240–420 ms, ease-out; exits are ~65 % of entrance; no bounce, 
 | `sit` → `doze` | 90 s without interaction | 600 ms | Head lowers first, eyes close last |
 | `doze` → `yawn` | User returns to the desk | 400 ms | Wake with a yawn |
 | `yawn` → `look` | Yawn ends | 400 ms | Then `look` or `sit` by context |
-| `sit` → `sleep` | Quiet hours begin | 600 ms | Body sinks a little, ears relax |
-| `sleep` → `sit` | Quiet hours end | 500 ms | Eyes open before the head lifts |
+| `sit` / `look` / `doze` → `yawn` → `sleep` | Quiet hours begin | yawn 1.8 s, then sleep | Settle with a yawn, then deep sleep (skip while recover/complete still owns the pose) |
+| `sleep` → `yawn` → `sit` / `look` | Quiet hours end | yawn 1.8 s, then day pose | Wake with a yawn, then return by context |
 | `look` → `sit` / `look` | Snooze / pause / dismiss | 240 ms | Card fades; pose returns with the situation |
 | `look` → `sit` | Session ends | 240 ms | Gaze falls back |
 
@@ -449,7 +449,7 @@ Rules:
 - While a session runs, a chip above him reads `陪伴中 · mm:ss`.
 - Hover reveals `拖动换位置 · 点击打开菜单`; the cursor is a grab hand; dragging clamps to the screen with an 8 px margin and persists after drag end.
 - Click opens a small menu: **结束陪伴** / **隐藏 Joey** / divider / **勿扰模式**.
-- Quiet hours: pose becomes `sleep`; no chip, no menu prompt, no motion beyond breathing.
+- Quiet hours: settle with `yawn` then hold `sleep`; no chip, no menu prompt, no motion beyond breath once asleep. Exit the window with another `yawn` before returning to the day pose.
 - Hidden mode: Joey leaves the desktop but keeps the rhythm. When an invitation is due he surfaces briefly, delivers it, then slips away again. The user can still hide at any time; hiding never ends the session.
 
 ### 10.2 Rest invitation
@@ -619,7 +619,7 @@ Rules:
 | Recovery completed | Break count +1, Joey `happy` ~2.6 s, one leaf added |
 | Recovery skipped | Return to desktop silently; count unchanged |
 | Hidden Joey | Pet invisible but rhythm continues; an invitation surfaces him for at most 60 s, then he returns to hidden |
-| Quiet hours | Joey `sleep`, no invitations, no motion beyond breath |
+| Quiet hours | Enter with `yawn` → `sleep`; exit with `yawn` → day pose; no invitations; breath only once asleep |
 | Empty reflection day | Show a visible seed in the soil; never a zero-score or a "failure" |
 
 Every feedback message states what happened in one sentence. Never a status code, never a machine voice.
@@ -632,7 +632,7 @@ Seven states, highest wins. A higher state overrides pose and interaction only; 
 |---|-------|------|-------------|----------|
 | 1 | Dragging | `look` | Pointer is down and moving; follows the cursor, no ambient loop | None |
 | 2 | Hidden | — | Menu **隐藏 Joey**, or the Settings switch is off | Persistent; invitations still surface Joey briefly |
-| 3 | Quiet hours | `sleep` | Local time enters the window (default 22:00–08:00) | Until window ends |
+| 3 | Quiet hours | `yawn` then `sleep` | Local time enters the window (default 22:00–08:00); settle yawn first unless recover/complete still owns the pose | Until window ends; exit via wake yawn |
 | 4 | Do not disturb | `doze` | Settings switch or desktop menu **勿扰模式** | Until the user turns it off |
 | 5 | Snoozed | `sit` | Invite **稍后提醒**; current session only | 10 min |
 | 6 | In session | `look` | User starts a session | Invitation interval ≥ 45 min |
@@ -667,7 +667,7 @@ idle ──5 min to go──▶ approach ──due──▶ invite ──accept�
 | Snooze | 10 min retry; only one snooze per session | Expiry returns to **In session** |
 | Do not disturb | No invitations, panels or toasts; pose stays `doze`, menu still works | Resume rhythm when the user turns it off |
 | Hidden reminder | Invitation is due while hidden | Surface Joey and the card; after 60 seconds return to hidden and treat as snoozed once |
-| Quiet hours | Enter `sleep` immediately, schedule no invitations; a running recovery countdown may finish | Return to `sit` when the window ends |
+| Quiet hours | Enter with a 1.8 s settle `yawn` then `sleep`; schedule no invitations; a running recovery/complete may finish first, then yawn into sleep | Exit with a 1.8 s wake `yawn`, then return to `sit` / `look` by context |
 | Single invitation | At most one invitation card; no repeated invite while it exists | Extra requests are dropped |
 | Exit during recovery | Closing the recovery panel counts as a skip; no count, no failure | Return to the desktop quietly |
 
@@ -807,3 +807,4 @@ Git history and the archive branch explain why they were replaced.
 | 2026-11-23 | `peek` art recomposed for the edge: the head leans toward the right of the canvas so the 48% docked strip keeps both eyes and both paws in view. The right edge uses the same art mirrored; the pose itself still has no horizontal motion. |
 | 2026-11-23 | V0 defers edge docking, collapse and `peek`. Dragging still clamps on screen and persists the release position; the edge-dock geometry and peek wiring are removed. `carry` remains. |
 | 2026-11-24 | Removed `step` / ambient walking from V0 (product meaning weak; walk art broke character identity). |
+| 2026-11-24 | Quiet-hours life bridges: enter and exit through a 1.8 s `yawn` before `sleep` / day pose; recovery and complete still finish first. |

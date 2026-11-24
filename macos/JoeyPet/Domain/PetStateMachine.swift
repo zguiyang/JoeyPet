@@ -215,7 +215,7 @@ enum PetStateMachine {
 
         case .completeFinished:
             guard next.companion == .complete else { break }
-            finishCompletion(&next, effects: &effects)
+            finishCompletion(&next, effects: &effects, now: now)
             effects.append(.persist)
 
         case .dragBegan:
@@ -300,10 +300,8 @@ enum PetStateMachine {
 
         case .presenceReturned:
             guard next.isDozing || next.wasAwayLong else { break }
-            next.isDozing = false
             next.wasAwayLong = false
-            next.isYawning = true
-            next.yawnUntil = now.addingTimeInterval(next.presence.yawnDuration)
+            beginLifeYawn(&next, at: now)
             effects.append(.pauseAmbient)
 
         case let .reduceMotionChanged(enabled):
@@ -333,6 +331,7 @@ enum PetStateMachine {
         now: Date,
         calendar: Calendar
     ) {
+        let wasQuiet = state.isQuietActive
         state.isQuietActive = state.quietWindow.isActive(at: now, calendar: calendar)
 
         if state.session == nil {
@@ -358,6 +357,27 @@ enum PetStateMachine {
         } else if state.session != nil, state.companion == nil {
             state.companion = .idle
         }
+
+        // Life-like quiet bridges: yawn before sinking into sleep, and yawn again
+        // when the window ends. Skip enter-yawn while recovery/complete still owns
+        // the pose; those finish first, then settle into sleep.
+        if !wasQuiet, state.isQuietActive {
+            switch state.companion {
+            case .recover, .complete:
+                break
+            default:
+                beginLifeYawn(&state, at: now)
+            }
+        } else if wasQuiet, !state.isQuietActive {
+            beginLifeYawn(&state, at: now)
+        }
+    }
+
+    /// Short wake/settle yawn used for presence return and quiet-hour edges.
+    private static func beginLifeYawn(_ state: inout PetSituation, at now: Date) {
+        state.isDozing = false
+        state.isYawning = true
+        state.yawnUntil = now.addingTimeInterval(state.presence.yawnDuration)
     }
 
     /// Do-not-disturb closes every surface that could interrupt the user.
@@ -422,7 +442,7 @@ enum PetStateMachine {
         if state.companion == .complete,
            let ends = state.completeEndsAt,
            ends <= now {
-            finishCompletion(&state, effects: &effects)
+            finishCompletion(&state, effects: &effects, now: now)
             effects.append(.persist)
         }
 
@@ -442,10 +462,16 @@ enum PetStateMachine {
     /// sense while the pet is visible, awake and allowed to be expressive.
     private static func finishCompletion(
         _ state: inout PetSituation,
-        effects: inout [PetEffect]
+        effects: inout [PetEffect],
+        now: Date
     ) {
         state.companion = state.session != nil ? .idle : nil
         state.completeEndsAt = nil
+        if state.isQuietActive {
+            // Quiet won the desk: settle with a yawn, then deep sleep. No leaf run.
+            beginLifeYawn(&state, at: now)
+            return
+        }
         if !state.isHidden, !state.isReduceMotion, !state.promptsSuppressed {
             effects.append(.playCarry)
         }

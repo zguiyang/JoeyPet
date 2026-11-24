@@ -475,10 +475,21 @@ struct PetDomainTests {
             calendar: calendar
         )
         #expect(quiet.state.resolvedDesktop(at: quietTime) == .quiet)
-        #expect(quiet.state.resolvedPose(at: quietTime) == .sleep)
+        #expect(quiet.state.isYawning)
+        #expect(quiet.state.resolvedPose(at: quietTime) == .yawn)
         #expect(quiet.state.companion == .idle)
         #expect(quiet.state.session != nil)
         #expect(quiet.effects.contains(.dismissInviteCard))
+
+        let asleepTime = quietTime.addingTimeInterval(1.8)
+        let asleep = PetStateMachine.reduce(
+            quiet.state,
+            event: .tick,
+            now: asleepTime,
+            calendar: calendar
+        ).state
+        #expect(!asleep.isYawning)
+        #expect(asleep.resolvedPose(at: asleepTime) == .sleep)
     }
 
     @Test func quietHoursLetsRecoveryFinishBeforeSleeping() {
@@ -518,14 +529,100 @@ struct PetDomainTests {
         #expect(completed.effects.contains(.completeRecovery))
 
         let sleepTime = quietTime.addingTimeInterval(2.6)
-        let sleeping = PetStateMachine.reduce(
+        let settling = PetStateMachine.reduce(
             completed.state,
             event: .tick,
             now: sleepTime,
             calendar: calendar
         ).state
-        #expect(sleeping.companion == .idle)
-        #expect(sleeping.resolvedPose(at: sleepTime) == .sleep)
+        #expect(settling.companion == .idle)
+        #expect(settling.isYawning)
+        #expect(settling.resolvedPose(at: sleepTime) == .yawn)
+
+        let asleepTime = sleepTime.addingTimeInterval(1.8)
+        let sleeping = PetStateMachine.reduce(
+            settling,
+            event: .tick,
+            now: asleepTime,
+            calendar: calendar
+        ).state
+        #expect(!sleeping.isYawning)
+        #expect(sleeping.resolvedPose(at: asleepTime) == .sleep)
+    }
+
+    @Test func quietHoursExitYawnsThenReturnsToSit() {
+        let calendar = testCalendar()
+        // Default quiet window is 22:00–08:00.
+        let night = testDate(2026, 11, 23, 23, 30)
+        var situation = PetSituation()
+        situation.isQuietActive = true
+
+        let holding = PetStateMachine.reduce(
+            situation,
+            event: .tick,
+            now: night,
+            calendar: calendar
+        ).state
+        #expect(holding.resolvedDesktop(at: night) == .quiet)
+
+        // Already quiet before the tick — no enter edge. Hold deep sleep, then leave.
+        var asleep = holding
+        asleep.isYawning = false
+        asleep.yawnUntil = nil
+
+        let morning = testDate(2026, 11, 24, 8, 0)
+        let waking = PetStateMachine.reduce(
+            asleep,
+            event: .tick,
+            now: morning,
+            calendar: calendar
+        ).state
+        #expect(waking.resolvedDesktop(at: morning) == .alone)
+        #expect(waking.isYawning)
+        #expect(waking.resolvedPose(at: morning) == .yawn)
+
+        let awakeTime = morning.addingTimeInterval(1.8)
+        let awake = PetStateMachine.reduce(
+            waking,
+            event: .tick,
+            now: awakeTime,
+            calendar: calendar
+        ).state
+        #expect(!awake.isYawning)
+        #expect(awake.resolvedPose(at: awakeTime) == .sit)
+    }
+
+    @Test func quietHoursEnterYawnsThenSleepsWhenAlone() {
+        let calendar = testCalendar()
+        let evening = testDate(2026, 11, 23, 21, 30)
+        let alone = PetStateMachine.reduce(
+            PetSituation(),
+            event: .tick,
+            now: evening,
+            calendar: calendar
+        ).state
+        #expect(alone.resolvedPose(at: evening) == .sit)
+
+        let quietTime = testDate(2026, 11, 23, 22, 0)
+        let settling = PetStateMachine.reduce(
+            alone,
+            event: .tick,
+            now: quietTime,
+            calendar: calendar
+        ).state
+        #expect(settling.resolvedDesktop(at: quietTime) == .quiet)
+        #expect(settling.isYawning)
+        #expect(settling.resolvedPose(at: quietTime) == .yawn)
+
+        let asleepTime = quietTime.addingTimeInterval(1.8)
+        let asleep = PetStateMachine.reduce(
+            settling,
+            event: .tick,
+            now: asleepTime,
+            calendar: calendar
+        ).state
+        #expect(!asleep.isYawning)
+        #expect(asleep.resolvedPose(at: asleepTime) == .sleep)
     }
 
     @Test func hiddenKeepsSessionAndStillInvites() {
@@ -1444,6 +1541,7 @@ struct PetRuntimeTests {
         #expect(runtime.renderedPose == .wave)
         #expect(runtime.currentTransientBehavior == .greeting)
     }
+
     @Test func carrySurvivesTicksWhileCompanionshipStaysIdle() {
         let calendar = testCalendar()
         let start = testDate(2026, 11, 23, 9, 0)
