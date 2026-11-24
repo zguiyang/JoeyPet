@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 640" width="880" height="640">
+  <defs>
+    <!-- Joey groom parts, sprite coordinates (320 x 400). Source: pose_groom.svg (body/ears/face shared with sit). -->
+    <g id="gTail">
+      <path d="M228 314 C 268 324 294 300 290 272 C 287 250 266 244 256 256 C 248 266 256 280 269 277" fill="none" stroke="#F0DFC8" stroke-width="23" stroke-linecap="round"/>
+    </g>
+    <g id="gEarL">
+      <path d="M118 148 C 100 126 88 90 93 68 C 97 50 116 46 126 62 C 138 80 144 116 146 140 Z" fill="#F3E3CD"/>
+      <path d="M120 136 C 108 118 101 94 105 80 C 108 70 117 69 122 78 C 129 90 134 114 136 132 Z" fill="#EFC8AA"/>
+    </g>
+    <g id="gEarR">
+      <path d="M202 148 C 220 126 232 90 227 68 C 223 50 204 46 194 62 C 182 80 176 116 174 140 Z" fill="#F3E3CD"/>
+      <path d="M200 136 C 212 118 219 94 215 80 C 212 70 203 69 198 78 C 191 90 186 114 184 132 Z" fill="#EFC8AA"/>
+    </g>
+    <g id="gBody">
+      <ellipse cx="160" cy="352" rx="94" ry="12" fill="#3F3A35" opacity="0.08"/>
+      <path d="M160 116 C 209 116 242 167 242 231 C 242 299 208 342 160 342 C 112 342 78 299 78 231 C 78 167 111 116 160 116 Z" fill="#F3E3CD"/>
+      <path d="M160 342 C 112 342 78 299 78 231 C 78 224 78 218 79 212 C 93 298 118 322 160 322 C 202 322 227 298 241 212 C 242 218 242 224 242 231 C 242 299 208 342 160 342 Z" fill="#EBD7BE" opacity="0.5"/>
+      <ellipse cx="128" cy="337" rx="27" ry="13" fill="#F8ECDA"/>
+      <ellipse cx="192" cy="337" rx="27" ry="13" fill="#F8ECDA"/>
+      <path d="M122 244 C 142 258 178 258 198 244" fill="none" stroke="#86A98A" stroke-width="9" stroke-linecap="round"/>
+      <circle cx="200" cy="247" r="7" fill="#86A98A"/>
+      <ellipse cx="84" cy="262" rx="18" ry="28" fill="#EDDAC1" transform="rotate(10 84 262)"/>
+    </g>
+    <!-- Rest arm (sit) on the right side. -->
+    <g id="gArmRest">
+      <ellipse cx="236" cy="262" rx="18" ry="28" fill="#EDDAC1" transform="rotate(-10 236 262)"/>
+    </g>
+    <!-- Open-eye face for rest/transition frames (same as carry face). -->
+    <g id="gFaceOpen">
+      <ellipse cx="111" cy="226" rx="18" ry="9" fill="#EFAE7D" opacity="0.26"/>
+      <ellipse cx="209" cy="226" rx="18" ry="9" fill="#EFAE7D" opacity="0.26"/>
+      <ellipse cx="134" cy="204" rx="8.5" ry="11" fill="#3F3A35"/>
+      <ellipse cx="186" cy="204" rx="8.5" ry="11" fill="#3F3A35"/>
+      <circle cx="131" cy="200" r="2.8" fill="#FFFFFF"/>
+      <circle cx="183" cy="200" r="2.8" fill="#FFFFFF"/>
+      <path d="M160 216 C 166 216 169 220 166.5 223 C 164.5 225.5 155.5 225.5 153.5 223 C 151 220 154 216 160 216 Z" fill="#C98F6E"/>
+      <path d="M160 224 C 158 230 153 232 150 228 M160 224 C 162 230 167 232 170 228" fill="none" stroke="#6F5F53" stroke-width="2.3" stroke-linecap="round"/>
+    </g>
+    <!-- Half-closed face for the groom peak (eyes narrowed to arcs, calm mouth). -->
+    <g id="gFaceHalf">
+      <ellipse cx="111" cy="226" rx="18" ry="9" fill="#EFAE7D" opacity="0.26"/>
+      <ellipse cx="209" cy="226" rx="18" ry="9" fill="#EFAE7D" opacity="0.26"/>
+      <path d="M125 202 C 131 210 141 210 147 202" fill="none" stroke="#3F3A35" stroke-width="3.6" stroke-linecap="round"/>
+      <path d="M173 202 C 179 210 189 210 195 202" fill="none" stroke="#3F3A35" stroke-width="3.6" stroke-linecap="round"/>
+      <path d="M160 216 C 166 216 169 220 166.5 223 C 164.5 225.5 155.5 225.5 153.5 223 C 151 220 154 216 160 216 Z" fill="#C98F6E"/>
+      <path d="M155 230 C 158 233 162 233 165 230" fill="none" stroke="#6F5F53" stroke-width="2.2" stroke-linecap="round"/>
+    </g>
+  </defs>
+
+  <rect x="0" y="0" width="880" height="640" fill="#F7F3EB"/>
+
+  <!-- One-shot groom, 4 x 2, frames 01-08 (cell 160 x 200, sprite scale 0.5). Feet pinned at y 352.
+       Right paw: rest (t=0) -> lift (t~0.45) -> ear (t=1) -> light strokes (t 0.9-1) -> lower (t 0.5, 0.15) -> rest.
+       The arm path is interpolated from shoulder (226,258) toward the groom tip (238,190); paw circle at the tip. -->
+
+  <!-- 01 rest, sitting, open eyes -->
+  <g transform="translate(40 40) scale(.5)"><g><use href="#gTail"/><use href="#gEarL"/><use href="#gEarR"/><use href="#gBody"/><use href="#gArmRest"/><use href="#gFaceOpen"/></g></g>
+  <!-- 02 paw starts lifting (t 0.45) -->
+  <g transform="translate(200 40) scale(.5)"><g><use href="#gTail"/><use href="#gEarL"/><use href="#gEarR"/><use href="#gBody"/>
+    <path d="M226 258 C 232.3 246.3 233.7 235.5 232.4 225.4" fill="none" stroke="#EDDAC1" stroke-width="28" stroke-linecap="round"/>
+    <circle cx="232.4" cy="225.4" r="15" fill="#F8ECDA"/>
+    <use href="#gFaceOpen"/></g></g>
+  <!-- 03 paw at ear (t 1), eyes starting to narrow -->
+  <g transform="translate(360 40) scale(.5)"><g><use href="#gTail"/><use href="#gEarL"/><use href="#gEarR"/><use href="#gBody"/>
+    <path d="M226 258 C 240 232 243 208 238 190" fill="none" stroke="#EDDAC1" stroke-width="28" stroke-linecap="round"/>
+    <circle cx="236" cy="185" r="15" fill="#F8ECDA"/>
+    <use href="#gFaceHalf"/></g></g>
+  <!-- 04 peak, paw at ear, eyes narrowed -->
+  <g transform="translate(520 40) scale(.5)"><g><use href="#gTail"/><use href="#gEarL"/><use href="#gEarR"/><use href="#gBody"/>
+    <path d="M226 258 C 240 232 243 208 238 190" fill="none" stroke="#EDDAC1" stroke-width="28" stroke-linecap="round"/>
+    <circle cx="236" cy="185" r="15" fill="#F8ECDA"/>
+    <use href="#gFaceHalf"/></g></g>
+  <!-- 05 one more light stroke (tiny paw shift) -->
+  <g transform="translate(40 240) scale(.5)"><g><use href="#gTail"/><use href="#gEarL"/><use href="#gEarR"/><use href="#gBody"/>
+    <path d="M226 258 C 239.4 233.8 242.7 211.2 237.8 192.8" fill="none" stroke="#EDDAC1" stroke-width="28" stroke-linecap="round"/>
+    <circle cx="235.8" cy="188.8" r="15" fill="#F8ECDA"/>
+    <use href="#gFaceHalf"/></g></g>
+  <!-- 06 paw lowering (t 0.5) -->
+  <g transform="translate(200 240) scale(.5)"><g><use href="#gTail"/><use href="#gEarL"/><use href="#gEarR"/><use href="#gBody"/>
+    <path d="M226 258 C 233 245 234.5 232 233 224" fill="none" stroke="#EDDAC1" stroke-width="28" stroke-linecap="round"/>
+    <circle cx="232" cy="224" r="15" fill="#F8ECDA"/>
+    <use href="#gFaceOpen"/></g></g>
+  <!-- 07 nearly sitting (t 0.15) -->
+  <g transform="translate(360 240) scale(.5)"><g><use href="#gTail"/><use href="#gEarL"/><use href="#gEarR"/><use href="#gBody"/>
+    <path d="M226 258 C 228 252 229 248 228 246" fill="none" stroke="#EDDAC1" stroke-width="28" stroke-linecap="round"/>
+    <circle cx="228" cy="246" r="15" fill="#F8ECDA"/>
+    <use href="#gFaceOpen"/></g></g>
+  <!-- 08 rest, back to sit (joins back to idle) -->
+  <g transform="translate(520 240) scale(.5)"><g><use href="#gTail"/><use href="#gEarL"/><use href="#gEarR"/><use href="#gBody"/><use href="#gArmRest"/><use href="#gFaceOpen"/></g></g>
+</svg>
