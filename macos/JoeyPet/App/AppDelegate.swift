@@ -6,6 +6,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private let settings = AppSettings()
     private let companionStatus = CompanionStatus()
+    private let audioController = JoeyAudioController()
     private var panelController: PetPanelController?
     private var coordinator: PetCoordinator?
     private var statusItem: NSStatusItem?
@@ -48,6 +49,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         settings.onDoNotDisturbChanged = { [weak self] enabled in
             self?.coordinator?.setDoNotDisturb(enabled)
         }
+        settings.onSoundSelectionChanged = { [weak self] ambientID, cueID in
+            guard let self else { return }
+            self.audioController.applySelection(ambientID: ambientID, cueID: cueID)
+            self.audioController.sync(situation: self.companionStatus.situation)
+        }
 
         let panel = PetPanelController(corner: settings.petCorner)
         let coordinator = PetCoordinator(panelController: panel)
@@ -57,6 +63,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             if self.settings.isDoNotDisturb != situation.isDoNotDisturb {
                 self.settings.isDoNotDisturb = situation.isDoNotDisturb
             }
+            self.audioController.sync(situation: situation)
         }
         coordinator.onPoseChanged = { [weak self] pose in
             self?.companionStatus.update(pose: pose)
@@ -66,6 +73,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         panelController = panel
         self.coordinator = coordinator
+        audioController.applySelection(
+            ambientID: settings.ambientSoundID,
+            cueID: settings.cueSoundID
+        )
         panel.applyAppearance(settings.appearance)
         panel.setVisible(settings.showsDesktopPet)
         coordinator.start()
@@ -73,12 +84,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             quietWindow: settings.quietWindow,
             rhythmMinutes: settings.rhythmMinutes
         )
+        audioController.sync(situation: panel.petRuntime.situation)
 
         configureStatusItem()
         showHome()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        audioController.stop()
         coordinator?.stop()
     }
 

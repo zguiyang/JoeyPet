@@ -15,9 +15,13 @@ final class AppSettings {
         static let petCorner = "joey.petCorner"
         static let feedback = "joey.feedback"
         static let showsDesktopPet = PetPreferences.showsDesktopPetKey
+        static let ambientSound = "joey.ambientSoundID"
+        static let cueSound = "joey.cueSoundID"
     }
 
     static let rhythmOptions = [45, 60, 90]
+    /// Soft cup tap — first preferred cue when the user has not chosen yet.
+    static let defaultCueSoundID = "cue_ceramic_cups"
 
     @ObservationIgnored private let defaults: UserDefaults
     @ObservationIgnored var onShowsDesktopPetChanged: ((Bool) -> Void)?
@@ -25,6 +29,7 @@ final class AppSettings {
     @ObservationIgnored var onPetCornerChanged: ((PetCorner) -> Void)?
     @ObservationIgnored var onScheduleChanged: ((QuietWindow, Int) -> Void)?
     @ObservationIgnored var onDoNotDisturbChanged: ((Bool) -> Void)?
+    @ObservationIgnored var onSoundSelectionChanged: ((String, String) -> Void)?
 
     var rhythmMinutes: Int {
         didSet {
@@ -83,6 +88,24 @@ final class AppSettings {
         didSet { defaults.set(feedback, forKey: Key.feedback) }
     }
 
+    /// Ambient bed while companionship is active. `JoeyAudioCatalog.noneID` = 无背景音.
+    var ambientSoundID: String {
+        didSet {
+            guard ambientSoundID != oldValue else { return }
+            defaults.set(ambientSoundID, forKey: Key.ambientSound)
+            notifySoundSelectionChanged()
+        }
+    }
+
+    /// One-shot for session start and rest invite. `JoeyAudioCatalog.noneID` = 无提示音.
+    var cueSoundID: String {
+        didSet {
+            guard cueSoundID != oldValue else { return }
+            defaults.set(cueSoundID, forKey: Key.cueSound)
+            notifySoundSelectionChanged()
+        }
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
 
@@ -101,6 +124,10 @@ final class AppSettings {
         ) ?? .bottomRight
         self.showsDesktopPet = defaults.object(forKey: Key.showsDesktopPet) as? Bool ?? false
         self.feedback = defaults.string(forKey: Key.feedback) ?? ""
+        // Ambient defaults off; cue defaults to the soft ceramic tap.
+        self.ambientSoundID = defaults.string(forKey: Key.ambientSound)
+            ?? JoeyAudioCatalog.noneID
+        self.cueSoundID = defaults.string(forKey: Key.cueSound) ?? Self.defaultCueSoundID
     }
 
     var quietWindow: QuietWindow {
@@ -109,5 +136,9 @@ final class AppSettings {
 
     private func notifyScheduleChanged() {
         onScheduleChanged?(quietWindow, rhythmMinutes)
+    }
+
+    private func notifySoundSelectionChanged() {
+        onSoundSelectionChanged?(ambientSoundID, cueSoundID)
     }
 }

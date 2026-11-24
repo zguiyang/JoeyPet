@@ -22,6 +22,10 @@
 		D7PET114305978720070926E /* PetPanelController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET014305978720070926E /* PetPanelController.swift */; };
 		D7PET11E305978720070926E /* PetTransientBehavior.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET01B305978720070926E /* PetTransientBehavior.swift */; };
 		D7PET11D305978720070926E /* Pets in Resources */ = {isa = PBXBuildFile; fileRef = D7PET20C305978720070926E /* Pets */; };
+		D7AUD11D305978720070926E /* Audio in Resources */ = {isa = PBXBuildFile; fileRef = D7AUD20C305978720070926E /* Audio */; };
+		D7AUD101305978720070926E /* JoeyAudioCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7AUD001305978720070926E /* JoeyAudioCatalog.swift */; };
+		D7AUD102305978720070926E /* JoeyAudioController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7AUD002305978720070926E /* JoeyAudioController.swift */; };
+		D7AUD103305978720070926E /* JoeySoundPreviewPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7AUD003305978720070926E /* JoeySoundPreviewPlayer.swift */; };
 		D7PET127305978720070926E /* PetPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET027305978720070926E /* PetPreferences.swift */; };
 		D7PET128305978720070926E /* PetPosition.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET028305978720070926E /* PetPosition.swift */; };
 		D7PET129305978720070926E /* PetPositionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET029305978720070926E /* PetPositionStore.swift */; };
@@ -78,6 +82,10 @@
 		D7PET014305978720070926E /* PetPanelController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetPanelController.swift; sourceTree = "<group>"; };
 		D7PET01B305978720070926E /* PetTransientBehavior.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetTransientBehavior.swift; sourceTree = "<group>"; };
 		D7PET20C305978720070926E /* Pets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Pets; path = JoeyPet/Resources/Pets; sourceTree = SOURCE_ROOT; };
+		D7AUD20C305978720070926E /* Audio */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Audio; path = JoeyPet/Resources/Audio; sourceTree = SOURCE_ROOT; };
+		D7AUD001305978720070926E /* JoeyAudioCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeyAudioCatalog.swift; sourceTree = "<group>"; };
+		D7AUD002305978720070926E /* JoeyAudioController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeyAudioController.swift; sourceTree = "<group>"; };
+		D7AUD003305978720070926E /* JoeySoundPreviewPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeySoundPreviewPlayer.swift; sourceTree = "<group>"; };
 		D7PET027305978720070926E /* PetPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetPreferences.swift; sourceTree = "<group>"; };
 		D7PET028305978720070926E /* PetPosition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetPosition.swift; sourceTree = "<group>"; };
 		D7PET029305978720070926E /* PetPositionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetPositionStore.swift; sourceTree = "<group>"; };
@@ -217,8 +225,17 @@
 			isa = PBXGroup;
 			children = (
 				D7PET20A305978720070926E /* Pets */,
+				D7AUD20A305978720070926E /* Audio */,
 			);
 			path = Resources;
+			sourceTree = "<group>";
+		};
+		D7AUD20A305978720070926E /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				D7AUD20C305978720070926E /* Audio */,
+			);
+			name = Audio;
 			sourceTree = "<group>";
 		};
 		D7PET20A305978720070926E /* Pets */ = {
@@ -234,6 +251,9 @@
 			children = (
 				D7PET00E305978720070926E /* AppDelegate.swift */,
 				D7F000000000000000000004 /* AppSettings.swift */,
+				D7AUD001305978720070926E /* JoeyAudioCatalog.swift */,
+				D7AUD002305978720070926E /* JoeyAudioController.swift */,
+				D7AUD003305978720070926E /* JoeySoundPreviewPlayer.swift */,
 				D7F000000000000000000033 /* CompanionStatus.swift */,
 				D7PET011305978720070926E /* DebugStateInjector.swift */,
 				D7PET01A305978720070926E /* DebugPetAction.swift */,
@@ -407,6 +427,7 @@
 			files = (
 				D7BABD69305978720070926E /* Assets.xcassets in Resources */,
 				D7PET11D305978720070926E /* Pets in Resources */,
+				D7AUD11D305978720070926E /* Audio in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -450,6 +471,9 @@
 				D7PET132305978720070926E /* JoeyDesktopScene.swift in Sources */,
 				D7F000000000000000000001 /* JoeyTheme.swift in Sources */,
 				D7F000000000000000000003 /* AppSettings.swift in Sources */,
+				D7AUD101305978720070926E /* JoeyAudioCatalog.swift in Sources */,
+				D7AUD102305978720070926E /* JoeyAudioController.swift in Sources */,
+				D7AUD103305978720070926E /* JoeySoundPreviewPlayer.swift in Sources */,
 				D7F000000000000000000005 /* CompanionSummary.swift in Sources */,
 				D7F000000000000000000007 /* JoeyComponents.swift in Sources */,
 				D7F000000000000000000009 /* MainWindowController.swift in Sources */,

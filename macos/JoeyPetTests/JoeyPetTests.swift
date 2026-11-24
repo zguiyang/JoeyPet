@@ -139,6 +139,48 @@ struct JoeyPetTests {
         let reloaded = AppSettings(defaults: testDefaults.defaults)
         #expect(reloaded.petCorner == .bottomLeft)
     }
+
+    @Test func soundSelectionDefaultsAndPersists() {
+        let testDefaults = TestDefaults("JoeyPetTestsSound")
+        defer { testDefaults.remove() }
+        let settings = AppSettings(defaults: testDefaults.defaults)
+        #expect(settings.ambientSoundID == JoeyAudioCatalog.noneID)
+        #expect(settings.cueSoundID == AppSettings.defaultCueSoundID)
+
+        var notified: (String, String)?
+        settings.onSoundSelectionChanged = { ambient, cue in
+            notified = (ambient, cue)
+        }
+        settings.ambientSoundID = "rain_soft_lynks"
+        settings.cueSoundID = JoeyAudioCatalog.noneID
+        #expect(notified?.0 == "rain_soft_lynks")
+        #expect(notified?.1 == JoeyAudioCatalog.noneID)
+
+        let reloaded = AppSettings(defaults: testDefaults.defaults)
+        #expect(reloaded.ambientSoundID == "rain_soft_lynks")
+        #expect(reloaded.cueSoundID == JoeyAudioCatalog.noneID)
+    }
+
+    @Test func audioMutePolicySilencesOnDoNotDisturbOrQuiet() {
+        #expect(
+            JoeyAudioMutePolicy.shouldSilence(isDoNotDisturb: false, isQuietActive: false)
+                == false
+        )
+        #expect(JoeyAudioMutePolicy.shouldSilence(isDoNotDisturb: true, isQuietActive: false))
+        #expect(JoeyAudioMutePolicy.shouldSilence(isDoNotDisturb: false, isQuietActive: true))
+        #expect(JoeyAudioMutePolicy.shouldSilence(isDoNotDisturb: true, isQuietActive: true))
+    }
+
+    @Test func audioCatalogLoadsBundledTracksAndSanitizes() {
+        let catalog = JoeyAudioCatalog.load()
+        #expect(!catalog.ambient.isEmpty)
+        #expect(!catalog.cues.isEmpty)
+        #expect(catalog.ambient.contains(where: { $0.id == "rain_soft_lynks" }))
+        #expect(catalog.cue(id: "cue_ceramic_cups") != nil)
+        #expect(catalog.sanitizedAmbientID("missing_track") == JoeyAudioCatalog.noneID)
+        #expect(catalog.sanitizedCueID(JoeyAudioCatalog.noneID) == JoeyAudioCatalog.noneID)
+        #expect(catalog.attributionTracks.contains(where: { $0.id == "wind_autumn_nicktayloe" }))
+    }
 }
 
 // MARK: - Pet domain
