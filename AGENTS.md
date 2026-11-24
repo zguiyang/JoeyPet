@@ -97,6 +97,7 @@ Do not use deleted legacy UI specs (`docs/product/ui-spec.md`), the old three-si
 | Happy pose frames | [docs/reference/joeypet-happy-frames-v0.html](docs/reference/joeypet-happy-frames-v0.html) |
 | Doze pose spritesheet | [docs/reference/joeypet-doze-spritesheet-v0.svg](docs/reference/joeypet-doze-spritesheet-v0.svg) |
 | Doze pose frames (preview) | [docs/reference/joeypet-doze-frames-v0.html](docs/reference/joeypet-doze-frames-v0.html) |
+| Sleep pose spritesheet | [docs/reference/joeypet-sleep-spritesheet-v0.svg](docs/reference/joeypet-sleep-spritesheet-v0.svg) |
 | Wave pose spec | [docs/reference/joeypet-wave-pose-v0.html](docs/reference/joeypet-wave-pose-v0.html) |
 | Pet domain & state model | [docs/pet-domain-model.md](docs/pet-domain-model.md) (engineering contract for states, poses, clips, timers) |
 | Audio catalog (V0.x) | [docs/audio-catalog-v0.md](docs/audio-catalog-v0.md) (ambient + cue pickers; mute under DND / quiet hours) |

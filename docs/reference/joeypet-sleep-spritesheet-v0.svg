@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 880" width="880" height="880">
+  <defs>
+    <!-- Joey sleep parts, sprite coordinates (320 x 400). Source: pose_sleep.svg (no body rotation; ears splayed -11 / +11 deg). -->
+    <g id="sTail">
+      <path d="M228 314 C 268 324 294 300 290 272 C 287 250 266 244 256 256 C 248 266 256 280 269 277" fill="none" stroke="#F0DFC8" stroke-width="23" stroke-linecap="round"/>
+    </g>
+    <g id="sEarL">
+      <path d="M118 148 C 100 126 88 90 93 68 C 97 50 116 46 126 62 C 138 80 144 116 146 140 Z" fill="#F3E3CD"/>
+      <path d="M120 136 C 108 118 101 94 105 80 C 108 70 117 69 122 78 C 129 90 134 114 136 132 Z" fill="#EFC8AA"/>
+    </g>
+    <g id="sEarR">
+      <path d="M202 148 C 220 126 232 90 227 68 C 223 50 204 46 194 62 C 182 80 176 116 174 140 Z" fill="#F3E3CD"/>
+      <path d="M200 136 C 212 118 219 94 215 80 C 212 70 203 69 198 78 C 191 90 186 114 184 132 Z" fill="#EFC8AA"/>
+    </g>
+    <g id="sBody">
+      <ellipse cx="160" cy="352" rx="94" ry="12" fill="#3F3A35" opacity="0.08"/>
+      <path d="M160 116 C 209 116 242 167 242 231 C 242 299 208 342 160 342 C 112 342 78 299 78 231 C 78 167 111 116 160 116 Z" fill="#F3E3CD"/>
+      <path d="M160 342 C 112 342 78 299 78 231 C 78 224 78 218 79 212 C 93 298 118 322 160 322 C 202 322 227 298 241 212 C 242 218 242 224 242 231 C 242 299 208 342 160 342 Z" fill="#EBD7BE" opacity="0.5"/>
+      <ellipse cx="128" cy="337" rx="27" ry="13" fill="#F8ECDA"/>
+      <ellipse cx="192" cy="337" rx="27" ry="13" fill="#F8ECDA"/>
+      <path d="M122 244 C 142 258 178 258 198 244" fill="none" stroke="#86A98A" stroke-width="9" stroke-linecap="round"/>
+      <circle cx="200" cy="247" r="7" fill="#86A98A"/>
+      <ellipse cx="84" cy="262" rx="18" ry="28" fill="#EDDAC1" transform="rotate(10 84 262)"/>
+      <ellipse cx="236" cy="262" rx="18" ry="28" fill="#EDDAC1" transform="rotate(-10 236 262)"/>
+    </g>
+    <g id="sFace">
+      <ellipse cx="111" cy="226" rx="17" ry="8" fill="#EFAE7D" opacity="0.22"/>
+      <ellipse cx="209" cy="226" rx="17" ry="8" fill="#EFAE7D" opacity="0.22"/>
+      <path d="M124 208 C 132 216 144 216 152 208" fill="none" stroke="#3F3A35" stroke-width="3.4" stroke-linecap="round"/>
+      <path d="M168 208 C 176 216 188 216 196 208" fill="none" stroke="#3F3A35" stroke-width="3.4" stroke-linecap="round"/>
+      <path d="M160 220 C 166 220 169 224 166.5 227 C 164.5 229.5 155.5 229.5 153.5 227 C 151 224 154 220 160 220 Z" fill="#C98F6E"/>
+      <path d="M156 234 C 158 237 163 237 166 234" fill="none" stroke="#6F5F53" stroke-width="2" stroke-linecap="round"/>
+    </g>
+  </defs>
+
+  <rect x="0" y="0" width="880" height="880" fill="#F7F3EB"/>
+
+  <!-- A. Deep sleep breathing loop, 5 x 2, frames 01-10 (cell 160 x 200, sprite scale 0.5).
+       Breath = small scaleY about the feet (y 352). Sway at most about 0.2 deg. Ears near-static. Tail still. -->
+  <!-- 01 -->
+  <g transform="translate(40 40) scale(.5)"><g><use href="#sTail"/><g transform="translate(160 352) scale(1 1.000) translate(-160 -352)"><use href="#sBody"/><use href="#sFace"/></g><use href="#sEarL" transform="rotate(-11 118 148)"/><use href="#sEarR" transform="rotate(11 202 148)"/></g></g>
+  <!-- 02 -->
+  <g transform="translate(200 40) scale(.5)"><g><use href="#sTail"/><g transform="translate(160 352) rotate(0) scale(1 1.003) translate(-160 -352)"><use href="#sBody"/><use href="#sFace"/></g><use href="#sEarL" transform="rotate(-11 118 148)"/><use href="#sEarR" transform="rotate(11 202 148)"/></g></g>
+  <!-- 03 -->
+  <g transform="translate(360 40) scale(.5)"><g><use href="#sTail"/><g transform="translate(160 352) rotate(0.1) scale(1 1.007) translate(-160 -352)"><use href="#sBody"/><use href="#sFace"/></g><use href="#sEarL" transform="rotate(-11 118 148)"/><use href="#sEarR" transform="rotate(11 202 148)"/></g></g>
+  <!-- 04 -->
+  <g transform="translate(520 40) scale(.5)"><g><use href="#sTail"/><g transform="translate(160 352) rotate(0.2) scale(1 1.009) translate(-160 -352)"><use href="#sBody"/><use href="#sFace"/></g><use href="#sEarL" transform="rotate(-11 118 148)"/><use href="#sEarR" transform="rotate(11 202 148)"/></g></g>
+  <!-- 05 -->
+  <g transform="translate(680 40) scale(.5)"><g><use href="#sTail"/><g transform="translate(160 352) rotate(0.1) scale(1 1.010) translate(-160 -352)"><use href="#sBody"/><use href="#sFace"/></g><use href="#sEarL" transform="rotate(-11 118 148)"/><use href="#sEarR" transform="rotate(11 202 148)"/></g></g>
+  <!-- 06 -->
+  <g transform="translate(40 240) scale(.5)"><g><use href="#sTail"/><g transform="translate(160 352) rotate(0) scale(1 1.008) translate(-160 -352)"><use href="#sBody"/><use href="#sFace"/></g><use href="#sEarL" transform="rotate(-11 118 148)"/><use href="#sEarR" transform="rotate(11 202 148)"/></g></g>
+  <!-- 07 -->
+  <g transform="translate(200 240) scale(.5)"><g><use href="#sTail"/><g transform="translate(160 352) rotate(-0.1) scale(1 1.005) translate(-160 -352)"><use href="#sBody"/><use href="#sFace"/></g><use href="#sEarL" transform="rotate(-11 118 148)"/><use href="#sEarR" transform="rotate(11 202 148)"/></g></g>
+  <!-- 08 -->
+  <g transform="translate(360 240) scale(.5)"><g><use href="#sTail"/><g transform="translate(160 352) rotate(-0.2) scale(1 1.002) translate(-160 -352)"><use href="#sBody"/><use href="#sFace"/></g><use href="#sEarL" transform="rotate(-11 118 148)"/><use href="#sEarR" transform="rotate(11 202 148)"/></g></g>
+  <!-- 09 -->
+  <g transform="translate(520 240) scale(.5)"><g><use href="#sTail"/><g transform="translate(160 352) rotate(-0.1) scale(1 0.999) translate(-160 -352)"><use href="#sBody"/><use href="#sFace"/></g><use href="#sEarL" transform="rotate(-11 118 148)"/><use href="#sEarR" transform="rotate(11 202 148)"/></g></g>
+  <!-- 10 -->
+  <g transform="translate(680 240) scale(.5)"><g><use href="#sTail"/><g transform="translate(160 352) rotate(0) scale(1 1.000) translate(-160 -352)"><use href="#sBody"/><use href="#sFace"/></g><use href="#sEarL" transform="rotate(-11 118 148)"/><use href="#sEarR" transform="rotate(11 202 148)"/></g></g>
+
+  <!-- B. Occasional short actions, 2 groups x 4 frames.
+       Row 1: ears settle (extra outward splay +1.0 / +1.8 then back to rest). Row 2: head dips slightly (ears + face) then returns. -->
+  <!-- B1 ear settle: rest -->
+  <g transform="translate(120 480) scale(.5)"><g><use href="#sTail"/><use href="#sBody"/><use href="#sFace"/><use href="#sEarL" transform="rotate(-11 118 148)"/><use href="#sEarR" transform="rotate(11 202 148)"/></g></g>
+  <!-- B1 ear settle: +1.0 -->
+  <g transform="translate(280 480) scale(.5)"><g><use href="#sTail"/><use href="#sBody"/><use href="#sFace"/><use href="#sEarL" transform="rotate(-12.0 118 148)"/><use href="#sEarR" transform="rotate(12.0 202 148)"/></g></g>
+  <!-- B1 ear settle: +1.8 -->
+  <g transform="translate(440 480) scale(.5)"><g><use href="#sTail"/><use href="#sBody"/><use href="#sFace"/><use href="#sEarL" transform="rotate(-12.8 118 148)"/><use href="#sEarR" transform="rotate(12.8 202 148)"/></g></g>
+  <!-- B1 ear settle: back to rest -->
+  <g transform="translate(600 480) scale(.5)"><g><use href="#sTail"/><use href="#sBody"/><use href="#sFace"/><use href="#sEarL" transform="rotate(-11 118 148)"/><use href="#sEarR" transform="rotate(11 202 148)"/></g></g>
+
+  <!-- B2 head dip: rest -->
+  <g transform="translate(120 680) scale(.5)"><g><use href="#sTail"/><use href="#sBody"/><use href="#sFace"/><use href="#sEarL" transform="rotate(-11 118 148)"/><use href="#sEarR" transform="rotate(11 202 148)"/></g></g>
+  <!-- B2 head dip: slight -->
+  <g transform="translate(280 680) scale(.5)"><g><use href="#sTail"/><use href="#sBody"/><g transform="translate(0 1.5)"><use href="#sFace"/><use href="#sEarL" transform="rotate(-11 118 148)"/><use href="#sEarR" transform="rotate(11 202 148)"/></g></g></g>
+  <!-- B2 head dip: deepest (still asleep) -->
+  <g transform="translate(440 680) scale(.5)"><g><use href="#sTail"/><use href="#sBody"/><g transform="translate(0 2.5)"><use href="#sFace"/><use href="#sEarL" transform="rotate(-11 118 148)"/><use href="#sEarR" transform="rotate(11 202 148)"/></g></g></g>
+  <!-- B2 head dip: return to rest -->
+  <g transform="translate(600 680) scale(.5)"><g><use href="#sTail"/><use href="#sBody"/><use href="#sFace"/><use href="#sEarL" transform="rotate(-11 118 148)"/><use href="#sEarR" transform="rotate(11 202 148)"/></g></g>
+</svg>

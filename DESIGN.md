@@ -372,7 +372,7 @@ Eleven poses. The first six are the V0 state set; the rest cover ambient and low
 | `sign` | Holding a small handwritten sign | Kept as atlas art; V0 invitation no longer uses it |
 | `stretch` | Arms up, eyes closed, small mouth; 6 s breath (peak 1.032) + soft arm reach | Recovery demo — see [`joeypet-stretch-frames-v0.html`](docs/reference/joeypet-stretch-frames-v0.html) |
 | `happy` | Arc eyes, open smile, brighter blush; 2.6 s one-shot soft hop | After a completed break — see [`joeypet-happy-frames-v0.html`](docs/reference/joeypet-happy-frames-v0.html) |
-| `sleep` | Standing, ears relaxed outward, eyes closed in soft arcs | Quiet hours, hidden attention |
+| `sleep` | Standing, ears relaxed outward, eyes closed in soft arcs; 8 s quiet breath (peak 1.010, sway ≤ ±0.2°) + rare ear/head micros | Quiet hours — see [`joeypet-sleep-spritesheet-v0.svg`](docs/reference/joeypet-sleep-spritesheet-v0.svg) |
 | `groom` | Paw to the ear, eyes half-closed | Idle, when the room is quiet |
 | `yawn` | Eyes squeezed shut, wide small mouth, head back | Waking up, or after long sitting |
 | `doze` | Head low, eyes flat lines, loose shoulders; 7.2 s breath+sway (±1.1°, peak 1.011) + random ear/head/tail micros | Light sleep / DND — see [`joeypet-doze-spritesheet-v0.svg`](docs/reference/joeypet-doze-spritesheet-v0.svg) |
