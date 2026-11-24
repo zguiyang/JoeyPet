@@ -26,6 +26,7 @@ final class JoeyCharacterNode: SKNode {
         static let ear = "joey.ear"
         static let earAngle = "joey.earAngle"
         static let wave = "joey.wave"
+        static let stretchReach = "joey.stretchReach"
     }
 
     private static let blinkSuppressedPoses: Set<String> = [
@@ -42,6 +43,7 @@ final class JoeyCharacterNode: SKNode {
     private let earAnchor: CGPoint
     private let tailAnchor: CGPoint
     private let frontArmAnchor: CGPoint
+    private let backArmAnchor: CGPoint
     private let layerBasePosition: CGPoint
 
     private let breathPivot = SKNode()
@@ -84,6 +86,7 @@ final class JoeyCharacterNode: SKNode {
         let earSVG = svgPoint("ear", fallback: CGPoint(x: 160, y: 150))
         let tailSVG = svgPoint("tail", fallback: CGPoint(x: 250, y: 286))
         let shoulderRightSVG = svgPoint("shoulderRight", fallback: CGPoint(x: 230, y: 254))
+        let shoulderLeftSVG = svgPoint("shoulderLeft", fallback: CGPoint(x: 90, y: 254))
 
         breathAnchor = CGPoint(x: breathSVG.x - anchor.x, y: anchor.y - breathSVG.y)
         earAnchor = CGPoint(x: earSVG.x - anchor.x, y: anchor.y - earSVG.y)
@@ -91,6 +94,10 @@ final class JoeyCharacterNode: SKNode {
         frontArmAnchor = CGPoint(
             x: shoulderRightSVG.x - anchor.x,
             y: anchor.y - shoulderRightSVG.y
+        )
+        backArmAnchor = CGPoint(
+            x: shoulderLeftSVG.x - anchor.x,
+            y: anchor.y - shoulderLeftSVG.y
         )
         layerBasePosition = CGPoint(x: -anchor.x, y: anchor.y - canvas.height)
 
@@ -163,6 +170,7 @@ final class JoeyCharacterNode: SKNode {
 
         startAmbientIfNeeded()
         startWaveIfNeeded()
+        startStretchReachIfNeeded()
     }
 
     func applySize(id: String) {
@@ -184,6 +192,8 @@ final class JoeyCharacterNode: SKNode {
             cancelAmbient()
         } else {
             startAmbientIfNeeded()
+            startWaveIfNeeded()
+            startStretchReachIfNeeded()
         }
     }
 
@@ -279,6 +289,7 @@ final class JoeyCharacterNode: SKNode {
         case "tail": tailAnchor
         case "ears": earAnchor
         case "frontArm": frontArmAnchor
+        case "backArm": backArmAnchor
         default: nil
         }
     }
@@ -372,21 +383,53 @@ final class JoeyCharacterNode: SKNode {
         pivot.run(.sequence([oneWave, oneWave]), withKey: ActionKey.wave)
     }
 
-    /// Pose-specific breath: sit uses the idle sheet; look uses the quieter companion sheet.
+    /// Recovery hold: both raised arms open a few more degrees with the breath.
+    /// Matches docs/reference/joeypet-stretch-frames-v0.html (`--reach` ≤ 3.4°).
+    private func startStretchReachIfNeeded() {
+        guard poseID == "stretch" else { return }
+        let front = layerPivots["frontArm"]
+        let back = layerPivots["backArm"]
+        front?.removeAction(forKey: ActionKey.stretchReach)
+        back?.removeAction(forKey: ActionKey.stretchReach)
+        front?.zRotation = 0
+        back?.zRotation = 0
+        guard !isReduceMotionEnabled else { return }
+
+        let peak = 3.4 * CGFloat.pi / 180
+        let half = breathDuration / 2
+
+        func reachCycle(opening: CGFloat) -> SKAction {
+            let out = SKAction.rotate(toAngle: opening, duration: half, shortestUnitArc: true)
+            out.timingMode = .easeInEaseOut
+            let back = SKAction.rotate(toAngle: 0, duration: half, shortestUnitArc: true)
+            back.timingMode = .easeInEaseOut
+            return .repeatForever(.sequence([out, back]))
+        }
+
+        front?.run(reachCycle(opening: peak), withKey: ActionKey.stretchReach)
+        back?.run(reachCycle(opening: -peak), withKey: ActionKey.stretchReach)
+    }
+
+    /// Pose-specific breath: sit / look / stretch each follow their frame sheet.
     private var breathProfile: (duration: TimeInterval, peakScale: CGFloat, tiltDegrees: CGFloat) {
         let spec = package.ambient("breathe")
-        if poseID == "look" {
+        switch poseID {
+        case "look":
             // docs/reference/joeypet-look-frames-v0.html
             return (5.4, 1.028, 0.6)
+        case "stretch":
+            // docs/reference/joeypet-stretch-frames-v0.html
+            return (6.0, 1.032, 0.2)
+        default:
+            let isSleeping = poseID == "sleep" || poseID == "doze"
+            let milliseconds = isSleeping ? (spec?.sleepMs ?? 6000) : (spec?.loopMs ?? 4800)
+            // docs/reference/joeypet-idle-breathing-frames-v0.html
+            return (
+                TimeInterval(milliseconds) / 1000,
+                CGFloat(spec?.scale ?? 1.046),
+                1.2
+            )
         }
-        let isSleeping = poseID == "sleep" || poseID == "doze"
-        let milliseconds = isSleeping ? (spec?.sleepMs ?? 6000) : (spec?.loopMs ?? 4800)
-        // docs/reference/joeypet-idle-breathing-frames-v0.html
-        return (
-            TimeInterval(milliseconds) / 1000,
-            CGFloat(spec?.scale ?? 1.046),
-            1.2
-        )
     }
 
     private var breathDuration: TimeInterval { breathProfile.duration }
@@ -423,6 +466,8 @@ final class JoeyCharacterNode: SKNode {
     }
 
     private func startTail() {
+        // Recovery stretch keeps the tail nearly still (domain ambient matrix).
+        guard poseID != "stretch" else { return }
         guard let pivot = layerPivots["tail"], !pivot.isHidden else { return }
         guard let spec = package.ambient("tail"),
               case let .single(degrees)? = spec.degrees
@@ -543,6 +588,8 @@ final class JoeyCharacterNode: SKNode {
         layerPivots["tail"]?.removeAction(forKey: ActionKey.tail)
         layerPivots["ears"]?.removeAction(forKey: ActionKey.earAngle)
         layerPivots["frontArm"]?.removeAction(forKey: ActionKey.wave)
+        layerPivots["frontArm"]?.removeAction(forKey: ActionKey.stretchReach)
+        layerPivots["backArm"]?.removeAction(forKey: ActionKey.stretchReach)
         removeAction(forKey: ActionKey.blink)
         removeAction(forKey: ActionKey.ear)
 
@@ -554,6 +601,7 @@ final class JoeyCharacterNode: SKNode {
         layerPivots["tail"]?.zRotation = 0
         layerPivots["ears"]?.zRotation = 0
         layerPivots["frontArm"]?.zRotation = 0
+        layerPivots["backArm"]?.zRotation = 0
         layerSprites["face"]?.texture = currentFaceTexture
     }
 }
