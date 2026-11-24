@@ -12,7 +12,8 @@ final class MainWindowController: NSWindowController {
         settings: AppSettings,
         status: CompanionStatus,
         onPrimaryAction: @escaping () -> Void,
-        onGreetPet: @escaping () -> Void
+        onGreetPet: @escaping () -> Void,
+        onDebugAction: ((DebugPetAction) -> Void)? = nil
     ) {
         self.settings = settings
 
@@ -37,6 +38,7 @@ final class MainWindowController: NSWindowController {
             status: status,
             onPrimaryAction: onPrimaryAction,
             onGreetPet: onGreetPet,
+            onDebugAction: onDebugAction,
             onRouteChange: { [weak self] route in
                 self?.updateChrome(for: route)
             }

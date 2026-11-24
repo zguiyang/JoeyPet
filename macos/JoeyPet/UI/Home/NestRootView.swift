@@ -51,6 +51,7 @@ struct NestRootView: View {
     var topChromeHeight: CGFloat = 40
     let onPrimaryAction: () -> Void
     let onGreetPet: () -> Void
+    var onDebugAction: ((DebugPetAction) -> Void)?
     let onRouteChange: (NestRoute) -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -82,8 +83,11 @@ struct NestRootView: View {
                     )
                     .transition(.opacity)
                 case .settings:
-                    SettingsRootView(settings: settings)
-                        .transition(.opacity)
+                    SettingsRootView(
+                        settings: settings,
+                        onDebugAction: onDebugAction
+                    )
+                    .transition(.opacity)
                 }
             }
             .animation(reduceMotion ? nil : JoeyMotion.stateEnter, value: navigation.route)

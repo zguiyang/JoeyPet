@@ -215,7 +215,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 settings: settings,
                 status: companionStatus,
                 onPrimaryAction: { [weak self] in self?.toggleCompanionship() },
-                onGreetPet: { [weak self] in self?.coordinator?.greetPet() }
+                onGreetPet: { [weak self] in self?.coordinator?.greetPet() },
+                onDebugAction: { [weak self] action in
+                    self?.handleDebugPetAction(action)
+                }
             )
         }
         homeWindowController?.applyAppearance()
@@ -255,6 +258,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func applyAppearanceToWindows() {
         homeWindowController?.applyAppearance()
         panelController?.applyAppearance(settings.appearance)
+    }
+
+    private func handleDebugPetAction(_ action: DebugPetAction) {
+        #if DEBUG
+        switch action {
+        case .showDesktopPet:
+            settings.showsDesktopPet = true
+        case .posePreview:
+            showPosePreview()
+        case .greeting, .notifying, .celebrating, .carrying, .sleeping,
+             .startSession, .endSession:
+            if action == .notifying || action == .celebrating
+                || action == .carrying || action == .sleeping || action == .greeting {
+                settings.showsDesktopPet = true
+                panelController?.setVisible(true)
+                coordinator?.setVisible(true)
+            }
+            DispatchQueue.main.async { [weak self] in
+                _ = self?.coordinator?.debugTrigger(action)
+            }
+        }
+        #else
+        _ = action
+        #endif
     }
 
     #if DEBUG

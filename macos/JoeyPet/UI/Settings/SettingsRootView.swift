@@ -3,9 +3,12 @@ import SwiftUI
 
 struct SettingsRootView: View {
     @Bindable var settings: AppSettings
+    /// Only wired in Debug; Release builds never show the Debug section.
+    var onDebugAction: ((DebugPetAction) -> Void)?
     @State private var selection: SettingsSection = .rhythm
     @State private var hoveredSection: SettingsSection?
     @State private var isFeedbackOpen = false
+    @State private var debugStatus: String = "点一项即可触发完整效果"
     @ScaledMetric(relativeTo: .body) private var feedbackFontSize: CGFloat = 13
 
     private var theme: JoeyTheme { JoeyTheme(appearance: settings.appearance) }
@@ -29,7 +32,7 @@ struct SettingsRootView: View {
 
     private var sidebar: some View {
         VStack(alignment: .leading, spacing: 2) {
-            ForEach(SettingsSection.allCases) { section in
+            ForEach(Array(SettingsSection.allCases)) { section in
                 navRow(section)
             }
             Spacer(minLength: 0)
@@ -81,6 +84,10 @@ struct SettingsRootView: View {
             appearancePane
         case .about:
             aboutPane
+        #if DEBUG
+        case .debug:
+            debugPane
+        #endif
         }
     }
 
@@ -146,6 +153,34 @@ struct SettingsRootView: View {
             }
         }
     }
+
+    #if DEBUG
+    private var debugPane: some View {
+        SettingsPane(
+            title: "Debug",
+            description: "仅开发构建可见。Release / 上线包不会出现此页。点击后走完整产品路径（含桌面位移）。"
+        ) {
+            VStack(alignment: .leading, spacing: 14) {
+                Text(debugStatus)
+                    .font(.system(size: 12))
+                    .foregroundStyle(theme.muted)
+                    .accessibilityLabel("Debug 状态")
+
+                SettingsRowList {
+                    ForEach(DebugPetAction.allCases) { action in
+                        SettingsRow(action.title, subtitle: action.subtitle) {
+                            SettingsSmallButton(title: "播放") {
+                                debugStatus = "已触发：\(action.title)"
+                                onDebugAction?(action)
+                            }
+                            .accessibilityLabel("播放\(action.title)")
+                        }
+                    }
+                }
+            }
+        }
+    }
+    #endif
 
     private var aboutPane: some View {
         SettingsPane(title: "关于 JoeyPet", description: "一只安静生活在桌面上的宠物。") {
@@ -220,13 +255,24 @@ struct SettingsRootView: View {
 
 // MARK: - Sections
 
-enum SettingsSection: String, CaseIterable, Identifiable {
+enum SettingsSection: String, Identifiable {
     case rhythm
     case quiet
     case appearance
     case about
+    #if DEBUG
+    case debug
+    #endif
 
     var id: String { rawValue }
+
+    static var allCases: [SettingsSection] {
+        #if DEBUG
+        [.rhythm, .quiet, .appearance, .about, .debug]
+        #else
+        [.rhythm, .quiet, .appearance, .about]
+        #endif
+    }
 
     var title: String {
         switch self {
@@ -234,6 +280,9 @@ enum SettingsSection: String, CaseIterable, Identifiable {
         case .quiet: return "安静时段"
         case .appearance: return "外观与位置"
         case .about: return "关于 JoeyPet"
+        #if DEBUG
+        case .debug: return "Debug"
+        #endif
         }
     }
 }

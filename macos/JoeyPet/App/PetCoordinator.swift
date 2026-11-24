@@ -10,7 +10,6 @@ final class PetCoordinator {
     private let presenceMonitor: PetPresenceMonitor
     private let panelController: PetPanelController
     private var workspaceObservers: [NSObjectProtocol] = []
-    private var ambientTask: Task<Void, Never>?
 
     /// Forwards every reduced situation together with today's facts.
     var onSituationChanged: ((PetSituation, CompanionSummary) -> Void)?
@@ -64,7 +63,6 @@ final class PetCoordinator {
         runtime.start()
         onPoseChanged?(runtime.renderedPose)
         presenceMonitor.start()
-        startAmbientSteps()
 
         if let animationID = DebugStateInjector.injectedAnimationID() {
             runtime.applyDebugAnimation(animationID)
@@ -87,8 +85,6 @@ final class PetCoordinator {
         }
         workspaceObservers.removeAll()
 
-        ambientTask?.cancel()
-        ambientTask = nil
         runtime.stop()
     }
 
@@ -113,6 +109,36 @@ final class PetCoordinator {
         _ = runtime.perform(.greeting)
     }
 
+    /// Debug settings: play one product probe. Callers must ensure the desktop
+    /// pet is visible first when the effect lives on the panel.
+    @discardableResult
+    func debugTrigger(_ action: DebugPetAction) -> Bool {
+        if let current = runtime.currentTransientBehavior {
+            runtime.finishTransientIfCurrent(current)
+        }
+
+        switch action {
+        case .showDesktopPet, .posePreview:
+            return true
+        case .greeting:
+            return runtime.perform(.greeting)
+        case .notifying:
+            return runtime.perform(.notifying)
+        case .celebrating:
+            return runtime.perform(.celebrating)
+        case .carrying:
+            return runtime.perform(.carrying)
+        case .sleeping:
+            return runtime.perform(.sleeping)
+        case .startSession:
+            runtime.startSession()
+            return true
+        case .endSession:
+            runtime.endSession()
+            return true
+        }
+    }
+
     /// Mirrors the Settings do-not-disturb switch into the runtime.
     func setDoNotDisturb(_ enabled: Bool) {
         runtime.setDoNotDisturb(enabled)
@@ -120,27 +146,6 @@ final class PetCoordinator {
 
     func applyConfiguration(quietWindow: QuietWindow, rhythmMinutes: Int) {
         runtime.applyConfiguration(quietWindow: quietWindow, rhythmMinutes: rhythmMinutes)
-    }
-
-    /// Low-frequency ambient walks. Each pass is a single randomized sleep, so
-    /// there is no polling, display link or timer burst.
-    private func startAmbientSteps() {
-        ambientTask?.cancel()
-        ambientTask = Task { [weak self] in
-            while !Task.isCancelled {
-                guard let self else { return }
-                let delay = AmbientStepPolicy().nextDelay(
-                    lowPower: self.runtime.situation.isLowPowerMode
-                )
-                do {
-                    try await Task.sleep(for: .seconds(delay))
-                } catch {
-                    return
-                }
-                guard !Task.isCancelled else { return }
-                self.panelController.moveShortDistance()
-            }
-        }
     }
 
     private func observeAccessibility() {
