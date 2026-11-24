@@ -108,6 +108,21 @@ struct JoeyTheme {
     var joeyEye: Color { Color(hex: 0x3F3A35) }
     var joeyScarf: Color { Color(hex: 0x86A98A) }
     var joeyBlush: Color { Color(hex: 0xEFAE7D) }
+
+    /// Dusk wash for the layered pet inside the room. The desktop pet is
+    /// intentionally left untinted because it sits on the user's wallpaper.
+    var nestPetTint: JoeyPetTint {
+        guard !isLight else { return .none }
+        return JoeyPetTint(
+            color: NSColor(
+                srgbRed: CGFloat(0x57) / 255,
+                green: CGFloat(0x66) / 255,
+                blue: CGFloat(0x5F) / 255,
+                alpha: 1
+            ),
+            factor: 0.18
+        )
+    }
 }
 
 // MARK: - Type scale (DESIGN.md §5.2)

@@ -1,71 +1,28 @@
 import AppKit
+import SpriteKit
 import SwiftUI
 
 /// The pet that lives in the room's nest.
 ///
-/// It does not own a day schedule: it renders the exact pose that `PetRuntime`
-/// resolved for the desktop pet, so the nest and the desktop always show the
-/// same state. Tapping the nest asks the runtime for a short greeting.
+/// It does not own art of its own: it hosts the same layered SpriteKit scene
+/// (`JoeyDesktopScene`) with the same `JoeyAssetPackage` the desktop pet uses,
+/// and feeds it the pose `PetRuntime` resolved. Faces, props, breathing, blinks
+/// and ear/tail motion therefore match the desktop pet exactly.
 struct NestPetView: View {
     let pose: PetPose
     let onGreet: () -> Void
 
     @Environment(\.joeyAppearance) private var appearance
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    @State private var poseStartedAt = Date()
-    @State private var previousPose: PetPose?
-    @State private var transitionStartedAt = Date()
     @State private var isWindowVisible = true
 
-    private static let transitionDuration: TimeInterval = 0.32
-
-    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
-
     var body: some View {
-        TimelineView(.animation(
-            minimumInterval: 1.0 / 30.0,
-            paused: reduceMotion || !isWindowVisible
-        )) { timeline in
-            Canvas { context, size in
-                context.scaleBy(x: size.width / 320, y: size.height / 400)
-
-                let elapsed = reduceMotion
-                    ? 0
-                    : max(0, timeline.date.timeIntervalSince(poseStartedAt))
-                let transition: (from: PetPose, progress: Double)? = {
-                    guard !reduceMotion, let previousPose else { return nil }
-                    let value = timeline.date.timeIntervalSince(transitionStartedAt)
-                    guard value < Self.transitionDuration else { return nil }
-                    return (previousPose, value / Self.transitionDuration)
-                }()
-
-                let painter = NestPetPainter(theme: theme)
-                if let transition {
-                    painter.draw(
-                        pose: transition.from,
-                        elapsed: elapsed,
-                        reduceMotion: reduceMotion,
-                        opacity: 1 - transition.progress,
-                        in: &context
-                    )
-                    painter.draw(
-                        pose: pose,
-                        elapsed: elapsed,
-                        reduceMotion: reduceMotion,
-                        opacity: transition.progress,
-                        in: &context
-                    )
-                } else {
-                    painter.draw(
-                        pose: pose,
-                        elapsed: elapsed,
-                        reduceMotion: reduceMotion,
-                        in: &context
-                    )
-                }
-            }
-        }
+        LayeredPetSurface(
+            pose: pose,
+            tint: JoeyTheme(appearance: appearance).nestPetTint,
+            reduceMotion: reduceMotion,
+            isPaused: !isWindowVisible
+        )
         .overlay(alignment: .bottom) {
             Color.clear
                 .frame(maxWidth: .infinity)
@@ -77,213 +34,62 @@ struct NestPetView: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Joey")
         .accessibilityHint("点一下它会回应你")
-        .onChange(of: pose) { oldValue, _ in
-            previousPose = oldValue
-            transitionStartedAt = Date()
-            poseStartedAt = Date()
-        }
-        .onChange(of: reduceMotion) { _, _ in
-            previousPose = nil
-            poseStartedAt = Date()
-        }
     }
 }
 
-// MARK: - Painting
+// MARK: - Layered scene host
 
-private struct NestPetPainter {
-    let theme: JoeyTheme
+/// A read-only host for the desktop pet's scene. It only forwards a pose; the
+/// schedule and behavior still live in `PetRuntime`.
+private struct LayeredPetSurface: NSViewRepresentable {
+    /// The scene is the same 320×400 design canvas; `.aspectFit` scales it to
+    /// whatever frame the room gives the nest.
+    private static let designSize = CGSize(width: 320, height: 400)
 
-    private var art: NestPetArt { NestPetArt(theme: theme) }
+    let pose: PetPose
+    let tint: JoeyPetTint
+    let reduceMotion: Bool
+    let isPaused: Bool
 
-    /// Renders one runtime pose. Every pose keeps the same upright silhouette;
-    /// only ears, arms, face, settle and breathing change.
-    func draw(
-        pose: PetPose,
-        elapsed: TimeInterval,
-        reduceMotion: Bool,
-        opacity: Double = 1,
-        in context: inout GraphicsContext
-    ) {
-        switch pose {
-        case .sit:
-            drawStanding(
-                elapsed: elapsed,
-                face: .calm,
-                arms: .rest,
-                opacity: opacity,
-                in: &context
-            )
+    func makeNSView(context: Context) -> SKView {
+        let view = SKView()
+        view.allowsTransparency = true
+        view.preferredFramesPerSecond = 30
 
-        case .look:
-            drawStanding(
-                elapsed: elapsed,
-                face: .look,
-                arms: .rest,
-                opacity: opacity,
-                in: &context
-            )
-
-        case .sign:
-            drawStanding(
-                elapsed: elapsed,
-                face: .calm,
-                arms: .wave,
-                opacity: opacity,
-                in: &context
-            )
-
-        case .stretch:
-            drawStanding(
-                elapsed: elapsed,
-                face: .stretch,
-                arms: .up,
-                opacity: opacity,
-                in: &context
-            )
-
-        case .happy:
-            drawStanding(
-                elapsed: elapsed,
-                face: .happy,
-                arms: .rest,
-                bodyOffsetY: -5,
-                opacity: opacity,
-                in: &context
-            )
-
-        case .sleep:
-            art.drawSitting(
-                in: &context,
-                face: .sleep,
-                arms: .rest,
-                earTilt: 12,
-                bodyOffset: CGSize(width: 0, height: 8),
-                breath: breath(elapsed, period: 6),
-                tailAngle: 0,
-                opacity: opacity
-            )
-            if opacity > 0.99 {
-                art.drawZ(
-                    in: &context,
-                    elapsed: elapsed,
-                    count: 3,
-                    period: 6,
-                    reduceMotion: reduceMotion
-                )
-            }
-
-        case .doze:
-            art.drawSitting(
-                in: &context,
-                face: .doze,
-                arms: .rest,
-                earTilt: 6,
-                bodyRotation: -2,
-                bodyOffset: CGSize(width: 0, height: 5),
-                breath: breath(elapsed, period: 5.4),
-                tailAngle: 0,
-                opacity: opacity
-            )
-            if opacity > 0.99 {
-                art.drawZ(
-                    in: &context,
-                    elapsed: elapsed,
-                    count: 2,
-                    period: 5.4,
-                    reduceMotion: reduceMotion
-                )
-            }
-
-        case .groom:
-            art.drawSitting(
-                in: &context,
-                face: .groom,
-                arms: .groom,
-                waveAngle: groomingStroke(elapsed),
-                breath: breath(elapsed, period: 4.8),
-                tailAngle: tailAngle(elapsed, period: 4.8, lag: 0.1),
-                opacity: opacity
-            )
-
-        case .yawn:
-            drawStanding(
-                elapsed: elapsed,
-                face: .yawn,
-                arms: .rest,
-                opacity: opacity,
-                in: &context
-            )
-
-        case .step:
-            drawStanding(
-                elapsed: elapsed,
-                face: .look,
-                arms: .rest,
-                opacity: opacity,
-                in: &context
-            )
-
-        case .carry:
-            drawStanding(
-                elapsed: elapsed,
-                face: .calm,
-                arms: .rest,
-                opacity: opacity,
-                in: &context
-            )
-
-        case .peek:
-            drawStanding(
-                elapsed: elapsed,
-                face: .look,
-                arms: .rest,
-                opacity: opacity,
-                in: &context
-            )
+        defer { view.isPaused = isPaused }
+        guard let package = JoeyAssetPackage.load() else {
+            let empty = SKScene(size: Self.designSize)
+            empty.scaleMode = .aspectFit
+            empty.backgroundColor = .clear
+            view.presentScene(empty)
+            return view
         }
+
+        let scene = JoeyDesktopScene(size: Self.designSize, package: package)
+        scene.scaleMode = .aspectFit
+        scene.backgroundColor = .clear
+        scene.setTint(tint)
+        scene.setReduceMotion(reduceMotion)
+        scene.show(pose: pose)
+        view.presentScene(scene)
+        context.coordinator.scene = scene
+        return view
     }
 
-    private func drawStanding(
-        elapsed: TimeInterval,
-        face: NestFace,
-        arms: NestArms,
-        bodyOffsetY: CGFloat = 0,
-        opacity: Double,
-        in context: inout GraphicsContext
-    ) {
-        art.drawSitting(
-            in: &context,
-            face: face,
-            arms: arms,
-            bodyOffset: CGSize(width: 0, height: bodyOffsetY),
-            breath: breath(elapsed, period: 4.8),
-            tailAngle: tailAngle(elapsed, period: 4.8, lag: 0.1),
-            opacity: opacity
-        )
+    func updateNSView(_ view: SKView, context: Context) {
+        guard let scene = context.coordinator.scene else { return }
+        scene.setTint(tint)
+        scene.setReduceMotion(reduceMotion)
+        scene.show(pose: pose)
+        view.isPaused = isPaused
     }
 
-    private func groomingStroke(_ elapsed: TimeInterval) -> Double {
-        let cycle = elapsed.truncatingRemainder(dividingBy: 1.6)
-        let window: TimeInterval = 0.38
-        guard cycle < window else { return 0 }
-        return -15 * sin(Double.pi * cycle / window)
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
     }
 
-    // MARK: - Ambient helpers
-
-    private func breath(_ elapsed: TimeInterval, period: TimeInterval) -> CGFloat {
-        let phase = elapsed.truncatingRemainder(dividingBy: period) / period
-        return CGFloat(1 + 0.012 * (0.5 - 0.5 * cos(2 * .pi * phase)))
-    }
-
-    private func tailAngle(
-        _ elapsed: TimeInterval,
-        period: TimeInterval,
-        lag: TimeInterval
-    ) -> Double {
-        let phase = (elapsed - lag).truncatingRemainder(dividingBy: period) / period
-        return 8 * sin(2 * .pi * phase)
+    final class Coordinator {
+        var scene: JoeyDesktopScene?
     }
 }
 

@@ -2,6 +2,15 @@ import AppKit
 import Foundation
 import SpriteKit
 
+/// Optional colour wash for the layered pet. The desktop pet uses `.none`;
+/// the room applies a dusk tint so the same artwork sits in the dim light.
+struct JoeyPetTint {
+    let color: NSColor
+    let factor: CGFloat
+
+    static let none = JoeyPetTint(color: .clear, factor: 0)
+}
+
 /// Layered Joey renderer built from the V0.1 atlas.
 ///
 /// Coordinate contract: the node origin is the canvas anchor (feet), so a parent
@@ -43,6 +52,7 @@ final class JoeyCharacterNode: SKNode {
 
     private var currentFaceTexture: SKTexture?
     private var blinkTextures: [SKTexture] = []
+    private var tint: JoeyPetTint = .none
 
     private(set) var poseID: String?
     private(set) var sizeID: String
@@ -159,6 +169,14 @@ final class JoeyCharacterNode: SKNode {
         }
     }
 
+    /// Applies a colour wash to every fur/face/arm layer. The shadow is left
+    /// neutral so the pet still sits on the ground.
+    func setTint(_ tint: JoeyPetTint) {
+        guard tint.color != self.tint.color || tint.factor != self.tint.factor else { return }
+        self.tint = tint
+        applyTint()
+    }
+
     /// Whether a layer (including pivot-backed ears and tail) is drawn.
     func isLayerVisible(_ layer: String) -> Bool {
         guard let sprite = layerSprites[layer] else { return false }
@@ -217,6 +235,20 @@ final class JoeyCharacterNode: SKNode {
         fallbackNode.zPosition = 1
         fallbackNode.isHidden = true
         breathPivot.addChild(fallbackNode)
+
+        applyTint()
+    }
+
+    private func applyTint() {
+        let factor = tint.factor > 0 ? min(max(tint.factor, 0), 1) : 0
+        let color = factor > 0 ? tint.color : .clear
+
+        for sprite in layerSprites.values {
+            sprite.color = color
+            sprite.colorBlendFactor = factor
+        }
+        fallbackNode.color = color
+        fallbackNode.colorBlendFactor = factor
     }
 
     private func pivotAnchor(for layer: String) -> CGPoint? {

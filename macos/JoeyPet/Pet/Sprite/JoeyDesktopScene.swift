@@ -44,6 +44,10 @@ final class JoeyDesktopScene: SKScene, PetPoseRendering {
         character.setReduceMotion(enabled)
     }
 
+    func setTint(_ tint: JoeyPetTint) {
+        character.setTint(tint)
+    }
+
     /// Fits the 168×210 default sprite inside the current panel. PR4 replaces the
     /// panel size itself; until then this keeps the layered pet fully visible.
     private func fitCharacter() {

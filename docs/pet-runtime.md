@@ -44,9 +44,10 @@ hidden, dozing or companioning pet simply skips it. The scheduler stops
 on system sleep and restarts at most once after wake.
 
 The runtime also exposes `onRenderedPoseChanged` after every real pose switch,
-transients included. `PetCoordinator` forwards it to `CompanionStatus.pose`, and
-the nest window renders that stored pose with its own drawing rather than
-running a separate day loop, so the desktop pet and the nest always agree.
+transients included. `PetCoordinator` forwards it to `CompanionStatus.pose`. The
+nest hosts the same layered `JoeyDesktopScene` and `JoeyAssetPackage` as the
+desktop pet and feeds it that pose, so faces, props, breathing and blinks are
+identical instead of running a separate day loop.
 
 Edge docking and `peek` are deferred from V0: the panel stays where the user
 drops it, and `peek` is not reachable yet.

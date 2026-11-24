@@ -496,7 +496,7 @@ Rules:
 The main window, and it should feel like entering Joey's home.
 
 - Title: **Joey 的家**. Traffic lights, title, one gear.
-- Room scene fills the content area. The nest is not a separate day loop: it renders the exact pose `PetRuntime` is showing on the desktop, transients included, so the room and the desktop never disagree. `sleep` is the standing closed-eye pose with relaxed ears; `doze` is the lighter, slightly tilted nap.
+- Room scene fills the content area. The nest is not a separate renderer: it hosts the same layered `JoeyDesktopScene` with the same `JoeyAssetPackage` as the desktop pet, feeds it the pose `PetRuntime` resolved, and therefore matches faces, props, breathing, blinks and ear/tail motion exactly. `sleep` is the standing closed-eye pose with relaxed ears; `doze` is the lighter, slightly tilted nap. At dusk the room applies a 0.18 sage-grey wash (`nestPetTint`) to the layered pet so it sits in the dim light; the desktop pet stays untinted.
 - Joey stays in the nest. The room pet is not draggable; a click asks the runtime for one short greeting (`happy` for ~2.8 s), and both the nest and the desktop pet play it.
 - While a companionship session is running (`陪伴中`), the runtime drives `look`, then `sign`, `stretch` and `happy` at the matching moments, and the nest follows. Quiet hours show the same `sleep` pose in both places.
 - The wall clock shows the real local time with hour and minute hands; clicking it opens `JoeyPet 设置` on **节奏与提醒**. The hover hint is `调整提醒时间`.
