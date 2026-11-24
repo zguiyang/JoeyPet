@@ -538,6 +538,8 @@ Native, quieter, more functional than the room. No illustration, no hero copy, n
 |-----|---------|------|
 | 提醒节奏 | Segmented 45 / 60 / 90 分钟 | 开始陪伴后才计时 |
 | 勿扰模式 | Switch | 开启后不会再有邀请或提示，需要恢复时手动关闭 |
+| 背景音 | Menu-style chooser：无背景音 + catalog beds；每条有小喇叭试听 | 陪伴中播放；勿扰或安静时段会静音（试听不受影响） |
+| 提示音 | Menu-style chooser：无提示音 + catalog cues；每条有小喇叭试听 | 开始陪伴与休息邀请时播放；勿扰或安静时段会静音（试听不受影响） |
 | 安静时段 | Time-range field: two editable halves, centre dash, double-click selects all | 这段时间不会邀请；正在进行的休息会先走完 |
 | 外观 | Segmented 白天 / 黄昏 | 白天和黄昏各有一套配色 |
 | 显示位置 | Segmented 右下角 / 左下角 | 拖动后以你放的位置为准 |

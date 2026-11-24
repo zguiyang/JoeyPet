@@ -10,6 +10,8 @@ struct SettingsRootView: View {
     @State private var isFeedbackOpen = false
     @State private var debugStatus: String = "点一项即可触发完整效果"
     @ScaledMetric(relativeTo: .body) private var feedbackFontSize: CGFloat = 13
+    private let audioCatalog = JoeyAudioCatalog.load()
+    private let soundPreview = JoeySoundPreviewPlayer()
 
     private var theme: JoeyTheme { JoeyTheme(appearance: settings.appearance) }
 
@@ -28,6 +30,13 @@ struct SettingsRootView: View {
         }
         .background(theme.windowBg)
         .environment(\.joeyAppearance, settings.appearance)
+        .onAppear {
+            settings.ambientSoundID = audioCatalog.sanitizedAmbientID(settings.ambientSoundID)
+            settings.cueSoundID = audioCatalog.sanitizedCueID(settings.cueSoundID)
+        }
+        .onDisappear {
+            soundPreview.stop()
+        }
     }
 
     private var sidebar: some View {
@@ -106,6 +115,34 @@ struct SettingsRootView: View {
 
                 SettingsRow("勿扰模式", subtitle: "开启后不会再有邀请或提示，需要恢复时手动关闭") {
                     JoeySwitch(isOn: $settings.isDoNotDisturb, label: "勿扰模式")
+                }
+
+                SettingsRow(
+                    "背景音",
+                    subtitle: "陪伴中播放；勿扰或安静时段会静音"
+                ) {
+                    SoundPicker(
+                        selection: $settings.ambientSoundID,
+                        noneTitle: JoeyAudioCatalog.noneAmbientTitle,
+                        tracks: audioCatalog.ambient,
+                        kind: .ambient,
+                        preview: soundPreview
+                    )
+                    .accessibilityLabel("背景音")
+                }
+
+                SettingsRow(
+                    "提示音",
+                    subtitle: "开始陪伴与休息邀请时播放；勿扰或安静时段会静音"
+                ) {
+                    SoundPicker(
+                        selection: $settings.cueSoundID,
+                        noneTitle: JoeyAudioCatalog.noneCueTitle,
+                        tracks: audioCatalog.cues,
+                        kind: .cue,
+                        preview: soundPreview
+                    )
+                    .accessibilityLabel("提示音")
                 }
             }
         }
@@ -202,6 +239,14 @@ struct SettingsRootView: View {
                             }
                         }
                     }
+
+                    if !audioCatalog.attributionTracks.isEmpty {
+                        SettingsRow("声音致谢", subtitle: audioAttributionLine) {
+                            Text("CC BY")
+                                .font(.system(size: 12.5))
+                                .foregroundStyle(theme.muted)
+                        }
+                    }
                 }
 
                 if isFeedbackOpen {
@@ -246,6 +291,11 @@ struct SettingsRootView: View {
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .stroke(theme.hairlineStrong, lineWidth: 1)
         )
+    }
+
+    private var audioAttributionLine: String {
+        // Only wind_autumn currently requires credit; keep the line factual.
+        "秋叶风 · NickTayloe / Freesound"
     }
 
     private var appVersion: String {
@@ -383,6 +433,247 @@ private struct SettingsRow<Control: View>: View {
 }
 
 // MARK: - Controls
+
+/// Menu-style sound chooser: each track has a speaker for audition (settings-only, ignores mute).
+private struct SoundPicker: View {
+    @Binding var selection: String
+    let noneTitle: String
+    let tracks: [JoeyAudioTrack]
+    let kind: JoeySoundKind
+    let preview: JoeySoundPreviewPlayer
+
+    @Environment(\.joeyAppearance) private var appearance
+    @State private var isOpen = false
+    @State private var isHovering = false
+    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+
+    private var selectedTitle: String {
+        if selection == JoeyAudioCatalog.noneID { return noneTitle }
+        return tracks.first(where: { $0.id == selection })?.displayNameZh ?? noneTitle
+    }
+
+    var body: some View {
+        Button {
+            isOpen.toggle()
+        } label: {
+            HStack(spacing: 6) {
+                Text(selectedTitle)
+                    .font(.system(size: 13))
+                    .foregroundStyle(theme.ink)
+                    .lineLimit(1)
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(theme.muted)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(isHovering || isOpen ? theme.panel2 : theme.panel)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .stroke(theme.hairlineStrong, lineWidth: 1)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .focusEffectDisabled()
+        .onHover { isHovering = $0 }
+        .popover(isPresented: $isOpen, arrowEdge: .bottom) {
+            SoundPickerMenu(
+                selection: $selection,
+                noneTitle: noneTitle,
+                tracks: tracks,
+                kind: kind,
+                preview: preview,
+                onPick: { isOpen = false }
+            )
+        }
+    }
+}
+
+private struct SoundPickerMenu: View {
+    @Binding var selection: String
+    let noneTitle: String
+    let tracks: [JoeyAudioTrack]
+    let kind: JoeySoundKind
+    let preview: JoeySoundPreviewPlayer
+    let onPick: () -> Void
+
+    @Environment(\.joeyAppearance) private var appearance
+    @State private var hoveredID: String?
+    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+
+    /// Popover ScrollView needs a concrete height or it grows with content and clips.
+    private var trackListHeight: CGFloat {
+        let rowHeight: CGFloat = 37
+        let content = CGFloat(tracks.count) * rowHeight
+        let cap: CGFloat = 268
+        return min(max(content, rowHeight), cap)
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Keep「无」pinned so a long ambient list never hides it.
+            menuRow(
+                id: JoeyAudioCatalog.noneID,
+                title: noneTitle,
+                showsSpeaker: false
+            )
+
+            insetDivider
+
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(spacing: 0) {
+                        ForEach(Array(tracks.enumerated()), id: \.element.id) { index, track in
+                            if index > 0 {
+                                insetDivider
+                            }
+                            menuRow(
+                                id: track.id,
+                                title: track.displayNameZh,
+                                showsSpeaker: true
+                            )
+                            .id(track.id)
+                        }
+                    }
+                }
+                .frame(height: trackListHeight)
+                .scrollIndicators(.visible)
+                .onAppear {
+                    guard selection != JoeyAudioCatalog.noneID,
+                          tracks.contains(where: { $0.id == selection })
+                    else { return }
+                    DispatchQueue.main.async {
+                        withAnimation(.easeOut(duration: 0.18)) {
+                            proxy.scrollTo(selection, anchor: .center)
+                        }
+                    }
+                }
+            }
+        }
+        .padding(6)
+        .frame(minWidth: 220)
+        .background(theme.panel)
+    }
+
+    private var insetDivider: some View {
+        Rectangle()
+            .fill(theme.hairline)
+            .frame(height: 1)
+            .padding(.horizontal, 10)
+    }
+
+    private func menuRow(id: String, title: String, showsSpeaker: Bool) -> some View {
+        SoundPickerRow(
+            title: title,
+            isSelected: selection == id,
+            isHovered: hoveredID == id,
+            showsSpeaker: showsSpeaker,
+            onSelect: {
+                selection = id
+                if id == JoeyAudioCatalog.noneID {
+                    preview.stop()
+                } else {
+                    playPreview(id: id)
+                }
+                onPick()
+            },
+            onPreview: { playPreview(id: id) }
+        )
+        .onHover { hovering in
+            if hovering {
+                hoveredID = id
+            } else if hoveredID == id {
+                hoveredID = nil
+            }
+        }
+    }
+
+    private func playPreview(id: String) {
+        switch kind {
+        case .ambient:
+            preview.previewAmbient(id: id)
+        case .cue:
+            preview.previewCue(id: id)
+        }
+    }
+}
+
+private struct SoundPickerRow: View {
+    let title: String
+    let isSelected: Bool
+    let isHovered: Bool
+    let showsSpeaker: Bool
+    let onSelect: () -> Void
+    let onPreview: () -> Void
+
+    @Environment(\.joeyAppearance) private var appearance
+    @State private var speakerHovered = false
+    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+
+    private var rowFill: Color {
+        if isSelected { return theme.panel2 }
+        if isHovered { return theme.sageSoft.opacity(0.55) }
+        return .clear
+    }
+
+    var body: some View {
+        HStack(spacing: 0) {
+            Button(action: onSelect) {
+                HStack(spacing: 8) {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(theme.sageDeep)
+                        .opacity(isSelected ? 1 : 0)
+                        .frame(width: 14)
+                    Text(title)
+                        .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
+                        .foregroundStyle(theme.ink)
+                        .lineLimit(1)
+                    Spacer(minLength: 4)
+                }
+                .padding(.leading, 8)
+                .padding(.trailing, 4)
+                .padding(.vertical, 7)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .focusEffectDisabled()
+            .accessibilityLabel(title)
+            .accessibilityAddTraits(isSelected ? .isSelected : [])
+
+            if showsSpeaker {
+                Button(action: onPreview) {
+                    Image(systemName: "speaker.wave.2.fill")
+                        .font(.system(size: 11))
+                        .foregroundStyle(speakerHovered ? theme.sageDeep : theme.muted)
+                        .frame(width: 28, height: 28)
+                        .background(
+                            Circle()
+                                .fill(speakerHovered ? theme.panel2 : Color.clear)
+                        )
+                        .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .focusEffectDisabled()
+                .onHover { speakerHovered = $0 }
+                .padding(.trailing, 6)
+                .accessibilityLabel("试听\(title)")
+            } else {
+                Color.clear
+                    .frame(width: 34, height: 28)
+            }
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                .fill(rowFill)
+        )
+    }
+}
 
 private struct JoeySegmentedControl: View {
     let titles: [String]
