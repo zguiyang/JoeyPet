@@ -368,7 +368,7 @@ Eleven poses. The first six are the V0 state set; the rest cover ambient and low
 | Pose | Reads as | Used in |
 |------|----------|---------|
 | `sit` | Quiet company, breathing | Idle, nest |
-| `look` | Turned toward the user, attentive | Session active, nearly time to rest |
+| `look` | Turned toward the user, attentive; quieter 5.4 s breath (peak 1.028) than `sit` | Session active, nearly time to rest — see [`joeypet-look-frames-v0.html`](docs/reference/joeypet-look-frames-v0.html) |
 | `sign` | Holding a small handwritten sign | Kept as atlas art; V0 invitation no longer uses it |
 | `stretch` | Arms up, eyes closed, small mouth | Recovery demo |
 | `happy` | Arc eyes, open smile, brighter blush | After a completed break |

@@ -91,6 +91,9 @@ Do not use deleted legacy UI specs (`docs/product/ui-spec.md`), the old three-si
 | UI / UX (native) | [DESIGN.md](DESIGN.md) (V0 design contract; authority rules in this file) |
 | Frozen UI design | [docs/reference/joeypet-ui-v0.html](docs/reference/joeypet-ui-v0.html) |
 | Nest animation spec | [docs/reference/joeypet-nest-animations-v0.html](docs/reference/joeypet-nest-animations-v0.html) |
+| Idle sit breath frames | [docs/reference/joeypet-idle-breathing-frames-v0.html](docs/reference/joeypet-idle-breathing-frames-v0.html) |
+| Look pose frames | [docs/reference/joeypet-look-frames-v0.html](docs/reference/joeypet-look-frames-v0.html) |
+| Wave pose spec | [docs/reference/joeypet-wave-pose-v0.html](docs/reference/joeypet-wave-pose-v0.html) |
 | Pet domain & state model | [docs/pet-domain-model.md](docs/pet-domain-model.md) (engineering contract for states, poses, clips, timers) |
 | Audio catalog (V0.x) | [docs/audio-catalog-v0.md](docs/audio-catalog-v0.md) (ambient + cue pickers; mute under DND / quiet hours) |
 | Pet runtime | [docs/pet-runtime.md](docs/pet-runtime.md) |
