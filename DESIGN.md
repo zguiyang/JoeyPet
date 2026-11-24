@@ -371,7 +371,7 @@ Eleven poses. The first six are the V0 state set; the rest cover ambient and low
 | `look` | Turned toward the user, attentive; quieter 5.4 s breath (peak 1.028) than `sit` | Session active, nearly time to rest — see [`joeypet-look-frames-v0.html`](docs/reference/joeypet-look-frames-v0.html) |
 | `sign` | Holding a small handwritten sign | Kept as atlas art; V0 invitation no longer uses it |
 | `stretch` | Arms up, eyes closed, small mouth; 6 s breath (peak 1.032) + soft arm reach | Recovery demo — see [`joeypet-stretch-frames-v0.html`](docs/reference/joeypet-stretch-frames-v0.html) |
-| `happy` | Arc eyes, open smile, brighter blush | After a completed break |
+| `happy` | Arc eyes, open smile, brighter blush; 2.6 s one-shot soft hop | After a completed break — see [`joeypet-happy-frames-v0.html`](docs/reference/joeypet-happy-frames-v0.html) |
 | `sleep` | Standing, ears relaxed outward, eyes closed in soft arcs | Quiet hours, hidden attention |
 | `groom` | Paw to the ear, eyes half-closed | Idle, when the room is quiet |
 | `yawn` | Eyes squeezed shut, wide small mouth, head back | Waking up, or after long sitting |
