@@ -166,9 +166,9 @@
         "tail": "tail.default",
         "body": "body.default",
         "ears": "ears.default",
-        "backArm": "arm.backGroom",
+        "backArm": "arm.backRest",
         "face": "face.groom",
-        "frontArm": null,
+        "frontArm": "arm.frontGroom",
         "prop": null
       },
       "yawn": {

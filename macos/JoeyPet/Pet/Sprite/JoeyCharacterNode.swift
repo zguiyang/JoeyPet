@@ -38,6 +38,7 @@ final class JoeyCharacterNode: SKNode {
         static let yawn = "joey.yawn"
         static let carryLoop = "joey.carryLoop"
         static let carryLeaf = "joey.carryLeaf"
+        static let groom = "joey.groom"
     }
 
     private static let blinkSuppressedPoses: Set<String> = [
@@ -184,6 +185,7 @@ final class JoeyCharacterNode: SKNode {
         startStretchReachIfNeeded()
         startHappyCelebrationIfNeeded()
         startYawnIfNeeded()
+        startGroomIfNeeded()
     }
 
     func applySize(id: String) {
@@ -209,6 +211,7 @@ final class JoeyCharacterNode: SKNode {
             startStretchReachIfNeeded()
             startHappyCelebrationIfNeeded()
             startYawnIfNeeded()
+            startGroomIfNeeded()
         }
     }
 
@@ -371,8 +374,8 @@ final class JoeyCharacterNode: SKNode {
 
     private func startAmbientIfNeeded() {
         guard !isReduceMotionEnabled, poseID != nil else { return }
-        // Happy / yawn are one-shots, not breath loops.
-        guard poseID != "happy", poseID != "yawn" else { return }
+        // Happy / yawn / groom are one-shots, not breath loops.
+        guard poseID != "happy", poseID != "yawn", poseID != "groom" else { return }
         if poseID == "doze" {
             // docs/reference/joeypet-doze-spritesheet-v0.svg — breath+sway loop + random micro.
             startDozeLoop()
@@ -648,6 +651,31 @@ final class JoeyCharacterNode: SKNode {
         let settle = SKAction.move(to: rest, duration: 0.36)
         settle.timingMode = .easeInEaseOut
         face.run(.sequence([down, deeper, settle]), withKey: ActionKey.sleepHead)
+    }
+
+    /// Quiet idle groom: soft ear-stroke on the raised front arm over ~2.8 s.
+    /// Matches docs/reference/joeypet-groom-spritesheet-v0.svg (peak hold + light stroke).
+    /// `arm.frontGroom` already bakes the raised paw; motion is a small shoulder wiggle.
+    private func startGroomIfNeeded() {
+        guard poseID == "groom" else { return }
+
+        let pivot = layerPivots["frontArm"]
+        pivot?.removeAction(forKey: ActionKey.groom)
+        pivot?.zRotation = 0
+
+        guard !isReduceMotionEnabled, let pivot, !pivot.isHidden else { return }
+
+        let peak = CGFloat(package.ambient("groom")?.armDeg ?? -15) * .pi / 180
+        let out = SKAction.rotate(toAngle: peak, duration: 0.35, shortestUnitArc: true)
+        out.timingMode = .easeInEaseOut
+        let back = SKAction.rotate(toAngle: peak * 0.35, duration: 0.4, shortestUnitArc: true)
+        back.timingMode = .easeInEaseOut
+        let again = SKAction.rotate(toAngle: peak, duration: 0.35, shortestUnitArc: true)
+        again.timingMode = .easeInEaseOut
+        let settle = SKAction.rotate(toAngle: 0, duration: 0.45, shortestUnitArc: true)
+        settle.timingMode = .easeInEaseOut
+        let hold = SKAction.wait(forDuration: 1.25)
+        pivot.run(.sequence([out, back, again, hold, settle]), withKey: ActionKey.groom)
     }
 
     /// Wake / long-sit yawn: one-shot head tip-back over 1.8 s.
@@ -1013,6 +1041,7 @@ final class JoeyCharacterNode: SKNode {
         layerPivots["ears"]?.removeAction(forKey: ActionKey.yawn)
         layerPivots["frontArm"]?.removeAction(forKey: ActionKey.wave)
         layerPivots["frontArm"]?.removeAction(forKey: ActionKey.stretchReach)
+        layerPivots["frontArm"]?.removeAction(forKey: ActionKey.groom)
         layerPivots["backArm"]?.removeAction(forKey: ActionKey.stretchReach)
         layerSprites["face"]?.removeAction(forKey: ActionKey.dozeHead)
         layerSprites["face"]?.removeAction(forKey: ActionKey.sleepHead)

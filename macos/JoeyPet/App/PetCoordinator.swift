@@ -141,6 +141,8 @@ final class PetCoordinator {
             return runtime.debugHoldPose(.sleep, duration: 24)
         case .yawning:
             return runtime.debugHoldPose(.yawn, duration: 1.8)
+        case .grooming:
+            return runtime.debugHoldPose(.groom, duration: 2.8)
         case .startSession:
             runtime.startSession()
             return true
