@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="24"
+     height="24"
+     viewBox="0 0 24 24"
+     fill="none">
+  <!--
+    Menu-bar template (path A / silhouette v1 · V3 头耳特写).
+    Source: pose_sit outer+inner ears and body, single black fill.
+    Crop y ≤ 200; optically centred in 24×24; ~18pt working height.
+    Template: black + alpha only — AppKit recolors for light/dark bars.
+  -->
+  <defs>
+    <clipPath id="clip-head">
+      <rect x="0" y="0" width="320" height="200"/>
+    </clipPath>
+  </defs>
+  <g fill="#000000"
+     transform="translate(12 12) scale(0.116883) translate(-160 -123)">
+    <g clip-path="url(#clip-head)">
+      <path d="M118 148 C100 126 88 90 93 68 C97 50 116 46 126 62 C138 80 144 116 146 140 Z"/>
+      <path d="M120 136 C108 118 101 94 105 80 C108 70 117 69 122 78 C129 90 134 114 136 132 Z"/>
+      <path d="M202 148 C220 126 232 90 227 68 C223 50 204 46 194 62 C182 80 176 116 174 140 Z"/>
+      <path d="M200 136 C212 118 219 94 215 80 C212 70 203 69 198 78 C191 90 186 114 184 132 Z"/>
+      <path d="M160 116 C209 116 242 167 242 231 C242 299 208 342 160 342 C112 342 78 299 78 231 C78 167 111 116 160 116 Z"/>
+    </g>
+  </g>
+</svg>
