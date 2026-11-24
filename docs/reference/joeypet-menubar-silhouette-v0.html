@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>JoeyPet · Menu bar silhouette v0（A：同源剪影）</title>
+<style>
+  :root{
+    --ivory:#F7F3EB; --ivory-2:#F1E9DA; --panel:#FFFDF7;
+    --ink:#3F3A35; --ink-2:#6B6259; --muted:#6E6459;
+    --sage:#86A98A; --sage-deep:#4F6D54; --cream:#F3E3CD;
+    --hairline:rgba(63,58,53,.14);
+    --font:"PingFang SC","Hiragino Sans GB",-apple-system,BlinkMacSystemFont,sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,monospace;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; min-height:100vh;
+    background:var(--ivory); color:var(--ink);
+    font-family:var(--font); font-size:15px; line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+  }
+  .board{ width:min(100%,980px); margin:0 auto; padding:48px 28px 72px; }
+  .eyebrow{
+    display:flex; align-items:center; gap:10px; margin:0 0 14px;
+    color:var(--sage-deep); font-family:var(--mono);
+    font-size:11px; font-weight:600; letter-spacing:.12em; text-transform:uppercase;
+  }
+  .eyebrow::before{ content:""; width:22px; height:1px; background:var(--sage); }
+  h1{ margin:0 0 10px; font-size:clamp(26px,3vw,34px); font-weight:600; line-height:1.3; }
+  .dek{ margin:0 0 28px; max-width:62ch; color:var(--ink-2); font-size:14.5px; }
+  .dek strong{ color:var(--ink); font-weight:600; }
+
+  .ref{
+    display:grid; grid-template-columns:160px 1fr; gap:18px; align-items:center;
+    margin:0 0 36px; padding:16px;
+    background:var(--panel); border:1px solid var(--hairline); border-radius:14px;
+  }
+  .ref-art{
+    width:160px; height:160px; border-radius:22%;
+    background:#4F6D54; display:grid; place-items:center;
+  }
+  .ref p{ margin:0; color:var(--ink-2); font-size:13px; }
+  .ref b{ color:var(--ink); }
+
+  .grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:720px){ .grid{ grid-template-columns:1fr; } .ref{ grid-template-columns:1fr; } }
+
+  .card{
+    margin:0; padding:16px;
+    background:var(--panel); border:1px solid var(--hairline); border-radius:14px;
+  }
+  .card h3{
+    margin:0 0 4px; font-size:14.5px; font-weight:600;
+    display:flex; gap:8px; align-items:baseline;
+  }
+  .card h3 span{ font-family:var(--mono); font-size:11px; color:var(--sage-deep); }
+  .intent{ margin:0 0 12px; color:var(--ink-2); font-size:12.5px; }
+
+  .row{ display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end; }
+  .big{
+    width:140px; height:140px;
+    background:#fff; border:1px dashed var(--hairline); border-radius:12px;
+    color:#000;
+  }
+  .lbl{
+    font-family:var(--mono); font-size:10px; color:var(--muted);
+    letter-spacing:.04em; text-transform:uppercase; margin:0 0 6px;
+  }
+  .bars{ display:flex; flex-direction:column; gap:6px; min-width:200px; flex:1; }
+  .bar{
+    height:28px; border-radius:6px; padding:0 10px;
+    display:flex; align-items:center; justify-content:flex-end; gap:8px;
+    font-family:var(--mono); font-size:9px;
+  }
+  .bar svg{ width:18px; height:18px; display:block; }
+  .bar--l{ background:#EDEDF0; color:#111; }
+  .bar--d{ background:#2A2A2D; color:#eee; }
+  .bar--n{ background:#000; color:#eee; }
+  .bar--l svg{ color:#000; }
+  .bar--d svg, .bar--n svg{ color:#fff; }
+
+  .next{
+    margin-top:28px; padding:14px 16px;
+    background:var(--ivory-2); border-radius:12px;
+    font-size:13px; color:var(--ink-2);
+  }
+  .next strong{ color:var(--ink); }
+</style>
+</head>
+<body>
+<svg width="0" height="0" aria-hidden="true" style="position:absolute">
+  <defs>
+    <!-- Color reference (Dock DNA) -->
+    <g id="joey-color-head">
+      <path d="M118 148 C100 126 88 90 93 68 C97 50 116 46 126 62 C138 80 144 116 146 140 Z" fill="#F3E3CD"/>
+      <path d="M120 136 C108 118 101 94 105 80 C108 70 117 69 122 78 C129 90 134 114 136 132 Z" fill="#EFC8AA"/>
+      <path d="M202 148 C220 126 232 90 227 68 C223 50 204 46 194 62 C182 80 176 116 174 140 Z" fill="#F3E3CD"/>
+      <path d="M200 136 C212 118 219 94 215 80 C212 70 203 69 198 78 C191 90 186 114 184 132 Z" fill="#EFC8AA"/>
+      <path d="M160 116 C209 116 242 167 242 231 C242 299 208 342 160 342 C112 342 78 299 78 231 C78 167 111 116 160 116 Z" fill="#F3E3CD"/>
+      <path d="M122 244 C 142 258 178 258 198 244" fill="none" stroke="#86A98A" stroke-width="9" stroke-linecap="round"/>
+      <circle cx="200" cy="247" r="7" fill="#86A98A"/>
+      <ellipse cx="111" cy="226" rx="18" ry="9" fill="#EFAE7D" opacity="0.26"/>
+      <ellipse cx="209" cy="226" rx="18" ry="9" fill="#EFAE7D" opacity="0.26"/>
+      <ellipse cx="134" cy="204" rx="8.5" ry="11" fill="#3F3A35"/>
+      <ellipse cx="186" cy="204" rx="8.5" ry="11" fill="#3F3A35"/>
+      <circle cx="131" cy="200" r="2.8" fill="#FFFFFF"/>
+      <circle cx="183" cy="200" r="2.8" fill="#FFFFFF"/>
+      <path d="M160 216 C 166 216 169 220 166.5 223 C 164.5 225.5 155.5 225.5 153.5 223 C 151 220 154 216 160 216 Z" fill="#C98F6E"/>
+    </g>
+
+    <!-- Silhouette source: same ear+body paths, single fill, no face -->
+    <g id="sil-source">
+      <path d="M118 148 C100 126 88 90 93 68 C97 50 116 46 126 62 C138 80 144 116 146 140 Z"/>
+      <path d="M120 136 C108 118 101 94 105 80 C108 70 117 69 122 78 C129 90 134 114 136 132 Z"/>
+      <path d="M202 148 C220 126 232 90 227 68 C223 50 204 46 194 62 C182 80 176 116 174 140 Z"/>
+      <path d="M200 136 C212 118 219 94 215 80 C212 70 203 69 198 78 C191 90 186 114 184 132 Z"/>
+      <path d="M160 116 C209 116 242 167 242 231 C242 299 208 342 160 342 C112 342 78 299 78 231 C78 167 111 116 160 116 Z"/>
+    </g>
+
+    <!-- S1 · Portrait crop (matches D1 framing) -->
+    <symbol id="s1" viewBox="0 0 24 24">
+      <g fill="currentColor" transform="translate(12 12.2) scale(0.092) translate(-160 -168)">
+        <use href="#sil-source"/>
+      </g>
+    </symbol>
+
+    <!-- S2 · Slightly heavier (optical boost for 18pt) -->
+    <symbol id="s2" viewBox="0 0 24 24">
+      <g fill="currentColor" transform="translate(12 12.1) scale(0.098) translate(-160 -168)">
+        <use href="#sil-source"/>
+      </g>
+    </symbol>
+
+    <!-- S3 · Tighter head (less belly) -->
+    <symbol id="s3" viewBox="0 0 24 24">
+      <g fill="currentColor" transform="translate(12 13.2) scale(0.105) translate(-160 -150)">
+        <use href="#sil-source"/>
+      </g>
+    </symbol>
+
+    <!-- S4 · Ears emphasized (scale ears only via duplicate outer ears + body) -->
+    <symbol id="s4" viewBox="0 0 24 24">
+      <g fill="currentColor" transform="translate(12 12.3) scale(0.092) translate(-160 -168)">
+        <g transform="translate(160 100) scale(1.08) translate(-160 -100)">
+          <path d="M118 148 C100 126 88 90 93 68 C97 50 116 46 126 62 C138 80 144 116 146 140 Z"/>
+          <path d="M202 148 C220 126 232 90 227 68 C223 50 204 46 194 62 C182 80 176 116 174 140 Z"/>
+        </g>
+        <path d="M120 136 C108 118 101 94 105 80 C108 70 117 69 122 78 C129 90 134 114 136 132 Z"/>
+        <path d="M200 136 C212 118 219 94 215 80 C212 70 203 69 198 78 C191 90 186 114 184 132 Z"/>
+        <path d="M160 116 C209 116 242 167 242 231 C242 299 208 342 160 342 C112 342 78 299 78 231 C78 167 111 116 160 116 Z"/>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+<main class="board">
+  <p class="eyebrow">JoeyPet · Menu bar · path A</p>
+  <h1>同源剪影 · 菜单栏专用 v0</h1>
+  <p class="dek">
+    Dock 已可用（D1）。菜单栏不另起炉灶：用<strong>同一套 Joey 耳 + 身体 path</strong>填成实心黑剪影，只调裁切与光学重量。
+    禁止手画新耳朵。这是 template（系统按 alpha 上色），不是彩色标。
+  </p>
+
+  <div class="ref">
+    <div class="ref-art" aria-hidden="true">
+      <svg width="132" height="132" viewBox="70 40 180 240">
+        <use href="#joey-color-head"/>
+      </svg>
+    </div>
+    <p>
+      <b>对照</b>：左侧是 Dock 同源彩色头（pose_sit 路径）。下方 S1–S4 只是同一轮廓的黑剪影变体——比 v1 的 M1–M4 手绘瓣耳可靠。
+    </p>
+  </div>
+
+  <div class="grid">
+    <article class="card">
+      <h3><span>S1</span> Portrait crop</h3>
+      <p class="intent">与 D1 取景接近：头耳为主，肚子裁掉一部分。默认候选。</p>
+      <div class="row">
+        <div>
+          <p class="lbl">放大</p>
+          <svg class="big" viewBox="0 0 24 24"><use href="#s1"/></svg>
+        </div>
+        <div class="bars">
+          <p class="lbl">18pt 三态</p>
+          <div class="bar bar--l">浅<svg viewBox="0 0 24 24"><use href="#s1"/></svg></div>
+          <div class="bar bar--d">深<svg viewBox="0 0 24 24"><use href="#s1"/></svg></div>
+          <div class="bar bar--n">近黑<svg viewBox="0 0 24 24"><use href="#s1"/></svg></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="card">
+      <h3><span>S2</span> Heavier</h3>
+      <p class="intent">整体放大一点，菜单栏里更「够分量」，接近系统 16–18pt 实心标。</p>
+      <div class="row">
+        <div>
+          <p class="lbl">放大</p>
+          <svg class="big" viewBox="0 0 24 24"><use href="#s2"/></svg>
+        </div>
+        <div class="bars">
+          <p class="lbl">18pt 三态</p>
+          <div class="bar bar--l">浅<svg viewBox="0 0 24 24"><use href="#s2"/></svg></div>
+          <div class="bar bar--d">深<svg viewBox="0 0 24 24"><use href="#s2"/></svg></div>
+          <div class="bar bar--n">近黑<svg viewBox="0 0 24 24"><use href="#s2"/></svg></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="card">
+      <h3><span>S3</span> Tighter head</h3>
+      <p class="intent">更贴脸：肚子更少，耳朵占比更高。适合怕「一团黑」的情况。</p>
+      <div class="row">
+        <div>
+          <p class="lbl">放大</p>
+          <svg class="big" viewBox="0 0 24 24"><use href="#s3"/></svg>
+        </div>
+        <div class="bars">
+          <p class="lbl">18pt 三态</p>
+          <div class="bar bar--l">浅<svg viewBox="0 0 24 24"><use href="#s3"/></svg></div>
+          <div class="bar bar--d">深<svg viewBox="0 0 24 24"><use href="#s3"/></svg></div>
+          <div class="bar bar--n">近黑<svg viewBox="0 0 24 24"><use href="#s3"/></svg></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="card">
+      <h3><span>S4</span> Ear boost</h3>
+      <p class="intent">外耳略放大 8%，小尺寸里耳形更清楚；仍是同一 path，不是重画。</p>
+      <div class="row">
+        <div>
+          <p class="lbl">放大</p>
+          <svg class="big" viewBox="0 0 24 24"><use href="#s4"/></svg>
+        </div>
+        <div class="bars">
+          <p class="lbl">18pt 三态</p>
+          <div class="bar bar--l">浅<svg viewBox="0 0 24 24"><use href="#s4"/></svg></div>
+          <div class="bar bar--d">深<svg viewBox="0 0 24 24"><use href="#s4"/></svg></div>
+          <div class="bar bar--n">近黑<svg viewBox="0 0 24 24"><use href="#s4"/></svg></div>
+        </div>
+      </div>
+    </article>
+  </div>
+
+  <p class="next">
+    <strong>Next</strong>：你从 S1–S4 里圈一个（或说「再重一点 / 再贴脸一点」）。
+    定稿后导出为 <code>JoeyPetMenuBarTemplate.svg</code>（黑 + 透明，template），Dock 继续用 D1 导出 AppIcon。
+  </p>
+</main>
+</body>
+</html>

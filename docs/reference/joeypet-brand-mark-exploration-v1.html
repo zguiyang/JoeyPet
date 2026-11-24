@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JoeyPet · Brand mark exploration v1</title>
+<style>
+  :root{
+    --ivory:#F7F3EB; --ivory-2:#F1E9DA; --ink:#3F3A35; --ink-2:#6E6459;
+    --sage:#86A98A; --sage-deep:#4F6D54; --sage-ink:#263227; --apricot:#EFAE7D; --clay:#C9B08C;
+    --cream:#F3E3CD; --tile:#4F6D54; --hair:rgba(63,58,53,.14);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ivory);color:var(--ink);font-family:"PingFang SC","Hiragino Sans GB","Noto Sans SC",system-ui,sans-serif;line-height:1.6}
+  main{max-width:1120px;margin:0 auto;padding:48px 32px 72px}
+  h1{font-size:26px;margin:0 0 6px;letter-spacing:.01em}
+  h2{font-size:18px;margin:48px 0 6px;padding-top:24px;border-top:1px solid var(--hair)}
+  .sub{font-size:13px;color:var(--ink-2);margin:0 0 14px}
+  .lead{font-size:14px;color:var(--ink-2);max-width:72ch;margin:0}
+  .note{font-size:12px;color:var(--ink-2)}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-top:20px}
+  .card{background:#FFFDF7;border:1px solid var(--hair);border-radius:16px;padding:20px;box-shadow:0 1px 2px rgba(63,58,53,.05)}
+  .card h3{font-size:15px;margin:0}
+  .card .intent{font-size:13px;color:var(--ink-2);margin:2px 0 14px}
+  .row{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap}
+  .lbl{font-size:11px;color:var(--ink-2);letter-spacing:.04em;margin-bottom:6px}
+  .big{width:180px;height:180px;display:block}
+  .sizes{display:flex;gap:14px;align-items:flex-end}
+  .strip{display:flex;gap:10px;align-items:center;border-radius:10px;padding:10px 12px}
+  .strip.light{background:#E9E9EC;color:#000}
+  .strip.dark{background:#1E1E20;color:#fff}
+  .strip.near{background:#000;color:#fff}
+  .bar{height:24px;display:flex;align-items:center;justify-content:flex-end;gap:10px;width:100%;padding:0 10px;border-radius:6px;font-size:10px}
+  .bar.l{background:#EDEDF0;color:#000}
+  .bar.d{background:#2A2A2D;color:#fff}
+  .bar.n{background:#000;color:#fff}
+  .bar svg{width:18px;height:18px}
+  .dockrow{display:flex;gap:12px;align-items:center;padding:12px;border-radius:12px}
+  .dock-l{background:#DCDCE0}
+  .dock-d{background:#1C1C1F}
+  .tag{font-size:11px;color:var(--ink-2)}
+  .pair{width:100%;border-collapse:collapse;font-size:13px;margin-top:14px;background:#FFFDF7;border:1px solid var(--hair);border-radius:12px;overflow:hidden}
+  .pair th,.pair td{border-bottom:1px solid var(--hair);padding:10px 12px;text-align:left;vertical-align:top}
+  .pair th{font-size:12px;color:var(--ink-2);font-weight:600;background:var(--ivory-2)}
+  .blank{color:#B5ADA2;font-style:italic}
+  .next{margin-top:28px;font-size:13px;background:var(--ivory-2);border-radius:12px;padding:14px 16px}
+  .mini{font-size:12px;color:var(--ink-2)}
+  ul.ref{margin:6px 0 0;padding-left:18px;font-size:13px;color:var(--ink-2)}
+  @media (max-width:820px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<!-- Shared symbol library: Joey art reused from pose_sit.svg (identity lock) and menu-bar silhouettes -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="j-tail">
+      <path d="M228 314 C 268 324 294 300 290 272 C 287 250 266 244 256 256 C 248 266 256 280 269 277" fill="none" stroke="#F0DFC8" stroke-width="23" stroke-linecap="round"/>
+    </g>
+    <g id="j-ears">
+      <path d="M118 148 C100 126 88 90 93 68 C97 50 116 46 126 62 C138 80 144 116 146 140 Z" fill="#F3E3CD"/>
+      <path d="M120 136 C108 118 101 94 105 80 C108 70 117 69 122 78 C129 90 134 114 136 132 Z" fill="#EFC8AA"/>
+      <path d="M202 148 C220 126 232 90 227 68 C223 50 204 46 194 62 C182 80 176 116 174 140 Z" fill="#F3E3CD"/>
+      <path d="M200 136 C212 118 219 94 215 80 C212 70 203 69 198 78 C191 90 186 114 184 132 Z" fill="#EFC8AA"/>
+    </g>
+    <g id="j-body">
+      <path d="M160 116 C209 116 242 167 242 231 C242 299 208 342 160 342 C112 342 78 299 78 231 C78 167 111 116 160 116 Z" fill="#F3E3CD"/>
+      <path d="M160 342 C112 342 78 299 78 231 C78 224 78 218 79 212 C93 298 118 322 160 322 C202 322 227 298 241 212 C242 218 242 224 242 231 C242 299 208 342 160 342 Z" fill="#EBD7BE" opacity="0.5"/>
+      <ellipse cx="128" cy="337" rx="27" ry="13" fill="#F8ECDA"/>
+      <ellipse cx="192" cy="337" rx="27" ry="13" fill="#F8ECDA"/>
+      <path d="M122 244 C 142 258 178 258 198 244" fill="none" stroke="#86A98A" stroke-width="9" stroke-linecap="round"/>
+      <circle cx="200" cy="247" r="7" fill="#86A98A"/>
+    </g>
+    <g id="j-arms">
+      <ellipse cx="84" cy="262" rx="18" ry="28" fill="#EDDAC1" transform="rotate(10 84 262)"/>
+      <ellipse cx="236" cy="262" rx="18" ry="28" fill="#EDDAC1" transform="rotate(-10 236 262)"/>
+    </g>
+    <g id="j-face">
+      <ellipse cx="111" cy="226" rx="18" ry="9" fill="#EFAE7D" opacity="0.26"/>
+      <ellipse cx="209" cy="226" rx="18" ry="9" fill="#EFAE7D" opacity="0.26"/>
+      <ellipse cx="134" cy="204" rx="8.5" ry="11" fill="#3F3A35"/>
+      <ellipse cx="186" cy="204" rx="8.5" ry="11" fill="#3F3A35"/>
+      <circle cx="131" cy="200" r="2.8" fill="#FFFFFF"/>
+      <circle cx="183" cy="200" r="2.8" fill="#FFFFFF"/>
+      <path d="M160 216 C 166 216 169 220 166.5 223 C 164.5 225.5 155.5 225.5 153.5 223 C 151 220 154 216 160 216 Z" fill="#C98F6E"/>
+      <path d="M160 224 C 158 230 153 232 150 228 M160 224 C 162 230 167 232 170 228" fill="none" stroke="#6F5F53" stroke-width="2.3" stroke-linecap="round"/>
+    </g>
+    <!-- Joey core: tail, ears, body, face (no arms) -->
+    <g id="j-core">
+      <use href="#j-tail"/><use href="#j-ears"/><use href="#j-body"/><use href="#j-face"/>
+    </g>
+    <g id="j-full">
+      <use href="#j-tail"/><use href="#j-ears"/><use href="#j-body"/><use href="#j-arms"/><use href="#j-face"/>
+    </g>
+    <!-- Menu bar template silhouettes (24 x 24, fill = currentColor, no detail) -->
+    <g id="m-head">
+      <path d="M5 11 C4 7.5 4 3.5 6 2.5 C7.6 1.8 9.2 4.2 9.8 8.2 Z"/>
+      <path d="M19 11 C20 7.5 20 3.5 18 2.5 C16.4 1.8 14.8 4.2 14.2 8.2 Z"/>
+      <path d="M12 7.5 C17.5 7.5 20.5 11 20.5 15.5 C20.5 20 17 22.5 12 22.5 C7 22.5 3.5 20 3.5 15.5 C3.5 11 6.5 7.5 12 7.5 Z"/>
+    </g>
+    <clipPath id="m-clip-top"><rect x="0" y="0" width="24" height="16.6"/></clipPath>
+    <g id="m-tail-body">
+      <use href="#m-head"/>
+      <path d="M17.5 20.2 C21.5 20.6 22.8 17.2 20.8 15.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    </g>
+    <g id="m-round">
+      <circle cx="12" cy="13.6" r="8"/>
+      <path d="M4.8 9.6 L5.6 3.4 C5.7 2.6 6.5 2.3 7 2.8 L10.2 6.2 Z"/>
+      <path d="M19.2 9.6 L18.4 3.4 C18.3 2.6 17.5 2.3 17 2.8 L13.8 6.2 Z"/>
+    </g>
+    <g id="m-nest">
+      <g clip-path="url(#m-clip-top)"><use href="#m-head"/></g>
+      <path d="M2.2 18.4 L21.8 18.4 C21.2 21.8 17.2 23 12 23 C6.8 23 2.8 21.8 2.2 18.4 Z"/>
+    </g>
+  </defs>
+</svg>
+
+<main>
+  <h1>JoeyPet · Brand mark exploration v1</h1>
+  <p class="sub">选型板，不是最终打包资源。Dock（App Icon）与菜单栏（Template）分开评审，两者共享轮廓 DNA，但不是同一张图缩放。</p>
+  <p class="lead">角色依据现网 Joey（pose_sit）造型：奶油皮、无颈圆头身、长耳、墨色五官与鼠尾草围巾。图标背景统一为淡鼠尾草雾色，以保证奶油皮与底色有可辨的明度差。</p>
+
+  <!-- ============ TRACK 1: DOCK ============ -->
+  <h2>赛道 1 · Dock / App Icon（彩色）</h2>
+  <p class="note">系统会裁圆角，图案已在方形内留出安全边。开/关状态由系统小圆点处理，图标本身不画两套。</p>
+
+  <div class="grid">
+    <!-- D1 -->
+    <section class="card">
+      <h3>D1 · Front portrait</h3>
+      <p class="intent">正面头像特写：耳、脸、围巾占主视觉，一眼是 Joey。</p>
+      <div class="row">
+        <div>
+          <div class="lbl">大预览</div>
+          <svg class="big" viewBox="0 0 200 200" aria-label="D1 大预览">
+            <rect width="200" height="200" rx="45" fill="#4F6D54"/>
+            <svg x="14" y="14" width="172" height="172" viewBox="50 40 220 220"><use href="#j-core"/></svg>
+          </svg>
+        </div>
+        <div>
+          <div class="lbl">App Icon 128 / 64 / 32</div>
+          <div class="sizes">
+            <svg width="128" height="128" viewBox="0 0 200 200"><rect width="200" height="200" rx="45" fill="#4F6D54"/><svg x="14" y="14" width="172" height="172" viewBox="50 40 220 220"><use href="#j-core"/></svg></svg>
+            <svg width="64" height="64" viewBox="0 0 200 200"><rect width="200" height="200" rx="45" fill="#4F6D54"/><svg x="14" y="14" width="172" height="172" viewBox="50 40 220 220"><use href="#j-core"/></svg></svg>
+            <svg width="32" height="32" viewBox="0 0 200 200"><rect width="200" height="200" rx="45" fill="#4F6D54"/><svg x="14" y="14" width="172" height="172" viewBox="50 40 220 220"><use href="#j-core"/></svg></svg>
+          </div>
+        </div>
+      </div>
+      <div class="lbl" style="margin-top:14px">亮 Dock / 暗 Dock（64）</div>
+      <div class="dockrow dock-l"><svg width="64" height="64" viewBox="0 0 200 200"><rect width="200" height="200" rx="45" fill="#4F6D54"/><svg x="14" y="14" width="172" height="172" viewBox="50 40 220 220"><use href="#j-core"/></svg></svg></div>
+      <div class="dockrow dock-d" style="margin-top:6px"><svg width="64" height="64" viewBox="0 0 200 200"><rect width="200" height="200" rx="45" fill="#4F6D54"/><svg x="14" y="14" width="172" height="172" viewBox="50 40 220 220"><use href="#j-core"/></svg></svg></div>
+    </section>
+
+    <!-- D2 -->
+    <section class="card">
+      <h3>D2 · Three-quarter glance</h3>
+      <p class="intent">3/4 侧脸安静看向你：脸部微偏，耳朵保持直立。</p>
+      <div class="row">
+        <div>
+          <div class="lbl">大预览</div>
+          <svg class="big" viewBox="0 0 200 200" aria-label="D2 大预览">
+            <rect width="200" height="200" rx="45" fill="#4F6D54"/>
+            <svg x="14" y="14" width="172" height="172" viewBox="50 40 220 220">
+              <use href="#j-tail"/><use href="#j-ears"/><use href="#j-body"/>
+              <use href="#j-face" transform="translate(160 0) scale(0.9 1) translate(-160 0) translate(7 -2)"/>
+            </svg>
+          </svg>
+        </div>
+        <div>
+          <div class="lbl">App Icon 128 / 64 / 32</div>
+          <div class="sizes">
+            <svg width="128" height="128" viewBox="0 0 200 200"><rect width="200" height="200" rx="45" fill="#4F6D54"/><svg x="14" y="14" width="172" height="172" viewBox="50 40 220 220"><use href="#j-tail"/><use href="#j-ears"/><use href="#j-body"/><use href="#j-face" transform="translate(160 0) scale(0.9 1) translate(-160 0) translate(7 -2)"/></svg></svg>
+            <svg width="64" height="64" viewBox="0 0 200 200"><rect width="200" height="200" rx="45" fill="#4F6D54"/><svg x="14" y="14" width="172" height="172" viewBox="50 40 220 220"><use href="#j-tail"/><use href="#j-ears"/><use href="#j-body"/><use href="#j-face" transform="translate(160 0) scale(0.9 1) translate(-160 0) translate(7 -2)"/></svg></svg>
+            <svg width="32" height="32" viewBox="0 0 200 200"><rect width="200" height="200" rx="45" fill="#4F6D54"/><svg x="14" y="14" width="172" height="172" viewBox="50 40 220 220"><use href="#j-tail"/><use href="#j-ears"/><use href="#j-body"/><use href="#j-face" transform="translate(160 0) scale(0.9 1) translate(-160 0) translate(7 -2)"/></svg></svg>
+          </div>
+        </div>
+      </div>
+      <div class="lbl" style="margin-top:14px">亮 Dock / 暗 Dock（64）</div>
+      <div class="dockrow dock-l"><svg width="64" height="64" viewBox="0 0 200 200"><rect width="200" height="200" rx="45" fill="#4F6D54"/><svg x="14" y="14" width="172" height="172" viewBox="50 40 220 220"><use href="#j-tail"/><use href="#j-ears"/><use href="#j-body"/><use href="#j-face" transform="translate(160 0) scale(0.9 1) translate(-160 0) translate(7 -2)"/></svg></svg></div>
+      <div class="dockrow dock-d" style="margin-top:6px"><svg width="64" height="64" viewBox="0 0 200 200"><rect width="200" height="200" rx="45" fill="#4F6D54"/><svg x="14" y="14" width="172" height="172" viewBox="50 40 220 220"><use href="#j-tail"/><use href="#j-ears"/><use href="#j-body"/><use href="#j-face" transform="translate(160 0) scale(0.9 1) translate(-160 0) translate(7 -2)"/></svg></svg></div>
+    </section>
+
+    <!-- D3 -->
+    <section class="card">
+      <h3>D3 · Upper body, arms relaxed</h3>
+      <p class="intent">头加上半身坐姿裁切，双臂贴身，仍以头为主，不挤全身。</p>
+      <div class="row">
+        <div>
+          <div class="lbl">大预览</div>
+          <svg class="big" viewBox="0 0 200 200" aria-label="D3 大预览">
+            <rect width="200" height="200" rx="45" fill="#4F6D54"/>
+            <svg x="12" y="12" width="176" height="176" viewBox="40 60 250 250"><use href="#j-full"/></svg>
+          </svg>
+        </div>
+        <div>
+          <div class="lbl">App Icon 128 / 64 / 32</div>
+          <div class="sizes">
+            <svg width="128" height="128" viewBox="0 0 200 200"><rect width="200" height="200" rx="45" fill="#4F6D54"/><svg x="12" y="12" width="176" height="176" viewBox="40 60 250 250"><use href="#j-full"/></svg></svg>
+            <svg width="64" height="64" viewBox="0 0 200 200"><rect width="200" height="200" rx="45" fill="#4F6D54"/><svg x="12" y="12" width="176" height="176" viewBox="40 60 250 250"><use href="#j-full"/></svg></svg>
+            <svg width="32" height="32" viewBox="0 0 200 200"><rect width="200" height="200" rx="45" fill="#4F6D54"/><svg x="12" y="12" width="176" height="176" viewBox="40 60 250 250"><use href="#j-full"/></svg></svg>
+          </div>
+        </div>
+      </div>
+      <div class="lbl" style="margin-top:14px">亮 Dock / 暗 Dock（64）</div>
+      <div class="dockrow dock-l"><svg width="64" height="64" viewBox="0 0 200 200"><rect width="200" height="200" rx="45" fill="#4F6D54"/><svg x="12" y="12" width="176" height="176" viewBox="40 60 250 250"><use href="#j-full"/></svg></svg></div>
+      <div class="dockrow dock-d" style="margin-top:6px"><svg width="64" height="64" viewBox="0 0 200 200"><rect width="200" height="200" rx="45" fill="#4F6D54"/><svg x="12" y="12" width="176" height="176" viewBox="40 60 250 250"><use href="#j-full"/></svg></svg></div>
+    </section>
+
+    <!-- D4 -->
+    <section class="card">
+      <h3>D4 · Head over the nest rim</h3>
+      <p class="intent">头从窝缘探出，鼠尾草叶作配角；窝与叶只做点缀，不抢头。</p>
+      <div class="row">
+        <div>
+          <div class="lbl">大预览</div>
+          <svg class="big" viewBox="0 0 200 200" aria-label="D4 大预览">
+            <rect width="200" height="200" rx="45" fill="#4F6D54"/>
+            <svg x="12" y="12" width="176" height="176" viewBox="40 40 260 260">
+              <ellipse cx="160" cy="272" rx="112" ry="22" fill="#C9B08C" opacity="0.45"/>
+              <use href="#j-core"/>
+              <path d="M236 244 C 262 230 282 210 286 182 C 258 188 236 210 228 236 Z" fill="#86A98A"/>
+              <path d="M40 270 C 84 294 236 294 280 270 L 280 310 L 40 310 Z" fill="#C9B08C"/>
+            </svg>
+          </svg>
+        </div>
+        <div>
+          <div class="lbl">App Icon 128 / 64 / 32</div>
+          <div class="sizes">
+            <svg width="128" height="128" viewBox="0 0 200 200"><rect width="200" height="200" rx="45" fill="#4F6D54"/><svg x="12" y="12" width="176" height="176" viewBox="40 40 260 260"><ellipse cx="160" cy="272" rx="112" ry="22" fill="#C9B08C" opacity="0.45"/><use href="#j-core"/><path d="M236 244 C 262 230 282 210 286 182 C 258 188 236 210 228 236 Z" fill="#86A98A"/><path d="M40 270 C 84 294 236 294 280 270 L 280 310 L 40 310 Z" fill="#C9B08C"/></svg></svg>
+            <svg width="64" height="64" viewBox="0 0 200 200"><rect width="200" height="200" rx="45" fill="#4F6D54"/><svg x="12" y="12" width="176" height="176" viewBox="40 40 260 260"><ellipse cx="160" cy="272" rx="112" ry="22" fill="#C9B08C" opacity="0.45"/><use href="#j-core"/><path d="M236 244 C 262 230 282 210 286 182 C 258 188 236 210 228 236 Z" fill="#86A98A"/><path d="M40 270 C 84 294 236 294 280 270 L 280 310 L 40 310 Z" fill="#C9B08C"/></svg></svg>
+            <svg width="32" height="32" viewBox="0 0 200 200"><rect width="200" height="200" rx="45" fill="#4F6D54"/><svg x="12" y="12" width="176" height="176" viewBox="40 40 260 260"><ellipse cx="160" cy="272" rx="112" ry="22" fill="#C9B08C" opacity="0.45"/><use href="#j-core"/><path d="M236 244 C 262 230 282 210 286 182 C 258 188 236 210 228 236 Z" fill="#86A98A"/><path d="M40 270 C 84 294 236 294 280 270 L 280 310 L 40 310 Z" fill="#C9B08C"/></svg></svg>
+          </div>
+        </div>
+      </div>
+      <div class="lbl" style="margin-top:14px">亮 Dock / 暗 Dock（64）</div>
+      <div class="dockrow dock-l"><svg width="64" height="64" viewBox="0 0 200 200"><rect width="200" height="200" rx="45" fill="#4F6D54"/><svg x="12" y="12" width="176" height="176" viewBox="40 40 260 260"><ellipse cx="160" cy="272" rx="112" ry="22" fill="#C9B08C" opacity="0.45"/><use href="#j-core"/><path d="M236 244 C 262 230 282 210 286 182 C 258 188 236 210 228 236 Z" fill="#86A98A"/><path d="M40 270 C 84 294 236 294 280 270 L 280 310 L 40 310 Z" fill="#C9B08C"/></svg></svg></div>
+      <div class="dockrow dock-d" style="margin-top:6px"><svg width="64" height="64" viewBox="0 0 200 200"><rect width="200" height="200" rx="45" fill="#4F6D54"/><svg x="12" y="12" width="176" height="176" viewBox="40 40 260 260"><ellipse cx="160" cy="272" rx="112" ry="22" fill="#C9B08C" opacity="0.45"/><use href="#j-core"/><path d="M236 244 C 262 230 282 210 286 182 C 258 188 236 210 228 236 Z" fill="#86A98A"/><path d="M40 270 C 84 294 236 294 280 270 L 280 310 L 40 310 Z" fill="#C9B08C"/></svg></svg></div>
+    </section>
+  </div>
+
+  <!-- ============ TRACK 2: MENU BAR ============ -->
+  <h2>赛道 2 · Menu bar template（单色）</h2>
+  <p class="note">纯黑透明底的实心剪影，系统只用 alpha 自动适配亮/暗/壁纸。工作高度约 16–18pt。下方三态为模拟：深色条按系统规则以白色呈现。</p>
+
+  <div class="grid">
+    <!-- M1 -->
+    <section class="card">
+      <h3>M1 · Head and ears</h3>
+      <p class="intent">头耳实心剪影，最直接的 Joey 轮廓；与 D1 同源。</p>
+      <div class="row">
+        <div>
+          <div class="lbl">大预览（24 格放大）</div>
+          <svg width="180" height="180" viewBox="0 0 24 24" style="color:#000;background:#fff;border:1px dashed var(--hair);border-radius:12px"><use href="#m-head"/></svg>
+        </div>
+        <div style="flex:1;min-width:200px">
+          <div class="lbl">18pt 三态</div>
+          <div class="strip light"><span class="bar l" style="color:#000"><svg viewBox="0 0 24 24" style="color:#000"><use href="#m-head"/></svg></span></div>
+          <div class="strip dark" style="margin-top:6px"><span class="bar d"><svg viewBox="0 0 24 24" style="color:#fff"><use href="#m-head"/></svg></span></div>
+          <div class="strip near" style="margin-top:6px"><span class="bar n"><svg viewBox="0 0 24 24" style="color:#fff"><use href="#m-head"/></svg></span></div>
+        </div>
+      </div>
+      <p class="mini" style="margin-top:10px">配对：D1 正面头像（共享耳与头的外轮廓）。</p>
+    </section>
+
+    <!-- M2 -->
+    <section class="card">
+      <h3>M2 · Head with tail</h3>
+      <p class="intent">头耳加一笔尾钩，区分于纯头像，适合横向菜单栏。</p>
+      <div class="row">
+        <div>
+          <div class="lbl">大预览（24 格放大）</div>
+          <svg width="180" height="180" viewBox="0 0 24 24" style="color:#000;background:#fff;border:1px dashed var(--hair);border-radius:12px"><use href="#m-tail-body"/></svg>
+        </div>
+        <div style="flex:1;min-width:200px">
+          <div class="lbl">18pt 三态</div>
+          <div class="strip light"><span class="bar l"><svg viewBox="0 0 24 24" style="color:#000"><use href="#m-tail-body"/></svg></span></div>
+          <div class="strip dark" style="margin-top:6px"><span class="bar d"><svg viewBox="0 0 24 24" style="color:#fff"><use href="#m-tail-body"/></svg></span></div>
+          <div class="strip near" style="margin-top:6px"><span class="bar n"><svg viewBox="0 0 24 24" style="color:#fff"><use href="#m-tail-body"/></svg></span></div>
+        </div>
+      </div>
+      <p class="mini" style="margin-top:10px">配对：D3 上半身（尾钩与双臂外轮廓相近，可对照）。</p>
+    </section>
+
+    <!-- M3 -->
+    <section class="card">
+      <h3>M3 · Round ears</h3>
+      <p class="intent">圆头加短耳的几何简化，最耐缩小，偏安静。</p>
+      <div class="row">
+        <div>
+          <div class="lbl">大预览（24 格放大）</div>
+          <svg width="180" height="180" viewBox="0 0 24 24" style="color:#000;background:#fff;border:1px dashed var(--hair);border-radius:12px"><use href="#m-round"/></svg>
+        </div>
+        <div style="flex:1;min-width:200px">
+          <div class="lbl">18pt 三态</div>
+          <div class="strip light"><span class="bar l"><svg viewBox="0 0 24 24" style="color:#000"><use href="#m-round"/></svg></span></div>
+          <div class="strip dark" style="margin-top:6px"><span class="bar d"><svg viewBox="0 0 24 24" style="color:#fff"><use href="#m-round"/></svg></span></div>
+          <div class="strip near" style="margin-top:6px"><span class="bar n"><svg viewBox="0 0 24 24" style="color:#fff"><use href="#m-round"/></svg></span></div>
+        </div>
+      </div>
+      <p class="mini" style="margin-top:10px">配对：D2 侧脸（几何更抽象，需确认与 D2 的耳朵方向一致）。</p>
+    </section>
+
+    <!-- M4 -->
+    <section class="card">
+      <h3>M4 · Head in the nest</h3>
+      <p class="intent">头从窝缘探出的负形剪影，与 D4 同一叙事。</p>
+      <div class="row">
+        <div>
+          <div class="lbl">大预览（24 格放大）</div>
+          <svg width="180" height="180" viewBox="0 0 24 24" style="color:#000;background:#fff;border:1px dashed var(--hair);border-radius:12px"><use href="#m-nest"/></svg>
+        </div>
+        <div style="flex:1;min-width:200px">
+          <div class="lbl">18pt 三态</div>
+          <div class="strip light"><span class="bar l"><svg viewBox="0 0 24 24" style="color:#000"><use href="#m-nest"/></svg></span></div>
+          <div class="strip dark" style="margin-top:6px"><span class="bar d"><svg viewBox="0 0 24 24" style="color:#fff"><use href="#m-nest"/></svg></span></div>
+          <div class="strip near" style="margin-top:6px"><span class="bar n"><svg viewBox="0 0 24 24" style="color:#fff"><use href="#m-nest"/></svg></span></div>
+        </div>
+      </div>
+      <p class="mini" style="margin-top:10px">配对：D4 窝缘探头（共享头耳与窝缘的轮廓）。</p>
+    </section>
+  </div>
+
+  <!-- ============ TRACK 3: PAIRING ============ -->
+  <h2>赛道 3 · 配对推荐</h2>
+  <p class="note">原则：菜单栏是 Dock 头像的去五官实心剪影，不是另起炉灶。</p>
+  <table class="pair">
+    <thead>
+      <tr><th>序号</th><th>Dock（彩色）</th><th>Menu bar（template）</th><th>共享轮廓</th><th>淘汰理由（留给人类填）</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>推荐 A</td><td>D1 正面头像</td><td>M1 头耳剪影</td><td>头顶双耳 + 无颈圆头</td><td class="blank">&nbsp;</td></tr>
+      <tr><td>推荐 B</td><td>D4 窝缘探头</td><td>M4 窝缘负形</td><td>头耳 + 窝缘线</td><td class="blank">&nbsp;</td></tr>
+      <tr><td>备选 C</td><td>D3 上半身</td><td>M2 头加尾钩</td><td>双耳 + 尾钩</td><td class="blank">&nbsp;</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ============ SELECTION LIST ============ -->
+  <h2>选型清单</h2>
+  <table class="pair">
+    <thead><tr><th>项目</th><th>选择</th><th>淘汰原因</th></tr></thead>
+    <tbody>
+      <tr><td>推荐 App Icon</td><td class="blank">&nbsp;</td><td class="blank">&nbsp;</td></tr>
+      <tr><td>推荐 Menu bar</td><td class="blank">&nbsp;</td><td class="blank">&nbsp;</td></tr>
+      <tr><td>淘汰方向</td><td class="blank">&nbsp;</td><td class="blank">&nbsp;</td></tr>
+    </tbody>
+  </table>
+
+  <div class="next">
+    <strong>Next step</strong>：人类锁定 1 组配对 → 导出 AppIcon 多尺寸（16 至 1024）与 <code>JoeyPetMenuBarTemplate.svg</code>。
+    <div class="mini" style="margin-top:6px">当前为静态模拟；真实 macOS 菜单栏渲染与 .icns 打包尚未执行。</div>
+  </div>
+</main>
+</body>
+</html>
