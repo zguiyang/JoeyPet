@@ -21,7 +21,7 @@ Do not quote it back as a report.
 | Motion | “动一下”, “淡一点”, “慢慢呼吸” | transition vs ambient loop vs micro-feedback; Reduce Motion fallback | DESIGN.md §12 Motion; Joey pose transitions in §9.2 |
 | Component state | “悬停展开”, “点了变一下”, “不能点” | hover / pressed / disabled / focus state | DESIGN.md §8 components (button, chip, ring, controls) |
 | Platform / a11y | “像苹果软件”, “键盘能用”, “读屏能读” | macOS conventions, Full Keyboard Access, VoiceOver labels, target size | DESIGN.md §14 Accessibility + HIG pages |
-| Feedback | “加载中”, “空了”, “失败了”, “成功了” | loading / empty / error / success state | DESIGN.md §13 State and feedback |
+| Feedback | “加载中”, “空了”, “失败了”, “成功了”, “提示一下”, “加句说明” | loading / empty / error / success; whether copy is needed at all | DESIGN.md §13 + **§11.1** (delete-first; state beats toast) |
 
 One phrase may span several categories. Translate to the concept first, then confirm the
 concept against DESIGN.md and the frozen reference — **do not implement from the phrase directly.**

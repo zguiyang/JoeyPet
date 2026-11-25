@@ -41,6 +41,7 @@ For any interface request, read [references/ui-intent.md](references/ui-intent.m
 4. **Respect authority and scope.** Apple HIG governs platform behaviour; `DESIGN.md` governs JoeyPet visuals and the six V0 surfaces; the frozen HTML reference resolves visual ambiguity only. Do not redesign a surface the user asked to tweak.
 5. **Keep the interaction short.** Do the analysis privately; explain only real ambiguity, a product decision, or a material trade-off.
 6. **Verify proportionally.** Build for UI changes; check Reduce Motion, keyboard/VoiceOver and compact window sizes where relevant.
+7. **Copy restraint (DESIGN.md §11.1).** Before adding or rewriting any string: delete if layout/state already explains it; no product/module prefix inside a known surface; no Toast when the UI already changed; prefer short native phrases over coaching sentences. Order: delete → shorten → merge → rewrite.
 
 Platform guardrails (official pages are `https://developer.apple.com/design/human-interface-guidelines/<page>.md`):
 
@@ -48,6 +49,7 @@ Platform guardrails (official pages are `https://developer.apple.com/design/huma
 - Menu-bar extras open a **menu**, not a popover.
 - Motion is purposeful; always honor Reduce Motion.
 - Every custom control needs a VoiceOver label and keyboard access.
+- User-facing copy must pass §11.1; fail the change if it only adds explanation the UI already carries.
 
 **`hallmark` is a web/HTML design skill — never use it for JoeyPet UI.**
 

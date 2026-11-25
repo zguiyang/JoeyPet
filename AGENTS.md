@@ -82,6 +82,17 @@ Skill dispatch — see [Agent skill](#agent-skill):
 
 Do not use deleted legacy UI specs (`docs/product/ui-spec.md`), the old three-sidebar IA (`Overview` / `Cleanup` / `Settings`), or the legacy Calm Space shell as design truth. Build UI only against DESIGN.md and the six agreed V0 surfaces; anything not listed there is out of scope until a new product decision.
 
+### Copy restraint (non-negotiable)
+
+Any new or changed UI string must follow **[DESIGN.md](DESIGN.md) §11.1**. Enforce in this order: **delete → shorten → merge → rewrite**.
+
+1. **Delete first** — if layout, controls, or visible state already explain it, do not add the title / subtitle / hint / toast.
+2. **No context echo** — inside Settings, the nest, or Joey’s desktop shell, do not restate product or module names in titles (`设置`, not `JoeyPet 设置`).
+3. **State beats toast** — card dismiss, label/chip update, count change, or switch flip is enough; Toast / banner only for silent outcomes the user must know, or errors.
+4. **Native short words** — prefer period-free phrases (`休息中`, `时段内不邀请`); no customer-service or manual-style long sentences.
+
+Fail the change if it only “sounds nicer” while adding explanation the UI already carries.
+
 ## Documentation map
 
 | Topic | Doc |
@@ -120,6 +131,7 @@ One generic SwiftUI skill is expected locally at `.agents/skills/swiftui-expert-
 
 1. Stay within scope; no speculative architecture or new dependencies without ADR.
 2. Match existing conventions; minimal diff.
-3. Build and run tests when code changed.
-4. Do not commit unless the user asks.
+3. If UI copy changed: pass DESIGN.md §11.1 (delete-first / no context echo / state beats toast / short words).
+4. Build and run tests when code changed.
+5. Do not commit unless the user asks.
 - If using MobileBuildMCP, use the installed MobileBuildMCP skill before calling MobileBuildMCP tools.
