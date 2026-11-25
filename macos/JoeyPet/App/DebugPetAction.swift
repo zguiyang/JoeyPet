@@ -11,7 +11,6 @@ enum DebugPetAction: String, CaseIterable, Identifiable, Sendable {
     case notifying
     case recovering
     case celebrating
-    case carrying
     case sleeping
     /// Quiet-hours deep sleep pose (`sleep`), distinct from DND/idle `doze`.
     case quietSleep
@@ -30,7 +29,6 @@ enum DebugPetAction: String, CaseIterable, Identifiable, Sendable {
         case .notifying: return "休息邀请"
         case .recovering: return "30 秒恢复"
         case .celebrating: return "完成开心"
-        case .carrying: return "叼叶子"
         case .sleeping: return "浅睡打盹"
         case .quietSleep: return "深睡"
         case .yawning: return "打哈欠"
@@ -52,9 +50,7 @@ enum DebugPetAction: String, CaseIterable, Identifiable, Sendable {
         case .recovering:
             return "stretch + 恢复面板（倒计时）"
         case .celebrating:
-            return "happy + 叶子 toast（不计入今日休息）"
-        case .carrying:
-            return "carry 叼叶子短会话"
+            return "happy（不计入今日休息）"
         case .sleeping:
             return "doze 浅睡（勿扰 / 空闲打盹同款），约 18 秒"
         case .quietSleep:

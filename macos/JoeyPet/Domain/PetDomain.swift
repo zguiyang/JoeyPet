@@ -21,7 +21,6 @@ enum PetPose: String, CaseIterable, Codable, Sendable {
     case yawn
     case doze
     case peek
-    case carry
 }
 
 enum PetAmbientEvent: String, CaseIterable, Codable, Sendable {

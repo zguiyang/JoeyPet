@@ -835,7 +835,7 @@ struct PetDomainTests {
         #expect(idle.resolvedPose(at: start.addingTimeInterval(90)) == .look)
     }
 
-    @Test func completedBreakCarriesALeafHome() {
+    @Test func completedBreakReturnsToIdleWithoutCarry() {
         let calendar = testCalendar()
         let start = testDate(2026, 11, 23, 9, 0)
         var situation = PetSituation()
@@ -850,7 +850,7 @@ struct PetDomainTests {
             calendar: calendar
         )
         #expect(finished.state.companion == .idle)
-        #expect(finished.effects.contains(.playCarry))
+        #expect(finished.state.resolvedPose(at: start.addingTimeInterval(2.6)) == .look)
 
         var quiet = situation
         quiet.quietWindow = QuietWindow(startMinutes: 8 * 60, endMinutes: 10 * 60)
@@ -860,17 +860,7 @@ struct PetDomainTests {
             now: start.addingTimeInterval(2.6),
             calendar: calendar
         )
-        #expect(!quietFinished.effects.contains(.playCarry))
-
-        var reduced = situation
-        reduced.isReduceMotion = true
-        let reducedFinished = PetStateMachine.reduce(
-            reduced,
-            event: .tick,
-            now: start.addingTimeInterval(2.6),
-            calendar: calendar
-        )
-        #expect(!reducedFinished.effects.contains(.playCarry))
+        #expect(quietFinished.state.isYawning || quietFinished.state.resolvedPose(at: start.addingTimeInterval(2.6)) == .sleep)
     }
 
     @Test func systemSleepFreezesInvitationProgression() {
@@ -1147,15 +1137,17 @@ struct JoeyManifestTests {
         #expect(issues.isEmpty, "\(issues)")
 
         #expect(manifest.schemaVersion == "0.1")
-        #expect(manifest.poses.count == 12)
+        #expect(manifest.poses.count == 11)
         #expect(manifest.states.count == 7)
         #expect(manifest.substates.count == 5)
         #expect(manifest.ambient.count == 8)
         #expect(manifest.transitions.count == 12)
         #expect(manifest.sizes.first(where: { $0.isDefault == true })?.w == 168)
         #expect(manifest.render?.layerOrder.count == 8)
-        #expect(manifest.render?.poseLayers.count == 12)
+        #expect(manifest.render?.poseLayers.count == 11)
         #expect(manifest.render?.poseLayers["wave"]?.frontArm == "arm.frontWave")
+        #expect(manifest.poses.contains(where: { $0.id == "carry" }) == false)
+        #expect(manifest.render?.poseLayers["carry"] == nil)
     }
 }
 
@@ -1492,7 +1484,7 @@ struct PetRuntimeTests {
         #expect(renderer.shownPoses.contains(.look))
     }
 
-    @Test func runtimeCarriesLeafAfterBreak() {
+    @Test func runtimeReturnsToCompanionshipPoseAfterBreak() {
         let calendar = testCalendar()
         let start = testDate(2026, 11, 23, 9, 0)
         var current = start
@@ -1514,8 +1506,9 @@ struct PetRuntimeTests {
 
         current = start.addingTimeInterval(45 * 60 + 32.6)
         runtime.send(.tick)
-        #expect(runtime.renderedPose == .carry)
-        #expect(runtime.currentTransientBehavior == .carrying)
+        #expect(runtime.situation.companion == .idle)
+        #expect(runtime.renderedPose == .look)
+        #expect(runtime.currentTransientBehavior == nil)
     }
 
     @Test func greetingPlaysAndNotifiesTheNestMirror() {
@@ -1560,38 +1553,6 @@ struct PetRuntimeTests {
         runtime.send(.tick)
         #expect(runtime.renderedPose == .wave)
         #expect(runtime.currentTransientBehavior == .greeting)
-    }
-
-    @Test func carrySurvivesTicksWhileCompanionshipStaysIdle() {
-        let calendar = testCalendar()
-        let start = testDate(2026, 11, 23, 9, 0)
-        var current = start
-        let runtime = PetRuntime(
-            renderer: TestPoseRenderer(),
-            store: TestSessionStore(makePersisted(now: start, calendar: calendar)),
-            now: { current },
-            calendar: calendar
-        )
-
-        runtime.startSession()
-        current = start.addingTimeInterval(45 * 60)
-        runtime.send(.tick)
-        runtime.send(.inviteAccepted)
-
-        current = start.addingTimeInterval(45 * 60 + 30)
-        runtime.send(.tick)
-        #expect(runtime.situation.companion == .complete)
-
-        current = start.addingTimeInterval(45 * 60 + 32.6)
-        runtime.send(.tick)
-        #expect(runtime.currentTransientBehavior == .carrying)
-        #expect(runtime.renderedPose == .carry)
-
-        // Next wake while companionship stays idle must not kill the leaf beat.
-        current = start.addingTimeInterval(45 * 60 + 33)
-        runtime.send(.tick)
-        #expect(runtime.currentTransientBehavior == .carrying)
-        #expect(runtime.renderedPose == .carry)
     }
 
     @Test func ambientGroomOnlyWhileAloneSitting() {

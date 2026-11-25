@@ -143,8 +143,6 @@ final class PetCoordinator {
         case .celebrating:
             runtime.send(.debugForceComplete)
             return true
-        case .carrying:
-            return runtime.perform(.carrying)
         case .sleeping:
             return runtime.perform(.sleeping)
         case .quietSleep:

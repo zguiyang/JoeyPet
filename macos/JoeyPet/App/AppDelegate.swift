@@ -292,10 +292,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             settings.showsDesktopPet = true
         case .posePreview:
             showPosePreview()
-        case .greeting, .notifying, .recovering, .celebrating, .carrying, .sleeping,
+        case .greeting, .notifying, .recovering, .celebrating, .sleeping,
              .quietSleep, .yawning, .grooming, .startSession, .endSession:
             if action == .notifying || action == .recovering || action == .celebrating
-                || action == .carrying || action == .sleeping || action == .quietSleep
+                || action == .sleeping || action == .quietSleep
                 || action == .yawning || action == .grooming || action == .greeting {
                 settings.showsDesktopPet = true
                 panelController?.setVisible(true)

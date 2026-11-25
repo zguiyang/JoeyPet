@@ -377,7 +377,6 @@ Eleven poses. The first six are the V0 state set; the rest cover ambient and low
 | `yawn` | Eyes squeezed shut, wide small mouth, head back; 1.8 s one-shot tip (+2° → +3.8°) | Waking / long sit — see [`joeypet-yawn-spritesheet-v0.svg`](docs/reference/joeypet-yawn-spritesheet-v0.svg) |
 | `doze` | Head low, eyes flat lines, loose shoulders; 7.2 s breath+sway (±1.1°, peak 1.011) + random ear/head/tail micros | Light sleep / DND — see [`joeypet-doze-spritesheet-v0.svg`](docs/reference/joeypet-doze-spritesheet-v0.svg) |
 | `peek` | Head leaning out from the screen edge, eyes and paws inside the visible strip, near edge tucked behind the panel | Not wired in V0 — edge docking is deferred |
-| `carry` | Leaf in mouth, returning to the nest; 3.6 s soft breath (peak 1.018) + rare leaf nudge | After a completed break — see [`joeypet-carry-spritesheet-v0.svg`](docs/reference/joeypet-carry-spritesheet-v0.svg) |
 
 Pose layer rules:
 
@@ -410,7 +409,7 @@ Panels, cards, and menus keep the 300–420 ms UI timing. Do not run the pose th
 A single warm room, 1080 × 680: ivory wall, warm wood floor, one window with hills, a wall clock, a framed 回顾 picture, a potted plant, a woven nest with a sage cushion, and a small desk with a notebook, mug, and a tiny pot.
 
 - **Information lives in objects:** clock = next invitation, notebook = today's companionship time, plant = today's completed breaks.
-- **Growth is additive and non-regressive:** each completed break may add one leaf, sprout, or small object. Nothing is ever removed, wilted, or reset.
+- **Growth is additive and non-regressive in 回顾:** completed breaks feed the week garden (seed → sprout → tree). The nest itself does not accumulate leaves.
 - No levels, XP, counters on the wall, trophy shelf, or scoreboard.
 - Prop colours use the `room-*` token family (wall, floor, frame, sky, hill, nest, cushion, desk, paper, mug, leaf), so light and dusk swap in one place.
 
@@ -493,7 +492,7 @@ Rules:
 ```
 
 - Progress is honest: a real 30 s countdown drives the ring. No confetti, no score, no "achievement".
-- Completing it increments today's break count and returns Joey to `happy` for ~2.6 s with the toast `窝里多了一片叶子。`
+- Completing it increments today's break count and returns Joey to `happy` for ~2.6 s; the plant label updates — no completion toast.
 - Skipping exits silently. The product never claims a break was detected.
 
 ### 10.4 Nest home
@@ -591,7 +590,7 @@ Chinese-first, short, warm, factual.
 - No invented metrics or fake personalisation.
 - No "轻轻/悄悄/静静" stacked on every line; one gentle adverb per screen at most.
 
-Length: invitation headline ≤ 12 characters per line; helper ≤ 18; toast ≤ 14 (`窝里多了一片叶子。`).
+Length: invitation headline ≤ 12 characters per line; helper ≤ 18; toast ≤ 14.
 
 ### 11.1 Copy restraint (hard rules)
 
@@ -641,7 +640,7 @@ Rules:
 | Invitation deferred | Invite card dismisses; clock shows `HH:mm 再问你一次`; schedule one later invitation, no toast, no repeat nagging |
 | Entered do-not-disturb | Invite card dismisses; clock / chip show `勿扰中`; no toast; no further invitations until the user turns it off |
 | Recovery running | Real countdown; no skip penalty |
-| Recovery completed | Break count +1, Joey `happy` ~2.6 s, one leaf added, toast `窝里多了一片叶子。` |
+| Recovery completed | Break count +1, Joey `happy` ~2.6 s; plant label updates; no toast |
 | Recovery skipped | Return to desktop silently; count unchanged |
 | Hidden Joey | Pet invisible but rhythm continues; an invitation surfaces him for at most 60 s, then he returns to hidden |
 | Quiet hours | Enter with `yawn` → `sleep`; exit with `yawn` → day pose; no invitations; breath only once asleep |
@@ -680,7 +679,7 @@ idle ──5 min to go──▶ approach ──due──▶ invite ──accept�
 ```
 
 - `invite` and `recover` can exit to `idle` on snooze / do not disturb / dismiss.
-- `complete` holds `happy` for 2.6 s, adds one leaf, then returns to `idle`.
+- `complete` holds `happy` for 2.6 s, then returns to `idle`.
 - When the session ends, the desktop returns to **Alone**.
 
 ### 13.3 Guards and cooldowns
@@ -712,7 +711,6 @@ Design poses are for people. At runtime they land on `PetPose`; `JoeyDesktopScen
 | `yawn` | `idle` | `idle_yawn` | Once; waking or long sitting |
 | `doze` | `sleeping` | `doze_short` | Loop; light sleep, interruptible |
 | `peek` | `idle` | `peek_edge` | Reserved; not reachable in V0 |
-| `carry` | `idle` | `idle_carry` | Loop; return-to-nest segment |
 
 Add a new pose to the state graph before adding it to the runtime. Clip ids are stable once shipped.
 
@@ -831,8 +829,9 @@ Git history and the archive branch explain why they were replaced.
 | 2026-11-22 | Extended Joey to twelve poses and added the pose/state graph: ambient loops, pose transitions, seven-state desktop priority, five companion substates, guards and cooldowns, and the pose → behavior/clip mapping via `PetStateAnimationMapping`. Frozen graph added at `docs/reference/joeypet-states-v0.html`. |
 | 2026-11-23 | `peek` now renders while the panel is docked-collapsed; dock exposure raised from 40% to 48% so one full eye stays inside the screen edge. The frozen graph and the dock geometry tests follow the same number. |
 | 2026-11-23 | `peek` art recomposed for the edge: the head leans toward the right of the canvas so the 48% docked strip keeps both eyes and both paws in view. The right edge uses the same art mirrored; the pose itself still has no horizontal motion. |
-| 2026-11-23 | V0 defers edge docking, collapse and `peek`. Dragging still clamps on screen and persists the release position; the edge-dock geometry and peek wiring are removed. `carry` remains. |
+| 2026-11-23 | V0 defers edge docking, collapse and `peek`. Dragging still clamps on screen and persists the release position; the edge-dock geometry and peek wiring are removed. |
 | 2026-11-25 | Nest wall clock: second hand ticks once per second; 12 hour + 60 minute marks. |
+| 2026-11-25 | Drop nest leaf accumulation and `carry` / 叼叶子 pose; recovery complete uses happy + break count only (no leaf toast). |
 | 2026-11-24 | Removed `step` / ambient walking from V0 (product meaning weak; walk art broke character identity). |
 | 2026-11-24 | Quiet-hours life bridges: enter and exit through a 1.8 s `yawn` before `sleep` / day pose; recovery and complete still finish first. |
 | 2026-11-24 | Nest home: daypart palettes + curtain sway (no beams); desk welcome replaces companionship duration; CTA centred; board `joeypet-home-v1.html`. |

@@ -10,9 +10,6 @@ import SwiftUI
 /// state stays in `PetRuntime` / `PetStateMachine`.
 @MainActor
 final class SessionSurfacesController {
-    /// Leaf + happy pose already mark completion; toast only names the nest change.
-    private static let completionToast = "窝里多了一片叶子。"
-
     var onAcceptInvitation: (() -> Void)?
     var onSnooze: (() -> Void)?
     var onEnterDoNotDisturb: (() -> Void)?
@@ -136,10 +133,7 @@ final class SessionSurfacesController {
         } else {
             dismiss(recoveryPanel, entrance: 0.38)
         }
-
-        if presentation.newlyCompleted {
-            showToast(Self.completionToast)
-        }
+        // Completion: happy pose + plant break count already mark the outcome — no toast.
     }
 
     func applyAppearance(_ appearance: JoeyAppearance) {

@@ -1602,7 +1602,7 @@
     recTimer = null;
     state.breaks++;
     document.getElementById("roomBreaks").textContent = state.breaks + " 次";
-    showToast("窝里多了一片叶子。");
+    // completion: plant label / happy pose only — no toast
     showState("desktop");
     setPetPose("#joey-happy");
     setTimeout(function () { refreshSessionUI(); }, 2600);

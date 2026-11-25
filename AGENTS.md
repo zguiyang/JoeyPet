@@ -110,7 +110,6 @@ Fail the change if it only “sounds nicer” while adding explanation the UI al
 | Doze pose frames (preview) | [docs/reference/joeypet-doze-frames-v0.html](docs/reference/joeypet-doze-frames-v0.html) |
 | Sleep pose spritesheet | [docs/reference/joeypet-sleep-spritesheet-v0.svg](docs/reference/joeypet-sleep-spritesheet-v0.svg) |
 | Yawn pose spritesheet | [docs/reference/joeypet-yawn-spritesheet-v0.svg](docs/reference/joeypet-yawn-spritesheet-v0.svg) |
-| Carry pose spritesheet | [docs/reference/joeypet-carry-spritesheet-v0.svg](docs/reference/joeypet-carry-spritesheet-v0.svg) |
 | Groom pose spritesheet | [docs/reference/joeypet-groom-spritesheet-v0.svg](docs/reference/joeypet-groom-spritesheet-v0.svg) |
 | Wave pose spec | [docs/reference/joeypet-wave-pose-v0.html](docs/reference/joeypet-wave-pose-v0.html) |
 | Pet domain & state model | [docs/pet-domain-model.md](docs/pet-domain-model.md) (engineering contract for states, poses, clips, timers) |

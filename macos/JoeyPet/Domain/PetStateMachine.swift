@@ -7,8 +7,6 @@ enum PetEffect: Equatable, Sendable {
     case showRecoveryPanel
     case hideRecoveryPanel
     case completeRecovery
-    /// Short "carrying a leaf home" moment after a completed break.
-    case playCarry
     case pauseAmbient
     case resumeAmbient
     case freeze
@@ -215,7 +213,7 @@ enum PetStateMachine {
 
         case .completeFinished:
             guard next.companion == .complete else { break }
-            finishCompletion(&next, effects: &effects, now: now)
+            finishCompletion(&next, now: now)
             effects.append(.persist)
 
         case .dragBegan:
@@ -442,7 +440,7 @@ enum PetStateMachine {
         if state.companion == .complete,
            let ends = state.completeEndsAt,
            ends <= now {
-            finishCompletion(&state, effects: &effects, now: now)
+            finishCompletion(&state, now: now)
             effects.append(.persist)
         }
 
@@ -458,22 +456,16 @@ enum PetStateMachine {
         reflowInvitation(&state, now: now)
     }
 
-    /// Ends the post-break celebration. The leaf-carrying moment only makes
-    /// sense while the pet is visible, awake and allowed to be expressive.
+    /// Ends the post-break celebration and returns to idle (or quiet settle).
     private static func finishCompletion(
         _ state: inout PetSituation,
-        effects: inout [PetEffect],
         now: Date
     ) {
         state.companion = state.session != nil ? .idle : nil
         state.completeEndsAt = nil
         if state.isQuietActive {
-            // Quiet won the desk: settle with a yawn, then deep sleep. No leaf run.
+            // Quiet won the desk: settle with a yawn, then deep sleep.
             beginLifeYawn(&state, at: now)
-            return
-        }
-        if !state.isHidden, !state.isReduceMotion, !state.promptsSuppressed {
-            effects.append(.playCarry)
         }
     }
 

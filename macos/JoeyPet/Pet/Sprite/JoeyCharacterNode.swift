@@ -36,8 +36,6 @@ final class JoeyCharacterNode: SKNode {
         static let sleepHead = "joey.sleepHead"
         static let sleepEar = "joey.sleepEar"
         static let yawn = "joey.yawn"
-        static let carryLoop = "joey.carryLoop"
-        static let carryLeaf = "joey.carryLeaf"
         static let groom = "joey.groom"
     }
 
@@ -388,85 +386,10 @@ final class JoeyCharacterNode: SKNode {
             scheduleSleepMicroAction()
             return
         }
-        if poseID == "carry" {
-            // docs/reference/joeypet-carry-spritesheet-v0.svg — soft breath + rare leaf nudge.
-            startCarryLoop()
-            startTail()
-            scheduleBlink()
-            scheduleCarryLeafNudge()
-            return
-        }
         startBreath()
         startTail()
         scheduleBlink()
         scheduleEarTwitch()
-    }
-
-    /// Post-break leaf hold from the accepted carry spritesheet (A: 8 frames / 3.6 s).
-    /// Peak scaleY 1.018, sway ≤ ±0.2°. Leaf tip wobble is a separate rare micro.
-    private func startCarryLoop() {
-        breathPivot.removeAction(forKey: ActionKey.breath)
-        breathPivot.removeAction(forKey: ActionKey.carryLoop)
-        breathPivot.xScale = 1
-        breathPivot.yScale = 1
-        breathPivot.zRotation = 0
-
-        let step: TimeInterval = 3.6 / 8
-        let frames: [(rotationDegrees: CGFloat, scaleY: CGFloat)] = [
-            (0, 1.000), (0, 1.005), (0.1, 1.012), (0.2, 1.018),
-            (0.1, 1.010), (0, 1.004), (0, 1.001), (0, 1.000)
-        ]
-
-        var steps: [SKAction] = []
-        for frame in frames {
-            let rotate = SKAction.rotate(
-                toAngle: frame.rotationDegrees * .pi / 180,
-                duration: step,
-                shortestUnitArc: true
-            )
-            rotate.timingMode = .easeInEaseOut
-            let scale = SKAction.scaleY(to: frame.scaleY, duration: step)
-            scale.timingMode = .easeInEaseOut
-            steps.append(.group([rotate, scale]))
-        }
-
-        breathPivot.run(.repeatForever(.sequence(steps)), withKey: ActionKey.carryLoop)
-    }
-
-    /// Occasional leaf tip nudge (B: 12° → 10° → 14° → 12°).
-    /// `prop.leaf` is a full-canvas layer without a stem pivot, so approximate the
-    /// tip rotate with a tiny translation bob of the prop sprite.
-    private func scheduleCarryLeafNudge() {
-        guard poseID == "carry", !isReduceMotionEnabled else { return }
-
-        let wait = SKAction.wait(forDuration: .random(in: 8...16))
-        let fire = SKAction.run { [weak self] in self?.playCarryLeafNudge() }
-        removeAction(forKey: ActionKey.carryLeaf)
-        run(.sequence([wait, fire]), withKey: ActionKey.carryLeaf)
-    }
-
-    private func playCarryLeafNudge() {
-        guard poseID == "carry",
-              let prop = layerSprites["prop"],
-              !prop.isHidden
-        else {
-            scheduleCarryLeafNudge()
-            return
-        }
-
-        let rest = prop.position
-        // ~2° tip around the mouth maps to a very small screen-space bob.
-        let down = CGPoint(x: rest.x - 0.6, y: rest.y - 0.8)
-        let up = CGPoint(x: rest.x + 0.6, y: rest.y + 0.8)
-
-        let dip = SKAction.move(to: down, duration: 0.22)
-        dip.timingMode = .easeInEaseOut
-        let lift = SKAction.move(to: up, duration: 0.24)
-        lift.timingMode = .easeInEaseOut
-        let settle = SKAction.move(to: rest, duration: 0.26)
-        settle.timingMode = .easeInEaseOut
-        prop.run(.sequence([dip, lift, settle]), withKey: ActionKey.carryLeaf)
-        scheduleCarryLeafNudge()
     }
 
     /// Shallow nap loop from the accepted doze spritesheet (A: 10 frames / 7.2 s).
@@ -1030,7 +953,6 @@ final class JoeyCharacterNode: SKNode {
         breathPivot.removeAction(forKey: ActionKey.happy)
         breathPivot.removeAction(forKey: ActionKey.dozeLoop)
         breathPivot.removeAction(forKey: ActionKey.sleepLoop)
-        breathPivot.removeAction(forKey: ActionKey.carryLoop)
         breathPivot.removeAction(forKey: ActionKey.yawn)
         posePivot.removeAction(forKey: ActionKey.happy)
         layerPivots["tail"]?.removeAction(forKey: ActionKey.tail)
@@ -1049,8 +971,6 @@ final class JoeyCharacterNode: SKNode {
         removeAction(forKey: ActionKey.ear)
         removeAction(forKey: ActionKey.dozeMicro)
         removeAction(forKey: ActionKey.sleepMicro)
-        removeAction(forKey: ActionKey.carryLeaf)
-        layerSprites["prop"]?.removeAction(forKey: ActionKey.carryLeaf)
         if let prop = layerSprites["prop"] {
             prop.position = layerBasePosition
         }

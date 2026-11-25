@@ -25,8 +25,7 @@ final class JoeyPosePreviewScene: SKScene {
         "groom": "理毛",
         "yawn": "打哈欠",
         "doze": "打盹",
-        "peek": "探头",
-        "carry": "叼叶子"
+        "peek": "探头"
     ]
 
     init(size: CGSize, package: JoeyAssetPackage, sizeID: String? = nil) {

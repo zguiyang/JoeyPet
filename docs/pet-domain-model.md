@@ -132,7 +132,6 @@ AmbientEvent                       叠加在姿态上的小循环/瞬态
 | `yawn` | `idle_yawn` | `idle` | 否 | 环境瞬态 |
 | `doze` | `doze_short` | `sleeping` | 是 | 浅睡 |
 | `peek` | `peek_edge` | `idle` | 是 | 贴边探头（V0 未接线） |
-| `carry` | `idle_carry` | `idle` | 是 | 回窝带叶子 |
 
 clip id 一经交付不再改名。未知 clip → `idle/idle_sit`，记一次日志，不崩溃。V0 **不含** `step` / ambient walking。
 
@@ -141,7 +140,7 @@ clip id 一经交付不再改名。未知 clip → `idle/idle_sit`，记一次�
 | id | 类型 | 关键参数 | 允许条件摘要 |
 |---|---|---|---|
 | `breathe` | 持续 | 4.2–6.0 s，基准 4.8 s，睡眠 6.0 s，缩放 1.046 | 按图谱第 12 章矩阵 |
-| `blink` | 瞬态 | 2.5–6 s 随机，180 ms，3 帧 | `sit`/`look`/`carry`；`happy`/`wave`/`yawn`/`sleep` 抑制 |
+| `blink` | 瞬态 | 2.5–6 s 随机，180 ms，3 帧 | `sit`/`look`；`happy`/`wave`/`yawn`/`sleep` 抑制 |
 | `ear` | 瞬态 | 12–35 s，−7°→4°，240 ms | 按图谱第 12 章矩阵 |
 | `tail` | 持续 | ±8°，与呼吸同拍，绕尾根旋转 | 按图谱第 12 章矩阵 |
 | `shift` | 持续 | 6–9 s，±2 px，0.5°，800 ms | 按图谱第 12 章矩阵 |
@@ -174,13 +173,12 @@ clip id 一经交付不再改名。未知 clip → `idle/idle_sit`，记一次�
 |---|---|
 | `schedule(deadline, event)` / `cancel(event)` | Coordinator |
 | `play(pose)` / `playAmbient(event)` / `stopAmbient` | PetRuntime |
-| `playCarry` | PetRuntime（完成动画结束后叼叶子 3.6 秒） |
 | `showInviteCard` / `dismissInviteCard` | PanelCoordinator |
 | `startRecovery` / `finishRecovery` / `skipRecovery` | PanelCoordinator |
 | `setHidden(Bool)` / `setDocked(Bool)` | PetPanelController |
 | `persist(PetPersistedState)` | PetSessionStore |
 | `updateChip` / `updateMenu` | PanelCoordinator |
-| `addLeaf` / `incrementBreak` | CompanionStore |
+| `incrementBreak` | CompanionStore |
 | `log(event)` | Logger |
 
 ### 5.3 Reducer 契约
@@ -326,8 +324,8 @@ nextDue  = lastInvitationClosedAt + effectiveGap
 
 - 会话在 App 退出时结束；`sessionStartedAt`、`snoozeUsedThisSession`、`inviteShownAt` 只存在内存。
 - 勿扰、安静、上次邀请关闭时间、每日统计跨启动保留。
-- 完成一次休息：`todayBreaks +1`、`weekBreakCounts` 当日 +1、加一片叶子。
-- 跳过/关闭：不扣次数、不扣叶子、不惩罚。
+- 完成一次休息：`todayBreaks +1`、`weekBreakCounts` 当日 +1。
+- 跳过/关闭：不扣次数、不惩罚。
 - 会话进行中每分钟把当日陪伴秒数写入 store；会话结束/退出时再写一次，避免崩溃丢失整天数据。
 - 跨午夜会话：当日陪伴时长按 `[sessionStartedAt, min(now, 当日结束)]` 与当日的交集计算，不靠午夜定时器累加。
 - 跨周：本地周一换周时把 `weekBreakCounts` 左移并清零新一天；`weekStartKey` 同步更新。
@@ -470,7 +468,7 @@ Mission Control 用 `NSWorkspace` 空间切换 + App 失活做 best-effort 冻�
 8. 隐藏 ≠ 停靠；隐藏只能由用户恢复；停靠仍呼吸。
 9. 会话只能由用户主动开始；不能从键鼠、App 使用或“看起来在忙”推断。
 10. 休息完成只能由用户确认；不能伪造检测。
-11. 跳过/关闭/稍后不扣次数、不扣叶子、不惩罚。
+11. 跳过/关闭/稍后不扣次数、不惩罚。
 12. manifest 是数值唯一来源；视图不写死时长、尺寸、间隔。
 13. clip id 稳定；未知回退 `idle/idle_sit`。
 14. 不新增 V0 设置、界面或依赖，除非有明确产品决定。
@@ -569,4 +567,5 @@ P1 与 P2 可并行；P3 必须等两者完成。每个 PR 保持可构建、可
 | 2026-11-23 | P8：接入 `peek` / `step` / `carry` 驱动。新增 `dockChanged(Bool)` 与 `isDocked`，贴边收起进入 `peek`、悬停/拖离回 `sit`；`step` 由 `PetCoordinator` 以 90–180 秒（低电量 ×1.5）低频调度，经 `canWalkAmbiently(at:)` 门控并移动面板 40–120 pt、播 2.4 秒；休息自然完成后新增 `playCarry` 效果，播 3.6 秒叼叶子，安静/勿扰/隐藏/减弱动态不播；高优先级姿态会立即打断进行中的环境瞬态 |
 | 2026-11-23 | P8 调整：贴边收起露出比例由 40% 改为 48%（168 档 81 pt），修复 40% 时屏幕边缘切断 peek 眼睛的问题；manifest、默认策略、几何测试与图谱同步。 |
 | 2026-11-23 | P8 素材：peek 重绘为左边缘构图（头部朝画布右侧让出 48% 可见区），右边缘通过 `PetDockEdge.right` 做静态水平镜像；`dockChanged` 改为携带 `PetDockEdge?`，`PetPoseRendering` 新增 `setDockEdge`；只翻转 peek，不产生水平位移动画。 |
-| 2026-11-23 | P8 回退：贴边停靠、收起与 `peek` 暂缓接入 V0。移除 `dockChanged`、`isDocked`、镜像渲染、停靠几何与 manifest `docking`；拖动只保留释放位置持久化。`step` 与 `carry` 保留。 |
+| 2026-11-23 | P8 回退：贴边停靠、收起与 `peek` 暂缓接入 V0。移除 `dockChanged`、`isDocked`、镜像渲染、停靠几何与 manifest `docking`；拖动只保留释放位置持久化。`step` 保留。 |
+| 2026-11-25 | 移除窝内叶子堆积与 `carry` / 叼叶子；休息完成后仅 `happy` + 计数，无叶子 toast。 |

@@ -151,8 +151,7 @@ final class PetRuntime {
         situation = transition.state
 
         // Ambient clips (groom, …) yield to higher-priority situation poses.
-        // Product moments like carrying / greeting finish unless a hard interrupt
-        // hits them — otherwise `session != nil` would kill the post-break leaf.
+        // Product moments like greeting finish unless a hard interrupt hits them.
         if shouldClearTransientForSituation() {
             clearTransient()
         }
@@ -351,9 +350,6 @@ final class PetRuntime {
             case .completeRecovery:
                 recordCompletedBreak(at: date)
 
-            case .playCarry:
-                playCarryReturn()
-
             case .pauseAmbient, .resumeAmbient, .freeze, .resume:
                 break
 
@@ -376,22 +372,6 @@ final class PetRuntime {
 
     private func renderCurrentPose() {
         render(situation.resolvedPose(at: now()))
-    }
-
-    /// The brief "carrying a leaf home" beat after a completed break.
-    private func playCarryReturn() {
-        guard !situation.isReduceMotion,
-              transientPose == nil,
-              currentTransientBehavior == nil,
-              situation.resolvedDesktop(at: now()) != .hidden
-        else {
-            return
-        }
-        playTransient(
-            pose: .carry,
-            duration: PetTransientBehavior.carrying.sessionDuration ?? 3.6,
-            behavior: .carrying
-        )
     }
 
     // MARK: - Transient poses
@@ -484,8 +464,6 @@ final class PetRuntime {
         switch behavior {
         case .blink:
             return nil
-        case .carrying:
-            return .carry
         case .sleeping:
             return .doze
         case .celebrating:
@@ -500,21 +478,11 @@ final class PetRuntime {
         }
     }
 
-    /// Ambient-only clips clear when the situation says so. Carrying survives
-    /// an active companionship session so the leaf beat can finish.
+    /// Ambient-only clips clear when the situation says so. Greeting finishes
+    /// unless a hard interrupt hits it.
     private func shouldClearTransientForSituation() -> Bool {
         guard let behavior = currentTransientBehavior else { return false }
         if behavior == .greeting { return false }
-        if behavior == .carrying {
-            return situation.isDragging
-                || situation.isHidden
-                || situation.isQuietActive
-                || situation.isSystemSleeping
-                || situation.isScreenLocked
-                || situation.companion == .invite
-                || situation.companion == .recover
-                || situation.companion == .complete
-        }
         return behavior.isAmbient && situation.interruptsAmbientTransient
     }
 

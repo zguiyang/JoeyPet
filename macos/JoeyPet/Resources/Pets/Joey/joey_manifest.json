@@ -27,8 +27,7 @@
     { "id": "groom", "clipId": "idle_groom", "behavior": "idle", "loop": false },
     { "id": "yawn", "clipId": "idle_yawn", "behavior": "idle", "loop": false },
     { "id": "doze", "clipId": "doze_short", "behavior": "sleeping", "loop": true },
-    { "id": "peek", "clipId": "peek_edge", "behavior": "idle", "loop": true },
-    { "id": "carry", "clipId": "idle_carry", "behavior": "idle", "loop": true }
+    { "id": "peek", "clipId": "peek_edge", "behavior": "idle", "loop": true }
   ],
   "faces": { "ids": ["calm", "look", "sign", "stretch", "happy", "sleep", "groom", "yawn"], "blinkFaces": "all" },
   "states": [
@@ -58,7 +57,7 @@
   "mapping": {
     "key": "behavior/clip",
     "buckets": {
-      "idle": ["idle_sit", "idle_look", "idle_groom", "idle_yawn", "idle_carry", "peek_edge", "recover_stretch", "greet_wave"],
+      "idle": ["idle_sit", "idle_look", "idle_groom", "idle_yawn", "peek_edge", "recover_stretch", "greet_wave"],
       "notifying": ["notify_sign"],
       "sleeping": ["sleep_curl", "doze_short"],
       "celebrating": ["complete_happy"]
@@ -205,16 +204,6 @@
         "face": "face.peek",
         "frontArm": null,
         "prop": null
-      },
-      "carry": {
-        "shadow": "shadow.default",
-        "tail": "tail.default",
-        "body": "body.default",
-        "ears": "ears.default",
-        "backArm": "arm.backRest",
-        "face": "face.calm",
-        "frontArm": "arm.frontRest",
-        "prop": "prop.leaf"
       }
     }
   }

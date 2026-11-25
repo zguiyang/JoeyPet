@@ -2,7 +2,6 @@ import Foundation
 
 enum PetTransientBehavior: String, Equatable, Sendable, CaseIterable {
     case blink
-    case carrying
     case sleeping
     case celebrating
     case notifying
@@ -16,12 +15,12 @@ enum PetTransientBehavior: String, Equatable, Sendable, CaseIterable {
     }
 
     /// Ambient clips yield immediately to higher-priority situation poses.
-    /// Product moments (`carrying`, `greeting`, …) finish unless a hard interrupt hits.
+    /// Product moments (`greeting`, …) finish unless a hard interrupt hits.
     var isAmbient: Bool {
         switch self {
         case .grooming, .sleeping, .blink:
             return true
-        case .carrying, .greeting, .celebrating, .notifying:
+        case .greeting, .celebrating, .notifying:
             return false
         }
     }
@@ -30,8 +29,6 @@ enum PetTransientBehavior: String, Equatable, Sendable, CaseIterable {
     /// underlying state. This is behavior cadence, not clip frame rate.
     var sessionDuration: TimeInterval? {
         switch self {
-        case .carrying:
-            return 3.6
         case .greeting:
             return 2.8
         case .grooming:
