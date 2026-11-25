@@ -7,7 +7,7 @@ struct SettingsRootView: View {
     var topInset: CGFloat = 0
     /// Only wired in Debug; Release builds never show the Debug section.
     var onDebugAction: ((DebugPetAction) -> Void)?
-    @State private var selection: SettingsSection = .rhythm
+    @State private var selection: SettingsSection = .general
     @State private var hoveredSection: SettingsSection?
     @State private var isFeedbackOpen = false
     @State private var debugStatus: String = "点一项即可触发完整效果"
@@ -113,12 +113,10 @@ struct SettingsRootView: View {
     @ViewBuilder
     private var detail: some View {
         switch selection {
-        case .rhythm:
-            rhythmPane
-        case .quiet:
-            quietPane
-        case .appearance:
-            appearancePane
+        case .general:
+            generalPane
+        case .pet:
+            petPane
         case .about:
             aboutPane
         #if DEBUG
@@ -128,8 +126,8 @@ struct SettingsRootView: View {
         }
     }
 
-    private var rhythmPane: some View {
-        SettingsPane(title: "节奏与提醒", description: "只在你开始工作后提醒。") {
+    private var generalPane: some View {
+        SettingsPane(title: "通用", description: "只在你开始工作后提醒。") {
             SettingsRowList {
                 SettingsRow("提醒节奏", subtitle: "开始陪伴后才计时") {
                     JoeySegmentedControl(
@@ -141,14 +139,18 @@ struct SettingsRootView: View {
                     .accessibilityLabel("提醒节奏")
                 }
 
-                SettingsRow("勿扰模式", subtitle: "开启后不会再有邀请或提示，需要恢复时手动关闭") {
+                SettingsRow("勿扰模式", subtitle: "不会再有邀请或提示") {
                     JoeySwitch(isOn: $settings.isDoNotDisturb, label: "勿扰模式")
                 }
 
-                SettingsRow(
-                    "背景音",
-                    subtitle: "陪伴中播放；勿扰或安静时段会静音"
-                ) {
+                SettingsRow("安静时段", subtitle: "这段时间不会邀请") {
+                    QuietHoursField(
+                        startMinutes: $settings.quietStartMinutes,
+                        endMinutes: $settings.quietEndMinutes
+                    )
+                }
+
+                SettingsRow("背景音", subtitle: "陪伴中播放") {
                     SoundPicker(
                         selection: $settings.ambientSoundID,
                         noneTitle: JoeyAudioCatalog.noneAmbientTitle,
@@ -159,10 +161,7 @@ struct SettingsRootView: View {
                     .accessibilityLabel("背景音")
                 }
 
-                SettingsRow(
-                    "提示音",
-                    subtitle: "开始陪伴与休息邀请时播放；勿扰或安静时段会静音"
-                ) {
+                SettingsRow("提示音", subtitle: "开始陪伴与邀请时播放") {
                     SoundPicker(
                         selection: $settings.cueSoundID,
                         noneTitle: JoeyAudioCatalog.noneCueTitle,
@@ -172,30 +171,8 @@ struct SettingsRootView: View {
                     )
                     .accessibilityLabel("提示音")
                 }
-            }
-        }
-    }
 
-    private var quietPane: some View {
-        SettingsPane(title: "安静时段", description: "这段时间里 Joey 不会来叫你。") {
-            SettingsRowList {
-                SettingsRow("安静时段", subtitle: "这段时间不会邀请；正在进行的休息会先走完") {
-                    QuietHoursField(
-                        startMinutes: $settings.quietStartMinutes,
-                        endMinutes: $settings.quietEndMinutes
-                    )
-                }
-            }
-        }
-    }
-
-    private var appearancePane: some View {
-        SettingsPane(title: "外观与位置", description: "Joey 在桌面上的样子。") {
-            SettingsRowList {
-                SettingsRow(
-                    "外观",
-                    subtitle: "时段跟家里氛围；系统跟 macOS；明亮/黑夜锁定后不再随时间变"
-                ) {
+                SettingsRow("外观", subtitle: "锁定明亮/黑夜后不再随时间变") {
                     JoeySegmentedControl(
                         titles: JoeyAppearance.allCases.map(\.title),
                         selectedIndex: JoeyAppearance.allCases.firstIndex(of: settings.appearance) ?? 0
@@ -203,6 +180,16 @@ struct SettingsRootView: View {
                         settings.appearance = JoeyAppearance.allCases[index]
                     }
                     .accessibilityLabel("外观")
+                }
+            }
+        }
+    }
+
+    private var petPane: some View {
+        SettingsPane(title: "宠物") {
+            SettingsRowList {
+                SettingsRow("在桌面上显示 Joey", subtitle: "关掉不会结束陪伴") {
+                    JoeySwitch(isOn: $settings.showsDesktopPet, label: "在桌面上显示 Joey")
                 }
 
                 SettingsRow("显示位置", subtitle: "拖动后以你放的位置为准") {
@@ -213,10 +200,6 @@ struct SettingsRootView: View {
                         settings.petCorner = PetCorner.allCases[index]
                     }
                     .accessibilityLabel("显示位置")
-                }
-
-                SettingsRow("在桌面上显示 Joey", subtitle: "关掉不会结束陪伴，到点仍会短暂露面提醒") {
-                    JoeySwitch(isOn: $settings.showsDesktopPet, label: "在桌面上显示 Joey")
                 }
             }
         }
@@ -251,7 +234,7 @@ struct SettingsRootView: View {
     #endif
 
     private var aboutPane: some View {
-        SettingsPane(title: "关于 JoeyPet", description: "一只安静生活在桌面上的宠物。") {
+        SettingsPane(title: "关于") {
             VStack(alignment: .leading, spacing: 0) {
                 SettingsRowList {
                     SettingsRow("版本", subtitle: "") {
@@ -261,7 +244,7 @@ struct SettingsRootView: View {
                             .foregroundStyle(theme.ink2)
                     }
 
-                    SettingsRow("反馈", subtitle: "只保存在这台 Mac，不会上传") {
+                    SettingsRow("反馈", subtitle: "只保存在这台 Mac") {
                         SettingsSmallButton(
                             title: isFeedbackOpen ? "收起" : "写一句"
                         ) {
@@ -337,9 +320,8 @@ struct SettingsRootView: View {
 // MARK: - Sections
 
 enum SettingsSection: String, Identifiable {
-    case rhythm
-    case quiet
-    case appearance
+    case general
+    case pet
     case about
     #if DEBUG
     case debug
@@ -349,18 +331,17 @@ enum SettingsSection: String, Identifiable {
 
     static var allCases: [SettingsSection] {
         #if DEBUG
-        [.rhythm, .quiet, .appearance, .about, .debug]
+        [.general, .pet, .about, .debug]
         #else
-        [.rhythm, .quiet, .appearance, .about]
+        [.general, .pet, .about]
         #endif
     }
 
     var title: String {
         switch self {
-        case .rhythm: return "节奏与提醒"
-        case .quiet: return "安静时段"
-        case .appearance: return "外观与位置"
-        case .about: return "关于 JoeyPet"
+        case .general: return "通用"
+        case .pet: return "宠物"
+        case .about: return "关于"
         #if DEBUG
         case .debug: return "Debug"
         #endif
@@ -372,10 +353,10 @@ enum SettingsSection: String, Identifiable {
 
 private struct SettingsPane<Content: View>: View {
     private let title: String
-    private let description: String
+    private let description: String?
     private let content: Content
 
-    init(title: String, description: String, @ViewBuilder content: () -> Content) {
+    init(title: String, description: String? = nil, @ViewBuilder content: () -> Content) {
         self.title = title
         self.description = description
         self.content = content()
@@ -391,11 +372,15 @@ private struct SettingsPane<Content: View>: View {
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(theme.ink)
 
-            Text(description)
-                .font(.system(size: 12.5))
-                .foregroundStyle(theme.muted)
-                .padding(.top, 4)
-                .padding(.bottom, 18)
+            if let description, !description.isEmpty {
+                Text(description)
+                    .font(.system(size: 12.5))
+                    .foregroundStyle(theme.muted)
+                    .padding(.top, 4)
+                    .padding(.bottom, 18)
+            } else {
+                Color.clear.frame(height: 18)
+            }
 
             content
         }

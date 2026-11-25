@@ -507,7 +507,7 @@ The main window, and it should feel like entering Joey's home.
 - Room scene fills the content area. The nest is not a separate renderer: it hosts the same layered `JoeyDesktopScene` with the same `JoeyAssetPackage` as the desktop pet, feeds it the pose `PetRuntime` resolved, and therefore matches faces, props, breathing, blinks and ear/tail motion exactly. `sleep` is the standing closed-eye pose with relaxed ears; `doze` is the lighter, slightly tilted nap. At dusk the room applies a 0.18 sage-grey wash (`nestPetTint`) to the layered pet so it sits in the dim light; the desktop pet stays untinted.
 - Joey stays in the nest. The room pet is not draggable; a click asks the runtime for one short greeting (`happy` for ~2.8 s), and both the nest and the desktop pet play it.
 - While a companionship session is running (`陪伴中`), the runtime drives `look` (including during the invitation card), then `stretch` and `happy` at the matching moments, and the nest follows. Quiet hours show the same `sleep` pose in both places.
-- The wall clock shows the real local time with hour and minute hands; clicking it opens `JoeyPet 设置` on **节奏与提醒**. The hover hint is `调整提醒时间`.
+- The wall clock shows the real local time with hour and minute hands; clicking it opens `JoeyPet 设置` on **通用**. The hover hint is `调整提醒时间`.
 - Object-bound copy (no companionship-duration on home — that stays in 回顾):
   - Clock label: `Joey 大约每 45 分钟来叫你一次`
   - Plant label: `今天休息 2 次` (empty: `今天还没有休息`)
@@ -533,24 +533,24 @@ Native, quieter, more functional than the room. No illustration, no hero copy, n
 
 - Page title **JoeyPet 设置** inside the shared window; 200 px sidebar + detail.
 - Sidebar and detail share one fill (not room-wall daypart paint): light `window-bg`, dark `window-chrome`. A hairline divider and type weight carry the split; controls still sit on `panel` / `panel-2`.
-- Sidebar is one flat list, no group headings: 节奏与提醒 · 安静时段 · 外观与位置 · 关于 JoeyPet.
-- Rows:
+- Sidebar is one flat list, no group headings: 通用 · 宠物 · 关于（Debug 仅 Debug 构建）。
+- Rows by section:
 
-| Row | Control | Copy |
-|-----|---------|------|
-| 提醒节奏 | Segmented 45 / 60 / 90 分钟 | 开始陪伴后才计时 |
-| 勿扰模式 | Switch | 开启后不会再有邀请或提示，需要恢复时手动关闭 |
-| 背景音 | Menu-style chooser：无背景音 + catalog beds；每条有小喇叭试听 | 陪伴中播放；勿扰或安静时段会静音（试听不受影响） |
-| 提示音 | Menu-style chooser：无提示音 + catalog cues；每条有小喇叭试听 | 开始陪伴与休息邀请时播放；勿扰或安静时段会静音（试听不受影响） |
-| 安静时段 | Time-range field: two editable halves, centre dash, double-click selects all | 这段时间不会邀请；正在进行的休息会先走完 |
-| 外观 | Segmented 时段 / 系统 / 明亮 / 黑夜 | 时段跟家里氛围；系统跟 macOS；明亮/黑夜锁定后不再随时间变。默认时段 |
-| 显示位置 | Segmented 右下角 / 左下角 | 拖动后以你放的位置为准 |
-| 在桌面上显示 Joey | Switch | 关掉不会结束陪伴，到点仍会短暂露面提醒 |
-| 反馈 | Button → textarea | 只保存在这台 Mac，不会上传 |
+| Section | Row | Control | Copy |
+|---------|-----|---------|------|
+| 通用 | 提醒节奏 | Segmented 45 / 60 / 90 分钟 | 开始陪伴后才计时 |
+| 通用 | 勿扰模式 | Switch | 不会再有邀请或提示 |
+| 通用 | 安静时段 | Time-range field: two editable halves, centre dash, double-click selects all | 这段时间不会邀请 |
+| 通用 | 背景音 | Menu-style chooser：无背景音 + catalog beds；每条有小喇叭试听 | 陪伴中播放 |
+| 通用 | 提示音 | Menu-style chooser：无提示音 + catalog cues；每条有小喇叭试听 | 开始陪伴与邀请时播放 |
+| 通用 | 外观 | Segmented 时段 / 系统 / 明亮 / 黑夜 | 锁定明亮/黑夜后不再随时间变。默认时段 |
+| 宠物 | 在桌面上显示 Joey | Switch | 关掉不会结束陪伴 |
+| 宠物 | 显示位置 | Segmented 右下角 / 左下角 | 拖动后以你放的位置为准 |
+| 关于 | 版本 · 反馈 · 声音致谢 | 反馈 → textarea | 反馈：只保存在这台 Mac |
 
 - Each row gets at most one incidental line under the title. Do not stack a subtitle and a second note layer.
 
-- Section description: `只在你开始工作后提醒。` — this is a product rule, not marketing.
+- 通用 section description: `只在你开始工作后提醒。` — product rule, not marketing. 宠物 / 关于 omit a page description.
 - Time inputs use direct typing. Focus shows a caret and sage selection, never a blue outline.
 - Native `Form`/`Toggle`/`Picker`/`TextField` behavior; semantic system colours are acceptable here where native controls demand them, but the surface stays ivory/panel, never system-grey dashboard.
 
@@ -814,3 +814,4 @@ Git history and the archive branch explain why they were replaced.
 | 2026-11-25 | Appearance is 时段 / 系统; home immersive under transparent titlebar; chrome shares daypart or macOS tone with settings/reflection. |
 | 2026-11-25 | Appearance adds locked 明亮 / 黑夜; four options, default 时段. |
 | 2026-11-25 | Settings sidebar + detail share one surface (light `window-bg`, dark `window-chrome`; no night-wall clash). |
+| 2026-11-25 | Settings IA simplified to 通用 / 宠物 / 关于; shorter row copy. |
