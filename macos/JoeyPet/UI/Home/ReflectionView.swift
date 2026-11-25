@@ -5,9 +5,13 @@ struct ReflectionView: View {
     let onReturn: () -> Void
 
     @Environment(\.joeyAppearance) private var appearance
+    @Environment(\.joeyChromeTone) private var chromeTone
 
     private let designSize = CGSize(width: 1080, height: 680)
-    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+    private var theme: JoeyTheme {
+        let daypart = appearance == .daypart ? RoomDaypart.resolve(at: Date()) : nil
+        return JoeyTheme(chromeTone: chromeTone, daypart: daypart)
+    }
 
     var body: some View {
         GeometryReader { geometry in
@@ -16,6 +20,7 @@ struct ReflectionView: View {
                 geometry.size.height / designSize.height
             )
             let originX = (geometry.size.width - designSize.width * scale) / 2
+            // Keep garden sky under the transparent titlebar (same rule as home).
             let originY = (geometry.size.height - designSize.height * scale) / 2
 
             ZStack(alignment: .topLeading) {
@@ -33,7 +38,8 @@ struct ReflectionView: View {
                     .frame(width: 388, alignment: .leading)
                     .offset(
                         x: originX + 60 * scale,
-                        y: originY + 48 * scale
+                        // Clear the floating window title.
+                        y: originY + max(48, 56) * scale
                     )
 
                 JoeySecondaryButton(

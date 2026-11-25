@@ -50,6 +50,9 @@ final class MainWindowController: NSWindowController {
             onDebugAction: onDebugAction,
             onRouteChange: { [weak self] route in
                 self?.updateChrome(for: route)
+            },
+            onChromeToneChange: { [weak self] tone, daypart in
+                self?.applyChrome(tone: tone, daypart: daypart)
             }
         )
         let hostingView = NSHostingView(rootView: root)
@@ -107,9 +110,16 @@ final class MainWindowController: NSWindowController {
     }
 
     func applyAppearance() {
+        let date = Date()
+        let tone = settings.appearance.resolveChromeTone(at: date)
+        let daypart = settings.appearance == .daypart ? RoomDaypart.resolve(at: date) : nil
+        applyChrome(tone: tone, daypart: daypart)
+    }
+
+    private func applyChrome(tone: JoeyChromeTone, daypart: RoomDaypart?) {
         guard let window else { return }
-        let theme = JoeyTheme(appearance: settings.appearance)
-        window.appearance = settings.appearance.nsAppearance
+        let theme = JoeyTheme(chromeTone: tone, daypart: daypart)
+        window.appearance = settings.appearance.nsAppearance()
         window.backgroundColor = NSColor(theme.windowChrome)
     }
 

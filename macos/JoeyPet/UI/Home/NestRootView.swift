@@ -56,68 +56,118 @@ struct NestRootView: View {
     var onInviteDoNotDisturb: (() -> Void)?
     var onDebugAction: ((DebugPetAction) -> Void)?
     let onRouteChange: (NestRoute) -> Void
+    /// Keeps AppKit window chrome colours in sync with 时段 / 系统.
+    var onChromeToneChange: ((JoeyChromeTone, RoomDaypart?) -> Void)?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        VStack(spacing: 0) {
-            WindowChromeHeader(
-                title: title(for: navigation.route),
-                height: topChromeHeight
-            )
-            // Keep traffic-light chrome from being compressed when a tall
-            // settings pane (Debug) wants more height than the window.
-            .layoutPriority(1)
-            .fixedSize(horizontal: false, vertical: true)
+        // Refresh when the clock crosses a daypart boundary (and for system dark flips).
+        TimelineView(.periodic(from: .now, by: 30)) { timeline in
+            let daypart = RoomDaypart.resolve(at: timeline.date)
+            let chromeTone = settings.appearance.resolveChromeTone(at: timeline.date)
+            let roomDaypartForChrome: RoomDaypart? =
+                settings.appearance == .daypart ? daypart : nil
 
-            ZStack {
+            Group {
                 switch navigation.route {
                 case .home:
-                    RoomSceneView(
-                        rhythmMinutes: settings.rhythmMinutes,
-                        showsDesktopPet: settings.showsDesktopPet,
-                        status: status,
-                        onOpenReflection: { navigation.showReflection() },
-                        onOpenClockSettings: { navigation.openSettings() },
-                        onPrimaryAction: onPrimaryAction,
-                        onGreetPet: onGreetPet,
-                        onInviteAccept: onInviteAccept,
-                        onInviteSnooze: onInviteSnooze,
-                        onInviteDoNotDisturb: onInviteDoNotDisturb
-                    )
-                    .transition(.opacity)
+                    immersiveHome
                 case .reflection:
-                    ReflectionView(
-                        summary: status.summary,
-                        onReturn: { navigation.showHome() }
-                    )
-                    .transition(.opacity)
+                    immersiveReflection
                 case .settings:
-                    SettingsRootView(
-                        settings: settings,
-                        onDebugAction: onDebugAction
-                    )
-                    .transition(.opacity)
+                    immersiveSettings
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .clipped()
             .animation(reduceMotion ? nil : JoeyMotion.stateEnter, value: navigation.route)
-        }
-        .environment(\.joeyAppearance, settings.appearance)
-        .frame(minWidth: 880, minHeight: 560)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .onAppear { onRouteChange(navigation.route) }
-        .onChange(of: navigation.route) { _, newRoute in
-            onRouteChange(newRoute)
+            .environment(\.joeyAppearance, settings.appearance)
+            .environment(\.joeyChromeTone, chromeTone)
+            .frame(minWidth: 880, minHeight: 560)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .onAppear {
+                onRouteChange(navigation.route)
+                onChromeToneChange?(chromeTone, roomDaypartForChrome)
+            }
+            .onChange(of: navigation.route) { _, newRoute in
+                onRouteChange(newRoute)
+            }
+            .onChange(of: chromeTone) { _, newTone in
+                onChromeToneChange?(newTone, roomDaypartForChrome)
+            }
+            .onChange(of: settings.appearance) { _, _ in
+                onChromeToneChange?(chromeTone, roomDaypartForChrome)
+            }
+            .onChange(of: daypart) { _, _ in
+                onChromeToneChange?(chromeTone, roomDaypartForChrome)
+            }
         }
     }
 
-    private func title(for route: NestRoute) -> String {
-        switch route {
-        case .home: return JoeyCopy.homeTitle
-        case .reflection: return JoeyCopy.reflectionTitle
-        case .settings: return JoeyCopy.settingsTitle
+    /// Home: room paints under the transparent titlebar — no solid nav strip.
+    private var immersiveHome: some View {
+        immersiveScene(title: JoeyCopy.homeTitle) {
+            RoomSceneView(
+                rhythmMinutes: settings.rhythmMinutes,
+                showsDesktopPet: settings.showsDesktopPet,
+                status: status,
+                onOpenReflection: { navigation.showReflection() },
+                onOpenClockSettings: { navigation.openSettings() },
+                onPrimaryAction: onPrimaryAction,
+                onGreetPet: onGreetPet,
+                onInviteAccept: onInviteAccept,
+                onInviteSnooze: onInviteSnooze,
+                onInviteDoNotDisturb: onInviteDoNotDisturb
+            )
         }
+    }
+
+    /// Reflection garden follows the same immersive rule as home.
+    private var immersiveReflection: some View {
+        immersiveScene(title: JoeyCopy.reflectionTitle) {
+            ReflectionView(
+                summary: status.summary,
+                onReturn: { navigation.showHome() }
+            )
+        }
+    }
+
+    /// Settings: full-height sidebar under the titlebar (no opaque nav strip).
+    private var immersiveSettings: some View {
+        ZStack(alignment: .top) {
+            SettingsRootView(
+                settings: settings,
+                topInset: topChromeHeight,
+                onDebugAction: onDebugAction
+            )
+
+            Text(JoeyCopy.settingsTitle)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Color.primary.opacity(0.72))
+                .padding(.top, 10)
+                .allowsHitTesting(false)
+                .accessibilityAddTraits(.isHeader)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .clipped()
+        .transition(.opacity)
+    }
+
+    private func immersiveScene<Content: View>(
+        title: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        ZStack(alignment: .top) {
+            content()
+
+            Text(title)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Color.primary.opacity(0.72))
+                .padding(.top, 10)
+                .allowsHitTesting(false)
+                .accessibilityAddTraits(.isHeader)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .clipped()
+        .transition(.opacity)
     }
 }
