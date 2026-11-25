@@ -127,13 +127,7 @@ struct SettingsRootView: View {
         SettingsPane(title: "通用") {
             SettingsRowList {
                 SettingsRow("提醒节奏", subtitle: "开始陪伴后才计时") {
-                    JoeySegmentedControl(
-                        titles: AppSettings.rhythmOptions.map { "\($0) 分钟" },
-                        selectedIndex: AppSettings.rhythmOptions.firstIndex(of: settings.rhythmMinutes) ?? 0
-                    ) { index in
-                        settings.rhythmMinutes = AppSettings.rhythmOptions[index]
-                    }
-                    .accessibilityLabel("提醒节奏")
+                    RhythmMinutesField(minutes: $settings.rhythmMinutes)
                 }
 
                 SettingsRow("勿扰模式", subtitle: "暂停邀请") {
@@ -825,6 +819,274 @@ private struct JoeySwitch: View {
                 .toggleStyle(.switch)
                 .labelsHidden()
         }
+    }
+}
+
+/// Combo control: type any minutes (15…180) or pick a preset from the chevron menu.
+private struct RhythmMinutesField: View {
+    @Binding var minutes: Int
+
+    @Environment(\.joeyAppearance) private var appearance
+    @Environment(\.joeyChromeTone) private var chromeTone
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var isEditing = false
+    @State private var isMenuOpen = false
+    @State private var isHovering = false
+    @State private var editText: String
+    /// Guards against commit-from-teardown re-entering while the field is removed.
+    @State private var suppressCommit = false
+
+    init(minutes: Binding<Int>) {
+        _minutes = minutes
+        _editText = State(initialValue: String(minutes.wrappedValue))
+    }
+
+    private var theme: JoeyTheme { JoeyTheme(chromeTone: chromeTone) }
+
+    var body: some View {
+        HStack(spacing: 0) {
+            if isEditing {
+                RhythmMinutesTextField(
+                    label: "提醒节奏",
+                    text: $editText,
+                    textColor: NSColor(theme.ink),
+                    onCommit: commitEdit
+                )
+                .frame(width: 36, height: 17)
+
+                Text("分钟")
+                    .font(.system(size: 13))
+                    .foregroundStyle(theme.ink)
+                    .padding(.leading, 4)
+            } else {
+                Button {
+                    beginEditing()
+                } label: {
+                    Text("\(minutes) 分钟")
+                        .font(.system(size: 13))
+                        .foregroundStyle(theme.ink)
+                        .lineLimit(1)
+                        .padding(.trailing, 2)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .focusEffectDisabled()
+                .accessibilityLabel("提醒节奏 \(minutes) 分钟")
+            }
+
+            Button {
+                if isEditing {
+                    commitEdit()
+                }
+                isMenuOpen.toggle()
+            } label: {
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(theme.muted)
+                    .frame(width: 20, height: 20)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .focusEffectDisabled()
+            .accessibilityLabel("提醒节奏预设")
+        }
+        .padding(.leading, 10)
+        .padding(.trailing, 6)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(isHovering || isMenuOpen || isEditing ? theme.panel2 : theme.panel)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(theme.hairlineStrong, lineWidth: 1)
+        )
+        .onHover { isHovering = $0 }
+        .popover(isPresented: $isMenuOpen, arrowEdge: .bottom) {
+            RhythmMinutesMenu(
+                selection: minutes,
+                onPick: { value in
+                    minutes = value
+                    editText = String(value)
+                    suppressCommit = true
+                    isEditing = false
+                    isMenuOpen = false
+                }
+            )
+        }
+        .onChange(of: minutes) { _, newValue in
+            if !isEditing {
+                editText = String(newValue)
+            }
+        }
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.16), value: isEditing)
+    }
+
+    private func beginEditing() {
+        suppressCommit = false
+        editText = String(minutes)
+        isEditing = true
+    }
+
+    private func commitEdit() {
+        guard isEditing, !suppressCommit else { return }
+        let trimmed = editText.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let value = Int(trimmed) {
+            minutes = AppSettings.clampRhythmMinutes(value)
+        }
+        editText = String(minutes)
+        suppressCommit = true
+        isEditing = false
+    }
+}
+
+private struct RhythmMinutesMenu: View {
+    let selection: Int
+    let onPick: (Int) -> Void
+
+    @Environment(\.joeyAppearance) private var appearance
+    @Environment(\.joeyChromeTone) private var chromeTone
+    @State private var hovered: Int?
+    private var theme: JoeyTheme { JoeyTheme(chromeTone: chromeTone) }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ForEach(Array(AppSettings.rhythmOptions.enumerated()), id: \.element) { index, option in
+                if index > 0 {
+                    Rectangle()
+                        .fill(theme.hairline)
+                        .frame(height: 1)
+                        .padding(.horizontal, 10)
+                }
+                Button {
+                    onPick(option)
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(theme.sageDeep)
+                            .opacity(selection == option ? 1 : 0)
+                            .frame(width: 14)
+                        Text("\(option) 分钟")
+                            .font(.system(size: 13, weight: selection == option ? .semibold : .regular))
+                            .foregroundStyle(theme.ink)
+                        Spacer(minLength: 4)
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 7)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                            .fill(rowFill(for: option))
+                    )
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .focusEffectDisabled()
+                .accessibilityLabel("\(option) 分钟")
+                .accessibilityAddTraits(selection == option ? .isSelected : [])
+                .onHover { hovering in
+                    if hovering {
+                        hovered = option
+                    } else if hovered == option {
+                        hovered = nil
+                    }
+                }
+            }
+        }
+        .padding(6)
+        .frame(minWidth: 140)
+        .background(theme.panel)
+    }
+
+    private func rowFill(for option: Int) -> Color {
+        if selection == option { return theme.panel2 }
+        if hovered == option { return theme.sageSoft.opacity(0.55) }
+        return .clear
+    }
+}
+
+/// Digit field for the rhythm combo; Enter / blur commits like the quiet-hours fields.
+private struct RhythmMinutesTextField: NSViewRepresentable {
+    let label: String
+    @Binding var text: String
+    let textColor: NSColor
+    let onCommit: () -> Void
+
+    func makeNSView(context: Context) -> RhythmMinutesNSTextField {
+        let field = RhythmMinutesNSTextField()
+        field.delegate = context.coordinator
+        field.isBordered = false
+        field.isBezeled = false
+        field.drawsBackground = false
+        field.focusRingType = .none
+        field.alignment = .right
+        field.font = .monospacedDigitSystemFont(ofSize: 13, weight: .regular)
+        field.textColor = textColor
+        field.usesSingleLineMode = true
+        field.cell?.isScrollable = true
+        field.cell?.wraps = false
+        field.stringValue = text
+        field.setAccessibilityLabel(label)
+        DispatchQueue.main.async {
+            field.window?.makeFirstResponder(field)
+            field.currentEditor()?.selectAll(nil)
+        }
+        return field
+    }
+
+    func updateNSView(_ nsView: RhythmMinutesNSTextField, context: Context) {
+        context.coordinator.parent = self
+        nsView.textColor = textColor
+        if nsView.currentEditor() == nil, nsView.stringValue != text {
+            nsView.stringValue = text
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+
+    final class Coordinator: NSObject, NSTextFieldDelegate {
+        var parent: RhythmMinutesTextField
+
+        init(_ parent: RhythmMinutesTextField) {
+            self.parent = parent
+        }
+
+        func controlTextDidChange(_ obj: Notification) {
+            guard let field = obj.object as? NSTextField else { return }
+            parent.text = field.stringValue
+        }
+
+        func controlTextDidEndEditing(_ obj: Notification) {
+            parent.onCommit()
+        }
+
+        func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+            if commandSelector == #selector(NSResponder.insertNewline(_:)) {
+                parent.onCommit()
+                return true
+            }
+            return false
+        }
+    }
+}
+
+private final class RhythmMinutesNSTextField: NSTextField {
+    override func mouseDown(with event: NSEvent) {
+        if event.clickCount == 2 {
+            window?.makeFirstResponder(self)
+            if let editor = currentEditor() {
+                editor.selectAll(nil)
+            } else {
+                DispatchQueue.main.async { [weak self] in
+                    self?.currentEditor()?.selectAll(nil)
+                }
+            }
+            return
+        }
+        super.mouseDown(with: event)
     }
 }
 

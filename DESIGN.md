@@ -547,7 +547,7 @@ Native, quieter, more functional than the room. No illustration, no hero copy, n
 
 | Section | Row | Control | Copy |
 |---------|-----|---------|------|
-| 通用 | 提醒节奏 | Segmented 45 / 60 / 90 分钟 | 开始陪伴后才计时 |
+| 通用 | 提醒节奏 | 组合框：▾ 选 45 / 60 / 90，或直接输入分钟（15–180） | 开始陪伴后才计时 |
 | 通用 | 勿扰模式 | Switch | 暂停邀请 |
 | 通用 | 安静时段 | Time-range field: two editable halves, centre dash, double-click selects all | 时段内不邀请 |
 | 通用 | 背景音 | Menu-style chooser：无背景音 + catalog beds；每条有小喇叭试听 | 陪伴中播放 |

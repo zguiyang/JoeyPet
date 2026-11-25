@@ -244,7 +244,7 @@ hidden --邀请到点--> 临时显示 Joey + 邀请卡
 邀请到点的计算：
 
 ```
-effectiveGap = max(45 分钟, rhythmMinutes)   // rhythmMinutes ∈ {45, 60, 90}
+effectiveGap = max(15 分钟, clamp(rhythmMinutes, 15…180))   // presets 45 / 60 / 90; custom int allowed
 firstDue = sessionStart + effectiveGap
 nextDue  = lastInvitationClosedAt + effectiveGap
 ```
@@ -317,7 +317,7 @@ nextDue  = lastInvitationClosedAt + effectiveGap
 | `weekBreakCounts` | [Int] | 7 天休息次数 |
 | `quietStartMinutes` | Int | 默认 1320（22:00） |
 | `quietEndMinutes` | Int | 默认 480（08:00） |
-| `rhythmMinutes` | Int | 45 / 60 / 90 |
+| `rhythmMinutes` | Int | 15…180（快捷预设 45 / 60 / 90） |
 | `showsDesktopPet` | Bool | 隐藏状态 |
 
 规则：

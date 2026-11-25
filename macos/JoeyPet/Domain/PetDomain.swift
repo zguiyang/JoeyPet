@@ -146,7 +146,7 @@ struct InvitationPolicy: Equatable, Sendable {
     var hiddenRevealDuration: TimeInterval
 
     init(
-        minimumGapMinutes: Int = 45,
+        minimumGapMinutes: Int = 15,
         rhythmMinutes: Int = 45,
         snoozeMinutes: Int = 10,
         approachLeadMinutes: Int = 5,
@@ -163,9 +163,17 @@ struct InvitationPolicy: Equatable, Sendable {
         self.hiddenRevealDuration = hiddenRevealDuration
     }
 
-    /// The atlas allows 45 / 60 / 90 minutes, with 45 as a hard floor.
+    /// Allowed custom / preset rhythm range. Presets are 45 / 60 / 90; any int in range is valid.
+    static let rhythmMinutesMinimum = 15
+    static let rhythmMinutesMaximum = 180
+
+    static func clampedRhythmMinutes(_ value: Int) -> Int {
+        min(max(value, rhythmMinutesMinimum), rhythmMinutesMaximum)
+    }
+
+    /// Gap between invitations: clamp rhythm into 15…180, then honor `minimumGapMinutes`.
     var effectiveGapMinutes: Int {
-        max(minimumGapMinutes, max(45, rhythmMinutes))
+        max(minimumGapMinutes, Self.clampedRhythmMinutes(rhythmMinutes))
     }
 
     var effectiveGap: TimeInterval {
@@ -461,9 +469,7 @@ struct PetPersistedState: Equatable, Sendable {
         copy.todayCompanionshipSeconds = max(0, copy.todayCompanionshipSeconds)
         copy.todayBreaks = max(0, copy.todayBreaks)
 
-        if ![45, 60, 90].contains(copy.rhythmMinutes) {
-            copy.rhythmMinutes = 45
-        }
+        copy.rhythmMinutes = InvitationPolicy.clampedRhythmMinutes(copy.rhythmMinutes)
         if !(0...1439).contains(copy.quietWindow.startMinutes) {
             copy.quietWindow.startMinutes = 22 * 60
         }

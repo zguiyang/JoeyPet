@@ -267,21 +267,64 @@ struct PetDomainTests {
         #expect(!disabled.isActive(at: testDate(2026, 11, 23, 10, 0), calendar: calendar))
     }
 
-    @Test func invitationPolicyUsesRhythmWithFortyFiveMinuteFloor() {
+    @Test func invitationPolicyClampsCustomRhythm() {
         let start = testDate(2026, 11, 23, 9, 0)
         let policy45 = InvitationPolicy(rhythmMinutes: 45)
         let policy90 = InvitationPolicy(rhythmMinutes: 90)
-        let floor = InvitationPolicy(rhythmMinutes: 30)
+        let custom30 = InvitationPolicy(rhythmMinutes: 30)
+        let custom75 = InvitationPolicy(rhythmMinutes: 75)
+        let floor = InvitationPolicy(rhythmMinutes: 5)
+        let ceiling = InvitationPolicy(rhythmMinutes: 200)
 
         #expect(policy45.effectiveGapMinutes == 45)
         #expect(policy90.effectiveGapMinutes == 90)
-        #expect(floor.effectiveGapMinutes == 45)
+        #expect(custom30.effectiveGapMinutes == 30)
+        #expect(custom75.effectiveGapMinutes == 75)
+        #expect(floor.effectiveGapMinutes == 15)
+        #expect(ceiling.effectiveGapMinutes == 180)
+        #expect(InvitationPolicy.clampedRhythmMinutes(30) == 30)
+        #expect(InvitationPolicy.clampedRhythmMinutes(5) == 15)
+        #expect(InvitationPolicy.clampedRhythmMinutes(200) == 180)
+        #expect(InvitationPolicy.clampedRhythmMinutes(75) == 75)
         #expect(policy45.nextDue(sessionStart: start, lastClosed: nil)
             == start.addingTimeInterval(45 * 60))
+        #expect(custom30.nextDue(sessionStart: start, lastClosed: nil)
+            == start.addingTimeInterval(30 * 60))
 
         let lastClosed = start.addingTimeInterval(10 * 60)
         #expect(policy45.nextDue(sessionStart: start, lastClosed: lastClosed)
             == lastClosed.addingTimeInterval(45 * 60))
+    }
+
+    @Test func rhythmMinutesCustomPersistsAndClamps() {
+        let testDefaults = TestDefaults("JoeyPetTestsRhythm")
+        defer { testDefaults.remove() }
+        let settings = AppSettings(defaults: testDefaults.defaults)
+
+        settings.rhythmMinutes = 75
+        #expect(settings.rhythmMinutes == 75)
+        let reloaded = AppSettings(defaults: testDefaults.defaults)
+        #expect(reloaded.rhythmMinutes == 75)
+
+        settings.rhythmMinutes = 30
+        #expect(settings.rhythmMinutes == 30)
+        let reloadedCustom = AppSettings(defaults: testDefaults.defaults)
+        #expect(reloadedCustom.rhythmMinutes == 30)
+
+        settings.rhythmMinutes = 5
+        #expect(settings.rhythmMinutes == 15)
+        settings.rhythmMinutes = 240
+        #expect(settings.rhythmMinutes == 180)
+
+        var state = PetPersistedState.empty(now: .now)
+        state.rhythmMinutes = 75
+        #expect(state.normalized(now: .now).rhythmMinutes == 75)
+        state.rhythmMinutes = 30
+        #expect(state.normalized(now: .now).rhythmMinutes == 30)
+        state.rhythmMinutes = 5
+        #expect(state.normalized(now: .now).rhythmMinutes == 15)
+        state.rhythmMinutes = 999
+        #expect(state.normalized(now: .now).rhythmMinutes == 180)
     }
 
     @Test func priorityLadderOverridesPoseButKeepsSession() {

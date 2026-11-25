@@ -18,9 +18,14 @@ final class AppSettings {
         static let cueSound = "joey.cueSoundID"
     }
 
+    /// Preset shortcuts shown in the rhythm combo menu.
     static let rhythmOptions = [45, 60, 90]
     /// Soft cup tap — first preferred cue when the user has not chosen yet.
     static let defaultCueSoundID = "cue_ceramic_cups"
+
+    static func clampRhythmMinutes(_ value: Int) -> Int {
+        InvitationPolicy.clampedRhythmMinutes(value)
+    }
 
     @ObservationIgnored private let defaults: UserDefaults
     @ObservationIgnored var onShowsDesktopPetChanged: ((Bool) -> Void)?
@@ -32,6 +37,11 @@ final class AppSettings {
 
     var rhythmMinutes: Int {
         didSet {
+            let clamped = Self.clampRhythmMinutes(rhythmMinutes)
+            if clamped != rhythmMinutes {
+                rhythmMinutes = clamped
+                return
+            }
             defaults.set(rhythmMinutes, forKey: Key.rhythm)
             notifyScheduleChanged()
         }
@@ -105,7 +115,7 @@ final class AppSettings {
         self.defaults = defaults
 
         let storedRhythm = defaults.object(forKey: Key.rhythm) as? Int ?? 45
-        self.rhythmMinutes = Self.rhythmOptions.contains(storedRhythm) ? storedRhythm : 45
+        self.rhythmMinutes = Self.clampRhythmMinutes(storedRhythm)
 
         self.isDoNotDisturb = defaults.object(forKey: Key.doNotDisturb) as? Bool ?? false
 
