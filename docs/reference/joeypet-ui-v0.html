@@ -1250,16 +1250,12 @@
               </div>
               <div class="settings-body">
                 <aside class="set-nav">
-                  <div class="grp">陪伴</div>
-                  <a class="on">节奏与提醒</a>
-                  <a>安静时段</a>
-                  <div class="grp">Joey</div>
-                  <a>外观与位置</a>
-                  <div class="grp">关于</div>
-                  <a>关于 JoeyPet</a>
+                  <a class="on">通用</a>
+                  <a>宠物</a>
+                  <a>关于</a>
                 </aside>
                 <div class="set-panel">
-                  <h3>节奏与提醒</h3>
+                  <h3>通用</h3>
                   <p class="desc">只在你开始工作后提醒。</p>
                   <div class="set-row">
                     <div class="k"><b>提醒节奏</b><span>开始陪伴后才计时</span></div>
@@ -1268,31 +1264,24 @@
                     </div>
                   </div>
                   <div class="set-row">
-                    <div class="k"><b>勿扰模式</b><span>开启后不会再有邀请或提示，需要恢复时手动关闭</span></div>
+                    <div class="k"><b>勿扰模式</b><span>不会再有邀请或提示</span></div>
                     <div class="switch" id="swPause" role="switch" aria-checked="false" tabindex="0"></div>
                   </div>
                   <div class="set-row">
-                    <div class="k"><b>安静时段</b><span>这段时间不会邀请；正在进行的休息会先走完</span></div>
+                    <div class="k"><b>安静时段</b><span>这段时间不会邀请</span></div>
                     <div class="timefield">22:00 <em>–</em> 08:00</div>
                   </div>
                   <div class="set-row">
-                    <div class="k"><b>外观</b><span>白天和黄昏各有一套配色</span></div>
-                    <div class="seg"><button class="on">白天</button><button>黄昏</button></div>
+                    <div class="k"><b>背景音</b><span>陪伴中播放</span></div>
+                    <button class="set-btn">无背景音</button>
                   </div>
                   <div class="set-row">
-                    <div class="k"><b>显示位置</b><span>拖动后以你放的位置为准</span></div>
-                    <div class="seg"><button class="on">右下角</button><button>左下角</button></div>
+                    <div class="k"><b>提示音</b><span>开始陪伴与邀请时播放</span></div>
+                    <button class="set-btn">竹风铃</button>
                   </div>
                   <div class="set-row">
-                    <div class="k"><b>在桌面上显示 Joey</b><span>关掉不会结束陪伴，到点仍会短暂露面提醒</span></div>
-                    <div class="switch on" id="swShow" role="switch" aria-checked="true" tabindex="0"></div>
-                  </div>
-                  <div class="set-row">
-                    <div class="k"><b>反馈</b><span>只保存在这台 Mac，不会上传</span></div>
-                    <button class="set-btn" id="feedbackBtn">写一句</button>
-                  </div>
-                  <div class="feedback-box" id="feedbackBox" hidden>
-                    <textarea placeholder="说给 Joey 听…"></textarea>
+                    <div class="k"><b>外观</b><span>锁定明亮/黑夜后不再随时间变</span></div>
+                    <div class="seg"><button class="on">时段</button><button>系统</button><button>明亮</button><button>黑夜</button></div>
                   </div>
                 </div>
               </div>
@@ -1467,30 +1456,23 @@
 
   /* 设置 · 勿扰模式 */
   bindSwitch(document.getElementById("swPause"));
-  /* 设置 · 显示 Joey */
-  bindSwitch(document.getElementById("swShow"), function (on) {
+
+  function setPetVisible(on) {
     state.hidden = !on;
     document.getElementById("pet").style.opacity = on ? "1" : "0";
     document.getElementById("pet").style.pointerEvents = on ? "" : "none";
     showToast(on ? "Joey 回到桌面了。" : "Joey 藏起来了。设置里可以叫回来。");
-  });
+  }
 
   /* 设置 · 节奏分段 */
   var rhythmSeg = document.getElementById("rhythmSeg");
-  rhythmSeg.addEventListener("click", function (e) {
-    var t = e.target.closest("button");
-    if (!t) return;
-    Array.prototype.forEach.call(rhythmSeg.querySelectorAll("button"), function (b) { b.classList.toggle("on", b === t); });
-  });
-
-  /* 设置 · 反馈 */
-  var feedbackBtn = document.getElementById("feedbackBtn");
-  var feedbackBox = document.getElementById("feedbackBox");
-  feedbackBtn.addEventListener("click", function () {
-    var show = feedbackBox.hidden;
-    feedbackBox.hidden = !show;
-    if (show) feedbackBox.querySelector("textarea").focus();
-  });
+  if (rhythmSeg) {
+    rhythmSeg.addEventListener("click", function (e) {
+      var t = e.target.closest("button");
+      if (!t) return;
+      Array.prototype.forEach.call(rhythmSeg.querySelectorAll("button"), function (b) { b.classList.toggle("on", b === t); });
+    });
+  }
 
   /* ============ 桌面宠物拖动 ============ */
   var pet = document.getElementById("pet");
@@ -1558,7 +1540,7 @@
   });
   document.getElementById("menuHide").addEventListener("click", function () {
     petMenu.hidden = true;
-    document.getElementById("swShow").click();
+    setPetVisible(false);
   });
   document.getElementById("menuPause").addEventListener("click", function () {
     petMenu.hidden = true;
