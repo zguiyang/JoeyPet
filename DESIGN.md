@@ -546,7 +546,7 @@ Native, quieter, more functional than the room. No illustration, no hero copy, n
 | 通用 | 外观 | Segmented 时段 / 系统 / 明亮 / 黑夜 | 锁定明亮/黑夜后不再随时间变。默认时段 |
 | 宠物 | 在桌面上显示 Joey | Switch | 关掉不会结束陪伴 |
 | 宠物 | 显示位置 | Segmented 右下角 / 左下角 | 拖动后以你放的位置为准 |
-| 关于 | 版本 · 反馈 · 声音致谢 | 反馈 → textarea | 反馈：只保存在这台 Mac |
+| 关于 | 版本 · 反馈 · 声音致谢 | 反馈 → 发邮件（优先系统「邮件」） | 副标题显示邮箱；打不开时复制地址并提示 |
 
 - Each row gets at most one incidental line under the title. Do not stack a subtitle and a second note layer.
 
@@ -815,3 +815,4 @@ Git history and the archive branch explain why they were replaced.
 | 2026-11-25 | Appearance adds locked 明亮 / 黑夜; four options, default 时段. |
 | 2026-11-25 | Settings sidebar + detail share one surface (light `window-bg`, dark `window-chrome`; no night-wall clash). |
 | 2026-11-25 | Settings IA simplified to 通用 / 宠物 / 关于; shorter row copy. |
+| 2026-11-25 | Settings feedback uses mailto (no local draft / no backend). |
