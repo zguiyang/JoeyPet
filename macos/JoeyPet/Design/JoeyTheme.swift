@@ -3,9 +3,8 @@ import SwiftUI
 
 // MARK: - Appearance preference (Settings)
 
-/// User choice in 外观. Default is 时段.
+/// User choice in 外观. Default is 系统 (follow macOS light/dark).
 enum JoeyAppearance: String, CaseIterable, Identifiable, Sendable {
-    case daypart
     case system
     case light
     case dark
@@ -14,36 +13,26 @@ enum JoeyAppearance: String, CaseIterable, Identifiable, Sendable {
 
     var title: String {
         switch self {
-        case .daypart: return "时段"
         case .system: return "系统"
         case .light: return "明亮"
         case .dark: return "黑夜"
         }
     }
 
-    /// Migrate storage; legacy `dusk` maps to locked 黑夜.
+    /// Migrate storage; legacy `dusk` → 黑夜, `daypart` → 系统.
     static func fromStored(_ raw: String?) -> JoeyAppearance {
         switch raw {
-        case JoeyAppearance.daypart.rawValue: return .daypart
-        case JoeyAppearance.system.rawValue: return .system
+        case JoeyAppearance.system.rawValue, "daypart", "", nil: return .system
         case JoeyAppearance.light.rawValue, "light": return .light
         case JoeyAppearance.dark.rawValue, "dusk": return .dark
-        case "", nil: return .daypart
-        default: return .daypart
+        default: return .system
         }
     }
 
     func resolveChromeTone(
-        at date: Date = Date(),
-        calendar: Calendar = .autoupdatingCurrent,
         systemAppearance: NSAppearance? = nil
     ) -> JoeyChromeTone {
         switch self {
-        case .daypart:
-            switch RoomDaypart.resolve(at: date, calendar: calendar) {
-            case .morning, .day: return .light
-            case .dusk, .night: return .dark
-            }
         case .system:
             let appearance = systemAppearance ?? NSApp.effectiveAppearance
             let match = appearance.bestMatch(from: [.aqua, .darkAqua])
@@ -55,36 +44,13 @@ enum JoeyAppearance: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    /// Room/garden paint source. Locked 明亮/黑夜 ignore the clock; 系统 follows
-    /// the resolved chrome cluster so pages stay one skin.
-    func resolveRoomDaypart(
-        at date: Date = Date(),
-        calendar: Calendar = .autoupdatingCurrent,
-        systemAppearance: NSAppearance? = nil
-    ) -> RoomDaypart {
-        switch self {
-        case .daypart:
-            return RoomDaypart.resolve(at: date, calendar: calendar)
-        case .light:
-            return .day
-        case .dark:
-            return .night
-        case .system:
-            return resolveChromeTone(
-                at: date,
-                calendar: calendar,
-                systemAppearance: systemAppearance
-            ) == .light ? .day : .night
-        }
-    }
-
-    /// `nil` only for 系统 (follow macOS). Locked and 时段 set aqua/darkAqua explicitly.
-    func nsAppearance(at date: Date = Date()) -> NSAppearance? {
+    /// `nil` only for 系统 (follow macOS). Locked 明亮/黑夜 set aqua/darkAqua.
+    func nsAppearance() -> NSAppearance? {
         switch self {
         case .system:
             return nil
-        case .daypart, .light, .dark:
-            return resolveChromeTone(at: date).nsAppearance
+        case .light, .dark:
+            return resolveChromeTone().nsAppearance
         }
     }
 }
@@ -102,32 +68,19 @@ enum JoeyChromeTone: String, Sendable {
 // MARK: - Theme
 
 /// Every surface colour comes from a token here. Views never hardcode hex values.
+/// Nest home, reflection and settings share one light/dark cluster (no clock daypart).
 struct JoeyTheme {
     let chromeTone: JoeyChromeTone
-    /// When set (nest home), room illustration follows the local-clock daypart
-    /// instead of the chrome light/dark cluster alone.
-    var daypart: RoomDaypart? = nil
 
     private var isLight: Bool { chromeTone == .light }
 
-    private var roomPalette: RoomDaypartPalette? {
-        daypart.map(RoomDaypartPalette.palette(for:))
-    }
-
-    init(chromeTone: JoeyChromeTone, daypart: RoomDaypart? = nil) {
+    init(chromeTone: JoeyChromeTone) {
         self.chromeTone = chromeTone
-        self.daypart = daypart
     }
 
-    /// Convenience: resolve chrome from the user preference at `date`.
-    init(
-        appearance: JoeyAppearance,
-        at date: Date = Date(),
-        daypart: RoomDaypart? = nil,
-        calendar: Calendar = .autoupdatingCurrent
-    ) {
-        self.chromeTone = appearance.resolveChromeTone(at: date, calendar: calendar)
-        self.daypart = daypart
+    /// Convenience: resolve chrome from the user preference.
+    init(appearance: JoeyAppearance) {
+        self.chromeTone = appearance.resolveChromeTone()
     }
 
     // Core tokens (DESIGN.md §4.1)
@@ -156,141 +109,47 @@ struct JoeyTheme {
     }
     var focus: Color { isLight ? Color(hex: 0x4F6D54) : Color(hex: 0x86A98A) }
 
-    // Surfaces (DESIGN.md §4.2) — dark cluster stays in the dusk/night family
+    // Surfaces (DESIGN.md §4.2) — one light / one dark cluster shared with settings
     var windowBg: Color { isLight ? Color(hex: 0xFBF8F0) : Color(hex: 0x313A3B) }
-    var windowChrome: Color {
-        if let daypart, !isLight {
-            // Home/reflection only: paint the traffic-light band with the room wall.
-            // Settings must pass `daypart: nil` so sidebar + detail stay on the
-            // fixed chrome token (one surface, no wall/content hue clash).
-            return RoomDaypartPalette.palette(for: daypart).wall
-        }
-        return isLight ? Color(hex: 0xF2ECE1) : Color(hex: 0x262E2F)
-    }
+    var windowChrome: Color { isLight ? Color(hex: 0xF2ECE1) : Color(hex: 0x262E2F) }
     var panel: Color { isLight ? Color(hex: 0xFFFDF7) : Color(hex: 0x37403F) }
     var panel2: Color { isLight ? Color(hex: 0xF8F3E9) : Color(hex: 0x2F3838) }
     var popover: Color { isLight ? Color(hex: 0xFFFDF8) : Color(hex: 0x394241) }
 
-    // Room scene tokens — daypart when nesting; else chrome light/dark (DESIGN §9.3 / home-v1)
-    var roomWall: Color {
-        if let roomPalette { return roomPalette.wall }
-        return isLight ? Color(hex: 0xF8F4EC) : Color(hex: 0x2F3736)
-    }
+    // Room scene tokens — same light/dark cluster as chrome (no clock daypart)
+    var roomWall: Color { isLight ? Color(hex: 0xF8F4EC) : Color(hex: 0x2F3736) }
     var roomWash: Color {
-        if let roomPalette { return roomPalette.wash }
-        return isLight ? Color(hex: 0xFFFDF4, opacity: 0.55) : Color(hex: 0xC4D6D2, opacity: 0.05)
+        isLight ? Color(hex: 0xFFFDF4, opacity: 0.55) : Color(hex: 0xC4D6D2, opacity: 0.05)
     }
-    var roomFloor: Color {
-        if let roomPalette { return roomPalette.floor }
-        return isLight ? Color(hex: 0xE6D5BE) : Color(hex: 0x29302F)
-    }
-    var roomBase: Color {
-        if let roomPalette { return roomPalette.base }
-        return isLight ? Color(hex: 0xEFE5D4) : Color(hex: 0x3A4240)
-    }
-    var roomFloorLine: Color {
-        if let roomPalette { return roomPalette.floorLine }
-        return isLight ? Color(hex: 0xD9C6AC) : Color(hex: 0x3D4644)
-    }
-    var roomSky: Color {
-        if let roomPalette { return roomPalette.sky }
-        return isLight ? Color(hex: 0xD9E7E6) : Color(hex: 0x3E5560)
-    }
-    var roomFrame: Color {
-        if let roomPalette { return roomPalette.frame }
-        return isLight ? Color(hex: 0xE3D3BC) : Color(hex: 0x4A5451)
-    }
-    var roomHill1: Color {
-        if let roomPalette { return roomPalette.hill1 }
-        return isLight ? Color(hex: 0xC3D8D5) : Color(hex: 0x35474B)
-    }
-    var roomHill2: Color {
-        if let roomPalette { return roomPalette.hill2 }
-        return isLight ? Color(hex: 0xAFC9C5) : Color(hex: 0x2E4045)
-    }
-    var roomSill: Color {
-        if let roomPalette { return roomPalette.sill }
-        return isLight ? Color(hex: 0xEFE5D4) : Color(hex: 0x3A4240)
-    }
-    var roomCurtain: Color {
-        if let roomPalette { return roomPalette.curtain }
-        return isLight ? Color(hex: 0xE8EDE4) : Color(hex: 0x3D4744)
-    }
-    var roomOutdoorDisc: Color {
-        roomPalette?.outdoorDisc ?? (isLight ? Color(hex: 0xFFF1C9) : Color(hex: 0xE9E4D6))
-    }
-    var roomShowsStars: Bool { roomPalette?.showStars ?? !isLight }
-    var roomClock: Color {
-        if let roomPalette { return roomPalette.clock }
-        return isLight ? Color(hex: 0xFBF6EC) : Color(hex: 0x3B4544)
-    }
-    var roomClockRim: Color {
-        if let roomPalette { return roomPalette.clockRim }
-        return isLight ? Color(hex: 0xD9C6AE) : Color(hex: 0x4A5451)
-    }
-    var roomClockTick: Color {
-        if let roomPalette { return roomPalette.clockTick }
-        return isLight ? Color(hex: 0xC9B08C) : Color(hex: 0x5A6A66)
-    }
-    var roomHand: Color {
-        if let roomPalette { return roomPalette.hand }
-        return isLight ? Color(hex: 0x3F3A35) : Color(hex: 0xD9D2C4)
-    }
-    var roomPot: Color {
-        if let roomPalette { return roomPalette.pot }
-        return isLight ? Color(hex: 0xD8B892) : Color(hex: 0x4A443B)
-    }
-    var roomStem: Color {
-        if let roomPalette { return roomPalette.stem }
-        return isLight ? Color(hex: 0x7E9B7C) : Color(hex: 0x5F7A62)
-    }
-    var roomLeaf: Color {
-        if let roomPalette { return roomPalette.leaf }
-        return isLight ? Color(hex: 0x86A98A) : Color(hex: 0x6E9077)
-    }
-    var roomRug: Color {
-        if let roomPalette { return roomPalette.rug }
-        return isLight ? Color(hex: 0xE0CDB6) : Color(hex: 0x232A29)
-    }
-    var roomNestDark: Color {
-        if let roomPalette { return roomPalette.nestDark }
-        return isLight ? Color(hex: 0xD2B189) : Color(hex: 0x3A342C)
-    }
-    var roomNest: Color {
-        if let roomPalette { return roomPalette.nest }
-        return isLight ? Color(hex: 0xD9BD97) : Color(hex: 0x4A4238)
-    }
-    var roomNestRim: Color {
-        roomPalette?.nestRim ?? roomNest
-    }
-    var roomCushion: Color {
-        if let roomPalette { return roomPalette.cushion }
-        return isLight ? Color(hex: 0xE7EDDD) : Color(hex: 0x3E4A42)
-    }
-    var roomCushion2: Color {
-        if let roomPalette { return roomPalette.cushion2 }
-        return isLight ? Color(hex: 0xF0F4E8) : Color(hex: 0x46544A)
-    }
-    var roomDesk: Color {
-        if let roomPalette { return roomPalette.desk }
-        return isLight ? Color(hex: 0xDEC9AE) : Color(hex: 0x4A4238)
-    }
-    var roomDeskLeg: Color {
-        if let roomPalette { return roomPalette.deskLeg }
-        return isLight ? Color(hex: 0xD2BB9E) : Color(hex: 0x3A342C)
-    }
-    var roomPaper: Color {
-        if let roomPalette { return roomPalette.paper }
-        return isLight ? Color(hex: 0xFBF7EF) : Color(hex: 0x3F4847)
-    }
-    var roomPaperLine: Color {
-        if let roomPalette { return roomPalette.paperLine }
-        return isLight ? Color(hex: 0xE4D6C1) : Color(hex: 0x55605E)
-    }
-    var roomNoteLine: Color {
-        if let roomPalette { return roomPalette.noteLine }
-        return isLight ? Color(hex: 0x3F3A35) : Color(hex: 0xD9D2C4)
-    }
+    var roomFloor: Color { isLight ? Color(hex: 0xE6D5BE) : Color(hex: 0x29302F) }
+    var roomBase: Color { isLight ? Color(hex: 0xEFE5D4) : Color(hex: 0x3A4240) }
+    var roomFloorLine: Color { isLight ? Color(hex: 0xD9C6AC) : Color(hex: 0x3D4644) }
+    var roomSky: Color { isLight ? Color(hex: 0xD9E7E6) : Color(hex: 0x3E5560) }
+    var roomFrame: Color { isLight ? Color(hex: 0xE3D3BC) : Color(hex: 0x4A5451) }
+    var roomHill1: Color { isLight ? Color(hex: 0xC3D8D5) : Color(hex: 0x35474B) }
+    var roomHill2: Color { isLight ? Color(hex: 0xAFC9C5) : Color(hex: 0x2E4045) }
+    var roomSill: Color { isLight ? Color(hex: 0xEFE5D4) : Color(hex: 0x3A4240) }
+    var roomCurtain: Color { isLight ? Color(hex: 0xE8EDE4) : Color(hex: 0x3D4744) }
+    var roomOutdoorDisc: Color { isLight ? Color(hex: 0xFFF1C9) : Color(hex: 0xE9E4D6) }
+    var roomShowsStars: Bool { !isLight }
+    var roomClock: Color { isLight ? Color(hex: 0xFBF6EC) : Color(hex: 0x3B4544) }
+    var roomClockRim: Color { isLight ? Color(hex: 0xD9C6AE) : Color(hex: 0x4A5451) }
+    var roomClockTick: Color { isLight ? Color(hex: 0xC9B08C) : Color(hex: 0x5A6A66) }
+    var roomHand: Color { isLight ? Color(hex: 0x3F3A35) : Color(hex: 0xD9D2C4) }
+    var roomPot: Color { isLight ? Color(hex: 0xD8B892) : Color(hex: 0x4A443B) }
+    var roomStem: Color { isLight ? Color(hex: 0x7E9B7C) : Color(hex: 0x5F7A62) }
+    var roomLeaf: Color { isLight ? Color(hex: 0x86A98A) : Color(hex: 0x6E9077) }
+    var roomRug: Color { isLight ? Color(hex: 0xE0CDB6) : Color(hex: 0x232A29) }
+    var roomNestDark: Color { isLight ? Color(hex: 0xD2B189) : Color(hex: 0x3A342C) }
+    var roomNest: Color { isLight ? Color(hex: 0xD9BD97) : Color(hex: 0x4A4238) }
+    var roomNestRim: Color { roomNest }
+    var roomCushion: Color { isLight ? Color(hex: 0xE7EDDD) : Color(hex: 0x3E4A42) }
+    var roomCushion2: Color { isLight ? Color(hex: 0xF0F4E8) : Color(hex: 0x46544A) }
+    var roomDesk: Color { isLight ? Color(hex: 0xDEC9AE) : Color(hex: 0x4A4238) }
+    var roomDeskLeg: Color { isLight ? Color(hex: 0xD2BB9E) : Color(hex: 0x3A342C) }
+    var roomPaper: Color { isLight ? Color(hex: 0xFBF7EF) : Color(hex: 0x3F4847) }
+    var roomPaperLine: Color { isLight ? Color(hex: 0xE4D6C1) : Color(hex: 0x55605E) }
+    var roomNoteLine: Color { isLight ? Color(hex: 0x3F3A35) : Color(hex: 0xD9D2C4) }
     var roomMug: Color { Color(hex: 0xEFAE7D) }
     var roomMugTop: Color { Color(hex: 0xC98F6E) }
 
@@ -307,9 +166,8 @@ struct JoeyTheme {
     var joeyScarf: Color { Color(hex: 0x86A98A) }
     var joeyBlush: Color { Color(hex: 0xEFAE7D) }
 
-    /// Wash for the layered pet inside the room. Prefer room daypart; else dark chrome.
+    /// Soft wash so Joey sits in the dark nest without looking overlit.
     var nestPetTint: JoeyPetTint {
-        if let daypart { return daypart.nestPetTint }
         guard !isLight else { return .none }
         return JoeyPetTint(
             color: NSColor(
@@ -387,7 +245,7 @@ enum JoeyMotion {
 // MARK: - Environment
 
 private struct JoeyAppearanceKey: EnvironmentKey {
-    nonisolated static let defaultValue: JoeyAppearance = .daypart
+    nonisolated static let defaultValue: JoeyAppearance = .system
 }
 
 private struct JoeyChromeToneKey: EnvironmentKey {
@@ -395,7 +253,7 @@ private struct JoeyChromeToneKey: EnvironmentKey {
 }
 
 extension EnvironmentValues {
-    /// Settings preference: 时段 or 系统.
+    /// Settings preference: 系统 / 明亮 / 黑夜.
     var joeyAppearance: JoeyAppearance {
         get { self[JoeyAppearanceKey.self] }
         set { self[JoeyAppearanceKey.self] = newValue }

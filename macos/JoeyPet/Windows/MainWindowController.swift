@@ -51,8 +51,8 @@ final class MainWindowController: NSWindowController {
             onRouteChange: { [weak self] route in
                 self?.updateChrome(for: route)
             },
-            onChromeToneChange: { [weak self] tone, daypart in
-                self?.applyChrome(tone: tone, daypart: daypart)
+            onChromeToneChange: { [weak self] tone, isSettings in
+                self?.applyChrome(tone: tone, isSettings: isSettings)
             }
         )
         let hostingView = NSHostingView(rootView: root)
@@ -110,22 +110,18 @@ final class MainWindowController: NSWindowController {
     }
 
     func applyAppearance() {
-        let date = Date()
-        let tone = settings.appearance.resolveChromeTone(at: date)
-        // Settings keeps fixed chrome tokens (no room-wall daypart).
-        let daypart = navigation.route == .settings
-            ? nil
-            : settings.appearance.resolveRoomDaypart(at: date)
-        applyChrome(tone: tone, daypart: daypart)
+        applyChrome(
+            tone: settings.appearance.resolveChromeTone(),
+            isSettings: navigation.route == .settings
+        )
     }
 
-    private func applyChrome(tone: JoeyChromeTone, daypart: RoomDaypart?) {
+    private func applyChrome(tone: JoeyChromeTone, isSettings: Bool) {
         guard let window else { return }
-        let theme = JoeyTheme(chromeTone: tone, daypart: daypart)
+        let theme = JoeyTheme(chromeTone: tone)
         window.appearance = settings.appearance.nsAppearance()
-        // `daypart == nil` means settings: match the unified settings surface
-        // (light paper / dark chrome). Home still uses chrome (or room wall).
-        let surface = daypart == nil
+        // Settings: light paper / dark chrome. Home/reflection: windowChrome.
+        let surface = isSettings
             ? (tone == .light ? theme.windowBg : theme.windowChrome)
             : theme.windowChrome
         window.backgroundColor = NSColor(surface)

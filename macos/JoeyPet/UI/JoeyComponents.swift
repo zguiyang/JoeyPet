@@ -24,7 +24,6 @@ struct JoeyPrimaryButton: View {
     var systemImage: String? = nil
     let action: () -> Void
 
-    @Environment(\.joeyAppearance) private var appearance
     @Environment(\.joeyChromeTone) private var chromeTone
     @State private var isHovering = false
 
@@ -61,7 +60,6 @@ struct JoeySecondaryButton: View {
     var systemImage: String? = nil
     let action: () -> Void
 
-    @Environment(\.joeyAppearance) private var appearance
     @Environment(\.joeyChromeTone) private var chromeTone
     @State private var isHovering = false
 
@@ -111,11 +109,9 @@ struct WindowChromeHeader: View {
     var height: CGFloat = 32
 
     @Environment(\.joeyChromeTone) private var chromeTone
-    @Environment(\.joeyAppearance) private var appearance
 
     private var theme: JoeyTheme {
-        let daypart = appearance.resolveRoomDaypart(at: Date())
-        return JoeyTheme(chromeTone: chromeTone, daypart: daypart)
+        JoeyTheme(chromeTone: chromeTone)
     }
 
     var body: some View {
@@ -146,7 +142,6 @@ struct JoeyRoomLabel<Content: View>: View {
         self.content = content()
     }
 
-    @Environment(\.joeyAppearance) private var appearance
     @Environment(\.joeyChromeTone) private var chromeTone
 
     private var theme: JoeyTheme { JoeyTheme(chromeTone: chromeTone) }
@@ -184,7 +179,6 @@ struct JoeyPetTipView<Content: View>: View {
     var caret: Caret = .none
     @ViewBuilder var content: () -> Content
 
-    @Environment(\.joeyAppearance) private var appearance
     @Environment(\.joeyChromeTone) private var chromeTone
 
     private var theme: JoeyTheme { JoeyTheme(chromeTone: chromeTone) }

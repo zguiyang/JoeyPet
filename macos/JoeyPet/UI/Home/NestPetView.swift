@@ -10,7 +10,6 @@ import SwiftUI
 /// and ear/tail motion therefore match the desktop pet exactly.
 struct NestPetView: View {
     let pose: PetPose
-    var daypart: RoomDaypart? = nil
     let onGreet: () -> Void
 
     @Environment(\.joeyChromeTone) private var chromeTone
@@ -20,7 +19,7 @@ struct NestPetView: View {
     var body: some View {
         LayeredPetSurface(
             pose: pose,
-            tint: JoeyTheme(chromeTone: chromeTone, daypart: daypart).nestPetTint,
+            tint: JoeyTheme(chromeTone: chromeTone).nestPetTint,
             reduceMotion: reduceMotion,
             isPaused: !isWindowVisible
         )

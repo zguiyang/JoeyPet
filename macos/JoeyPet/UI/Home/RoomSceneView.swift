@@ -12,7 +12,6 @@ struct RoomSceneView: View {
     var onInviteSnooze: (() -> Void)?
     var onInviteDoNotDisturb: (() -> Void)?
 
-    @Environment(\.joeyAppearance) private var appearance
     @Environment(\.joeyChromeTone) private var chromeTone
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isFrameHovering = false
@@ -21,13 +20,12 @@ struct RoomSceneView: View {
     private let designSize = CGSize(width: 1080, height: 680)
     /// Floor CTA sits on the scene midline (DESIGN §10.4), not under the desk.
     private let floorCenterX: CGFloat = 540
-    /// Chrome / labels follow Settings appearance; the room canvas uses daypart.
+    /// Shared light/dark chrome cluster for labels and the room canvas.
     private var chromeTheme: JoeyTheme { JoeyTheme(chromeTone: chromeTone) }
 
     var body: some View {
         TimelineView(.animation(minimumInterval: reduceMotion ? 60 : 1 / 12)) { timeline in
-            let daypart = appearance.resolveRoomDaypart(at: timeline.date)
-            let theme = JoeyTheme(chromeTone: chromeTone, daypart: daypart)
+            let theme = JoeyTheme(chromeTone: chromeTone)
             let curtainPhase = reduceMotion
                 ? 0
                 : sin(timeline.date.timeIntervalSinceReferenceDate / 5.5) * 3.2
@@ -68,7 +66,7 @@ struct RoomSceneView: View {
                         )
 
                     // Nest + Joey keep the shipped home geometry (not the Design AI nest).
-                    NestPetView(pose: status.pose, daypart: daypart, onGreet: onGreetPet)
+                    NestPetView(pose: status.pose, onGreet: onGreetPet)
                         .frame(width: 288 * scale, height: 360 * scale)
                         .position(
                             x: originX + 340 * scale,

@@ -116,26 +116,27 @@ struct JoeyPetTests {
         #expect(settings.appearance == .system)
         #expect(JoeyAppearance.system.nsAppearance() == nil)
 
-        let calendar = testCalendar()
-        let morning = testDate(2026, 11, 24, 9, 0)
-        let night = testDate(2026, 11, 24, 23, 0)
-        #expect(JoeyAppearance.daypart.resolveChromeTone(at: morning, calendar: calendar) == .light)
-        #expect(JoeyAppearance.daypart.resolveChromeTone(at: night, calendar: calendar) == .dark)
-        #expect(JoeyAppearance.daypart.nsAppearance(at: morning)?.name == .aqua)
-        #expect(JoeyAppearance.daypart.nsAppearance(at: night)?.name == .darkAqua)
+        #expect(JoeyAppearance.light.resolveChromeTone() == .light)
+        #expect(JoeyAppearance.dark.resolveChromeTone() == .dark)
+        #expect(JoeyAppearance.light.nsAppearance()?.name == .aqua)
+        #expect(JoeyAppearance.dark.nsAppearance()?.name == .darkAqua)
 
-        #expect(JoeyAppearance.light.resolveChromeTone(at: night, calendar: calendar) == .light)
-        #expect(JoeyAppearance.dark.resolveChromeTone(at: morning, calendar: calendar) == .dark)
-        #expect(JoeyAppearance.light.resolveRoomDaypart(at: night, calendar: calendar) == .day)
-        #expect(JoeyAppearance.dark.resolveRoomDaypart(at: morning, calendar: calendar) == .night)
+        let lightTone = JoeyAppearance.system.resolveChromeTone(
+            systemAppearance: NSAppearance(named: .aqua)
+        )
+        let darkTone = JoeyAppearance.system.resolveChromeTone(
+            systemAppearance: NSAppearance(named: .darkAqua)
+        )
+        #expect(lightTone == .light)
+        #expect(darkTone == .dark)
     }
 
     @Test func appearanceMigratesLegacyStorage() {
         #expect(JoeyAppearance.fromStored("light") == .light)
         #expect(JoeyAppearance.fromStored("dusk") == .dark)
         #expect(JoeyAppearance.fromStored("system") == .system)
-        #expect(JoeyAppearance.fromStored("daypart") == .daypart)
-        #expect(JoeyAppearance.fromStored(nil) == .daypart)
+        #expect(JoeyAppearance.fromStored("daypart") == .system)
+        #expect(JoeyAppearance.fromStored(nil) == .system)
     }
 
     @Test func desktopPetIsHiddenByDefault() {
@@ -1597,14 +1598,3 @@ struct PetRuntimeTests {
     }
 }
 
-struct RoomDaypartTests {
-    @Test func resolveFollowsLocalHourWindows() {
-        let calendar = testCalendar()
-        #expect(RoomDaypart.resolve(at: testDate(2026, 11, 24, 6, 0), calendar: calendar) == .morning)
-        #expect(RoomDaypart.resolve(at: testDate(2026, 11, 24, 12, 0), calendar: calendar) == .day)
-        #expect(RoomDaypart.resolve(at: testDate(2026, 11, 24, 18, 0), calendar: calendar) == .dusk)
-        #expect(RoomDaypart.resolve(at: testDate(2026, 11, 24, 22, 0), calendar: calendar) == .night)
-        #expect(RoomDaypart.resolve(at: testDate(2026, 11, 24, 3, 0), calendar: calendar) == .night)
-    }
-
-}

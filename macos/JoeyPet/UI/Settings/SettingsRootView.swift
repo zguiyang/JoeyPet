@@ -13,10 +13,9 @@ struct SettingsRootView: View {
     private let audioCatalog = JoeyAudioCatalog.load()
     private let soundPreview = JoeySoundPreviewPlayer()
 
-    /// Settings stays on chrome tokens only — never room-wall daypart paint —
-    /// so sidebar and detail share one surface (hierarchy via type + selection).
+    /// Settings stays on the shared light/dark chrome cluster.
     private var theme: JoeyTheme {
-        JoeyTheme(chromeTone: settings.appearance.resolveChromeTone(at: Date()))
+        JoeyTheme(chromeTone: settings.appearance.resolveChromeTone())
     }
 
     /// One surface for sidebar + detail. Light uses paper `windowBg` so
@@ -51,7 +50,7 @@ struct SettingsRootView: View {
         .environment(\.joeyAppearance, settings.appearance)
         .environment(
             \.joeyChromeTone,
-            settings.appearance.resolveChromeTone(at: Date())
+            settings.appearance.resolveChromeTone()
         )
         .onAppear {
             settings.ambientSoundID = audioCatalog.sanitizedAmbientID(settings.ambientSoundID)

@@ -56,16 +56,15 @@ struct NestRootView: View {
     var onInviteDoNotDisturb: (() -> Void)?
     var onDebugAction: ((DebugPetAction) -> Void)?
     let onRouteChange: (NestRoute) -> Void
-    /// Keeps AppKit window chrome colours in sync with 时段 / 系统.
-    var onChromeToneChange: ((JoeyChromeTone, RoomDaypart?) -> Void)?
+    /// Keeps AppKit window chrome colours in sync with 系统 / 明亮 / 黑夜.
+    var onChromeToneChange: ((JoeyChromeTone, Bool) -> Void)?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        // Refresh when the clock crosses a daypart boundary (and for system dark flips).
-        TimelineView(.periodic(from: .now, by: 30)) { timeline in
-            let displayDaypart = settings.appearance.resolveRoomDaypart(at: timeline.date)
-            let chromeTone = settings.appearance.resolveChromeTone(at: timeline.date)
+        // Poll so 系统 tracks macOS light/dark flips without a manual restart.
+        TimelineView(.periodic(from: .now, by: 30)) { _ in
+            let chromeTone = settings.appearance.resolveChromeTone()
 
             Group {
                 switch navigation.route {
@@ -84,20 +83,17 @@ struct NestRootView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .onAppear {
                 onRouteChange(navigation.route)
-                publishChrome(tone: chromeTone, daypart: displayDaypart, route: navigation.route)
+                publishChrome(tone: chromeTone, route: navigation.route)
             }
             .onChange(of: navigation.route) { _, newRoute in
                 onRouteChange(newRoute)
-                publishChrome(tone: chromeTone, daypart: displayDaypart, route: newRoute)
+                publishChrome(tone: chromeTone, route: newRoute)
             }
             .onChange(of: chromeTone) { _, newTone in
-                publishChrome(tone: newTone, daypart: displayDaypart, route: navigation.route)
+                publishChrome(tone: newTone, route: navigation.route)
             }
             .onChange(of: settings.appearance) { _, _ in
-                publishChrome(tone: chromeTone, daypart: displayDaypart, route: navigation.route)
-            }
-            .onChange(of: displayDaypart) { _, _ in
-                publishChrome(tone: chromeTone, daypart: displayDaypart, route: navigation.route)
+                publishChrome(tone: chromeTone, route: navigation.route)
             }
         }
     }
@@ -130,10 +126,9 @@ struct NestRootView: View {
         }
     }
 
-    /// Home/reflection keep daypart wall under the titlebar; settings uses fixed
-    /// chrome so sidebar, detail and traffic-light band stay one surface.
-    private func publishChrome(tone: JoeyChromeTone, daypart: RoomDaypart, route: NestRoute) {
-        onChromeToneChange?(tone, route == .settings ? nil : daypart)
+    /// Settings uses windowBg/windowChrome; home/reflection use room chrome.
+    private func publishChrome(tone: JoeyChromeTone, route: NestRoute) {
+        onChromeToneChange?(tone, route == .settings)
     }
 
     /// Settings: full-height sidebar under the titlebar (no opaque nav strip).

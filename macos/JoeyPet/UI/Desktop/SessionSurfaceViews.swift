@@ -4,7 +4,6 @@ import SwiftUI
 struct JoeyCompanionChipView: View {
     let startedAt: Date
 
-    @Environment(\.joeyAppearance) private var appearance
     @Environment(\.joeyChromeTone) private var chromeTone
 
     private var theme: JoeyTheme { JoeyTheme(chromeTone: chromeTone) }
@@ -48,7 +47,6 @@ struct InvitationCardView: View {
     var caretEdge: InvitationCaretEdge = .leading
     var scale: InvitationCardScale = .desktop
 
-    @Environment(\.joeyAppearance) private var appearance
     @Environment(\.joeyChromeTone) private var chromeTone
     @State private var hoveredAction: CardAction?
 
@@ -177,7 +175,6 @@ struct RecoveryPanelView: View {
     let onDone: () -> Void
     let onSkip: () -> Void
 
-    @Environment(\.joeyAppearance) private var appearance
     @Environment(\.joeyChromeTone) private var chromeTone
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var hoveredAction: RecoveryAction?
@@ -303,7 +300,6 @@ struct RecoveryPanelView: View {
 struct JoeyToastView: View {
     let text: String
 
-    @Environment(\.joeyAppearance) private var appearance
     @Environment(\.joeyChromeTone) private var chromeTone
 
     private var theme: JoeyTheme { JoeyTheme(chromeTone: chromeTone) }
