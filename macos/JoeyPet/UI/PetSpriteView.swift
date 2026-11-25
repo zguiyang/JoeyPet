@@ -249,7 +249,7 @@ final class PetSpriteView: SKView {
     private func configureAccessibility() {
         setAccessibilityElement(true)
         setAccessibilityRole(.button)
-        setAccessibilityLabel("Joey")
+        setAccessibilityLabel("Joey，桌面宠物")
         setAccessibilityHelp(Self.hintText)
         setAccessibilityValue(accessibilityStatus)
     }

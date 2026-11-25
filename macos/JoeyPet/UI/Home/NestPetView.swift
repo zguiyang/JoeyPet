@@ -41,7 +41,7 @@ struct NestPetView: View {
         }
         .background(WindowVisibilityObserver(isVisible: $isWindowVisible))
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Joey")
+        .accessibilityLabel("Joey，桌面宠物")
         .accessibilityHint("点一下它会回应你")
     }
 }

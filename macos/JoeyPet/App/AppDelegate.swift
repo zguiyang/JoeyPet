@@ -202,7 +202,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(toggle)
 
         let doNotDisturb = menuItem(
-            settings.isDoNotDisturb ? "勿扰中 · 点击关闭" : "勿扰模式",
+            settings.isDoNotDisturb ? "关闭勿扰模式" : "勿扰模式",
             #selector(toggleDoNotDisturb)
         )
         doNotDisturb.state = settings.isDoNotDisturb ? .on : .off
@@ -219,7 +219,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     func menuWillOpen(_ menu: NSMenu) {
         togglePetItem?.state = settings.showsDesktopPet ? .on : .off
         doNotDisturbItem?.state = settings.isDoNotDisturb ? .on : .off
-        doNotDisturbItem?.title = settings.isDoNotDisturb ? "勿扰中 · 点击关闭" : "勿扰模式"
+        doNotDisturbItem?.title = settings.isDoNotDisturb ? "关闭勿扰模式" : "勿扰模式"
     }
 
     // MARK: - Windows
