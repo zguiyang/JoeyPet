@@ -13,9 +13,9 @@ struct SessionSurfacePresentation: Equatable, Sendable {
 
     init(situation: PetSituation, previous: PetSituation?, now: Date) {
         let desktop = situation.resolvedDesktop(at: now)
-        showsCompanionChip = situation.session != nil
-            && desktop == .companion
-            && !situation.isHidden
+        // Hidden invite reveals the panel with desktop `.companion`; keep the
+        // chip so the temporary reveal still reads as an active session.
+        showsCompanionChip = situation.session != nil && desktop == .companion
         showsInvitation = situation.isInviteCardVisible(at: now)
         showsRecovery = situation.isRecoveryPanelVisible(at: now)
             && situation.recoveryEndsAt != nil

@@ -143,12 +143,15 @@ final class PetPanelController {
         setVisible(shouldShow)
     }
 
+    /// System sleep / lock freeze from `PetRuntime` effects. Keeps SpriteKit
+    /// paused even while the panel remains ordered in (hidden panels stay paused).
+    private var isRenderFrozen = false
+
     /// Shows or hides the desktop pet. Hidden mode also pauses SpriteKit so a hidden pet costs no CPU.
     func setVisible(_ visible: Bool) {
         isVisible = visible
         if visible {
-            spriteView.isPaused = false
-            petRuntime.scene.isPaused = false
+            applySpritePausedState()
             panel.orderFrontRegardless()
             sessionSurfaces.update(situation: petRuntime.situation)
             Self.logger.info("Pet panel shown")
@@ -159,6 +162,20 @@ final class PetPanelController {
             petRuntime.scene.isPaused = true
             Self.logger.info("Pet panel hidden")
         }
+    }
+
+    /// Mirrors domain `.freeze` / `.resume` so sleep and screen lock stop the GPU.
+    func setRenderFrozen(_ frozen: Bool) {
+        guard isRenderFrozen != frozen else { return }
+        isRenderFrozen = frozen
+        applySpritePausedState()
+        Self.logger.info("Pet render \(frozen ? "frozen" : "resumed", privacy: .public)")
+    }
+
+    private func applySpritePausedState() {
+        let paused = !isVisible || isRenderFrozen
+        spriteView.isPaused = paused
+        petRuntime.scene.isPaused = paused
     }
 
     func currentFrame() -> NSRect { panel.frame }

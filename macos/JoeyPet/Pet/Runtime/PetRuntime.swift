@@ -50,6 +50,10 @@ final class PetRuntime {
     /// Notifies the host whenever the renderer actually switches pose, including
     /// ambient transients. The nest mirrors this value so both surfaces agree.
     var onRenderedPoseChanged: ((PetPose) -> Void)?
+    /// `true` pauses ambient scheduling (drag, menu, sleep); `false` resumes.
+    var onAmbientPausedChanged: ((Bool) -> Void)?
+    /// `true` freezes SpriteKit rendering (system sleep / lock); `false` resumes.
+    var onRenderFrozenChanged: ((Bool) -> Void)?
 
     private var persisted: PetPersistedState
     private var lastCompanionshipSampleAt: Date?
@@ -138,9 +142,13 @@ final class PetRuntime {
     /// The only mutation entry point. Views pass user or system events here.
     func send(_ event: PetEvent) {
         let date = now()
-        let sessionClockPaused = event == .systemSleep || event == .screenLocked
+        let enteringFreeze = event == .systemSleep || event == .screenLocked
+        let alreadyFrozen = situation.isSystemSleeping || situation.isScreenLocked
 
-        updateCompanionship(at: date)
+        // Sample companionship until the freeze edge; ignore ticks while frozen.
+        if !alreadyFrozen {
+            updateCompanionship(at: date)
+        }
 
         let transition = PetStateMachine.reduce(
             situation,
@@ -156,7 +164,7 @@ final class PetRuntime {
             clearTransient()
         }
 
-        if sessionClockPaused {
+        if enteringFreeze || situation.isSystemSleeping || situation.isScreenLocked {
             lastCompanionshipSampleAt = nil
         } else if situation.session == nil {
             lastCompanionshipSampleAt = nil
@@ -350,8 +358,14 @@ final class PetRuntime {
             case .completeRecovery:
                 recordCompletedBreak(at: date)
 
-            case .pauseAmbient, .resumeAmbient, .freeze, .resume:
-                break
+            case .pauseAmbient:
+                onAmbientPausedChanged?(true)
+            case .resumeAmbient:
+                onAmbientPausedChanged?(false)
+            case .freeze:
+                onRenderFrozenChanged?(true)
+            case .resume:
+                onRenderFrozenChanged?(false)
 
             case .persist:
                 persist(at: date)
@@ -479,10 +493,12 @@ final class PetRuntime {
     }
 
     /// Ambient-only clips clear when the situation says so. Greeting finishes
-    /// unless a hard interrupt hits it.
+    /// unless a hard interrupt (drag, invite surface, sleep/lock, menu) hits it.
     private func shouldClearTransientForSituation() -> Bool {
         guard let behavior = currentTransientBehavior else { return false }
-        if behavior == .greeting { return false }
+        if behavior == .greeting {
+            return situation.interruptsGreetingTransient
+        }
         return behavior.isAmbient && situation.interruptsAmbientTransient
     }
 

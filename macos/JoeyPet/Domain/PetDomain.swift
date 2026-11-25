@@ -296,6 +296,13 @@ struct PetSituation: Equatable, Sendable {
             || isDozing || isYawning || session != nil
     }
 
+    /// Hard interrupts that cut a greeting short so drag / invite / sleep win.
+    /// Quiet hours alone do not cancel a greeting already in flight.
+    var interruptsGreetingTransient: Bool {
+        isDragging || isMenuOpen || isSystemSleeping || isScreenLocked
+            || companion == .invite || companion == .recover || companion == .complete
+    }
+
     /// Alone on `sit`, quiet desk — the only place ambient groom may start.
     func canPlayAmbientGroom(at now: Date) -> Bool {
         guard !isReduceMotion else { return false }

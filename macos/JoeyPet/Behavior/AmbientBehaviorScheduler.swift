@@ -64,6 +64,8 @@ final class AmbientBehaviorScheduler {
     private let sleeper: (TimeInterval) async -> Bool
     private var planner = AmbientGroomPlanner()
     private var task: Task<Void, Never>?
+    /// Soft pause from domain effects (drag / menu). Keeps the planner clock.
+    private(set) var isPaused = false
 
     var onGroom: (() -> Bool)?
 
@@ -77,6 +79,7 @@ final class AmbientBehaviorScheduler {
 
     func start(at now: Date = Date()) {
         guard task == nil else { return }
+        isPaused = false
         planner.reset(at: now)
         task = Task { [weak self] in
             await self?.run()
@@ -87,13 +90,22 @@ final class AmbientBehaviorScheduler {
     func stop() {
         task?.cancel()
         task = nil
+        isPaused = false
         planner.stop()
         Self.logger.info("Ambient scheduler stopped")
+    }
+
+    /// Domain `.pauseAmbient` / `.resumeAmbient` — do not reset the planner.
+    func setPaused(_ paused: Bool) {
+        guard isPaused != paused else { return }
+        isPaused = paused
+        Self.logger.debug("Ambient scheduler \(paused ? "paused" : "resumed", privacy: .public)")
     }
 
     private func run() async {
         while !Task.isCancelled {
             guard await sleeper(sampleInterval), !Task.isCancelled else { break }
+            guard !isPaused else { continue }
             let now = Date()
             guard planner.isDue(at: now) else { continue }
 

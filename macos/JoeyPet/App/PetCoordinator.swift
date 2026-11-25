@@ -28,6 +28,12 @@ final class PetCoordinator {
         ambientScheduler.onGroom = { [weak self] in
             self?.panelController.petRuntime.playAmbientGroom() ?? false
         }
+        panelController.petRuntime.onAmbientPausedChanged = { [weak self] paused in
+            self?.ambientScheduler.setPaused(paused)
+        }
+        panelController.petRuntime.onRenderFrozenChanged = { [weak self] frozen in
+            self?.panelController.setRenderFrozen(frozen)
+        }
         panelController.onSituationChanged = { [weak self] situation in
             guard let self else { return }
             self.onSituationChanged?(situation, self.runtime.summary)

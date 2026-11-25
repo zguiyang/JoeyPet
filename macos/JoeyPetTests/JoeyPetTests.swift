@@ -971,6 +971,85 @@ struct PetDomainTests {
         #expect(PetDayKey.weekdayIndex(for: testDate(2026, 11, 29, 9, 0), calendar: calendar) == 6)
     }
 
+    @Test func companionChipVisibleDuringHiddenInvite() {
+        let calendar = testCalendar()
+        let start = testDate(2026, 11, 23, 9, 0)
+        let due = start.addingTimeInterval(45 * 60)
+
+        let started = PetStateMachine.reduce(
+            PetSituation(),
+            event: .sessionStart,
+            now: start,
+            calendar: calendar
+        ).state
+        let hidden = PetStateMachine.reduce(
+            started,
+            event: .hideRequested,
+            now: start,
+            calendar: calendar
+        ).state
+        let invited = PetStateMachine.reduce(
+            hidden,
+            event: .tick,
+            now: due,
+            calendar: calendar
+        ).state
+
+        let presentation = SessionSurfacePresentation(
+            situation: invited,
+            previous: hidden,
+            now: due
+        )
+        #expect(invited.isHidden)
+        #expect(invited.isTemporarilyRevealed(at: due))
+        #expect(presentation.showsInvitation)
+        #expect(presentation.showsCompanionChip)
+    }
+
+    @Test func multiScreenRestoreUsesMainWhenDisplayRemoved() {
+        let main = PetScreenGeometry(
+            identifier: "main",
+            visibleFrame: PetPositionRect(minX: 0, minY: 0, width: 1440, height: 900),
+            isMain: true
+        )
+        let saved = PetPositionRecord(
+            screenIdentifier: "missing-display",
+            absoluteOrigin: PetPositionPoint(x: 3000, y: 200),
+            normalizedOrigin: PetPositionPoint(x: 0.8, y: 0.2),
+            savedVisibleFrame: PetPositionRect(minX: 1440, minY: 0, width: 1920, height: 1080)
+        )
+
+        let point = PetPositionGeometry.restore(
+            saved,
+            on: [main],
+            windowSize: PetPositionPoint(x: 168, y: 210),
+            corner: .bottomRight
+        )
+        #expect(point.x == 1440 - 168 - 40)
+        #expect(point.y == 92)
+    }
+
+    @Test func nextWakeDateIncludesQuietBoundaryWithoutSession() {
+        let calendar = testCalendar()
+        let now = testDate(2026, 11, 23, 21, 30)
+        var persisted = PetPersistedState.empty(now: now, calendar: calendar)
+        persisted.quietWindow = QuietWindow(startMinutes: 22 * 60, endMinutes: 8 * 60)
+        let store = TestSessionStore(persisted)
+        let runtime = PetRuntime(
+            renderer: TestPoseRenderer(),
+            store: store,
+            now: { now },
+            calendar: calendar
+        )
+        runtime.start()
+
+        let wake = runtime.nextWakeDate(after: now)
+        #expect(wake != nil)
+        let boundary = QuietWindow(startMinutes: 22 * 60, endMinutes: 8 * 60)
+            .nextBoundary(after: now, calendar: calendar)
+        #expect(wake! <= boundary!)
+    }
+
     @Test func sessionSurfacesFollowInvitationAndRecovery() {
         let calendar = testCalendar()
         let start = testDate(2026, 11, 23, 9, 0)
@@ -1595,6 +1674,147 @@ struct PetRuntimeTests {
         planner.markFired(at: start.addingTimeInterval(30)) { _ in 60 }
         #expect(planner.isDue(at: start.addingTimeInterval(89)) == false)
         #expect(planner.isDue(at: start.addingTimeInterval(90)))
+    }
+
+    @Test func greetingInterruptedByDragRendersLook() {
+        let calendar = testCalendar()
+        let now = testDate(2026, 11, 23, 9, 0)
+        let (runtime, _, _) = makeRuntime(now: now, calendar: calendar)
+
+        #expect(runtime.perform(.greeting))
+        #expect(runtime.renderedPose == .wave)
+
+        runtime.send(.dragBegan)
+        #expect(runtime.currentTransientBehavior == nil)
+        #expect(runtime.renderedPose == .look)
+    }
+
+    @Test func greetingYieldsToInvitePose() {
+        let calendar = testCalendar()
+        let start = testDate(2026, 11, 23, 9, 0)
+        var current = start
+        let runtime = PetRuntime(
+            renderer: TestPoseRenderer(),
+            store: TestSessionStore(makePersisted(now: start, calendar: calendar)),
+            now: { current },
+            calendar: calendar
+        )
+
+        runtime.startSession()
+        #expect(runtime.perform(.greeting))
+        #expect(runtime.renderedPose == .wave)
+
+        current = start.addingTimeInterval(45 * 60)
+        runtime.send(.tick)
+        #expect(runtime.situation.companion == .invite)
+        #expect(runtime.situation.isInviteCardVisible(at: current))
+        #expect(runtime.currentTransientBehavior == nil)
+        #expect(runtime.renderedPose == .look)
+    }
+
+    @Test func pauseAndFreezeEffectsNotifyHosts() {
+        let calendar = testCalendar()
+        let now = testDate(2026, 11, 23, 9, 0)
+        let (runtime, _, _) = makeRuntime(now: now, calendar: calendar)
+
+        var ambientPaused: [Bool] = []
+        var renderFrozen: [Bool] = []
+        runtime.onAmbientPausedChanged = { ambientPaused.append($0) }
+        runtime.onRenderFrozenChanged = { renderFrozen.append($0) }
+
+        runtime.send(.dragBegan)
+        #expect(ambientPaused == [true])
+
+        runtime.send(.dragEnded)
+        #expect(ambientPaused == [true, false])
+
+        runtime.send(.systemSleep)
+        #expect(renderFrozen.last == true)
+
+        runtime.send(.systemWake)
+        #expect(renderFrozen.last == false)
+    }
+
+    @Test func companionshipSecondsDoNotAccrueDuringScreenLock() {
+        let calendar = testCalendar()
+        let start = testDate(2026, 11, 23, 9, 0)
+        var current = start
+        let store = TestSessionStore(makePersisted(now: start, calendar: calendar))
+        let runtime = PetRuntime(
+            renderer: TestPoseRenderer(),
+            store: store,
+            now: { current },
+            calendar: calendar
+        )
+
+        runtime.startSession()
+        current = start.addingTimeInterval(30)
+        runtime.send(.tick)
+        let beforeLock = store.state.todayCompanionshipSeconds
+        #expect(beforeLock >= 30)
+
+        runtime.send(.screenLocked)
+        current = start.addingTimeInterval(150)
+        runtime.send(.tick)
+        #expect(store.state.todayCompanionshipSeconds == beforeLock)
+
+        runtime.send(.screenUnlocked)
+        current = start.addingTimeInterval(195)
+        runtime.send(.tick)
+        #expect(store.state.todayCompanionshipSeconds >= beforeLock + 45)
+    }
+
+    @Test func recoverySkippedDoesNotIncrementBreakCount() {
+        let calendar = testCalendar()
+        let start = testDate(2026, 11, 23, 9, 0)
+        var current = start
+        let store = TestSessionStore(makePersisted(now: start, calendar: calendar))
+        let runtime = PetRuntime(
+            renderer: TestPoseRenderer(),
+            store: store,
+            now: { current },
+            calendar: calendar
+        )
+
+        runtime.startSession()
+        current = start.addingTimeInterval(45 * 60)
+        runtime.send(.tick)
+        runtime.send(.inviteAccepted)
+        #expect(runtime.situation.companion == .recover)
+
+        runtime.send(.recoverySkipped)
+        #expect(runtime.situation.companion == .idle)
+        #expect(store.state.todayBreaks == 0)
+    }
+
+    @Test func inviteDismissClosesCardAndSetsLastClosed() {
+        let calendar = testCalendar()
+        let start = testDate(2026, 11, 23, 9, 0)
+        var current = start
+        let runtime = PetRuntime(
+            renderer: TestPoseRenderer(),
+            store: TestSessionStore(makePersisted(now: start, calendar: calendar)),
+            now: { current },
+            calendar: calendar
+        )
+
+        runtime.startSession()
+        current = start.addingTimeInterval(45 * 60)
+        runtime.send(.tick)
+        #expect(runtime.situation.companion == .invite)
+
+        runtime.send(.inviteDismissed)
+        #expect(runtime.situation.companion == .idle)
+        #expect(!runtime.situation.isInviteCardVisible(at: current))
+        #expect(runtime.situation.lastInvitationClosedAt == current)
+
+        let sessionStart = runtime.situation.session?.startedAt
+        #expect(sessionStart != nil)
+        let nextDue = runtime.situation.policy.nextDue(
+            sessionStart: sessionStart!,
+            lastClosed: runtime.situation.lastInvitationClosedAt
+        )
+        #expect(nextDue > current)
     }
 }
 
