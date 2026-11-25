@@ -3,7 +3,7 @@ import SwiftUI
 enum JoeyCopy {
     static let homeTitle = "Joey 的家"
     static let reflectionTitle = "节奏回顾"
-    static let settingsTitle = "JoeyPet 设置"
+    static let settingsTitle = "设置"
 
     static let startCompanionship = "开始一起工作"
     static let endCompanionship = "结束陪伴"
@@ -11,9 +11,9 @@ enum JoeyCopy {
     static let reviewHint = "回顾这周"
     static let clockHint = "调整提醒时间"
 
-    static let emptyToday = "今天还没开始"
+    static let emptyToday = "今天还没开始。"
     static let emptyBreaks = "今天还没有休息"
-    static let emptyWeek = "今天还没开始，这一周还没有记录。"
+    static let emptyWeek = "这一周还没有一起休息过。"
 
     /// Greeting tip above Joey on both the nest and the desktop pet.
     static let greetingHello = "你好。"

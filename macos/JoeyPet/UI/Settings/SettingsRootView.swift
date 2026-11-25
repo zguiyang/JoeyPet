@@ -9,7 +9,7 @@ struct SettingsRootView: View {
     var onDebugAction: ((DebugPetAction) -> Void)?
     @State private var selection: SettingsSection = .general
     @State private var hoveredSection: SettingsSection?
-    @State private var debugStatus: String = "点一项即可触发完整效果"
+    @State private var debugStatus: String = "点一项触发"
     private let audioCatalog = JoeyAudioCatalog.load()
     private let soundPreview = JoeySoundPreviewPlayer()
 
@@ -125,7 +125,7 @@ struct SettingsRootView: View {
     }
 
     private var generalPane: some View {
-        SettingsPane(title: "通用", description: "只在你开始工作后提醒。") {
+        SettingsPane(title: "通用") {
             SettingsRowList {
                 SettingsRow("提醒节奏", subtitle: "开始陪伴后才计时") {
                     JoeySegmentedControl(
@@ -137,11 +137,11 @@ struct SettingsRootView: View {
                     .accessibilityLabel("提醒节奏")
                 }
 
-                SettingsRow("勿扰模式", subtitle: "不会再有邀请或提示") {
+                SettingsRow("勿扰模式", subtitle: "暂停邀请") {
                     JoeySwitch(isOn: $settings.isDoNotDisturb, label: "勿扰模式")
                 }
 
-                SettingsRow("安静时段", subtitle: "这段时间不会邀请") {
+                SettingsRow("安静时段", subtitle: "时段内不邀请") {
                     QuietHoursField(
                         startMinutes: $settings.quietStartMinutes,
                         endMinutes: $settings.quietEndMinutes
@@ -159,7 +159,7 @@ struct SettingsRootView: View {
                     .accessibilityLabel("背景音")
                 }
 
-                SettingsRow("提示音", subtitle: "开始陪伴与邀请时播放") {
+                SettingsRow("提示音", subtitle: "开始与邀请时") {
                     SoundPicker(
                         selection: $settings.cueSoundID,
                         noneTitle: JoeyAudioCatalog.noneCueTitle,
@@ -170,7 +170,7 @@ struct SettingsRootView: View {
                     .accessibilityLabel("提示音")
                 }
 
-                SettingsRow("外观", subtitle: "锁定明亮/黑夜后不再随时间变") {
+                SettingsRow("外观") {
                     JoeySegmentedControl(
                         titles: JoeyAppearance.allCases.map(\.title),
                         selectedIndex: JoeyAppearance.allCases.firstIndex(of: settings.appearance) ?? 0
@@ -186,11 +186,11 @@ struct SettingsRootView: View {
     private var petPane: some View {
         SettingsPane(title: "宠物") {
             SettingsRowList {
-                SettingsRow("在桌面上显示 Joey", subtitle: "关掉不会结束陪伴") {
-                    JoeySwitch(isOn: $settings.showsDesktopPet, label: "在桌面上显示 Joey")
+                SettingsRow("在桌面显示 Joey") {
+                    JoeySwitch(isOn: $settings.showsDesktopPet, label: "在桌面显示 Joey")
                 }
 
-                SettingsRow("显示位置", subtitle: "拖动后以你放的位置为准") {
+                SettingsRow("显示位置") {
                     JoeySegmentedControl(
                         titles: PetCorner.allCases.map(\.title),
                         selectedIndex: PetCorner.allCases.firstIndex(of: settings.petCorner) ?? 0
@@ -207,7 +207,7 @@ struct SettingsRootView: View {
     private var debugPane: some View {
         SettingsPane(
             title: "Debug",
-            description: "仅开发构建可见。Release / 上线包不会出现此页。点击后走完整产品路径（含桌面位移）。"
+            description: "仅 Debug 构建可见。"
         ) {
             VStack(alignment: .leading, spacing: 14) {
                 Text(debugStatus)
@@ -246,7 +246,6 @@ struct SettingsRootView: View {
                         openFeedbackMail()
                     }
                     .accessibilityLabel("发邮件反馈")
-                    .help("用系统邮件写信到 \(FeedbackMail.address)")
                 }
 
                 if !audioCatalog.attributionTracks.isEmpty {
@@ -309,7 +308,7 @@ struct SettingsRootView: View {
 
         let alert = NSAlert()
         alert.messageText = "没法打开邮件"
-        alert.informativeText = "邮箱地址已复制：\(FeedbackMail.address)\n可以粘贴到你常用的邮箱里发给我。"
+        alert.informativeText = "已复制 \(FeedbackMail.address)"
         alert.alertStyle = .informational
         alert.addButton(withTitle: "好")
         alert.runModal()

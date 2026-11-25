@@ -44,7 +44,7 @@ enum DebugPetAction: String, CaseIterable, Identifiable, Sendable {
     var subtitle: String {
         switch self {
         case .showDesktopPet:
-            return "打开「在桌面上显示 Joey」，便于看桌面效果"
+            return "打开「在桌面显示 Joey」"
         case .greeting:
             return "抬爪挥手 + 头顶「你好。」胶囊 tip"
         case .notifying:
@@ -52,7 +52,7 @@ enum DebugPetAction: String, CaseIterable, Identifiable, Sendable {
         case .recovering:
             return "stretch + 恢复面板（倒计时）"
         case .celebrating:
-            return "happy + 完成 toast（不计入今日休息）"
+            return "happy + 叶子 toast（不计入今日休息）"
         case .carrying:
             return "carry 叼叶子短会话"
         case .sleeping:
