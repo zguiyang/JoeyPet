@@ -84,3 +84,4 @@ Before marking done:
 ## Related docs
 
 - [pet-runtime.md](pet-runtime.md)
+- [release.md](release.md) — Developer ID, notarization, GitHub Releases, Homebrew

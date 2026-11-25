@@ -118,6 +118,7 @@ Fail the change if it only “sounds nicer” while adding explanation the UI al
 | 2D clip animation pipeline | [docs/pet-animation-pipeline-2d.md](docs/pet-animation-pipeline-2d.md) |
 | Tech stack | [docs/tech-stack.md](docs/tech-stack.md) |
 | Workflow | [docs/development.md](docs/development.md) |
+| Release (sign / notarize / Homebrew / GitHub) | [docs/release.md](docs/release.md) |
 | ADRs | [docs/decisions/](docs/decisions/) |
 
 ## Agent skill
