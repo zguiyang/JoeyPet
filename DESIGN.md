@@ -593,6 +593,17 @@ Chinese-first, short, warm, factual.
 
 Length: invitation headline ≤ 12 characters per line; helper ≤ 18; toast ≤ 14 (`窝里多了一片叶子。`).
 
+### 11.1 Copy restraint (hard rules)
+
+Every new or edited string — titles, subtitles, empty states, helpers, toasts, banners, alerts, menu labels, VoiceOver — must pass these before it ships. Priority is always **delete → shorten → merge → rewrite**. Do not expand a short label into a sentence just to look finished.
+
+1. **Delete before rewrite.** Before adding a title, subtitle, hint, or feedback line, ask: *if this text is removed, can the user still understand from layout, control labels, and visible state?* If yes, do not write it. Prefer omitting a page description, row subtitle, or second caption under a ring/clock that already states the fact.
+2. **No context restatement.** Inside a known page, module, or product shell, do not restate that identity in titles or helpers. Examples to reject: `JoeyPet 设置` on the settings window (use `设置`); product or section prefixes on rows that already sit under that sidebar; repeating “Joey” when the pet or nest scene already owns the context.
+3. **State change beats a second prompt.** When the UI already shows the outcome — card dismisses, chip/label updates, list/count changes, switch flips, pose changes — default to **no Toast, banner, or “已完成…” line**. Use a light toast only when (a) there is no reliable on-screen change *and* the user must know the result, or (b) an error / failure needs a short fact. Snooze and do-not-disturb follow the card + clock; they do not get confirmation toasts.
+4. **Native short-word style.** Labels, subtitles, and short statuses prefer period-free short phrases (`设置`, `休息中`, `时段内不邀请`, `勿扰中`). Reject customer-service tone, hand-holding tutorials, and manual-style long sentences (`可以粘贴到你常用的邮箱里发给我`, `关掉不会结束陪伴` when the control already names the action).
+
+Centralise strings in `JoeyCopy` (or the owning surface’s small enum). When copy in this file disagrees with a frozen HTML board, **this section wins** — fix the HTML in the same task.
+
 ---
 
 ## 12. Motion
@@ -753,7 +764,7 @@ Before marking any UI task done:
 4. CJK line height ≥ 1.35 on display text; no negative tracking on Chinese.
 5. No uppercase micro-labels, no emoji icons, no pill-shaped everything.
 6. Spacing follows the 4/8 rhythm; nothing overlaps the pet, the invitation card, or the CTA.
-7. Copy passes the voice rules in §11 — factual, short, no praise, no guilt.
+7. Copy passes §11 voice **and** §11.1 restraint — delete-first, no context echo, no toast when state already speaks, short native words.
 8. Numbers are self-consistent (today ≤ week; clock matches the "resume at" time).
 9. Real states only; nothing simulated that the product cannot detect.
 10. Reduce Motion and keyboard focus verified.
@@ -772,6 +783,7 @@ Before marking any UI task done:
 - Toolbar, segmented mode switch, tab bar, or global sidebar in the main window.
 - Stitch-era Calm Space orb/dial canvas, dock, hover mode switch, or status block.
 - Uppercase eyebrows, triple-negation slogans, sugar-coated `完成啦`, or meta explanations of the product's own kindness.
+- Redundant copy: product/module prefixes inside an already-named surface; page blurbs that repeat a row subtitle; `剩余 N 秒` under an `mm:ss` ring; coaching subtitles the control already implies; confirmation toasts after an obvious state change.
 - Emoji used as icons; hand-drawn SVG people used as decoration.
 - Hardcoded hex in views; a second palette that drifts from §4.
 - Uppercase tracking on Chinese; negative tracking on Chinese; Latin display leading on Chinese headlines.
@@ -830,3 +842,4 @@ Git history and the archive branch explain why they were replaced.
 | 2026-11-25 | Settings feedback uses mailto (no local draft / no backend). |
 | 2026-11-25 | Copy pass: nest session clock lines; empty-week headline; settings「陪伴」; toast length exception; invite helper is tone-only (not on card); HTML reference synced. |
 | 2026-11-25 | Copy restraint pass: drop product-prefix settings title, pane blurb, redundant subtitles, ring/recovery fluff, snooze/DND toasts; shorten completion toast and nest clock lines. |
+| 2026-11-25 | §11.1 Copy restraint hard rules (delete-first, no context echo, state beats toast, native short words); checklist + anti-patterns updated. |
