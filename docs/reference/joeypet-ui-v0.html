@@ -1114,7 +1114,6 @@
               <div class="invite-card spec-target" id="inviteCard">
                 <div class="tape"></div>
                 <p class="msg">坐久啦，<br>我们一起伸个懒腰？</p>
-                <p class="sub">不用走开，半分钟就够。</p>
                 <div class="invite-actions">
                   <button class="btn btn--primary" id="inviteAccept">休息一下</button>
                   <div class="row">
@@ -1144,11 +1143,11 @@
                     <circle class="track" cx="48" cy="48" r="44"/>
                     <circle class="prog" id="ringProg" cx="48" cy="48" r="44" stroke-dasharray="276.46" stroke-dashoffset="0"/>
                   </svg>
-                  <div class="time"><b id="ringTime">00:30</b><small id="ringLeft">剩余 30 秒</small></div>
+                  <div class="time"><b id="ringTime">00:30</b></div>
                 </div>
                 <div class="copy">
                   <b>吸气四拍，呼气六拍</b>
-                  <p>不用数得很准。</p>
+                  
                 </div>
               </div>
               <div class="recover-actions">
@@ -1180,7 +1179,6 @@
                 </svg>
                 <button class="room-nav" id="roomNavReflect" aria-label="回顾这周" style="left:700px; top:150px; width:120px; height:130px;"></button>
                 <div class="room-label" style="left:250px; top:198px; transform:translateX(-50%);">Joey 大约每 <b>45 分钟</b>来叫你一次</div>
-                <div class="room-label" style="right:40px; top:326px;">今天陪了 <b id="roomFocus">2 小时 10 分</b></div>
                 <div class="room-label" style="left:40px; top:326px;">今天休息 <b id="roomBreaks">2 次</b></div>
                 <div class="room-status" id="roomStatus"><span class="dot"></span><span id="roomStatusText">陪伴中 · 00:00</span></div>
                 <button class="room-cta" id="roomCta">
@@ -1245,7 +1243,7 @@
             <div class="window settings-win spec-target">
               <div class="win-titlebar">
                 <div class="lights"><i></i><i></i><i></i></div>
-                <div class="win-title">JoeyPet 设置</div>
+                <div class="win-title">设置</div>
                 <div class="win-tools"></div>
               </div>
               <div class="settings-body">
@@ -1256,7 +1254,7 @@
                 </aside>
                 <div class="set-panel">
                   <h3>通用</h3>
-                  <p class="desc">只在你开始工作后提醒。</p>
+                  
                   <div class="set-row">
                     <div class="k"><b>提醒节奏</b><span>开始陪伴后才计时</span></div>
                     <div class="seg" id="rhythmSeg">
@@ -1264,11 +1262,11 @@
                     </div>
                   </div>
                   <div class="set-row">
-                    <div class="k"><b>勿扰模式</b><span>不会再有邀请或提示</span></div>
+                    <div class="k"><b>勿扰模式</b><span>暂停邀请</span></div>
                     <div class="switch" id="swPause" role="switch" aria-checked="false" tabindex="0"></div>
                   </div>
                   <div class="set-row">
-                    <div class="k"><b>安静时段</b><span>这段时间不会邀请</span></div>
+                    <div class="k"><b>安静时段</b><span>时段内不邀请</span></div>
                     <div class="timefield">22:00 <em>–</em> 08:00</div>
                   </div>
                   <div class="set-row">
@@ -1276,11 +1274,11 @@
                     <button class="set-btn">无背景音</button>
                   </div>
                   <div class="set-row">
-                    <div class="k"><b>提示音</b><span>开始陪伴与邀请时播放</span></div>
+                    <div class="k"><b>提示音</b><span>开始与邀请时</span></div>
                     <button class="set-btn">竹风铃</button>
                   </div>
                   <div class="set-row">
-                    <div class="k"><b>外观</b><span>锁定明亮/黑夜后不再随时间变</span></div>
+                    <div class="k"><b>外观</b></div>
                     <div class="seg"><button class="on">时段</button><button>系统</button><button>明亮</button><button>黑夜</button></div>
                   </div>
                 </div>
@@ -1461,7 +1459,7 @@
     state.hidden = !on;
     document.getElementById("pet").style.opacity = on ? "1" : "0";
     document.getElementById("pet").style.pointerEvents = on ? "" : "none";
-    showToast(on ? "Joey 回到桌面了。" : "Joey 藏起来了。设置里可以叫回来。");
+    // desktop visibility: switch state is enough
   }
 
   /* 设置 · 节奏分段 */
@@ -1553,10 +1551,10 @@
     startRecovery();
   });
   document.getElementById("inviteLater").addEventListener("click", function () {
-    showToast("好，过一阵再问你。");
+    // snooze: no toast — clock updates
   });
   document.getElementById("invitePause").addEventListener("click", function () {
-    showToast("好，先不打扰你。");
+    // dnd: no toast — clock updates
   });
 
   /* ============ 恢复倒计时 ============ */
@@ -1581,14 +1579,14 @@
   function updateRing() {
     ringProg.style.strokeDashoffset = String(CIRC * (1 - remain / TOTAL));
     ringTime.textContent = "00:" + (remain < 10 ? "0" + remain : remain);
-    ringLeft.textContent = "剩余 " + remain + " 秒";
+    if (ringLeft) ringLeft.textContent = "";
   }
   function finishRecovery() {
     if (recTimer) clearInterval(recTimer);
     recTimer = null;
     state.breaks++;
     document.getElementById("roomBreaks").textContent = state.breaks + " 次";
-    showToast("好了。Joey 的窝里多了一片叶子。");
+    showToast("窝里多了一片叶子。");
     showState("desktop");
     setPetPose("#joey-happy");
     setTimeout(function () { refreshSessionUI(); }, 2600);

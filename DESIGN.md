@@ -258,7 +258,7 @@ All layout derives from the live window size in code. The 1440 × 900 numbers de
 - **No toolbar. No in-window tab bar. No solid navigation bar on the home room.** System chrome already provides traffic lights; the illustrated room paints under a transparent titlebar.
 - **One chrome control only:** a settings gear at the titlebar trailing edge. Nothing else lives in the titlebar.
 - Illustrated surfaces (home + reflection) are immersive: no opaque title strip; sky/garden paints under the transparent titlebar with a light floating title. Settings uses a full-height sidebar under the same transparent titlebar (no solid nav band); sidebar and detail share one surface — light `window-bg`, dark `window-chrome` (hierarchy via type and selection, not a second fill).
-- Window title metadata stays real ("Joey 的家", "节奏回顾", "JoeyPet 设置") for window management even when the home label is subtle.
+- Window title metadata stays real ("Joey 的家", "节奏回顾", "设置") for window management even when the home label is subtle.
 
 ### 7.3 Navigation lives in the scene
 
@@ -318,7 +318,7 @@ Small in-scene information tag: `popover` fill, 1 px hairline, radius 9, `6/11` 
 
 ### 8.5 Progress ring
 
-104 px, 8 px stroke, radius 46, track `panel-2`, progress `sage` with round caps, 1 s linear updates. Centre: `mm:ss` at 22 px / 650 tabular, with a 10.5 px / `muted` "剩余 N 秒" beneath. The ring never uses gradient or shadow.
+104 px, 8 px stroke, radius 46, track `panel-2`, progress `sage` with round caps, 1 s linear updates. Centre: `mm:ss` at 22 px / 650 tabular only — do not duplicate the countdown as "剩余 N 秒". The ring never uses gradient or shadow.
 
 ### 8.6 Controls
 
@@ -468,7 +468,7 @@ Rules:
 - The same card family appears in the nest beside Joey when invite is active.
 - Companion chip and greeting「你好。」share one paper tip chrome (`JoeyPetTipView`).
 - It is an invitation from a pet, never an alert: no title bar, no icon-warning, no modal scrim over the whole screen, no system beep.
-- Dismissing is always available and never punished. Toasts: `好，过一阵再问你。` / `好，先不打扰你。`
+- Dismissing is always available and never punished. Snooze / do-not-disturb need **no toast** — the invite card leaves and the clock label updates (`HH:mm 再问你一次` / `勿扰中`).
 - Only one reminder per interval; never re-prompt immediately.
 - When Joey is hidden, the card appears with him for at most 60 seconds. If it is ignored, both slip away and the invitation counts as "later" once.
 
@@ -486,16 +486,14 @@ Rules:
 
               (ring)
              00:30
-           剩余 30 秒
 
         吸气四拍，呼气六拍
-          不用数得很准。
 
            [好了]  [先跳过]
 ```
 
 - Progress is honest: a real 30 s countdown drives the ring. No confetti, no score, no "achievement".
-- Completing it increments today's break count and returns Joey to `happy` for ~2.6 s with the toast `好了。Joey 的窝里多了一片叶子。`
+- Completing it increments today's break count and returns Joey to `happy` for ~2.6 s with the toast `窝里多了一片叶子。`
 - Skipping exits silently. The product never claims a break was detected.
 
 ### 10.4 Nest home
@@ -507,9 +505,22 @@ The main window, and it should feel like entering Joey's home.
 - Room scene fills the content area. The nest is not a separate renderer: it hosts the same layered `JoeyDesktopScene` with the same `JoeyAssetPackage` as the desktop pet, feeds it the pose `PetRuntime` resolved, and therefore matches faces, props, breathing, blinks and ear/tail motion exactly. `sleep` is the standing closed-eye pose with relaxed ears; `doze` is the lighter, slightly tilted nap. At dusk the room applies a 0.18 sage-grey wash (`nestPetTint`) to the layered pet so it sits in the dim light; the desktop pet stays untinted.
 - Joey stays in the nest. The room pet is not draggable; a click asks the runtime for one short greeting (`happy` for ~2.8 s), and both the nest and the desktop pet play it.
 - While a companionship session is running (`陪伴中`), the runtime drives `look` (including during the invitation card), then `stretch` and `happy` at the matching moments, and the nest follows. Quiet hours show the same `sleep` pose in both places.
-- The wall clock shows the real local time with hour and minute hands; clicking it opens `JoeyPet 设置` on **通用**. The hover hint is `调整提醒时间`.
+- The wall clock shows the real local time with hour and minute hands; clicking it opens **设置** on **通用**. The hover hint is `调整提醒时间`.
 - Object-bound copy (no companionship-duration on home — that stays in 回顾):
-  - Clock label: `Joey 大约每 45 分钟来叫你一次`
+  - Clock label (no session): `大约每 45 分钟叫你一次` (same whether the desktop pet is visible)
+  - Clock label (session active) — one line, highest situation wins:
+
+| Situation | Copy |
+|-----------|------|
+| Do not disturb | `勿扰中` |
+| Quiet hours | `安静时段` |
+| Snoozed | `HH:mm 再问你一次` |
+| Invite | `该休息了` (card carries the ask) |
+| Recover | `休息中` |
+| Complete | `刚休息完` |
+| Next invite due | `下次大约 HH:mm 叫你` |
+| Fallback (no due) | `我就在这儿陪着。` |
+
   - Plant label: `今天休息 2 次` (empty: `今天还没有休息`)
   - Desk welcome: one pet-voice line by local daypart (`一年之计在于晨。` / `我在这儿陪着你。` / `今天够了，慢慢收一收。` / `夜里也安静陪着。`)
 - Primary action **horizontally centred** near the floor (scene x ≈ 540): **开始一起工作**; while running it becomes **结束陪伴** with a status chip `陪伴中 · mm:ss` centred above it.
@@ -523,6 +534,7 @@ A garden inside the same window, opened from the wall frame.
 
 - A small path across seven days. Every day leaves something visible: 0 breaks shows a seed in the soil, 1 break a sprout, 2 a taller sprout, 3+ a small tree. No bars, no axes, no percentages.
 - Copy (388 wide, top-left, directly on the garden): date range `11月16日 – 11月22日`, headline `这周我们一起休息了 6 次。`, sub `今天陪了 2 小时 10 分。周三没有记录。` No card, panel, border or shadow behind this text.
+- Empty week (0 breaks): headline `这一周还没有一起休息过。` — never lead with `0 次`. Sub may stay empty (garden seeds carry the empty days) or only state today's companionship if any.
 - Numbers are facts, not scores. Never say "only", "missed", "failed", or "keep it up".
 - Return: **回巢**, bottom-right.
 - Data must be self-consistent: today's breaks ≤ this week's total; if today has none, say so plainly.
@@ -531,7 +543,7 @@ A garden inside the same window, opened from the wall frame.
 
 Native, quieter, more functional than the room. No illustration, no hero copy, no sage hero blocks.
 
-- Page title **JoeyPet 设置** inside the shared window; 200 px sidebar + detail.
+- Page title **设置** inside the shared window; 200 px sidebar + detail.
 - Sidebar and detail share one fill (not room-wall daypart paint): light `window-bg`, dark `window-chrome`. A hairline divider and type weight carry the split; controls still sit on `panel` / `panel-2`.
 - Sidebar is one flat list, no group headings: 通用 · 宠物 · 关于（Debug 仅 Debug 构建）。
 - Rows by section:
@@ -539,18 +551,18 @@ Native, quieter, more functional than the room. No illustration, no hero copy, n
 | Section | Row | Control | Copy |
 |---------|-----|---------|------|
 | 通用 | 提醒节奏 | Segmented 45 / 60 / 90 分钟 | 开始陪伴后才计时 |
-| 通用 | 勿扰模式 | Switch | 不会再有邀请或提示 |
-| 通用 | 安静时段 | Time-range field: two editable halves, centre dash, double-click selects all | 这段时间不会邀请 |
+| 通用 | 勿扰模式 | Switch | 暂停邀请 |
+| 通用 | 安静时段 | Time-range field: two editable halves, centre dash, double-click selects all | 时段内不邀请 |
 | 通用 | 背景音 | Menu-style chooser：无背景音 + catalog beds；每条有小喇叭试听 | 陪伴中播放 |
-| 通用 | 提示音 | Menu-style chooser：无提示音 + catalog cues；每条有小喇叭试听 | 开始陪伴与邀请时播放 |
-| 通用 | 外观 | Segmented 时段 / 系统 / 明亮 / 黑夜 | 锁定明亮/黑夜后不再随时间变。默认时段 |
-| 宠物 | 在桌面上显示 Joey | Switch | 关掉不会结束陪伴 |
-| 宠物 | 显示位置 | Segmented 右下角 / 左下角 | 拖动后以你放的位置为准 |
-| 关于 | 版本 · 反馈 · 声音致谢 | 反馈 → 发邮件（优先系统「邮件」） | 副标题显示邮箱；打不开时复制地址并提示 |
+| 通用 | 提示音 | Menu-style chooser：无提示音 + catalog cues；每条有小喇叭试听 | 开始与邀请时 |
+| 通用 | 外观 | Segmented 时段 / 系统 / 明亮 / 黑夜 | （无副标题；分段控件自明） |
+| 宠物 | 在桌面显示 Joey | Switch | （无副标题） |
+| 宠物 | 显示位置 | Segmented 右下角 / 左下角 | （无副标题） |
+| 关于 | 版本 · 反馈 · 声音致谢 | 反馈 → 发邮件（优先系统「邮件」） | 副标题显示邮箱；打不开时复制地址 |
 
-- Each row gets at most one incidental line under the title. Do not stack a subtitle and a second note layer.
+- Each row gets at most one incidental line under the title. Do not stack a subtitle and a second note layer. Omit the subtitle when the control already states the fact.
 
-- 通用 section description: `只在你开始工作后提醒。` — product rule, not marketing. 宠物 / 关于 omit a page description.
+- 通用 / 宠物 / 关于 omit a page description — the rhythm rule lives once under **提醒节奏**. Session vocabulary is 陪伴; CTA `开始一起工作` stays as the open phrasing.
 - Time inputs use direct typing. Focus shows a caret and sage selection, never a blue outline.
 - Native `Form`/`Toggle`/`Picker`/`TextField` behavior; semantic system colours are acceptable here where native controls demand them, but the surface stays ivory/panel, never system-grey dashboard.
 
@@ -565,12 +577,12 @@ Chinese-first, short, warm, factual.
 - Speak as Joey or about Joey in the third person: `Joey 大约每 45 分钟来叫你一次`
 - State facts plainly: `今天陪了 2 小时 10 分。周三没有记录。`
 - Give one instruction at a time: `找个六米外的点，肩膀放松。`
-- Let the user off the hook: `不用走开，半分钟就够。`
+- Let the user off the hook (tone example for recovery / helper lines, **not** shown on the invite card): `不用走开，半分钟就够。`
 - Use everyday words: 休息, 陪你, 小窝, 好了, 先跳过.
 
 **Don't**
 
-- No exclamation piles, no `完成啦！`, no `太棒了！`
+- No exclamation piles, no `完成啦！`, no `太棒了！`, no praise like `真好`.
 - No meta explanation of product principles (`不会连着催第二次`, `不需要做任何汇报`, `空白不是失败`).
 - No triple-negation slogans (`不评分 · 不打卡 · 不追问感受`).
 - No uppercase English eyebrows (`JOEY 想问你`, `REST TIME`).
@@ -579,7 +591,7 @@ Chinese-first, short, warm, factual.
 - No invented metrics or fake personalisation.
 - No "轻轻/悄悄/静静" stacked on every line; one gentle adverb per screen at most.
 
-Length: invitation headline ≤ 12 characters per line; helper ≤ 18; toast ≤ 14.
+Length: invitation headline ≤ 12 characters per line; helper ≤ 18; toast ≤ 14 (`窝里多了一片叶子。`).
 
 ---
 
@@ -615,10 +627,10 @@ Rules:
 | No session | Chip hidden; CTA `开始一起工作`; Joey `sit` |
 | Session running | Chip `陪伴中 · mm:ss`; CTA `结束陪伴`; Joey `look` |
 | Invitation due | Joey `look` + invitation card; one invitation only |
-| Invitation deferred | Toast `好，过一阵再问你。`, schedule one later invitation, no repeat nagging |
-| Entered do-not-disturb | Toast `好，先不打扰你。`, no further invitations until the user turns it off |
+| Invitation deferred | Invite card dismisses; clock shows `HH:mm 再问你一次`; schedule one later invitation, no toast, no repeat nagging |
+| Entered do-not-disturb | Invite card dismisses; clock / chip show `勿扰中`; no toast; no further invitations until the user turns it off |
 | Recovery running | Real countdown; no skip penalty |
-| Recovery completed | Break count +1, Joey `happy` ~2.6 s, one leaf added |
+| Recovery completed | Break count +1, Joey `happy` ~2.6 s, one leaf added, toast `窝里多了一片叶子。` |
 | Recovery skipped | Return to desktop silently; count unchanged |
 | Hidden Joey | Pet invisible but rhythm continues; an invitation surfaces him for at most 60 s, then he returns to hidden |
 | Quiet hours | Enter with `yawn` → `sleep`; exit with `yawn` → day pose; no invitations; breath only once asleep |
@@ -816,3 +828,5 @@ Git history and the archive branch explain why they were replaced.
 | 2026-11-25 | Settings sidebar + detail share one surface (light `window-bg`, dark `window-chrome`; no night-wall clash). |
 | 2026-11-25 | Settings IA simplified to 通用 / 宠物 / 关于; shorter row copy. |
 | 2026-11-25 | Settings feedback uses mailto (no local draft / no backend). |
+| 2026-11-25 | Copy pass: nest session clock lines; empty-week headline; settings「陪伴」; toast length exception; invite helper is tone-only (not on card); HTML reference synced. |
+| 2026-11-25 | Copy restraint pass: drop product-prefix settings title, pane blurb, redundant subtitles, ring/recovery fluff, snooze/DND toasts; shorten completion toast and nest clock lines. |
