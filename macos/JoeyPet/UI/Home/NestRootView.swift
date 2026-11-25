@@ -107,7 +107,6 @@ struct NestRootView: View {
         immersiveScene(title: JoeyCopy.homeTitle) {
             RoomSceneView(
                 rhythmMinutes: settings.rhythmMinutes,
-                showsDesktopPet: settings.showsDesktopPet,
                 status: status,
                 onOpenReflection: { navigation.showReflection() },
                 onOpenClockSettings: { navigation.openSettings() },

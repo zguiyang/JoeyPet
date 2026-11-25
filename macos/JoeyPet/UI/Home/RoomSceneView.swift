@@ -3,7 +3,6 @@ import SwiftUI
 
 struct RoomSceneView: View {
     let rhythmMinutes: Int
-    let showsDesktopPet: Bool
     let status: CompanionStatus
     let onOpenReflection: () -> Void
     let onOpenClockSettings: () -> Void
@@ -158,16 +157,14 @@ struct RoomSceneView: View {
             if status.isSessionActive {
                 Text(sessionReminderText)
             } else if status.situation.isDoNotDisturb {
-                Text("勿扰中，先不打扰你")
-            } else if !showsDesktopPet {
-                Text("Joey 在后台，开始后会到点来叫你")
+                Text("勿扰中")
             } else {
                 HStack(spacing: 0) {
-                    Text("Joey 大约每 ")
+                    Text("大约每 ")
                     Text("\(rhythmMinutes) 分钟")
                         .fontWeight(.semibold)
                         .foregroundStyle(chromeTheme.sageDeep)
-                    Text("来叫你一次")
+                    Text("叫你一次")
                 }
             }
         }
@@ -178,10 +175,10 @@ struct RoomSceneView: View {
         let now = Date()
 
         if situation.isDoNotDisturb {
-            return "勿扰中，先不打扰你"
+            return "勿扰中"
         }
         if situation.isQuietActive {
-            return "安静时段，先不打扰你"
+            return "安静时段"
         }
         if situation.isSnoozeActive(at: now), let snoozeUntil = situation.snoozeUntil {
             return "\(Self.timeText(snoozeUntil)) 再问你一次"
@@ -189,17 +186,15 @@ struct RoomSceneView: View {
 
         switch situation.companion {
         case .invite:
-            return "现在想请你休息一下"
+            // Invitation card already carries the ask; clock stays a short status.
+            return "该休息了"
         case .recover:
-            return "正在一起休息"
+            return "休息中"
         case .complete:
-            return "刚休息完，真好"
+            return "刚休息完"
         default:
             guard let due = situation.invitationDueDate() else {
-                return "这段时间先安静陪你"
-            }
-            if situation.isHidden {
-                return "Joey 隐藏着，下次约 \(Self.timeText(due)) 来叫你"
+                return "我就在这儿陪着。"
             }
             return "下次大约 \(Self.timeText(due)) 叫你"
         }

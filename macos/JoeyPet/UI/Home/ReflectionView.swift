@@ -73,16 +73,21 @@ struct ReflectionView: View {
                 .foregroundStyle(theme.ink)
                 .lineSpacing(4)
 
-            Text(subtitleText)
-                .font(JoeyType.reflectionBody)
-                .foregroundStyle(theme.ink2)
-                .lineSpacing(4)
+            if !subtitleText.isEmpty {
+                Text(subtitleText)
+                    .font(JoeyType.reflectionBody)
+                    .foregroundStyle(theme.ink2)
+                    .lineSpacing(4)
+            }
         }
         .frame(width: 388, alignment: .leading)
     }
 
     private var headline: Text {
-        Text("这周我们一起休息了 ")
+        if summary.weekBreakTotal == 0 {
+            return Text(JoeyCopy.emptyWeek)
+        }
+        return Text("这周我们一起休息了 ")
             + Text("\(summary.weekBreakTotal) 次")
                 .fontWeight(.semibold)
                 .foregroundStyle(theme.sageDeep)
@@ -91,14 +96,17 @@ struct ReflectionView: View {
 
     private var subtitleText: String {
         guard summary.weekBreakTotal > 0 else {
-            return JoeyCopy.emptyWeek
+            if summary.todayCompanionship > 0 {
+                return "今天陪了 \(summary.todayCompanionshipText)。"
+            }
+            return ""
         }
 
         var parts: [String] = []
         if summary.todayCompanionship > 0 {
             parts.append("今天陪了 \(summary.todayCompanionshipText)。")
         } else {
-            parts.append("今天还没开始。")
+            parts.append(JoeyCopy.emptyToday)
         }
 
         let todayIndex = Self.indexOfToday
