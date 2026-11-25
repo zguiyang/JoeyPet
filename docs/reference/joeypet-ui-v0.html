@@ -913,7 +913,6 @@
             <ellipse cx="78" cy="60" rx="5" ry="9" transform="rotate(-20 78 60)"/>
             <ellipse cx="102" cy="52" rx="5" ry="9" transform="rotate(20 102 52)"/>
           </g>
-          <text x="60" y="120" text-anchor="middle" font-family="-apple-system,'PingFang SC',sans-serif" font-size="13" fill="var(--room-noteline)">回顾</text>
         </g>
         <g transform="translate(120,0)">
           <ellipse cx="0" cy="556" rx="40" ry="8" fill="#3F3A35" opacity="0.06"/>
@@ -1152,7 +1151,7 @@
             </div>
             <div class="recover-panel spec-target" id="recoverPanel">
               <h3>望向远处</h3>
-              <p class="hint">找个六米外的点，肩膀放松。</p>
+              <p class="hint">找个六米外的点，肩膀放松</p>
               <div class="recover-timer">
                 <div class="ring">
                   <svg viewBox="0 0 96 96">
@@ -1160,10 +1159,6 @@
                     <circle class="prog" id="ringProg" cx="48" cy="48" r="44" stroke-dasharray="276.46" stroke-dashoffset="0"/>
                   </svg>
                   <div class="time"><b id="ringTime">00:30</b></div>
-                </div>
-                <div class="copy">
-                  <b>吸气四拍，呼气六拍</b>
-                  
                 </div>
               </div>
               <div class="recover-actions">
@@ -1179,7 +1174,7 @@
             <div class="window nest-win spec-target">
               <div class="win-titlebar">
                 <div class="lights"><i></i><i></i><i></i></div>
-                <div class="win-title" id="nestTitle">Joey 的家</div>
+                <div class="win-title" id="nestTitle"></div>
                 <div class="win-tools">
                   <button class="win-tool-btn" id="openSettingsFromNest" aria-label="打开设置">
                     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 4 V6 M12 18 V20 M4 12 H6 M18 12 H20 M6.5 6.5 L8 8 M16 16 L17.5 17.5 M17.5 6.5 L16 8 M8 16 L6.5 17.5"/></svg>
@@ -1417,7 +1412,7 @@
   function closeReflect() {
     nestReflectView.hidden = true;
     nestRoomView.hidden = false;
-    nestTitle.textContent = "Joey 的家";
+    nestTitle.textContent = "";
     navBtns.forEach(function (b) { b.classList.toggle("on", b.dataset.state === "nest"); });
   }
   navBtns.forEach(function (b) {

@@ -228,11 +228,9 @@ body{background:#E9E1D4;font-family:"PingFang SC","Hiragino Sans GB","Microsoft 
 
         <!-- HUD -->
         <div class="hot" data-tip="调整提醒时间" tabindex="0" role="button" aria-label="挂钟，调整提醒时间" style="left:98px;top:116px;width:104px;height:104px"></div>
-        <div class="hud clock-cap">Joey 大约每 45 分钟来叫你一次</div>
+        <div class="hud clock-cap">大约每 45 分钟叫你一次</div>
         <div class="hud fact fact-plant">今天休息 2 次</div>
-        <div class="hot" data-tip="看看这周" tabindex="0" role="button" aria-label="相框，看看这周" style="left:874px;top:146px;width:128px;height:120px"></div>
-        <div class="hud frame-cap">回顾</div>
-        <div class="hud welcome" id="welcome">我在这儿陪着你。</div>
+        <div class="hot" data-tip="回顾这周" tabindex="0" role="button" aria-label="相框，回顾这周" style="left:874px;top:146px;width:128px;height:120px"></div>
         <div class="chip" id="chip">陪伴中 · <b id="timer">00:00</b></div>
         <div class="invite" role="note">
           <p>Joey 说：窗边的光正好。</p>
@@ -302,19 +300,12 @@ body{background:#E9E1D4;font-family:"PingFang SC","Hiragino Sans GB","Microsoft 
 (function(){
   var stage = document.getElementById('stage');
   var box = document.getElementById('stageBox');
-  var welcome = document.getElementById('welcome');
   var mainBtn = document.getElementById('mainBtn');
   var timer = document.getElementById('timer');
   var timeBtns = document.querySelectorAll('#timeSeg button');
   var sessBtns = document.querySelectorAll('#sessSeg button');
   var thumbs = document.querySelectorAll('#strip .thumb');
 
-  var WELCOME = {
-    morning: '一年之计在于晨。',
-    day: '我在这儿陪着你。',
-    dusk: '今天够了，慢慢收一收。',
-    night: '夜里也安静陪着。'
-  };
   var BTN = { idle: '开始一起工作', session: '结束陪伴', invite: '好，去伸个懒腰', quiet: '知道了' };
   var DEFAULT_TIME = { idle: 'day', session: 'day', invite: 'dusk', quiet: 'night' };
 
@@ -332,7 +323,6 @@ body{background:#E9E1D4;font-family:"PingFang SC","Hiragino Sans GB","Microsoft 
 
   function setTime(t, fromUser){
     stage.setAttribute('data-time', t);
-    welcome.textContent = WELCOME[t];
     timeBtns.forEach(function(b){ b.setAttribute('aria-pressed', String(b.dataset.time === t)); });
     if (fromUser) manualTime = true;
   }

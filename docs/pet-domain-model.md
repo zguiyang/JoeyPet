@@ -126,7 +126,7 @@ AmbientEvent                       叠加在姿态上的小循环/瞬态
 | `sign` | `notify_sign` | `notifying` | 否 | 一次性，停最后一帧 |
 | `stretch` | `recover_stretch` | `idle` | 是 | 恢复中 |
 | `happy` | `complete_happy` | `celebrating` | 否 | 2.6 秒；双手休息，完成开心 |
-| `wave` | `greet_wave` | `idle` | 否 | 2.8 秒；抬爪打招呼；运行时轻挥两下；头顶 tip「你好。」 |
+| `wave` | `greet_wave` | `idle` | 否 | 2.8 秒；抬爪打招呼；运行时轻挥两下；头顶 tip「你好」 |
 | `sleep` | `sleep_curl` | `sleeping` | 是 | 安静时段；站立闭眼，耳朵放松 |
 | `groom` | `idle_groom` | `idle` | 否 | 环境瞬态 |
 | `yawn` | `idle_yawn` | `idle` | 否 | 环境瞬态 |

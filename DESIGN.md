@@ -257,8 +257,8 @@ All layout derives from the live window size in code. The 1440 × 900 numbers de
 - **Native macOS window**: real traffic lights, native title, native resize/move/key-inactive appearance. Never draw fake traffic lights.
 - **No toolbar. No in-window tab bar. No solid navigation bar on the home room.** System chrome already provides traffic lights; the illustrated room paints under a transparent titlebar.
 - **One chrome control only:** a settings gear at the titlebar trailing edge. Nothing else lives in the titlebar.
-- Illustrated surfaces (home + reflection) are immersive: no opaque title strip; sky/garden paints under the transparent titlebar with a light floating title. Settings uses a full-height sidebar under the same transparent titlebar (no solid nav band); sidebar and detail share one surface — light `window-bg`, dark `window-chrome` (hierarchy via type and selection, not a second fill).
-- Window title metadata stays real ("Joey 的家", "节奏回顾", "设置") for window management even when the home label is subtle.
+- Illustrated surfaces (home + reflection) are immersive: no opaque title strip; sky/garden paints under the transparent titlebar. Home leaves the floating title blank for immersion; reflection keeps a light floating title (`节奏回顾`). Settings uses a full-height sidebar under the same transparent titlebar (no solid nav band); sidebar and detail share one surface — light `window-bg`, dark `window-chrome` (hierarchy via type and selection, not a second fill).
+- Window title metadata stays real ("Joey 的家", "节奏回顾", "设置") for window management even when the home floating label is blank.
 
 ### 7.3 Navigation lives in the scene
 
@@ -266,10 +266,10 @@ The main window is **one room**, not a container of pages.
 
 | Destination | Scene affordance | Return |
 |-------------|------------------|--------|
-| Rhythm reflection | Wall frame labelled 回顾 (hover: 回顾这周) | 回巢 button, bottom-right |
+| Rhythm reflection | Wall frame (hover only: 回顾这周) | 回巢 button, bottom-right |
 | Settings | Gear in the titlebar | Gear toggles back to the previous page |
 
-- The scene affordance is a real hit target; hovering shows the 回顾这周 tooltip. Never draw a hover or focus outline around the scene area.
+- The scene affordance is a real hit target; hovering shows the 回顾这周 tooltip. Do not paint a function word on the frame art. Never draw a hover or focus outline around the scene area.
 - Never add a second navigation layer (tab bar, segmented control, breadcrumb) to the room.
 - Reflection and settings are **views inside the same window**, not separate windows. The window title changes while either is open.
 - Settings returns to whichever page was open before the gear was pressed.
@@ -406,7 +406,7 @@ Panels, cards, and menus keep the 300–420 ms UI timing. Do not run the pose th
 
 ### 9.3 Room
 
-A single warm room, 1080 × 680: ivory wall, warm wood floor, one window with hills, a wall clock, a framed 回顾 picture, a potted plant, a woven nest with a sage cushion, and a small desk with a notebook, mug, and a tiny pot.
+A single warm room, 1080 × 680: ivory wall, warm wood floor, one window with hills, a wall clock, a framed picture (hover opens 节奏回顾), a potted plant, a woven nest with a sage cushion, and a small desk with a notebook, mug, and a tiny pot.
 
 - **Information lives in objects:** clock = next invitation, notebook = today's companionship time, plant = today's completed breaks.
 - **Growth is additive and non-regressive in 回顾:** completed breaks feed the week garden (seed → sprout → tree). The nest itself does not accumulate leaves.
@@ -465,7 +465,7 @@ Rules:
 ```
 
 - The same card family appears in the nest beside Joey when invite is active.
-- Companion chip and greeting「你好。」share one paper tip chrome (`JoeyPetTipView`).
+- Companion chip and greeting「你好」share one paper tip chrome (`JoeyPetTipView`).
 - It is an invitation from a pet, never an alert: no title bar, no icon-warning, no modal scrim over the whole screen, no system beep.
 - Dismissing is always available and never punished. Snooze / do-not-disturb need **no toast** — the invite card leaves and the clock label updates (`HH:mm 再问你一次` / `勿扰中`).
 - Only one reminder per interval; never re-prompt immediately.
@@ -474,19 +474,17 @@ Rules:
 ### 10.3 30-second recovery
 
 - Calm paper panel ≈ **300** wide, radius 22, padding ~22 / 18. Always on **Joey’s screen** (same as the invite): **dead centre** of that screen’s visible frame (horizontal and vertical). Do not use `NSScreen.main` (key-window screen). Joey may demonstrate `stretch` wherever he already is; this pass does not relocate him beside the panel.
-- Layout is a **centered vertical stack** (not a left-leading HStack): title → hint → ring → breath copy → compact action row. No unused right gutter; the card width tracks content weight.
+- Layout is a **centered vertical stack** (not a left-leading HStack): title → one hint → ring → compact action row. No unused right gutter; the card width tracks content weight. Do not add a second coaching line under the ring.
 - Actions match the invite control family: soft square corners (radius 8), compact sage primary + quiet text — not a full-bleed primary bar.
 - Frozen visual target: [`docs/reference/joeypet-recovery-panel-v0.html`](docs/reference/joeypet-recovery-panel-v0.html).
 - Copy:
 
 ```text
             望向远处
-     找个六米外的点，肩膀放松。
+     找个六米外的点，肩膀放松
 
               (ring)
              00:30
-
-        吸气四拍，呼气六拍
 
            [好了]  [先跳过]
 ```
@@ -500,14 +498,14 @@ Rules:
 The main window, and it should feel like entering Joey's home.
 
 - Opens on the **system primary display** (`NSScreen.screens[0]` — menu bar / arrangement primary), not `NSScreen.main`. Remembers the last frame via AppKit autosave; if that frame is off-screen after a display change, re-centre on primary.
-- Title: **Joey 的家**. Traffic lights, title, one gear.
+- Window metadata title: **Joey 的家**. Traffic lights + gear; floating chrome title on home is blank (room immersion). Daypart atmosphere is visual only — no desk welcome line restating night/dusk mood.
 - Room scene fills the content area. The nest is not a separate renderer: it hosts the same layered `JoeyDesktopScene` with the same `JoeyAssetPackage` as the desktop pet, feeds it the pose `PetRuntime` resolved, and therefore matches faces, props, breathing, blinks and ear/tail motion exactly. `sleep` is the standing closed-eye pose with relaxed ears; `doze` is the lighter, slightly tilted nap. At dusk the room applies a 0.18 sage-grey wash (`nestPetTint`) to the layered pet so it sits in the dim light; the desktop pet stays untinted.
 - Joey stays in the nest. The room pet is not draggable; a click asks the runtime for one short greeting (`happy` for ~2.8 s), and both the nest and the desktop pet play it.
 - While a companionship session is running (`陪伴中`), the runtime drives `look` (including during the invitation card), then `stretch` and `happy` at the matching moments, and the nest follows. Quiet hours show the same `sleep` pose in both places.
 - The wall clock shows the real local time with hour, minute, and second hands (second hand ticks once per second, no continuous sweep); clicking it opens **设置** on **通用**. The hover hint is `调整提醒时间`.
-- Object-bound copy (no companionship-duration on home — that stays in 回顾):
+- Object-bound copy stays **status/result phrases only** (no companionship-duration on home — that stays in 回顾; no atmosphere asides):
   - Clock label (no session): `大约每 45 分钟叫你一次` (same whether the desktop pet is visible)
-  - Clock label (session active) — one line, highest situation wins:
+  - Clock label (session active) — one line, highest situation wins; omit the label when there is nothing factual to say:
 
 | Situation | Copy |
 |-----------|------|
@@ -518,10 +516,10 @@ The main window, and it should feel like entering Joey's home.
 | Recover | `休息中` |
 | Complete | `刚休息完` |
 | Next invite due | `下次大约 HH:mm 叫你` |
-| Fallback (no due) | `我就在这儿陪着。` |
+| Fallback (no due) | *(hide clock label)* |
 
   - Plant label: `今天休息 2 次` (empty: `今天还没有休息`)
-  - Desk welcome: one pet-voice line by local daypart (`一年之计在于晨。` / `我在这儿陪着你。` / `今天够了，慢慢收一收。` / `夜里也安静陪着。`)
+  - Wall frame: no painted caption; hover + VoiceOver use `回顾这周`
 - Primary action **horizontally centred** near the floor (scene x ≈ 540): **开始一起工作**; while running it becomes **结束陪伴** with a status chip `陪伴中 · mm:ss` centred above it.
 - Room atmosphere follows local clock dayparts (morning / day / dusk / night): recolor sky, hills, wall, floor, curtains, outdoor sun/moon disc; optional night stars. Curtains sway gently (Reduce Motion → static). **No** sun beams, floor pools, wall projections or desk lamps. Nest and Joey keep the shipped nest geometry. Frozen board: [`docs/reference/joeypet-home-v1.html`](docs/reference/joeypet-home-v1.html).
 - Starting a session never requires showing the desktop pet. If Joey is hidden, he stays hidden between reminders and surfaces only for an invitation.
@@ -532,8 +530,8 @@ The main window, and it should feel like entering Joey's home.
 A garden inside the same window, opened from the wall frame.
 
 - A small path across seven days. Every day leaves something visible: 0 breaks shows a seed in the soil, 1 break a sprout, 2 a taller sprout, 3+ a small tree. No bars, no axes, no percentages.
-- Copy (388 wide, top-left, directly on the garden): date range `11月16日 – 11月22日`, headline `这周我们一起休息了 6 次。`, sub `今天陪了 2 小时 10 分。周三没有记录。` No card, panel, border or shadow behind this text.
-- Empty week (0 breaks): headline `这一周还没有一起休息过。` — never lead with `0 次`. Sub may stay empty (garden seeds carry the empty days) or only state today's companionship if any.
+- Copy (388 wide, top-left, directly on the garden): date range `11月16日 – 11月22日`, headline `这周一起休息 6 次`, sub `今天陪了 2 小时 10 分 · 周三没有记录` (period-free short phrases). No card, panel, border or shadow behind this text.
+- Empty week (0 breaks): headline `这一周还没有一起休息过` — never lead with `0 次`. Sub may stay empty (garden seeds carry the empty days) or only state today's companionship if any.
 - Numbers are facts, not scores. Never say "only", "missed", "failed", or "keep it up".
 - Return: **回巢**, bottom-right.
 - Data must be self-consistent: today's breaks ≤ this week's total; if today has none, say so plainly.
@@ -575,7 +573,7 @@ Chinese-first, short, warm, factual.
 
 - Speak as Joey or about Joey in the third person: `Joey 大约每 45 分钟来叫你一次`
 - State facts plainly: `今天陪了 2 小时 10 分。周三没有记录。`
-- Give one instruction at a time: `找个六米外的点，肩膀放松。`
+- Give one instruction at a time: `找个六米外的点，肩膀放松`
 - Let the user off the hook (tone example for recovery / helper lines, **not** shown on the invite card): `不用走开，半分钟就够。`
 - Use everyday words: 休息, 陪你, 小窝, 好了, 先跳过.
 
@@ -843,3 +841,4 @@ Git history and the archive branch explain why they were replaced.
 | 2026-11-25 | Copy pass: nest session clock lines; empty-week headline; settings「陪伴」; toast length exception; invite helper is tone-only (not on card); HTML reference synced. |
 | 2026-11-25 | Copy restraint pass: drop product-prefix settings title, pane blurb, redundant subtitles, ring/recovery fluff, snooze/DND toasts; shorten completion toast and nest clock lines. |
 | 2026-11-25 | §11.1 Copy restraint hard rules (delete-first, no context echo, state beats toast, native short words); checklist + anti-patterns updated. |
+| 2026-11-25 | Copy restraint round 2: drop desk daypart welcome, painted frame「回顾」, home floating title, recovery breath line, lyric clock fallback; period-free reflection / greeting. |

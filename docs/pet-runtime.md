@@ -38,7 +38,7 @@ behavior/`clipId`; clip frame packs land when art is accepted.
 | `sleeping` | Ambient transient | Timed session, then returns to idle |
 | `celebrating` | Explicit transient | One-shot positive feedback; reserved for V0 recovery completion |
 | `notifying` | Explicit transient | Legacy probe; V0 invitation uses companion `invite` (`look` + floating card), not a handheld sign |
-| `greeting` | Explicit transient | `wave` for 2.8 s when the user taps the nest (raised paw + shared「你好。」tip on nest and desktop); allowed while the desktop pet is hidden |
+| `greeting` | Explicit transient | `wave` for 2.8 s when the user taps the nest (raised paw + shared「你好」tip on nest and desktop); allowed while the desktop pet is hidden |
 
 Ambient micro-motion uses in-node blink/ear loops with manifest ranges — never
 polling or a display link. Idle breath follows

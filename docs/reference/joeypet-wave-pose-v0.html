@@ -503,7 +503,7 @@
         <h1>打招呼抬爪</h1>
         <p class="dek">
           分层静态 hold：身体与 sit 相同，脸复用 <code>happy</code>，只新增右爪抬起的 <code>j-arms-wave</code>。
-          运行时对抬起的手臂轻挥两下；头顶「你好。」是同一套 tip UI，不进这张图。
+          运行时对抬起的手臂轻挥两下；头顶「你好」是同一套 tip UI，不进这张图。
           交付形态与 idle / nest 一致：本页 HTML + 内嵌 SVG symbols。
         </p>
         <ul class="spec-list">
@@ -511,7 +511,7 @@
           <li><span>canvas</span><b>320×400</b></li>
           <li><span>anchor</span><b>160, 388</b></li>
           <li><span>wave</span><b>×2 · ~1.4s</b></li>
-          <li><span>tip</span><b>你好。</b></li>
+          <li><span>tip</span><b>你好</b></li>
         </ul>
       </div>
 
@@ -521,7 +521,7 @@
           <span>CSS 示意 · 非资产帧</span>
         </div>
         <div class="preview-stage">
-          <div class="tip" aria-hidden="true">你好。</div>
+          <div class="tip" aria-hidden="true">你好</div>
           <svg class="preview-art" viewBox="0 0 320 400" aria-label="Joey 打招呼抬爪预览">
             <use href="#joey-wave"/>
             <line class="baseline" x1="36" y1="388" x2="284" y2="388"/>
@@ -607,7 +607,7 @@
         <h3>产品合同</h3>
         <ul>
           <li><b>打招呼 ≠ 完成开心</b>：wave 举手 + 头顶 tip；happy 安静笑 + 既有结果反馈。</li>
-          <li>桌面与小窝共用同一套 tip（「你好。」）与同一 wave 姿态，降低维护成本。</li>
+          <li>桌面与小窝共用同一套 tip（「你好」）与同一 wave 姿态，降低维护成本。</li>
           <li>V0 不做序列帧；挥动由 SpriteKit 对抬爪臂做轻量旋转（约两下）。</li>
           <li>Reduce Motion：定格 hold，不挥，tip 仍可出现。</li>
         </ul>
