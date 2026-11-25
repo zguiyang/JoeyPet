@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<!-- JoeyPet nest home atmosphere board (accepted direction).
+     Product keeps shipped nest/Joey geometry; CTA centred; no beams/lamps —
+     daypart palettes + curtain sway only. -->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Joey 的家 · JoeyPet 主界面 v1</title>
+<style>
+:root{--ink:#3F3A35;--muted:#6E6459;--sage-deep:#4F6D54}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#E9E1D4;font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;color:var(--ink);min-height:100vh;padding:28px 20px 40px}
+.page{max-width:1120px;margin:0 auto}
+.topbar{display:flex;flex-wrap:wrap;gap:12px 22px;align-items:center;justify-content:center;margin-bottom:18px}
+.ctrl{display:flex;align-items:center;gap:8px}
+.label{font-size:12px;color:var(--muted)}
+.seg{display:inline-flex;background:rgba(255,255,255,.55);border-radius:12px;padding:4px;gap:2px}
+.seg button{border:0;background:transparent;font:inherit;font-size:13px;color:var(--muted);padding:7px 14px;border-radius:9px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(63,58,53,.14)}
+.win{width:100%;max-width:1080px;margin:0 auto;background:#FBF8F2;border-radius:14px;box-shadow:0 12px 32px rgba(63,58,53,.16);overflow:hidden}
+.titlebar{height:38px;display:flex;align-items:center;padding:0 14px;position:relative;background:#F1EBDF;border-bottom:1px solid #E4DACB}
+.lights{display:flex;gap:8px}
+.lights i{width:12px;height:12px;border-radius:50%;display:block}
+.lights .r{background:#EE6A5E}.lights .y{background:#F4BF4F}.lights .g{background:#61C554}
+.wtitle{position:absolute;left:0;right:0;text-align:center;font-size:13px;font-weight:600;color:var(--ink);pointer-events:none}
+.gear{margin-left:auto;width:18px;height:18px;color:var(--muted)}
+
+/* ---------- stage ---------- */
+.stage-box{position:relative;width:100%;aspect-ratio:1080/680;overflow:hidden}
+.stage{position:absolute;left:0;top:0;width:1080px;height:680px;transform-origin:0 0;transform:scale(var(--s,1));overflow:hidden;background:var(--wall);color:var(--text)}
+.stage svg.room{position:absolute;left:0;top:0;width:1080px;height:680px;display:block}
+
+/* time-of-day palettes: only sky, hills, walls, floor, curtain, outdoor disc and surface tones change */
+.stage[data-time="morning"],.mini[data-time="morning"]{--wall:#F6EEE3;--floor:#E3CDB0;--sky:#CFE3E6;--hill:#B9CFC3;--curtain:#E9E2D3;--disc:#FFE7B8;--frame:#8A7A6A;--wood:#B99873;--wood-dk:#9C7B5C;--nest:#D8BE96;--nest-dk:#B89B73;--nest-rim:#EBD6B4;--stars:0;--text:#3F3A35;--text-soft:#6E6459;--chip:rgba(255,255,255,.8);--edge:#3F3A35}
+.stage[data-time="day"],.mini[data-time="day"]{--wall:#F8F4EC;--floor:#E6D5BE;--sky:#D9E7E6;--hill:#A9C7B4;--curtain:#E8EDE4;--disc:#FFF1C9;--frame:#8A7A6A;--wood:#B99873;--wood-dk:#9C7B5C;--nest:#D8BE96;--nest-dk:#B89B73;--nest-rim:#E9D3AE;--stars:0;--text:#3F3A35;--text-soft:#6E6459;--chip:rgba(255,255,255,.8);--edge:#3F3A35}
+.stage[data-time="dusk"],.mini[data-time="dusk"]{--wall:#F1DCC6;--floor:#D9B994;--sky:#F2C9A0;--hill:#B58E78;--curtain:#E9C9A6;--disc:#F6B27E;--frame:#8A6B57;--wood:#A8805E;--wood-dk:#8A6747;--nest:#CBA883;--nest-dk:#A9865F;--nest-rim:#DDBD98;--stars:0;--text:#3F3A35;--text-soft:#6E5A4C;--chip:rgba(255,246,236,.85);--edge:#3F3A35}
+.stage[data-time="night"],.mini[data-time="night"]{--wall:#4A4F5C;--floor:#5A4F49;--sky:#1F2A3F;--hill:#34405A;--curtain:#5B5F6E;--disc:#E9E4D6;--frame:#2E3440;--wood:#7A6553;--wood-dk:#5E4B3D;--nest:#8A7660;--nest-dk:#6E5A47;--nest-rim:#A89478;--stars:1;--text:#F4EEE3;--text-soft:#CFC6B8;--chip:rgba(40,44,56,.85);--edge:#FFF6E6}
+
+/* SVG fills driven by palette variables */
+.c-wall{fill:var(--wall)}
+.c-floor{fill:var(--floor)}
+.c-sky{fill:var(--sky)}
+.c-hill{fill:var(--hill)}
+.c-curtain{fill:var(--curtain)}
+.c-disc{fill:var(--disc)}
+.c-frame{fill:var(--frame)}
+.c-wood{fill:var(--wood)}
+.c-wood-dk{fill:var(--wood-dk)}
+.c-nest{fill:var(--nest);stroke:var(--nest-rim);stroke-width:3}
+.c-nest-dk{fill:var(--nest-dk)}
+.stars{opacity:var(--stars)}
+.jo{stroke:var(--edge);stroke-opacity:.3;stroke-width:2.2}
+.stage svg.room .c-wall,.stage svg.room .c-floor,.stage svg.room .c-sky,.stage svg.room .c-hill,.stage svg.room .c-curtain,.stage svg.room .c-disc,.stage svg.room .c-frame,.stage svg.room .c-wood,.stage svg.room .c-wood-dk,.stage svg.room .c-nest,.stage svg.room .c-nest-dk{transition:fill .8s ease}
+.sway{animation:sway 6s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 0}
+.sway.r{animation-delay:-3s}
+@keyframes sway{0%,100%{transform:rotate(0deg)}50%{transform:rotate(-.8deg)}}
+
+/* HUD: left wall = clock + plant, right wall = frame + welcome, centre = CTA + chip */
+.hud{position:absolute}
+.hot{position:absolute;cursor:pointer;border-radius:12px}
+.hot::after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 6px);transform:translateX(-50%);white-space:nowrap;font-size:12px;background:rgba(63,58,53,.9);color:#FBF8F2;padding:6px 10px;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .2s ease}
+.hot:hover::after,.hot:focus-visible::after{opacity:1}
+.hot:focus-visible{outline:2px solid var(--sage-deep);outline-offset:3px}
+.clock-cap{left:48px;top:232px;width:204px;text-align:center;font-size:12px;line-height:1.6;color:var(--text-soft)}
+.fact{background:var(--chip);color:var(--text);font-size:13px;padding:7px 12px;border-radius:10px;white-space:nowrap}
+.fact-plant{left:44px;top:336px}
+.frame-cap{left:874px;top:272px;width:128px;text-align:center;font-size:12px;color:var(--text-soft)}
+.welcome{left:770px;top:330px;width:270px;font-size:17px;line-height:1.7;font-weight:500;color:var(--text)}
+.chip{position:absolute;left:540px;top:560px;transform:translateX(-50%);background:var(--chip);color:var(--text);font-size:13px;padding:7px 14px;border-radius:12px;transition:opacity .4s ease;white-space:nowrap;font-variant-numeric:tabular-nums}
+.chip b{font-weight:600;color:var(--sage-deep);margin-left:6px}
+.stage:not([data-session="session"]) .chip{opacity:0;pointer-events:none}
+.invite{position:absolute;left:170px;top:520px;width:220px;background:#FFFDF8;color:var(--ink);border-radius:6px;padding:14px 14px 12px;font-size:13px;line-height:1.65;box-shadow:0 6px 16px rgba(63,58,53,.18);transform:rotate(-2deg);transition:opacity .4s ease}
+.invite p+p{margin-top:6px;font-size:12px;color:var(--muted)}
+.stage:not([data-session="invite"]) .invite{opacity:0;pointer-events:none}
+.primary{position:absolute;left:540px;top:612px;margin-left:-100px;width:200px;height:48px;border:0;border-radius:16px;background:var(--sage-deep);color:#FBF8F2;font:inherit;font-size:15px;font-weight:600;letter-spacing:.02em;cursor:pointer;box-shadow:0 4px 12px rgba(79,109,84,.24);transition:background .2s ease,transform .1s ease}
+.primary:hover{background:#44604a}
+.primary:active{transform:translateY(1px)}
+.primary:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+
+/* Joey eye states */
+.eyes{transition:opacity .4s ease}
+.stage[data-session="session"] .eyes-open,.stage[data-session="quiet"] .eyes-open{opacity:0}
+.stage:not([data-session="session"]) .eyes-look{opacity:0}
+.stage:not([data-session="quiet"]) .eyes-sleep{opacity:0}
+
+/* controls below stage */
+.foot{margin-top:18px;text-align:center;font-size:12px;color:var(--muted);line-height:1.7}
+.strip-title{margin:22px 0 10px;text-align:center;font-size:12px;color:var(--muted)}
+.strip{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:1080px;margin:0 auto}
+.thumb{border:2px solid transparent;background:#FBF8F2;border-radius:12px;padding:6px 6px 8px;cursor:pointer;font:inherit;color:var(--muted);font-size:12px;text-align:left;box-shadow:0 2px 8px rgba(63,58,53,.08)}
+.thumb[aria-pressed="true"]{border-color:var(--sage-deep);color:var(--ink)}
+.thumb .mini{margin-bottom:6px}
+.mini{position:relative;width:100%;aspect-ratio:180/110;border-radius:8px;overflow:hidden;background:var(--wall)}
+.mini svg{width:100%;height:100%;display:block}
+.mini .sway{animation:none}
+@media (max-width:720px){.strip{grid-template-columns:repeat(2,1fr)}}
+@media (prefers-reduced-motion:reduce){.sway{animation:none}.stage,.stage *{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="topbar">
+    <div class="ctrl">
+      <span class="label">时段</span>
+      <div class="seg" id="timeSeg" role="group" aria-label="时段">
+        <button type="button" data-time="morning" aria-pressed="false">清晨</button>
+        <button type="button" data-time="day" aria-pressed="false">白天</button>
+        <button type="button" data-time="dusk" aria-pressed="false">黄昏</button>
+        <button type="button" data-time="night" aria-pressed="false">夜晚</button>
+      </div>
+    </div>
+    <div class="ctrl">
+      <span class="label">陪伴</span>
+      <div class="seg" id="sessSeg" role="group" aria-label="陪伴状态">
+        <button type="button" data-session="idle" aria-pressed="false">未陪伴</button>
+        <button type="button" data-session="session" aria-pressed="false">陪伴中</button>
+        <button type="button" data-session="invite" aria-pressed="false">邀请休息</button>
+        <button type="button" data-session="quiet" aria-pressed="false">安静时段</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="win">
+    <div class="titlebar">
+      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+      <div class="wtitle">Joey 的家</div>
+      <svg class="gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-label="设置"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>
+    </div>
+    <div class="stage-box" id="stageBox">
+      <div class="stage" id="stage" data-time="day" data-session="idle">
+        <svg class="room" viewBox="0 0 1080 680" aria-hidden="true">
+          <!-- walls and floor -->
+          <rect class="c-wall" x="0" y="0" width="1080" height="500"/>
+          <rect class="c-floor" x="0" y="500" width="1080" height="180"/>
+          <rect x="0" y="498" width="1080" height="4" fill="#3F3A35" opacity=".06"/>
+
+          <!-- window: frame, sky, outdoor disc (sun or moon), hills, stars at night -->
+          <rect class="c-frame" x="380" y="110" width="320" height="290" rx="10"/>
+          <rect class="c-sky" x="394" y="124" width="292" height="262" rx="4"/>
+          <g class="stars" fill="#FFFDF2">
+            <circle cx="430" cy="160" r="2"/><circle cx="520" cy="142" r="1.6"/><circle cx="612" cy="184" r="2"/>
+            <circle cx="658" cy="152" r="1.5"/><circle cx="470" cy="206" r="1.4"/><circle cx="600" cy="236" r="1.6"/>
+          </g>
+          <circle class="c-disc" cx="630" cy="186" r="20"/>
+          <path class="c-hill" d="M394 330 C 470 288 560 300 686 332 L686 386 L394 386 Z"/>
+          <path class="c-hill" d="M394 362 C 440 344 500 350 540 362 L540 386 L394 386 Z" opacity=".7"/>
+          <rect class="c-frame" x="530" y="124" width="8" height="262"/>
+          <rect class="c-frame" x="394" y="250" width="292" height="8"/>
+
+          <!-- curtains: the only motion, gentle sway -->
+          <rect class="c-frame" x="330" y="88" width="420" height="6" rx="3"/>
+          <path class="c-curtain sway" d="M350 96 L404 96 C 392 200 396 320 384 420 L346 420 C 358 320 360 200 350 96 Z"/>
+          <path class="c-curtain sway r" d="M730 96 L676 96 C 688 200 684 320 696 420 L734 420 C 722 320 720 200 730 96 Z"/>
+
+          <!-- wall clock (left wall) -->
+          <circle class="c-frame" cx="150" cy="168" r="52"/>
+          <circle cx="150" cy="168" r="44" fill="#FBF8F2"/>
+          <path d="M150 132 L150 168 L172 178" fill="none" stroke="#3F3A35" stroke-width="4" stroke-linecap="round"/>
+          <path d="M150 168 L150 140" fill="none" stroke="#3F3A35" stroke-width="2.4" stroke-linecap="round"/>
+          <circle cx="150" cy="168" r="3.2" fill="#4F6D54"/>
+
+          <!-- picture frame (right wall) -->
+          <rect class="c-frame" x="874" y="146" width="128" height="120" rx="8"/>
+          <rect x="884" y="156" width="108" height="100" rx="4" fill="#FBF8F2"/>
+          <rect class="c-sky" x="884" y="156" width="108" height="100" rx="4"/>
+          <circle class="c-disc" cx="960" cy="186" r="11"/>
+          <path class="c-hill" d="M884 224 C 918 198 950 204 992 220 L992 256 L884 256 Z"/>
+
+          <!-- plant (left, bottom) -->
+          <path d="M66 470 C 66 440 80 420 90 404 C 100 420 114 440 114 470 Z" fill="#86A98A"/>
+          <path d="M90 404 C 76 396 62 388 56 372 C 72 372 86 384 92 398 Z" fill="#4F6D54" opacity=".85"/>
+          <path d="M90 404 C 106 394 120 386 126 370 C 110 370 96 382 88 398 Z" fill="#4F6D54" opacity=".85"/>
+          <path d="M58 470 L122 470 L114 530 L66 530 Z" fill="#C9B08C"/>
+          <rect x="56" y="462" width="68" height="12" rx="4" fill="#B99D7A"/>
+
+          <!-- desk (right, bottom): plain, no light source -->
+          <rect class="c-wood" x="770" y="470" width="260" height="16" rx="4"/>
+          <rect class="c-wood-dk" x="790" y="486" width="12" height="112"/>
+          <rect class="c-wood-dk" x="1006" y="486" width="12" height="112"/>
+          <rect x="800" y="444" width="84" height="26" rx="2" fill="#FFFDF8" stroke="#C9B08C" stroke-width="1.5"/>
+          <line x1="812" y1="454" x2="872" y2="454" stroke="#86A98A" stroke-width="2"/>
+          <line x1="812" y1="462" x2="866" y2="462" stroke="#C9B08C" stroke-width="2"/>
+
+          <!-- woven nest -->
+          <ellipse cx="436" cy="500" rx="160" ry="14" fill="#3F3A35" opacity=".08"/>
+          <ellipse class="c-nest" cx="436" cy="446" rx="140" ry="30"/>
+          <path class="c-nest-dk" d="M296 452 Q 436 502 576 452 L 576 474 Q 436 516 296 474 Z"/>
+          <path d="M320 462 Q 436 498 552 462" fill="none" stroke="#3F3A35" stroke-opacity=".14" stroke-width="2"/>
+
+          <!-- Joey, seated in the nest. Scaled 0.75. Outline via .jo class, eyes by session state. -->
+          <g transform="translate(316 200) scale(.75)">
+            <path d="M228 314 C 268 324 294 300 290 272 C 287 250 266 244 256 256 C 248 266 256 280 269 277" fill="none" stroke="#F0DFC8" stroke-width="23" stroke-linecap="round"/>
+            <path class="jo" d="M118 148 C 100 126 88 90 93 68 C 97 50 116 46 126 62 C 138 80 144 116 146 140 Z" fill="#F3E3CD"/>
+            <path d="M120 136 C 108 118 101 94 105 80 C 108 70 117 69 122 78 C 129 90 134 114 136 132 Z" fill="#EFC8AA"/>
+            <path class="jo" d="M202 148 C 220 126 232 90 227 68 C 223 50 204 46 194 62 C 182 80 176 116 174 140 Z" fill="#F3E3CD"/>
+            <path d="M200 136 C 212 118 219 94 215 80 C 212 70 203 69 198 78 C 191 90 186 114 184 132 Z" fill="#EFC8AA"/>
+            <path class="jo" d="M160 116 C 209 116 242 167 242 231 C 242 299 208 342 160 342 C 112 342 78 299 78 231 C 78 167 111 116 160 116 Z" fill="#F3E3CD"/>
+            <path d="M160 342 C 112 342 78 299 78 231 C 78 224 78 218 79 212 C 93 298 118 322 160 322 C 202 322 227 298 241 212 C 242 218 242 224 242 231 C 242 299 208 342 160 342 Z" fill="#EBD7BE" opacity="0.5"/>
+            <ellipse class="jo" cx="128" cy="337" rx="27" ry="13" fill="#F8ECDA"/>
+            <ellipse class="jo" cx="192" cy="337" rx="27" ry="13" fill="#F8ECDA"/>
+            <ellipse class="jo" cx="84" cy="262" rx="18" ry="28" fill="#EDDAC1" transform="rotate(10 84 262)"/>
+            <ellipse class="jo" cx="236" cy="262" rx="18" ry="28" fill="#EDDAC1" transform="rotate(-10 236 262)"/>
+            <path d="M122 244 C 142 258 178 258 198 244" fill="none" stroke="#86A98A" stroke-width="9" stroke-linecap="round"/>
+            <circle cx="200" cy="247" r="7" fill="#86A98A"/>
+            <ellipse cx="111" cy="226" rx="18" ry="9" fill="#EFAE7D" opacity="0.26"/>
+            <ellipse cx="209" cy="226" rx="18" ry="9" fill="#EFAE7D" opacity="0.26"/>
+            <g class="eyes eyes-open">
+              <ellipse cx="134" cy="204" rx="8.5" ry="11" fill="#3F3A35"/>
+              <ellipse cx="186" cy="204" rx="8.5" ry="11" fill="#3F3A35"/>
+              <circle cx="131" cy="200" r="2.8" fill="#FFFFFF"/>
+              <circle cx="183" cy="200" r="2.8" fill="#FFFFFF"/>
+            </g>
+            <g class="eyes eyes-look">
+              <ellipse cx="134" cy="203" rx="9.5" ry="12.5" fill="#3F3A35"/>
+              <ellipse cx="186" cy="203" rx="9.5" ry="12.5" fill="#3F3A35"/>
+              <circle cx="130.5" cy="198.5" r="3.2" fill="#FFFFFF"/>
+              <circle cx="182.5" cy="198.5" r="3.2" fill="#FFFFFF"/>
+            </g>
+            <g class="eyes eyes-sleep" fill="none" stroke="#3F3A35" stroke-width="3.6" stroke-linecap="round">
+              <path d="M125 206 C 131 212 141 212 147 206"/>
+              <path d="M173 206 C 179 212 189 212 195 206"/>
+            </g>
+            <path d="M160 216 C 166 216 169 220 166.5 223 C 164.5 225.5 155.5 225.5 153.5 223 C 151 220 154 216 160 216 Z" fill="#C98F6E"/>
+            <path d="M160 224 C 158 230 153 232 150 228 M160 224 C 162 230 167 232 170 228" fill="none" stroke="#6F5F53" stroke-width="2.3" stroke-linecap="round"/>
+          </g>
+        </svg>
+
+        <!-- HUD -->
+        <div class="hot" data-tip="调整提醒时间" tabindex="0" role="button" aria-label="挂钟，调整提醒时间" style="left:98px;top:116px;width:104px;height:104px"></div>
+        <div class="hud clock-cap">Joey 大约每 45 分钟来叫你一次</div>
+        <div class="hud fact fact-plant">今天休息 2 次</div>
+        <div class="hot" data-tip="看看这周" tabindex="0" role="button" aria-label="相框，看看这周" style="left:874px;top:146px;width:128px;height:120px"></div>
+        <div class="hud frame-cap">回顾</div>
+        <div class="hud welcome" id="welcome">我在这儿陪着你。</div>
+        <div class="chip" id="chip">陪伴中 · <b id="timer">00:00</b></div>
+        <div class="invite" role="note">
+          <p>Joey 说：窗边的光正好。</p>
+          <p>起来伸个懒腰，喝口水吧。</p>
+        </div>
+        <button type="button" class="primary" id="mainBtn">开始一起工作</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="strip-title">陪伴状态预览（点击切换）</div>
+  <div class="strip" id="strip">
+    <button type="button" class="thumb" data-session="idle" aria-pressed="false">
+      <div class="mini" data-time="day"><svg viewBox="0 0 180 110" aria-hidden="true">
+        <rect class="c-wall" x="0" y="0" width="180" height="72"/><rect class="c-floor" x="0" y="72" width="180" height="38"/>
+        <rect class="c-frame" x="60" y="12" width="60" height="50" rx="3"/><rect class="c-sky" x="64" y="16" width="52" height="42"/>
+        <circle class="c-disc" cx="104" cy="28" r="6"/><path class="c-hill" d="M64 46 C 78 38 96 40 116 44 L116 58 L64 58 Z"/>
+        <rect class="c-curtain" x="48" y="10" width="10" height="56" rx="3"/><rect class="c-curtain" x="122" y="10" width="10" height="56" rx="3"/>
+        <ellipse class="c-nest" cx="90" cy="86" rx="30" ry="7"/>
+        <ellipse class="jo" cx="82" cy="40" rx="4" ry="11" fill="#F3E3CD" transform="rotate(-8 82 40)"/><ellipse class="jo" cx="98" cy="40" rx="4" ry="11" fill="#F3E3CD" transform="rotate(8 98 40)"/>
+        <ellipse class="jo" cx="90" cy="72" rx="15" ry="16" fill="#F3E3CD"/><circle class="jo" cx="90" cy="54" r="12" fill="#F3E3CD"/>
+        <circle cx="86" cy="53" r="1.4" fill="#3F3A35"/><circle cx="94" cy="53" r="1.4" fill="#3F3A35"/>
+      </svg></div>未陪伴</button>
+    <button type="button" class="thumb" data-session="session" aria-pressed="false">
+      <div class="mini" data-time="day"><svg viewBox="0 0 180 110" aria-hidden="true">
+        <rect class="c-wall" x="0" y="0" width="180" height="72"/><rect class="c-floor" x="0" y="72" width="180" height="38"/>
+        <rect class="c-frame" x="60" y="12" width="60" height="50" rx="3"/><rect class="c-sky" x="64" y="16" width="52" height="42"/>
+        <circle class="c-disc" cx="104" cy="28" r="6"/><path class="c-hill" d="M64 46 C 78 38 96 40 116 44 L116 58 L64 58 Z"/>
+        <rect class="c-curtain" x="48" y="10" width="10" height="56" rx="3"/><rect class="c-curtain" x="122" y="10" width="10" height="56" rx="3"/>
+        <ellipse class="c-nest" cx="90" cy="86" rx="30" ry="7"/>
+        <ellipse class="jo" cx="82" cy="40" rx="4" ry="11" fill="#F3E3CD" transform="rotate(-8 82 40)"/><ellipse class="jo" cx="98" cy="40" rx="4" ry="11" fill="#F3E3CD" transform="rotate(8 98 40)"/>
+        <ellipse class="jo" cx="90" cy="72" rx="15" ry="16" fill="#F3E3CD"/><circle class="jo" cx="90" cy="54" r="12" fill="#F3E3CD"/>
+        <circle cx="86" cy="53" r="1.4" fill="#3F3A35"/><circle cx="94" cy="53" r="1.4" fill="#3F3A35"/>
+        <rect x="64" y="96" width="52" height="8" rx="4" fill="#4F6D54"/>
+      </svg></div>陪伴中</button>
+    <button type="button" class="thumb" data-session="invite" aria-pressed="false">
+      <div class="mini" data-time="dusk"><svg viewBox="0 0 180 110" aria-hidden="true">
+        <rect class="c-wall" x="0" y="0" width="180" height="72"/><rect class="c-floor" x="0" y="72" width="180" height="38"/>
+        <rect class="c-frame" x="60" y="12" width="60" height="50" rx="3"/><rect class="c-sky" x="64" y="16" width="52" height="42"/>
+        <circle class="c-disc" cx="104" cy="28" r="6"/><path class="c-hill" d="M64 46 C 78 38 96 40 116 44 L116 58 L64 58 Z"/>
+        <rect class="c-curtain" x="48" y="10" width="10" height="56" rx="3"/><rect class="c-curtain" x="122" y="10" width="10" height="56" rx="3"/>
+        <ellipse class="c-nest" cx="90" cy="86" rx="30" ry="7"/>
+        <ellipse class="jo" cx="82" cy="40" rx="4" ry="11" fill="#F3E3CD" transform="rotate(-8 82 40)"/><ellipse class="jo" cx="98" cy="40" rx="4" ry="11" fill="#F3E3CD" transform="rotate(8 98 40)"/>
+        <ellipse class="jo" cx="90" cy="72" rx="15" ry="16" fill="#F3E3CD"/><circle class="jo" cx="90" cy="54" r="12" fill="#F3E3CD"/>
+        <circle cx="86" cy="53" r="1.4" fill="#3F3A35"/><circle cx="94" cy="53" r="1.4" fill="#3F3A35"/>
+        <rect x="30" y="92" width="44" height="14" rx="3" fill="#FFFDF8"/>
+      </svg></div>邀请休息</button>
+    <button type="button" class="thumb" data-session="quiet" aria-pressed="false">
+      <div class="mini" data-time="night"><svg viewBox="0 0 180 110" aria-hidden="true">
+        <rect class="c-wall" x="0" y="0" width="180" height="72"/><rect class="c-floor" x="0" y="72" width="180" height="38"/>
+        <rect class="c-frame" x="60" y="12" width="60" height="50" rx="3"/><rect class="c-sky" x="64" y="16" width="52" height="42"/>
+        <g class="stars" fill="#FFFDF2"><circle cx="72" cy="24" r="1"/><circle cx="96" cy="20" r=".9"/><circle cx="110" cy="36" r="1"/></g>
+        <circle class="c-disc" cx="104" cy="28" r="6"/><path class="c-hill" d="M64 46 C 78 38 96 40 116 44 L116 58 L64 58 Z"/>
+        <rect class="c-curtain" x="48" y="10" width="10" height="56" rx="3"/><rect class="c-curtain" x="122" y="10" width="10" height="56" rx="3"/>
+        <ellipse class="c-nest" cx="90" cy="86" rx="30" ry="7"/>
+        <ellipse class="jo" cx="82" cy="40" rx="4" ry="11" fill="#F3E3CD" transform="rotate(-8 82 40)"/><ellipse class="jo" cx="98" cy="40" rx="4" ry="11" fill="#F3E3CD" transform="rotate(8 98 40)"/>
+        <ellipse class="jo" cx="90" cy="72" rx="15" ry="16" fill="#F3E3CD"/><circle class="jo" cx="90" cy="54" r="12" fill="#F3E3CD"/>
+        <path d="M84 54 q2 2 4 0 M92 54 q2 2 4 0" fill="none" stroke="#3F3A35" stroke-width="1.2" stroke-linecap="round"/>
+      </svg></div>安静时段</button>
+  </div>
+  <div class="foot">
+    时段默认跟随本地钟点，手动切换后覆盖自动。缩略图按各状态的默认时段着色。<br>
+    “今天休息 2 次”与计时器为示意数字。Joey 不计时、不打卡；邀请与安静时段可随时忽略。
+  </div>
+</div>
+<script>
+(function(){
+  var stage = document.getElementById('stage');
+  var box = document.getElementById('stageBox');
+  var welcome = document.getElementById('welcome');
+  var mainBtn = document.getElementById('mainBtn');
+  var timer = document.getElementById('timer');
+  var timeBtns = document.querySelectorAll('#timeSeg button');
+  var sessBtns = document.querySelectorAll('#sessSeg button');
+  var thumbs = document.querySelectorAll('#strip .thumb');
+
+  var WELCOME = {
+    morning: '一年之计在于晨。',
+    day: '我在这儿陪着你。',
+    dusk: '今天够了，慢慢收一收。',
+    night: '夜里也安静陪着。'
+  };
+  var BTN = { idle: '开始一起工作', session: '结束陪伴', invite: '好，去伸个懒腰', quiet: '知道了' };
+  var DEFAULT_TIME = { idle: 'day', session: 'day', invite: 'dusk', quiet: 'night' };
+
+  var manualTime = false;
+  var sec = 0, ticker = null;
+
+  function autoTime(){
+    var h = new Date().getHours();
+    if (h >= 5 && h < 10) return 'morning';
+    if (h >= 10 && h < 17) return 'day';
+    if (h >= 17 && h < 20) return 'dusk';
+    return 'night';
+  }
+  function fmt(n){ var m = Math.floor(n/60), s = n%60; return (m<10?'0':'')+m+':'+(s<10?'0':'')+s; }
+
+  function setTime(t, fromUser){
+    stage.setAttribute('data-time', t);
+    welcome.textContent = WELCOME[t];
+    timeBtns.forEach(function(b){ b.setAttribute('aria-pressed', String(b.dataset.time === t)); });
+    if (fromUser) manualTime = true;
+  }
+
+  function setSession(s){
+    stage.setAttribute('data-session', s);
+    mainBtn.textContent = BTN[s];
+    sessBtns.forEach(function(b){ b.setAttribute('aria-pressed', String(b.dataset.session === s)); });
+    thumbs.forEach(function(b){ b.setAttribute('aria-pressed', String(b.dataset.session === s)); });
+    if (s === 'session') {
+      sec = 0; timer.textContent = fmt(sec);
+      clearInterval(ticker);
+      ticker = setInterval(function(){ sec++; timer.textContent = fmt(sec); }, 1000);
+    } else {
+      clearInterval(ticker); ticker = null;
+    }
+  }
+
+  function fit(){ stage.style.setProperty('--s', box.clientWidth / 1080); }
+
+  timeBtns.forEach(function(b){ b.addEventListener('click', function(){ setTime(b.dataset.time, true); }); });
+  sessBtns.forEach(function(b){ b.addEventListener('click', function(){ setSession(b.dataset.session); }); });
+  thumbs.forEach(function(b){ b.addEventListener('click', function(){ setSession(b.dataset.session); }); });
+  mainBtn.addEventListener('click', function(){
+    setSession(stage.getAttribute('data-session') === 'session' ? 'idle' : 'session');
+  });
+
+  setTime(autoTime(), false);
+  setSession('idle');
+  window.addEventListener('resize', fit);
+  fit();
+  setInterval(function(){ if (!manualTime) setTime(autoTime(), false); }, 60000);
+})();
+</script>
+</body>
+</html>
