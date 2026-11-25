@@ -505,7 +505,7 @@ The main window, and it should feel like entering Joey's home.
 - Room scene fills the content area. The nest is not a separate renderer: it hosts the same layered `JoeyDesktopScene` with the same `JoeyAssetPackage` as the desktop pet, feeds it the pose `PetRuntime` resolved, and therefore matches faces, props, breathing, blinks and ear/tail motion exactly. `sleep` is the standing closed-eye pose with relaxed ears; `doze` is the lighter, slightly tilted nap. At dusk the room applies a 0.18 sage-grey wash (`nestPetTint`) to the layered pet so it sits in the dim light; the desktop pet stays untinted.
 - Joey stays in the nest. The room pet is not draggable; a click asks the runtime for one short greeting (`happy` for ~2.8 s), and both the nest and the desktop pet play it.
 - While a companionship session is running (`陪伴中`), the runtime drives `look` (including during the invitation card), then `stretch` and `happy` at the matching moments, and the nest follows. Quiet hours show the same `sleep` pose in both places.
-- The wall clock shows the real local time with hour and minute hands; clicking it opens **设置** on **通用**. The hover hint is `调整提醒时间`.
+- The wall clock shows the real local time with hour, minute, and second hands (second hand ticks once per second, no continuous sweep); clicking it opens **设置** on **通用**. The hover hint is `调整提醒时间`.
 - Object-bound copy (no companionship-duration on home — that stays in 回顾):
   - Clock label (no session): `大约每 45 分钟叫你一次` (same whether the desktop pet is visible)
   - Clock label (session active) — one line, highest situation wins:
@@ -832,6 +832,7 @@ Git history and the archive branch explain why they were replaced.
 | 2026-11-23 | `peek` now renders while the panel is docked-collapsed; dock exposure raised from 40% to 48% so one full eye stays inside the screen edge. The frozen graph and the dock geometry tests follow the same number. |
 | 2026-11-23 | `peek` art recomposed for the edge: the head leans toward the right of the canvas so the 48% docked strip keeps both eyes and both paws in view. The right edge uses the same art mirrored; the pose itself still has no horizontal motion. |
 | 2026-11-23 | V0 defers edge docking, collapse and `peek`. Dragging still clamps on screen and persists the release position; the edge-dock geometry and peek wiring are removed. `carry` remains. |
+| 2026-11-25 | Nest wall clock: second hand ticks once per second; 12 hour + 60 minute marks. |
 | 2026-11-24 | Removed `step` / ambient walking from V0 (product meaning weak; walk art broke character identity). |
 | 2026-11-24 | Quiet-hours life bridges: enter and exit through a 1.8 s `yawn` before `sleep` / day pose; recovery and complete still finish first. |
 | 2026-11-24 | Nest home: daypart palettes + curtain sway (no beams); desk welcome replaces companionship duration; CTA centred; board `joeypet-home-v1.html`. |

@@ -296,6 +296,7 @@ struct RoomSceneView: View {
 
 /// Draws the clock hands from the real local time. Only this small canvas
 /// refreshes each second; the room illustration stays static.
+/// Second hand ticks once per second (discrete steps), like a wall quartz clock.
 private struct RoomClockHandsView: View {
     let theme: JoeyTheme
 
@@ -309,32 +310,57 @@ private struct RoomClockHandsView: View {
                     [.hour, .minute, .second],
                     from: timeline.date
                 )
-                let minutes = Double(components.minute ?? 0)
-                    + Double(components.second ?? 0) / 60
+                // Whole seconds only — no continuous sweep.
+                let seconds = Double(components.second ?? 0)
+                let minutes = Double(components.minute ?? 0) + seconds / 60
                 let hours = Double((components.hour ?? 0) % 12) + minutes / 60
 
                 drawHand(
                     in: &canvas,
                     center: center,
                     angle: hours / 12 * 2 * .pi,
-                    length: 21 * unit,
-                    width: 4 * unit
+                    length: 20 * unit,
+                    tail: 4 * unit,
+                    width: 4.2 * unit,
+                    color: theme.roomHand
                 )
                 drawHand(
                     in: &canvas,
                     center: center,
                     angle: minutes / 60 * 2 * .pi,
-                    length: 32 * unit,
-                    width: 3 * unit
+                    length: 30 * unit,
+                    tail: 5 * unit,
+                    width: 3 * unit,
+                    color: theme.roomHand
+                )
+                // Thin second hand with a short counterweight behind the hub.
+                drawHand(
+                    in: &canvas,
+                    center: center,
+                    angle: seconds / 60 * 2 * .pi,
+                    length: 34 * unit,
+                    tail: 9 * unit,
+                    width: 1.15 * unit,
+                    color: theme.apricotInk
+                )
+                // Hub: outer disc + small pin (reads as a real clock axle).
+                canvas.fill(
+                    Path(ellipseIn: CGRect(
+                        x: center.x - 3.6 * unit,
+                        y: center.y - 3.6 * unit,
+                        width: 7.2 * unit,
+                        height: 7.2 * unit
+                    )),
+                    with: .color(theme.roomHand)
                 )
                 canvas.fill(
                     Path(ellipseIn: CGRect(
-                        x: center.x - 3.5 * unit,
-                        y: center.y - 3.5 * unit,
-                        width: 7 * unit,
-                        height: 7 * unit
+                        x: center.x - 1.6 * unit,
+                        y: center.y - 1.6 * unit,
+                        width: 3.2 * unit,
+                        height: 3.2 * unit
                     )),
-                    with: .color(theme.roomHand)
+                    with: .color(theme.apricotInk)
                 )
             }
         }
@@ -346,17 +372,24 @@ private struct RoomClockHandsView: View {
         center: CGPoint,
         angle: Double,
         length: CGFloat,
-        width: CGFloat
+        tail: CGFloat,
+        width: CGFloat,
+        color: Color
     ) {
-        var hand = Path()
-        hand.move(to: center)
-        hand.addLine(to: CGPoint(
+        let tip = CGPoint(
             x: center.x + sin(angle) * length,
             y: center.y - cos(angle) * length
-        ))
+        )
+        let heel = CGPoint(
+            x: center.x - sin(angle) * tail,
+            y: center.y + cos(angle) * tail
+        )
+        var hand = Path()
+        hand.move(to: heel)
+        hand.addLine(to: tip)
         canvas.stroke(
             hand,
-            with: .color(theme.roomHand),
+            with: .color(color),
             style: StrokeStyle(lineWidth: width, lineCap: .round)
         )
     }
@@ -552,24 +585,39 @@ private struct RoomPainter {
         context.fill(circle, with: .color(theme.roomClock))
         context.stroke(circle, with: .color(theme.roomClockRim), lineWidth: 5)
 
-        var ticks = Path()
-        for index in 0..<8 {
-            let angle = Double(index) * .pi / 4
+        // 60 faint minute marks + 12 stronger hour marks (wall-clock read).
+        var minuteTicks = Path()
+        var hourTicks = Path()
+        for index in 0..<60 {
+            let angle = Double(index) * .pi / 30 - .pi / 2
+            let isHour = index % 5 == 0
+            let outerR: CGFloat = 38
+            let innerR: CGFloat = isHour ? 30 : 35
             let outer = CGPoint(
-                x: center.x + cos(angle) * 38,
-                y: center.y + sin(angle) * 38
+                x: center.x + cos(angle) * outerR,
+                y: center.y + sin(angle) * outerR
             )
             let inner = CGPoint(
-                x: center.x + cos(angle) * 32,
-                y: center.y + sin(angle) * 32
+                x: center.x + cos(angle) * innerR,
+                y: center.y + sin(angle) * innerR
             )
-            ticks.move(to: outer)
-            ticks.addLine(to: inner)
+            if isHour {
+                hourTicks.move(to: outer)
+                hourTicks.addLine(to: inner)
+            } else {
+                minuteTicks.move(to: outer)
+                minuteTicks.addLine(to: inner)
+            }
         }
         context.stroke(
-            ticks,
+            minuteTicks,
+            with: .color(theme.roomClockTick.opacity(0.45)),
+            style: StrokeStyle(lineWidth: 1, lineCap: .round)
+        )
+        context.stroke(
+            hourTicks,
             with: .color(theme.roomClockTick),
-            style: StrokeStyle(lineWidth: 2, lineCap: .round)
+            style: StrokeStyle(lineWidth: 2.4, lineCap: .round)
         )
         // The hands are drawn by `RoomClockHandsView` so they can follow the
         // real time without repainting the whole room.
