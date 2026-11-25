@@ -13,7 +13,6 @@ final class AppSettings {
         static let quietEnd = "joey.quietEndMinutes"
         static let appearance = "joey.appearance"
         static let petCorner = "joey.petCorner"
-        static let feedback = "joey.feedback"
         static let showsDesktopPet = PetPreferences.showsDesktopPetKey
         static let ambientSound = "joey.ambientSoundID"
         static let cueSound = "joey.cueSoundID"
@@ -84,10 +83,6 @@ final class AppSettings {
         }
     }
 
-    var feedback: String {
-        didSet { defaults.set(feedback, forKey: Key.feedback) }
-    }
-
     /// Ambient bed while companionship is active. `JoeyAudioCatalog.noneID` = 无背景音.
     var ambientSoundID: String {
         didSet {
@@ -121,7 +116,6 @@ final class AppSettings {
             rawValue: defaults.string(forKey: Key.petCorner) ?? ""
         ) ?? .bottomRight
         self.showsDesktopPet = defaults.object(forKey: Key.showsDesktopPet) as? Bool ?? false
-        self.feedback = defaults.string(forKey: Key.feedback) ?? ""
         // Ambient defaults off; cue defaults to the soft ceramic tap.
         self.ambientSoundID = defaults.string(forKey: Key.ambientSound)
             ?? JoeyAudioCatalog.noneID

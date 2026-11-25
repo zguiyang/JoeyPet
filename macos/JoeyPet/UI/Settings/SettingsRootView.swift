@@ -9,9 +9,7 @@ struct SettingsRootView: View {
     var onDebugAction: ((DebugPetAction) -> Void)?
     @State private var selection: SettingsSection = .general
     @State private var hoveredSection: SettingsSection?
-    @State private var isFeedbackOpen = false
     @State private var debugStatus: String = "点一项即可触发完整效果"
-    @ScaledMetric(relativeTo: .body) private var feedbackFontSize: CGFloat = 13
     private let audioCatalog = JoeyAudioCatalog.load()
     private let soundPreview = JoeySoundPreviewPlayer()
 
@@ -235,76 +233,86 @@ struct SettingsRootView: View {
 
     private var aboutPane: some View {
         SettingsPane(title: "关于") {
-            VStack(alignment: .leading, spacing: 0) {
-                SettingsRowList {
-                    SettingsRow("版本", subtitle: "") {
-                        Text(appVersion)
-                            .font(.system(size: 13))
-                            .monospacedDigit()
-                            .foregroundStyle(theme.ink2)
-                    }
-
-                    SettingsRow("反馈", subtitle: "只保存在这台 Mac") {
-                        SettingsSmallButton(
-                            title: isFeedbackOpen ? "收起" : "写一句"
-                        ) {
-                            withAnimation(.easeOut(duration: 0.16)) {
-                                isFeedbackOpen.toggle()
-                            }
-                        }
-                    }
-
-                    if !audioCatalog.attributionTracks.isEmpty {
-                        SettingsRow("声音致谢", subtitle: audioAttributionLine) {
-                            Text("CC BY")
-                                .font(.system(size: 12.5))
-                                .foregroundStyle(theme.muted)
-                        }
-                    }
+            SettingsRowList {
+                SettingsRow("版本", subtitle: "") {
+                    Text(appVersion)
+                        .font(.system(size: 13))
+                        .monospacedDigit()
+                        .foregroundStyle(theme.ink2)
                 }
 
-                if isFeedbackOpen {
-                    VStack(alignment: .leading, spacing: 6) {
-                        feedbackEditor
-                        Text("已自动保存在本机")
-                            .font(.caption2)
-                            .foregroundStyle(theme.muted)
-                            .padding(.leading, 4)
+                SettingsRow("反馈", subtitle: FeedbackMail.address) {
+                    SettingsSmallButton(title: "发邮件") {
+                        openFeedbackMail()
                     }
-                    .padding(.top, 14)
+                    .accessibilityLabel("发邮件反馈")
+                    .help("用系统邮件写信到 \(FeedbackMail.address)")
+                }
+
+                if !audioCatalog.attributionTracks.isEmpty {
+                    SettingsRow("声音致谢", subtitle: audioAttributionLine) {
+                        Text("CC BY")
+                            .font(.system(size: 12.5))
+                            .foregroundStyle(theme.muted)
+                    }
                 }
             }
         }
     }
 
-    private var feedbackEditor: some View {
-        ZStack(alignment: .topLeading) {
-            if settings.feedback.isEmpty {
-                Text("说给 Joey 听…")
-                    .font(.system(size: feedbackFontSize))
-                    .foregroundStyle(theme.muted)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 16)
-                    .allowsHitTesting(false)
-            }
-
-            TextEditor(text: $settings.feedback)
-                .font(.system(size: feedbackFontSize))
-                .foregroundStyle(theme.ink)
-                .scrollContentBackground(.hidden)
-                .padding(12)
-                .frame(minHeight: 72)
-                .focusEffectDisabled()
-                .accessibilityLabel("反馈")
+    private func openFeedbackMail() {
+        guard let url = FeedbackMail.composeURL(appVersion: appVersion) else {
+            presentFeedbackFallback()
+            return
         }
-        .background(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(theme.panel)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .stroke(theme.hairlineStrong, lineWidth: 1)
-        )
+
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.activates = true
+
+        // Many Macs register Chrome (or another browser) as the mailto handler;
+        // that often opens a background tab instead of a compose window. Prefer
+        // Apple Mail when it is installed.
+        if let mailApp = NSWorkspace.shared.urlForApplication(
+            withBundleIdentifier: "com.apple.mail"
+        ) {
+            NSWorkspace.shared.open(
+                [url],
+                withApplicationAt: mailApp,
+                configuration: configuration
+            ) { _, error in
+                if error != nil {
+                    DispatchQueue.main.async {
+                        self.openFeedbackMailWithDefaultHandler(url, configuration: configuration)
+                    }
+                }
+            }
+            return
+        }
+
+        openFeedbackMailWithDefaultHandler(url, configuration: configuration)
+    }
+
+    private func openFeedbackMailWithDefaultHandler(
+        _ url: URL,
+        configuration: NSWorkspace.OpenConfiguration
+    ) {
+        NSWorkspace.shared.open(url, configuration: configuration) { _, error in
+            if error != nil {
+                DispatchQueue.main.async { self.presentFeedbackFallback() }
+            }
+        }
+    }
+
+    private func presentFeedbackFallback() {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(FeedbackMail.address, forType: .string)
+
+        let alert = NSAlert()
+        alert.messageText = "没法打开邮件"
+        alert.informativeText = "邮箱地址已复制：\(FeedbackMail.address)\n可以粘贴到你常用的邮箱里发给我。"
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "好")
+        alert.runModal()
     }
 
     private var audioAttributionLine: String {
@@ -314,6 +322,33 @@ struct SettingsRootView: View {
 
     private var appVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    }
+}
+
+/// V0 feedback goes out by mail — no backend. Swap to a form later if volume grows.
+private enum FeedbackMail {
+    static let address = "2770723534@qq.com"
+
+    static func composeURL(appVersion: String) -> URL? {
+        // Build the query with explicit percent-encoding. URLComponents can leave
+        // mailto handlers with awkward `+` spacing; Mail is happier with `%20`.
+        let subject = "JoeyPet 反馈"
+        let body = """
+
+
+        ---
+        JoeyPet \(appVersion)
+        macOS \(ProcessInfo.processInfo.operatingSystemVersionString)
+        """
+        var allowed = CharacterSet.urlQueryAllowed
+        allowed.remove(charactersIn: "&=+?")
+        guard
+            let encodedSubject = subject.addingPercentEncoding(withAllowedCharacters: allowed),
+            let encodedBody = body.addingPercentEncoding(withAllowedCharacters: allowed)
+        else {
+            return nil
+        }
+        return URL(string: "mailto:\(address)?subject=\(encodedSubject)&body=\(encodedBody)")
     }
 }
 
