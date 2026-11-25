@@ -112,7 +112,10 @@ final class MainWindowController: NSWindowController {
     func applyAppearance() {
         let date = Date()
         let tone = settings.appearance.resolveChromeTone(at: date)
-        let daypart = settings.appearance.resolveRoomDaypart(at: date)
+        // Settings keeps fixed chrome tokens (no room-wall daypart).
+        let daypart = navigation.route == .settings
+            ? nil
+            : settings.appearance.resolveRoomDaypart(at: date)
         applyChrome(tone: tone, daypart: daypart)
     }
 
@@ -120,7 +123,12 @@ final class MainWindowController: NSWindowController {
         guard let window else { return }
         let theme = JoeyTheme(chromeTone: tone, daypart: daypart)
         window.appearance = settings.appearance.nsAppearance()
-        window.backgroundColor = NSColor(theme.windowChrome)
+        // `daypart == nil` means settings: match the unified settings surface
+        // (light paper / dark chrome). Home still uses chrome (or room wall).
+        let surface = daypart == nil
+            ? (tone == .light ? theme.windowBg : theme.windowChrome)
+            : theme.windowChrome
+        window.backgroundColor = NSColor(surface)
     }
 
     private func installChromeButton() {

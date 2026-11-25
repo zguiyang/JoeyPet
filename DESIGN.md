@@ -105,8 +105,8 @@ Every surface colour comes from a token. Never hardcode a hex in a view.
 
 | Token | Light | Dusk | Use |
 |-------|-------|------|-----|
-| `window-bg` | `#FBF8F0` | `#313A3B` | Window content |
-| `window-chrome` | `#F2ECE1` | `#262E2F` | Titlebar, sidebar |
+| `window-bg` | `#FBF8F0` | `#313A3B` | Illustrated content; Settings light surface (sidebar + detail) |
+| `window-chrome` | `#F2ECE1` | `#262E2F` | Titlebar; Settings dark surface (sidebar + detail) |
 | `panel` | `#FFFDF7` | `#37403F` | Cards, panels, sign |
 | `panel-2` | `#F8F3E9` | `#2F3838` | Inset fills, segmented track, hover |
 | `popover` | `#FFFDF8` | `#394241` | Chips, menus, tooltips, labels |
@@ -257,7 +257,7 @@ All layout derives from the live window size in code. The 1440 × 900 numbers de
 - **Native macOS window**: real traffic lights, native title, native resize/move/key-inactive appearance. Never draw fake traffic lights.
 - **No toolbar. No in-window tab bar. No solid navigation bar on the home room.** System chrome already provides traffic lights; the illustrated room paints under a transparent titlebar.
 - **One chrome control only:** a settings gear at the titlebar trailing edge. Nothing else lives in the titlebar.
-- Illustrated surfaces (home + reflection) are immersive: no opaque title strip; sky/garden paints under the transparent titlebar with a light floating title. Settings uses a full-height sidebar under the same transparent titlebar (no solid nav band); sidebar + detail share the resolved appearance tone.
+- Illustrated surfaces (home + reflection) are immersive: no opaque title strip; sky/garden paints under the transparent titlebar with a light floating title. Settings uses a full-height sidebar under the same transparent titlebar (no solid nav band); sidebar and detail share one surface — light `window-bg`, dark `window-chrome` (hierarchy via type and selection, not a second fill).
 - Window title metadata stays real ("Joey 的家", "节奏回顾", "JoeyPet 设置") for window management even when the home label is subtle.
 
 ### 7.3 Navigation lives in the scene
@@ -532,6 +532,7 @@ A garden inside the same window, opened from the wall frame.
 Native, quieter, more functional than the room. No illustration, no hero copy, no sage hero blocks.
 
 - Page title **JoeyPet 设置** inside the shared window; 200 px sidebar + detail.
+- Sidebar and detail share one fill (not room-wall daypart paint): light `window-bg`, dark `window-chrome`. A hairline divider and type weight carry the split; controls still sit on `panel` / `panel-2`.
 - Sidebar is one flat list, no group headings: 节奏与提醒 · 安静时段 · 外观与位置 · 关于 JoeyPet.
 - Rows:
 
@@ -812,3 +813,4 @@ Git history and the archive branch explain why they were replaced.
 | 2026-11-24 | Nest home: daypart palettes + curtain sway (no beams); desk welcome replaces companionship duration; CTA centred; board `joeypet-home-v1.html`. |
 | 2026-11-25 | Appearance is 时段 / 系统; home immersive under transparent titlebar; chrome shares daypart or macOS tone with settings/reflection. |
 | 2026-11-25 | Appearance adds locked 明亮 / 黑夜; four options, default 时段. |
+| 2026-11-25 | Settings sidebar + detail share one surface (light `window-bg`, dark `window-chrome`; no night-wall clash). |

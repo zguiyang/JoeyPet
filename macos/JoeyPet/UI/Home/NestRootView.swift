@@ -84,19 +84,20 @@ struct NestRootView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .onAppear {
                 onRouteChange(navigation.route)
-                onChromeToneChange?(chromeTone, displayDaypart)
+                publishChrome(tone: chromeTone, daypart: displayDaypart, route: navigation.route)
             }
             .onChange(of: navigation.route) { _, newRoute in
                 onRouteChange(newRoute)
+                publishChrome(tone: chromeTone, daypart: displayDaypart, route: newRoute)
             }
             .onChange(of: chromeTone) { _, newTone in
-                onChromeToneChange?(newTone, displayDaypart)
+                publishChrome(tone: newTone, daypart: displayDaypart, route: navigation.route)
             }
             .onChange(of: settings.appearance) { _, _ in
-                onChromeToneChange?(chromeTone, displayDaypart)
+                publishChrome(tone: chromeTone, daypart: displayDaypart, route: navigation.route)
             }
             .onChange(of: displayDaypart) { _, _ in
-                onChromeToneChange?(chromeTone, displayDaypart)
+                publishChrome(tone: chromeTone, daypart: displayDaypart, route: navigation.route)
             }
         }
     }
@@ -127,6 +128,12 @@ struct NestRootView: View {
                 onReturn: { navigation.showHome() }
             )
         }
+    }
+
+    /// Home/reflection keep daypart wall under the titlebar; settings uses fixed
+    /// chrome so sidebar, detail and traffic-light band stay one surface.
+    private func publishChrome(tone: JoeyChromeTone, daypart: RoomDaypart, route: NestRoute) {
+        onChromeToneChange?(tone, route == .settings ? nil : daypart)
     }
 
     /// Settings: full-height sidebar under the titlebar (no opaque nav strip).

@@ -15,18 +15,24 @@ struct SettingsRootView: View {
     private let audioCatalog = JoeyAudioCatalog.load()
     private let soundPreview = JoeySoundPreviewPlayer()
 
+    /// Settings stays on chrome tokens only — never room-wall daypart paint —
+    /// so sidebar and detail share one surface (hierarchy via type + selection).
     private var theme: JoeyTheme {
-        JoeyTheme(
-            appearance: settings.appearance,
-            daypart: settings.appearance == .daypart ? RoomDaypart.resolve(at: Date()) : nil
-        )
+        JoeyTheme(chromeTone: settings.appearance.resolveChromeTone(at: Date()))
+    }
+
+    /// One surface for sidebar + detail. Light uses paper `windowBg` so
+    /// `panel-2` tracks stay recessed; dark keeps chrome so it matches the
+    /// traffic-light band. Controls still use `panel` / `panel-2`.
+    private var settingsSurface: Color {
+        theme.chromeTone == .light ? theme.windowBg : theme.windowChrome
     }
 
     var body: some View {
         HStack(spacing: 0) {
             sidebar
             Rectangle()
-                .fill(theme.hairline.opacity(0.7))
+                .fill(theme.hairline.opacity(0.55))
                 .frame(width: 1)
                 .frame(maxHeight: .infinity)
             // Sidebar stays put; only the detail pane scrolls when Debug (or
@@ -39,18 +45,11 @@ struct SettingsRootView: View {
                 .frame(maxWidth: .infinity, alignment: .topLeading)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .background(theme.windowBg)
+            .background(settingsSurface)
         }
         .padding(.top, topInset)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background {
-            HStack(spacing: 0) {
-                theme.windowChrome
-                    .frame(width: 200)
-                theme.windowBg
-            }
-            .ignoresSafeArea()
-        }
+        .background(settingsSurface.ignoresSafeArea())
         .environment(\.joeyAppearance, settings.appearance)
         .environment(
             \.joeyChromeTone,
@@ -77,7 +76,7 @@ struct SettingsRootView: View {
         .padding(.bottom, 12)
         .frame(width: 200)
         .frame(maxHeight: .infinity, alignment: .top)
-        .background(theme.windowChrome)
+        .background(settingsSurface)
     }
 
     private func navRow(_ section: SettingsSection) -> some View {

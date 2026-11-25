@@ -160,7 +160,9 @@ struct JoeyTheme {
     var windowBg: Color { isLight ? Color(hex: 0xFBF8F0) : Color(hex: 0x313A3B) }
     var windowChrome: Color {
         if let daypart, !isLight {
-            // Align chrome with home dusk/night walls when a daypart is supplied.
+            // Home/reflection only: paint the traffic-light band with the room wall.
+            // Settings must pass `daypart: nil` so sidebar + detail stay on the
+            // fixed chrome token (one surface, no wall/content hue clash).
             return RoomDaypartPalette.palette(for: daypart).wall
         }
         return isLight ? Color(hex: 0xF2ECE1) : Color(hex: 0x262E2F)
