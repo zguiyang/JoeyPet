@@ -551,9 +551,12 @@ struct PetDomainTests {
             event: .tick,
             now: asleepTime,
             calendar: calendar
-        ).state
-        #expect(!asleep.isYawning)
-        #expect(asleep.resolvedPose(at: asleepTime) == .sleep)
+        )
+        #expect(!asleep.state.isYawning)
+        #expect(asleep.state.resolvedPose(at: asleepTime) == .sleep)
+        // Must emit play(.sleep): finish() alone sees sleep→sleep at `now` and
+        // would leave the sprite stuck on yawn without this effect.
+        #expect(asleep.effects.contains(.play(.sleep)))
     }
 
     @Test func quietHoursLetsRecoveryFinishBeforeSleeping() {
@@ -609,9 +612,10 @@ struct PetDomainTests {
             event: .tick,
             now: asleepTime,
             calendar: calendar
-        ).state
-        #expect(!sleeping.isYawning)
-        #expect(sleeping.resolvedPose(at: asleepTime) == .sleep)
+        )
+        #expect(!sleeping.state.isYawning)
+        #expect(sleeping.state.resolvedPose(at: asleepTime) == .sleep)
+        #expect(sleeping.effects.contains(.play(.sleep)))
     }
 
     @Test func quietHoursExitYawnsThenReturnsToSit() {
@@ -651,9 +655,10 @@ struct PetDomainTests {
             event: .tick,
             now: awakeTime,
             calendar: calendar
-        ).state
-        #expect(!awake.isYawning)
-        #expect(awake.resolvedPose(at: awakeTime) == .sit)
+        )
+        #expect(!awake.state.isYawning)
+        #expect(awake.state.resolvedPose(at: awakeTime) == .sit)
+        #expect(awake.effects.contains(.play(.sit)))
     }
 
     @Test func quietHoursEnterYawnsThenSleepsWhenAlone() {
@@ -684,9 +689,44 @@ struct PetDomainTests {
             event: .tick,
             now: asleepTime,
             calendar: calendar
-        ).state
-        #expect(!asleep.isYawning)
-        #expect(asleep.resolvedPose(at: asleepTime) == .sleep)
+        )
+        #expect(!asleep.state.isYawning)
+        #expect(asleep.state.resolvedPose(at: asleepTime) == .sleep)
+        #expect(asleep.effects.contains(.play(.sleep)))
+    }
+
+    @Test func overdueYawnSettlesOnWakeAndNonTickEvents() {
+        let calendar = testCalendar()
+        let quietTime = testDate(2026, 11, 23, 22, 0)
+        var situation = PetSituation()
+        situation.isQuietActive = true
+        situation.isYawning = true
+        situation.yawnUntil = quietTime.addingTimeInterval(1.8)
+
+        // Flag still owns the pose after the deadline until timers settle.
+        let overdue = quietTime.addingTimeInterval(10)
+        #expect(situation.isYawnActive(at: overdue))
+        #expect(situation.resolvedPose(at: overdue) == .yawn)
+
+        let woken = PetStateMachine.reduce(
+            situation,
+            event: .systemWake,
+            now: overdue,
+            calendar: calendar
+        )
+        #expect(!woken.state.isYawning)
+        #expect(woken.state.resolvedPose(at: overdue) == .sleep)
+        #expect(woken.effects.contains(.play(.sleep)))
+
+        // Same settlement on an ordinary event — not only `.tick`.
+        let viaConfig = PetStateMachine.reduce(
+            situation,
+            event: .configurationChanged(quietWindow: QuietWindow(), rhythmMinutes: 45),
+            now: overdue,
+            calendar: calendar
+        )
+        #expect(!viaConfig.state.isYawning)
+        #expect(viaConfig.effects.contains(.play(.sleep)))
     }
 
     @Test func hiddenKeepsSessionAndStillInvites() {
@@ -1091,6 +1131,37 @@ struct PetDomainTests {
         let boundary = QuietWindow(startMinutes: 22 * 60, endMinutes: 8 * 60)
             .nextBoundary(after: now, calendar: calendar)
         #expect(wake! <= boundary!)
+    }
+
+    @Test func nextWakeDateWakesImmediatelyForOverdueYawn() {
+        let calendar = testCalendar()
+        var now = testDate(2026, 11, 23, 21, 59)
+        var persisted = PetPersistedState.empty(now: now, calendar: calendar)
+        persisted.showsDesktopPet = true
+        persisted.quietWindow = QuietWindow(startMinutes: 22 * 60, endMinutes: 8 * 60)
+        let store = TestSessionStore(persisted)
+        let runtime = PetRuntime(
+            renderer: TestPoseRenderer(),
+            store: store,
+            now: { now },
+            calendar: calendar
+        )
+        runtime.start()
+
+        now = testDate(2026, 11, 23, 22, 0)
+        runtime.send(.tick)
+        #expect(runtime.situation.isYawning)
+        #expect(runtime.renderedPose == .yawn)
+
+        // Deadline already passed; scheduler must not drop the wake.
+        now = testDate(2026, 11, 23, 22, 0).addingTimeInterval(10)
+        let wake = runtime.nextWakeDate(after: now)
+        #expect(wake != nil)
+        #expect(wake! <= now.addingTimeInterval(0.05))
+
+        runtime.send(.tick)
+        #expect(!runtime.situation.isYawning)
+        #expect(runtime.renderedPose == .sleep)
     }
 
     @Test func sessionSurfacesFollowInvitationAndRecovery() {

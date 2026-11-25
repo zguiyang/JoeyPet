@@ -208,6 +208,13 @@ reduce(situation: PetSituation, event: PetEvent, now: Date) -> (PetSituation, [P
 | `snoozeExpired` | 若会话仍在→`companion` 并立即评估邀请（跳过 `approach`）；否则 `alone` |
 | `quietWindowChanged(true)` / 进入安静窗 | `quiet`；关闭邀请卡；恢复/完成允许走完；否则先 `yawn` 1.8 s 再 `sleep` |
 | `quietWindowChanged(false)` / 离开安静窗 | 先 `yawn` 1.8 s；然后会话在→`companion`，否则 `alone` |
+
+过渡契约（避免姿态卡住）：
+
+- `finish` 用**同一** `now` 比较旧/新 `resolvedPose`。因此任何限时姿态叠加层必须 **用 flag 持有姿态，到点再清 flag**（哈欠：`isYawning`；`yawnUntil` 只作调度截止），不能在 flag 仍为真时用 `deadline > now` 让姿态提前变成下一态，否则会出现 sleep→sleep 漏发 `.play`、精灵停在旧脸上。
+- 到点结算（哈欠 / 稍后 / 恢复 / 完成 / 隐藏露面）在**每个**非冻结事件上跑，不只 `.tick`；睡眠中错过的截止在 wake 后补结。
+- Runtime：`nextWakeDate` 对**已过期**的截止立即唤醒；`send` 在无瞬态时再对齐一次姿态，防漏网。
+- 随机环境瞬态（`groom` 等）走 `PetRuntime` 自己的 timer + `clearTransient`，不经 `finish`；被更高优先级打断时由 `interruptsAmbientTransient` 清掉。
 | `screenLocked` | 冻结计时与动画；状态不变 |
 | `screenUnlocked` | 恢复计时；2 秒内不触发瞬态 |
 | `hideRequested` | `hidden`；关闭当前邀请/恢复；保留会话与计时 |
