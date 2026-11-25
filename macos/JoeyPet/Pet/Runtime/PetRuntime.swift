@@ -174,6 +174,12 @@ final class PetRuntime {
 
         renderer.setReduceMotion(situation.isReduceMotion)
         execute(transition.effects, at: date)
+        // Safety net for time-bound overlays (e.g. life yawn) whose expiry can
+        // look like sleep→sleep in `finish`, skipping `.play` while the sprite
+        // is still on the old pose.
+        if transientPose == nil {
+            render(situation.resolvedPose(at: date))
+        }
         rescheduleTick()
         onSituationChanged?(situation)
     }
@@ -276,42 +282,35 @@ final class PetRuntime {
 
     /// The next moment that can change the situation. Also capped at 60 seconds
     /// so wall-clock changes and day boundaries are picked up.
+    ///
+    /// Overdue deadlines wake almost immediately (0.05 s). Skipping them used to
+    /// strand overlays (expired yawn / snooze) with nothing left to schedule.
     func nextWakeDate(after date: Date) -> Date? {
         guard !situation.isSystemSleeping, !situation.isScreenLocked else { return nil }
 
         var deadlines: [Date] = []
-        if let snoozeUntil = situation.snoozeUntil, snoozeUntil > date {
-            deadlines.append(snoozeUntil)
+        func enqueue(_ deadline: Date?) {
+            guard let deadline else { return }
+            deadlines.append(deadline > date ? deadline : date.addingTimeInterval(0.05))
         }
-        if let revealDeadline = situation.hiddenRevealDeadline(), revealDeadline > date {
-            deadlines.append(revealDeadline)
+
+        enqueue(situation.snoozeUntil)
+        enqueue(situation.hiddenRevealDeadline())
+        enqueue(situation.dragSettledAt)
+        if situation.companion == .recover {
+            enqueue(situation.recoveryEndsAt)
         }
-        if let dragSettledAt = situation.dragSettledAt, dragSettledAt > date {
-            deadlines.append(dragSettledAt)
+        if situation.companion == .complete {
+            enqueue(situation.completeEndsAt)
         }
-        if situation.companion == .recover,
-           let ends = situation.recoveryEndsAt, ends > date {
-            deadlines.append(ends)
-        }
-        if situation.companion == .complete,
-           let ends = situation.completeEndsAt, ends > date {
-            deadlines.append(ends)
-        }
-        if situation.isYawning, let until = situation.yawnUntil, until > date {
-            deadlines.append(until)
+        if situation.isYawning {
+            enqueue(situation.yawnUntil ?? date)
         }
         if situation.session != nil {
-            if let approach = situation.approachStartDate(), approach > date {
-                deadlines.append(approach)
-            }
-            if let due = situation.invitationDueDate(), due > date {
-                deadlines.append(due)
-            }
+            enqueue(situation.approachStartDate())
+            enqueue(situation.invitationDueDate())
         }
-        if let boundary = situation.quietWindow.nextBoundary(after: date, calendar: calendar),
-           boundary > date {
-            deadlines.append(boundary)
-        }
+        enqueue(situation.quietWindow.nextBoundary(after: date, calendar: calendar))
 
         guard let earliest = deadlines.min() else { return nil }
         return min(earliest, date.addingTimeInterval(60))
