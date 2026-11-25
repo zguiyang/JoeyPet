@@ -10,9 +10,8 @@ import SwiftUI
 /// state stays in `PetRuntime` / `PetStateMachine`.
 @MainActor
 final class SessionSurfacesController {
-    private static let completionToast = "好了。Joey 的窝里多了一片叶子。"
-    private static let snoozeToast = "好，过一阵再问你。"
-    private static let doNotDisturbToast = "好，先不打扰你。"
+    /// Leaf + happy pose already mark completion; toast only names the nest change.
+    private static let completionToast = "窝里多了一片叶子。"
 
     var onAcceptInvitation: (() -> Void)?
     var onSnooze: (() -> Void)?
@@ -185,14 +184,6 @@ final class SessionSurfacesController {
             guard !Task.isCancelled else { return }
             self?.dismiss(self?.toastPanel, entrance: 0.24)
         }
-    }
-
-    func showSnoozeToast() {
-        showToast(Self.snoozeToast)
-    }
-
-    func showDoNotDisturbToast() {
-        showToast(Self.doNotDisturbToast)
     }
 
     /// Same object-label tip as the nest: appears above Joey while `wave` plays.

@@ -86,14 +86,10 @@ final class PetPanelController {
             self?.petRuntime.send(.inviteAccepted)
         }
         sessionSurfaces.onSnooze = { [weak self] in
-            guard let self else { return }
-            self.petRuntime.send(.snoozeRequested)
-            self.sessionSurfaces.showSnoozeToast()
+            self?.petRuntime.send(.snoozeRequested)
         }
         sessionSurfaces.onEnterDoNotDisturb = { [weak self] in
-            guard let self else { return }
-            self.petRuntime.send(.doNotDisturbChanged(true))
-            self.sessionSurfaces.showDoNotDisturbToast()
+            self?.petRuntime.send(.doNotDisturbChanged(true))
         }
         sessionSurfaces.onFinishRecovery = { [weak self] in
             self?.petRuntime.send(.recoveryFinished)
@@ -131,12 +127,10 @@ final class PetPanelController {
 
     func snoozeInvitationFromNest() {
         petRuntime.send(.snoozeRequested)
-        sessionSurfaces.showSnoozeToast()
     }
 
     func enterDoNotDisturbFromNest() {
         petRuntime.send(.doNotDisturbChanged(true))
-        sessionSurfaces.showDoNotDisturbToast()
     }
 
     private(set) var isVisible = false
@@ -236,17 +230,17 @@ final class PetPanelController {
         case .quiet:
             return "安静时段，正在睡觉"
         case .doNotDisturb:
-            return "勿扰模式，先不打扰你"
+            return "勿扰中"
         case .snoozed:
-            return "过一会儿提醒你休息"
+            return "过一阵再问你"
         case .companion:
             switch situation.companion {
             case .invite:
                 return "想请你休息一下"
             case .recover:
-                return "一起伸个懒腰"
+                return "正在望向远处"
             case .complete:
-                return "休息完成"
+                return "好了"
             case .approach, .idle, nil:
                 return "在旁边陪着你"
             }
@@ -257,7 +251,7 @@ final class PetPanelController {
             if situation.isDozing {
                 return "在打盹"
             }
-            return "安静地待着"
+            return "在旁边"
         }
     }
 
@@ -398,7 +392,7 @@ private final class PetMenuController: NSObject, NSMenuDelegate {
         endSessionItem.isEnabled = isSessionActive?() ?? false
         let isOn = isDoNotDisturb?() == true
         doNotDisturbItem.state = isOn ? .on : .off
-        doNotDisturbItem.title = isOn ? "勿扰中 · 点击关闭" : "勿扰模式"
+        doNotDisturbItem.title = isOn ? "关闭勿扰模式" : "勿扰模式"
         onOpen?()
     }
 

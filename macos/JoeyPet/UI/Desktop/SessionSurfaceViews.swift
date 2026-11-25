@@ -215,12 +215,6 @@ struct RecoveryPanelView: View {
                     .foregroundStyle(theme.ink)
                     .multilineTextAlignment(.center)
 
-                Text("不用数得很准。")
-                    .font(JoeyType.recoveryBreathHint)
-                    .foregroundStyle(theme.muted)
-                    .multilineTextAlignment(.center)
-                    .padding(.top, 3)
-
                 HStack(spacing: 8) {
                     primaryButton
                     quietButton
@@ -296,15 +290,10 @@ struct RecoveryPanelView: View {
                 .rotationEffect(.degrees(-90))
                 .animation(reduceMotion ? nil : .linear(duration: 1), value: fraction)
 
-            VStack(spacing: 4) {
-                Text(Self.clockText(remaining))
-                    .font(JoeyType.recoveryRingTime)
-                    .monospacedDigit()
-                    .foregroundStyle(theme.ink)
-                Text("剩余 \(Int(remaining.rounded(.up))) 秒")
-                    .font(JoeyType.recoveryRingCaption)
-                    .foregroundStyle(theme.muted)
-            }
+            Text(Self.clockText(remaining))
+                .font(JoeyType.recoveryRingTime)
+                .monospacedDigit()
+                .foregroundStyle(theme.ink)
         }
         .frame(width: 96, height: 96)
     }
