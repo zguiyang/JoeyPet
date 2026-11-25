@@ -1607,11 +1607,4 @@ struct RoomDaypartTests {
         #expect(RoomDaypart.resolve(at: testDate(2026, 11, 24, 3, 0), calendar: calendar) == .night)
     }
 
-    @Test func welcomeLinesArePetVoiceNotWorkPraise() {
-        for daypart in RoomDaypart.allCases {
-            #expect(!daypart.welcomeLine.contains("工作"))
-            #expect(!daypart.welcomeLine.contains("陪了"))
-            #expect(!daypart.welcomeLine.isEmpty)
-        }
-    }
 }

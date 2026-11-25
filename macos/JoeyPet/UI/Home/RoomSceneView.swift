@@ -95,13 +95,6 @@ struct RoomSceneView: View {
                             y: originY + 214 * scale
                         )
 
-                    welcomeLabel(daypart: daypart)
-                        .frame(width: 320, alignment: .trailing)
-                        .position(
-                            x: originX + sceneWidth - 40 * scale - 160,
-                            y: originY + 342 * scale
-                        )
-
                     plantLabel
                         .frame(width: 320, alignment: .leading)
                         .position(
@@ -152,13 +145,17 @@ struct RoomSceneView: View {
         onPrimaryAction()
     }
 
+    /// Empty when there is nothing factual to say (no atmosphere filler).
+    @ViewBuilder
     private var clockLabel: some View {
-        JoeyRoomLabel {
-            if status.isSessionActive {
-                Text(sessionReminderText)
-            } else if status.situation.isDoNotDisturb {
-                Text("勿扰中")
-            } else {
+        if status.isSessionActive {
+            if let text = sessionReminderText {
+                JoeyRoomLabel { Text(text) }
+            }
+        } else if status.situation.isDoNotDisturb {
+            JoeyRoomLabel { Text("勿扰中") }
+        } else {
+            JoeyRoomLabel {
                 HStack(spacing: 0) {
                     Text("大约每 ")
                     Text("\(rhythmMinutes) 分钟")
@@ -170,7 +167,7 @@ struct RoomSceneView: View {
         }
     }
 
-    private var sessionReminderText: String {
+    private var sessionReminderText: String? {
         let situation = status.situation
         let now = Date()
 
@@ -193,9 +190,7 @@ struct RoomSceneView: View {
         case .complete:
             return "刚休息完"
         default:
-            guard let due = situation.invitationDueDate() else {
-                return "我就在这儿陪着。"
-            }
+            guard let due = situation.invitationDueDate() else { return nil }
             return "下次大约 \(Self.timeText(due)) 叫你"
         }
     }
@@ -205,12 +200,6 @@ struct RoomSceneView: View {
         formatter.locale = Locale(identifier: "zh_CN")
         formatter.dateFormat = "HH:mm"
         return formatter.string(from: date)
-    }
-
-    private func welcomeLabel(daypart: RoomDaypart) -> some View {
-        JoeyRoomLabel {
-            Text(daypart.welcomeLine)
-        }
     }
 
     private var plantLabel: some View {
@@ -688,14 +677,7 @@ private struct RoomPainter {
         fillEllipse(&context, center: CGPoint(x: 754, y: 206), rx: 5, ry: 9, rotation: 20, color: theme.roomLeaf)
         fillEllipse(&context, center: CGPoint(x: 778, y: 210), rx: 5, ry: 9, rotation: -20, color: theme.roomLeaf)
         fillEllipse(&context, center: CGPoint(x: 802, y: 202), rx: 5, ry: 9, rotation: 20, color: theme.roomLeaf)
-
-        context.draw(
-            Text("回顾")
-                .font(.system(size: 13))
-                .foregroundStyle(theme.roomNoteLine),
-            at: CGPoint(x: 760, y: 264),
-            anchor: .center
-        )
+        // Frame affordance is hover-only (`回顾这周`); no painted function word on the art.
     }
 
     private func drawPlant(_ context: inout GraphicsContext) {

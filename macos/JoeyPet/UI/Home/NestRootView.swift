@@ -103,8 +103,9 @@ struct NestRootView: View {
     }
 
     /// Home: room paints under the transparent titlebar — no solid nav strip.
+    /// Floating title stays blank; window metadata still uses `JoeyCopy.homeTitle`.
     private var immersiveHome: some View {
-        immersiveScene(title: JoeyCopy.homeTitle) {
+        immersiveScene(title: nil) {
             RoomSceneView(
                 rhythmMinutes: settings.rhythmMinutes,
                 status: status,
@@ -157,18 +158,20 @@ struct NestRootView: View {
     }
 
     private func immersiveScene<Content: View>(
-        title: String,
+        title: String?,
         @ViewBuilder content: () -> Content
     ) -> some View {
         ZStack(alignment: .top) {
             content()
 
-            Text(title)
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(Color.primary.opacity(0.72))
-                .padding(.top, 10)
-                .allowsHitTesting(false)
-                .accessibilityAddTraits(.isHeader)
+            if let title, !title.isEmpty {
+                Text(title)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Color.primary.opacity(0.72))
+                    .padding(.top, 10)
+                    .allowsHitTesting(false)
+                    .accessibilityAddTraits(.isHeader)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipped()

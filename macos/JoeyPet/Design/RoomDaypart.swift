@@ -21,16 +21,6 @@ enum RoomDaypart: String, CaseIterable, Sendable {
         }
     }
 
-    /// Pet-voice line for the desk; stable for a given daypart (not work praise).
-    var welcomeLine: String {
-        switch self {
-        case .morning: return "一年之计在于晨。"
-        case .day: return "我在这儿陪着你。"
-        case .dusk: return "今天够了，慢慢收一收。"
-        case .night: return "夜里也安静陪着。"
-        }
-    }
-
     /// Soft wash on the layered nest pet so night/dusk rooms stay coherent.
     var nestPetTint: JoeyPetTint {
         switch self {
