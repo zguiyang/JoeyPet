@@ -64,10 +64,8 @@ struct NestRootView: View {
     var body: some View {
         // Refresh when the clock crosses a daypart boundary (and for system dark flips).
         TimelineView(.periodic(from: .now, by: 30)) { timeline in
-            let daypart = RoomDaypart.resolve(at: timeline.date)
+            let displayDaypart = settings.appearance.resolveRoomDaypart(at: timeline.date)
             let chromeTone = settings.appearance.resolveChromeTone(at: timeline.date)
-            let roomDaypartForChrome: RoomDaypart? =
-                settings.appearance == .daypart ? daypart : nil
 
             Group {
                 switch navigation.route {
@@ -86,19 +84,19 @@ struct NestRootView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .onAppear {
                 onRouteChange(navigation.route)
-                onChromeToneChange?(chromeTone, roomDaypartForChrome)
+                onChromeToneChange?(chromeTone, displayDaypart)
             }
             .onChange(of: navigation.route) { _, newRoute in
                 onRouteChange(newRoute)
             }
             .onChange(of: chromeTone) { _, newTone in
-                onChromeToneChange?(newTone, roomDaypartForChrome)
+                onChromeToneChange?(newTone, displayDaypart)
             }
             .onChange(of: settings.appearance) { _, _ in
-                onChromeToneChange?(chromeTone, roomDaypartForChrome)
+                onChromeToneChange?(chromeTone, displayDaypart)
             }
-            .onChange(of: daypart) { _, _ in
-                onChromeToneChange?(chromeTone, roomDaypartForChrome)
+            .onChange(of: displayDaypart) { _, _ in
+                onChromeToneChange?(chromeTone, displayDaypart)
             }
         }
     }

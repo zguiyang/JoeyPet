@@ -3,10 +3,12 @@ import SwiftUI
 
 // MARK: - Appearance preference (Settings)
 
-/// User choice in 外观: drive chrome from home daypart, or follow macOS.
+/// User choice in 外观. Default is 时段.
 enum JoeyAppearance: String, CaseIterable, Identifiable, Sendable {
     case daypart
     case system
+    case light
+    case dark
 
     var id: String { rawValue }
 
@@ -14,15 +16,19 @@ enum JoeyAppearance: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .daypart: return "时段"
         case .system: return "系统"
+        case .light: return "明亮"
+        case .dark: return "黑夜"
         }
     }
 
-    /// Migrate legacy `light` / `dusk` storage to the new model.
+    /// Migrate storage; legacy `dusk` maps to locked 黑夜.
     static func fromStored(_ raw: String?) -> JoeyAppearance {
         switch raw {
         case JoeyAppearance.daypart.rawValue: return .daypart
         case JoeyAppearance.system.rawValue: return .system
-        case "light", "dusk", "", nil: return .daypart
+        case JoeyAppearance.light.rawValue, "light": return .light
+        case JoeyAppearance.dark.rawValue, "dusk": return .dark
+        case "", nil: return .daypart
         default: return .daypart
         }
     }
@@ -42,15 +48,42 @@ enum JoeyAppearance: String, CaseIterable, Identifiable, Sendable {
             let appearance = systemAppearance ?? NSApp.effectiveAppearance
             let match = appearance.bestMatch(from: [.aqua, .darkAqua])
             return match == .darkAqua ? .dark : .light
+        case .light:
+            return .light
+        case .dark:
+            return .dark
         }
     }
 
-    /// Explicit aqua/darkAqua when locking to daypart; `nil` follows macOS when `.system`.
+    /// Room/garden paint source. Locked 明亮/黑夜 ignore the clock; 系统 follows
+    /// the resolved chrome cluster so pages stay one skin.
+    func resolveRoomDaypart(
+        at date: Date = Date(),
+        calendar: Calendar = .autoupdatingCurrent,
+        systemAppearance: NSAppearance? = nil
+    ) -> RoomDaypart {
+        switch self {
+        case .daypart:
+            return RoomDaypart.resolve(at: date, calendar: calendar)
+        case .light:
+            return .day
+        case .dark:
+            return .night
+        case .system:
+            return resolveChromeTone(
+                at: date,
+                calendar: calendar,
+                systemAppearance: systemAppearance
+            ) == .light ? .day : .night
+        }
+    }
+
+    /// `nil` only for 系统 (follow macOS). Locked and 时段 set aqua/darkAqua explicitly.
     func nsAppearance(at date: Date = Date()) -> NSAppearance? {
         switch self {
         case .system:
             return nil
-        case .daypart:
+        case .daypart, .light, .dark:
             return resolveChromeTone(at: date).nsAppearance
         }
     }
@@ -127,7 +160,7 @@ struct JoeyTheme {
     var windowBg: Color { isLight ? Color(hex: 0xFBF8F0) : Color(hex: 0x313A3B) }
     var windowChrome: Color {
         if let daypart, !isLight {
-            // Align settings chrome with home dusk/night walls when in 时段 mode.
+            // Align chrome with home dusk/night walls when a daypart is supplied.
             return RoomDaypartPalette.palette(for: daypart).wall
         }
         return isLight ? Color(hex: 0xF2ECE1) : Color(hex: 0x262E2F)

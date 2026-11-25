@@ -114,7 +114,7 @@ struct WindowChromeHeader: View {
     @Environment(\.joeyAppearance) private var appearance
 
     private var theme: JoeyTheme {
-        let daypart = appearance == .daypart ? RoomDaypart.resolve(at: Date()) : nil
+        let daypart = appearance.resolveRoomDaypart(at: Date())
         return JoeyTheme(chromeTone: chromeTone, daypart: daypart)
     }
 

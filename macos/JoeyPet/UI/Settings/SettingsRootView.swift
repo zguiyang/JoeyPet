@@ -193,7 +193,10 @@ struct SettingsRootView: View {
     private var appearancePane: some View {
         SettingsPane(title: "外观与位置", description: "Joey 在桌面上的样子。") {
             SettingsRowList {
-                SettingsRow("外观", subtitle: "时段跟首页氛围；系统跟 macOS 浅色/深色") {
+                SettingsRow(
+                    "外观",
+                    subtitle: "时段跟家里氛围；系统跟 macOS；明亮/黑夜锁定后不再随时间变"
+                ) {
                     JoeySegmentedControl(
                         titles: JoeyAppearance.allCases.map(\.title),
                         selectedIndex: JoeyAppearance.allCases.firstIndex(of: settings.appearance) ?? 0
@@ -726,9 +729,9 @@ private struct JoeySegmentedControl: View {
                     onSelect(index)
                 } label: {
                     Text(titles[index])
-                        .font(.system(size: 12, weight: selectedIndex == index ? .semibold : .regular))
+                        .font(.system(size: titles.count > 3 ? 11.5 : 12, weight: selectedIndex == index ? .semibold : .regular))
                         .foregroundStyle(selectedIndex == index ? theme.ink : theme.ink2)
-                        .padding(.horizontal, 10)
+                        .padding(.horizontal, titles.count > 3 ? 8 : 10)
                         .padding(.vertical, 4)
                         .background(
                             RoundedRectangle(cornerRadius: 6, style: .continuous)

@@ -9,7 +9,7 @@ struct ReflectionView: View {
 
     private let designSize = CGSize(width: 1080, height: 680)
     private var theme: JoeyTheme {
-        let daypart = appearance == .daypart ? RoomDaypart.resolve(at: Date()) : nil
+        let daypart = appearance.resolveRoomDaypart(at: Date())
         return JoeyTheme(chromeTone: chromeTone, daypart: daypart)
     }
 

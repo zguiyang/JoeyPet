@@ -27,8 +27,8 @@ struct RoomSceneView: View {
 
     var body: some View {
         TimelineView(.animation(minimumInterval: reduceMotion ? 60 : 1 / 12)) { timeline in
-            let daypart = RoomDaypart.resolve(at: timeline.date)
-            let theme = JoeyTheme(appearance: appearance, daypart: daypart)
+            let daypart = appearance.resolveRoomDaypart(at: timeline.date)
+            let theme = JoeyTheme(chromeTone: chromeTone, daypart: daypart)
             let curtainPhase = reduceMotion
                 ? 0
                 : sin(timeline.date.timeIntervalSinceReferenceDate / 5.5) * 3.2

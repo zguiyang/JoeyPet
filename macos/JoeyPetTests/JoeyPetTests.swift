@@ -116,18 +116,25 @@ struct JoeyPetTests {
         #expect(settings.appearance == .system)
         #expect(JoeyAppearance.system.nsAppearance() == nil)
 
+        let calendar = testCalendar()
         let morning = testDate(2026, 11, 24, 9, 0)
         let night = testDate(2026, 11, 24, 23, 0)
-        #expect(JoeyAppearance.daypart.resolveChromeTone(at: morning, calendar: testCalendar()) == .light)
-        #expect(JoeyAppearance.daypart.resolveChromeTone(at: night, calendar: testCalendar()) == .dark)
+        #expect(JoeyAppearance.daypart.resolveChromeTone(at: morning, calendar: calendar) == .light)
+        #expect(JoeyAppearance.daypart.resolveChromeTone(at: night, calendar: calendar) == .dark)
         #expect(JoeyAppearance.daypart.nsAppearance(at: morning)?.name == .aqua)
         #expect(JoeyAppearance.daypart.nsAppearance(at: night)?.name == .darkAqua)
+
+        #expect(JoeyAppearance.light.resolveChromeTone(at: night, calendar: calendar) == .light)
+        #expect(JoeyAppearance.dark.resolveChromeTone(at: morning, calendar: calendar) == .dark)
+        #expect(JoeyAppearance.light.resolveRoomDaypart(at: night, calendar: calendar) == .day)
+        #expect(JoeyAppearance.dark.resolveRoomDaypart(at: morning, calendar: calendar) == .night)
     }
 
-    @Test func appearanceMigratesLegacyLightAndDuskToDaypart() {
-        #expect(JoeyAppearance.fromStored("light") == .daypart)
-        #expect(JoeyAppearance.fromStored("dusk") == .daypart)
+    @Test func appearanceMigratesLegacyStorage() {
+        #expect(JoeyAppearance.fromStored("light") == .light)
+        #expect(JoeyAppearance.fromStored("dusk") == .dark)
         #expect(JoeyAppearance.fromStored("system") == .system)
+        #expect(JoeyAppearance.fromStored("daypart") == .daypart)
         #expect(JoeyAppearance.fromStored(nil) == .daypart)
     }
 

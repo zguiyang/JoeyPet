@@ -112,7 +112,7 @@ final class MainWindowController: NSWindowController {
     func applyAppearance() {
         let date = Date()
         let tone = settings.appearance.resolveChromeTone(at: date)
-        let daypart = settings.appearance == .daypart ? RoomDaypart.resolve(at: date) : nil
+        let daypart = settings.appearance.resolveRoomDaypart(at: date)
         applyChrome(tone: tone, daypart: daypart)
     }
 

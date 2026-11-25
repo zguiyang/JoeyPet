@@ -44,10 +44,10 @@ Engineering AGENTS.md, docs/tech-stack.md        → AppKit/SwiftUI/SpriteKit sp
 | Nest home (main window, room scene) | Agreed | Implemented (room shell, draggable Joey; session CTA wired) |
 | Rhythm reflection (garden view) | Agreed | Implemented (seed / sprout / tall sprout / tree stages; fed by session data) |
 | Settings | Agreed | Implemented (page inside the main window) |
-| Appearance 时段 / 系统 | Agreed | Implemented (chrome follows home daypart or macOS) |
+| Appearance 时段 / 系统 / 明亮 / 黑夜 | Agreed | Implemented (default 时段; locked light/dark ignore the clock) |
 | Calm Space / Mac Care shell | Legacy | Removed — archive branch only |
 
-> Shipped today: the desktop panel (drag, hide, show; hidden by default), menu bar item, the companion chip, rest invitation, 30-second recovery, completion feedback, the nest window with a working start / end companionship action, first-run "show Joey" step, next-reminder line, reflection, and settings with 时段/系统 appearance and persisted V0 settings. The desktop pet is shown only when the user turns it on in Settings, the menu bar, or the nest's explicit "让 Joey 到桌面" button; starting companionship does not reveal it automatically.
+> Shipped today: the desktop panel (drag, hide, show; hidden by default), menu bar item, the companion chip, rest invitation, 30-second recovery, completion feedback, the nest window with a working start / end companionship action, first-run "show Joey" step, next-reminder line, reflection, and settings with 时段/系统/明亮/黑夜 appearance and persisted V0 settings. The desktop pet is shown only when the user turns it on in Settings, the menu bar, or the nest's explicit "让 Joey 到桌面" button; starting companionship does not reveal it automatically.
 
 ---
 
@@ -257,7 +257,7 @@ All layout derives from the live window size in code. The 1440 × 900 numbers de
 - **Native macOS window**: real traffic lights, native title, native resize/move/key-inactive appearance. Never draw fake traffic lights.
 - **No toolbar. No in-window tab bar. No solid navigation bar on the home room.** System chrome already provides traffic lights; the illustrated room paints under a transparent titlebar.
 - **One chrome control only:** a settings gear at the titlebar trailing edge. Nothing else lives in the titlebar.
-- Illustrated surfaces (home + reflection) are immersive: no opaque title strip; sky/garden paints under the transparent titlebar with a light floating title. Settings uses a full-height sidebar under the same transparent titlebar (no solid nav band); sidebar + detail share the resolved 时段/系统 tone.
+- Illustrated surfaces (home + reflection) are immersive: no opaque title strip; sky/garden paints under the transparent titlebar with a light floating title. Settings uses a full-height sidebar under the same transparent titlebar (no solid nav band); sidebar + detail share the resolved appearance tone.
 - Window title metadata stays real ("Joey 的家", "节奏回顾", "JoeyPet 设置") for window management even when the home label is subtle.
 
 ### 7.3 Navigation lives in the scene
@@ -542,7 +542,7 @@ Native, quieter, more functional than the room. No illustration, no hero copy, n
 | 背景音 | Menu-style chooser：无背景音 + catalog beds；每条有小喇叭试听 | 陪伴中播放；勿扰或安静时段会静音（试听不受影响） |
 | 提示音 | Menu-style chooser：无提示音 + catalog cues；每条有小喇叭试听 | 开始陪伴与休息邀请时播放；勿扰或安静时段会静音（试听不受影响） |
 | 安静时段 | Time-range field: two editable halves, centre dash, double-click selects all | 这段时间不会邀请；正在进行的休息会先走完 |
-| 外观 | Segmented 时段 / 系统 | 时段：整窗 chrome 跟首页当前时段；系统：跟 macOS 浅色/深色。默认时段 |
+| 外观 | Segmented 时段 / 系统 / 明亮 / 黑夜 | 时段跟家里氛围；系统跟 macOS；明亮/黑夜锁定后不再随时间变。默认时段 |
 | 显示位置 | Segmented 右下角 / 左下角 | 拖动后以你放的位置为准 |
 | 在桌面上显示 Joey | Switch | 关掉不会结束陪伴，到点仍会短暂露面提醒 |
 | 反馈 | Button → textarea | 只保存在这台 Mac，不会上传 |
@@ -811,3 +811,4 @@ Git history and the archive branch explain why they were replaced.
 | 2026-11-24 | Quiet-hours life bridges: enter and exit through a 1.8 s `yawn` before `sleep` / day pose; recovery and complete still finish first. |
 | 2026-11-24 | Nest home: daypart palettes + curtain sway (no beams); desk welcome replaces companionship duration; CTA centred; board `joeypet-home-v1.html`. |
 | 2026-11-25 | Appearance is 时段 / 系统; home immersive under transparent titlebar; chrome shares daypart or macOS tone with settings/reflection. |
+| 2026-11-25 | Appearance adds locked 明亮 / 黑夜; four options, default 时段. |
