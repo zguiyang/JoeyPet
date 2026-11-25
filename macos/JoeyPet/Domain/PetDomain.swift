@@ -370,9 +370,12 @@ struct PetSituation: Equatable, Sendable {
         }
     }
 
+    /// Pose follows the flag until `applyDueTimers` clears it. `yawnUntil` is only
+    /// a wake deadline — do not gate the pose on `now`, or `finish` sees
+    /// sleep→sleep at expiry and the sprite can stay on yawn.
     func isYawnActive(at now: Date) -> Bool {
-        guard isYawning, let yawnUntil else { return false }
-        return yawnUntil > now
+        _ = now
+        return isYawning
     }
 
     func isInviteCardVisible(at now: Date) -> Bool {

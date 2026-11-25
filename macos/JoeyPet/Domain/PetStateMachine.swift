@@ -79,15 +79,19 @@ enum PetStateMachine {
         }
         if event == .systemWake {
             var next = state
+            var effects: [PetEffect] = [.resume]
             next.isSystemSleeping = false
             normalize(&next, now: now, calendar: calendar)
-            return finish(next, old: state, now: now, effects: [.resume])
+            applyDueTimers(&next, now: now, calendar: calendar, effects: &effects)
+            return finish(next, old: state, now: now, effects: effects)
         }
         if event == .screenUnlocked {
             var next = state
+            var effects: [PetEffect] = [.resume]
             next.isScreenLocked = false
             normalize(&next, now: now, calendar: calendar)
-            return finish(next, old: state, now: now, effects: [.resume])
+            applyDueTimers(&next, now: now, calendar: calendar, effects: &effects)
+            return finish(next, old: state, now: now, effects: effects)
         }
 
         var next = state
@@ -96,8 +100,8 @@ enum PetStateMachine {
 
         switch event {
         case .tick:
-            guard !next.isSystemSleeping, !next.isScreenLocked else { break }
-            tick(&next, now: now, calendar: calendar, effects: &effects)
+            // Timers always run after the switch so a bare tick still settles.
+            break
 
         case .sessionStart:
             guard next.session == nil else { break }
@@ -319,6 +323,12 @@ enum PetStateMachine {
         }
 
         normalize(&next, now: now, calendar: calendar)
+        // Settle every event, not only `.tick`. Otherwise a missed wake (sleep
+        // during yawn, overdue snooze, etc.) leaves overlays stuck until some
+        // future deadline happens to be scheduled.
+        if !next.isSystemSleeping, !next.isScreenLocked {
+            applyDueTimers(&next, now: now, calendar: calendar, effects: &effects)
+        }
         return finish(next, old: state, now: now, effects: effects)
     }
 
@@ -398,12 +408,15 @@ enum PetStateMachine {
         state.inviteShownAt = nil
     }
 
-    private static func tick(
+    /// Advances every wall-clock overlay that is due. Shared by `.tick` and by
+    /// ordinary events so overdue state cannot wait forever for a missed wake.
+    private static func applyDueTimers(
         _ state: inout PetSituation,
         now: Date,
         calendar: Calendar,
         effects: inout [PetEffect]
     ) {
+        _ = calendar
         if let snoozeUntil = state.snoozeUntil, snoozeUntil <= now {
             state.snoozeUntil = nil
             if state.session != nil, canPresentInvite(state, now: now, bypassGap: true) {
@@ -444,7 +457,9 @@ enum PetStateMachine {
             effects.append(.persist)
         }
 
-        if state.isYawning, let until = state.yawnUntil, until <= now {
+        // Clear when due, or when the deadline is missing (defensive). Pose uses
+        // the flag, so finish sees yawn→settled and emits `.play` on its own.
+        if state.isYawning, state.yawnUntil.map({ $0 <= now }) ?? true {
             state.isYawning = false
             state.yawnUntil = nil
             effects.append(.resumeAmbient)
@@ -546,6 +561,9 @@ enum PetStateMachine {
         }
     }
 
+    /// Diffs poses/surfaces at a single `now`. Time-bound pose overlays must be
+    /// flag-driven until `applyDueTimers` clears them (see `isYawnActive`); if a
+    /// pose gate uses `deadline > now`, expiry looks like no-op and the sprite sticks.
     private static func finish(
         _ state: PetSituation,
         old: PetSituation,
