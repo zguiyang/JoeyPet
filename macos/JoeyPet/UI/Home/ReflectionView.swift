@@ -87,24 +87,23 @@ struct ReflectionView: View {
         if summary.weekBreakTotal == 0 {
             return Text(JoeyCopy.emptyWeek)
         }
-        return Text("这周我们一起休息了 ")
+        return Text("这周一起休息 ")
             + Text("\(summary.weekBreakTotal) 次")
                 .fontWeight(.semibold)
                 .foregroundStyle(theme.sageDeep)
-            + Text("。")
     }
 
     private var subtitleText: String {
         guard summary.weekBreakTotal > 0 else {
             if summary.todayCompanionship > 0 {
-                return "今天陪了 \(summary.todayCompanionshipText)。"
+                return "今天陪了 \(summary.todayCompanionshipText)"
             }
             return ""
         }
 
         var parts: [String] = []
         if summary.todayCompanionship > 0 {
-            parts.append("今天陪了 \(summary.todayCompanionshipText)。")
+            parts.append("今天陪了 \(summary.todayCompanionshipText)")
         } else {
             parts.append(JoeyCopy.emptyToday)
         }
@@ -115,10 +114,10 @@ struct ReflectionView: View {
                 .filter { summary.weekBreakCounts[$0] == 0 }
                 .map { "周" + Self.weekdayNames[$0] }
             if !missing.isEmpty {
-                parts.append(missing.joined(separator: "、") + "没有记录。")
+                parts.append(missing.joined(separator: "、") + "没有记录")
             }
         }
-        return parts.joined()
+        return parts.joined(separator: " · ")
     }
 
     private var weekRangeText: String {

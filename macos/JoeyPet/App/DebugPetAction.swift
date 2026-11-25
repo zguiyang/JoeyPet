@@ -44,7 +44,7 @@ enum DebugPetAction: String, CaseIterable, Identifiable, Sendable {
         case .showDesktopPet:
             return "打开「在桌面显示 Joey」"
         case .greeting:
-            return "抬爪挥手 + 头顶「你好。」胶囊 tip"
+            return "抬爪挥手 + 头顶「你好」胶囊 tip"
         case .notifying:
             return "look + 邀请卡（坐久啦…）"
         case .recovering:

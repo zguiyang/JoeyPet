@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// `陪伴中 · mm:ss` tip — same paper tip chrome as the greeting「你好。」.
+/// `陪伴中 · mm:ss` tip — same paper tip chrome as the greeting「你好」.
 struct JoeyCompanionChipView: View {
     let startedAt: Date
 
@@ -199,7 +199,7 @@ struct RecoveryPanelView: View {
                     .foregroundStyle(theme.ink)
                     .multilineTextAlignment(.center)
 
-                Text("找个六米外的点，肩膀放松。")
+                Text("找个六米外的点，肩膀放松")
                     .font(JoeyType.recoveryHint)
                     .lineSpacing(2)
                     .foregroundStyle(theme.muted)
@@ -208,12 +208,7 @@ struct RecoveryPanelView: View {
 
                 ring(remaining: remaining)
                     .padding(.top, 18)
-                    .padding(.bottom, 14)
-
-                Text("吸气四拍，呼气六拍")
-                    .font(JoeyType.recoveryBreath)
-                    .foregroundStyle(theme.ink)
-                    .multilineTextAlignment(.center)
+                    .padding(.bottom, 16)
 
                 HStack(spacing: 8) {
                     primaryButton

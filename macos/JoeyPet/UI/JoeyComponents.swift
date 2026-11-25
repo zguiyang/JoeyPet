@@ -11,12 +11,12 @@ enum JoeyCopy {
     static let reviewHint = "回顾这周"
     static let clockHint = "调整提醒时间"
 
-    static let emptyToday = "今天还没开始。"
+    static let emptyToday = "今天还没开始"
     static let emptyBreaks = "今天还没有休息"
-    static let emptyWeek = "这一周还没有一起休息过。"
+    static let emptyWeek = "这一周还没有一起休息过"
 
     /// Greeting tip above Joey on both the nest and the desktop pet.
-    static let greetingHello = "你好。"
+    static let greetingHello = "你好"
 }
 
 struct JoeyPrimaryButton: View {
@@ -172,7 +172,7 @@ struct JoeyRoomLabel<Content: View>: View {
 }
 
 /// Shared paper tip chrome for pet-adjacent callouts: companion chip, greeting
-///「你好。」, and similar short notes. Same family as the invite card paper —
+///「你好」, and similar short notes. Same family as the invite card paper —
 /// soft rounded rect + hairline, never a bare capsule toast.
 struct JoeyPetTipView<Content: View>: View {
     enum Caret: Equatable {

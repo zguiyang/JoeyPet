@@ -207,7 +207,7 @@ struct SettingsRootView: View {
     private var debugPane: some View {
         SettingsPane(
             title: "Debug",
-            description: "仅 Debug 构建可见。"
+            description: "仅 Debug 构建可见"
         ) {
             VStack(alignment: .leading, spacing: 14) {
                 Text(debugStatus)
