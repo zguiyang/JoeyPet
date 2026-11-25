@@ -44,10 +44,10 @@ Engineering AGENTS.md, docs/tech-stack.md        → AppKit/SwiftUI/SpriteKit sp
 | Nest home (main window, room scene) | Agreed | Implemented (room shell, draggable Joey; session CTA wired) |
 | Rhythm reflection (garden view) | Agreed | Implemented (seed / sprout / tall sprout / tree stages; fed by session data) |
 | Settings | Agreed | Implemented (page inside the main window) |
-| Appearance 时段 / 系统 / 明亮 / 黑夜 | Agreed | Implemented (default 时段; locked light/dark ignore the clock) |
+| Appearance 系统 / 明亮 / 黑夜 | Agreed | Implemented (default 系统; nest uses the same light/dark cluster as settings) |
 | Calm Space / Mac Care shell | Legacy | Removed — archive branch only |
 
-> Shipped today: the desktop panel (drag, hide, show; hidden by default), menu bar item, the companion chip, rest invitation, 30-second recovery, completion feedback, the nest window with a working start / end companionship action, first-run "show Joey" step, next-reminder line, reflection, and settings with 时段/系统/明亮/黑夜 appearance and persisted V0 settings. The desktop pet is shown only when the user turns it on in Settings, the menu bar, or the nest's explicit "让 Joey 到桌面" button; starting companionship does not reveal it automatically.
+> Shipped today: the desktop panel (drag, hide, show; hidden by default), menu bar item, the companion chip, rest invitation, 30-second recovery, completion feedback, the nest window with a working start / end companionship action, first-run "show Joey" step, next-reminder line, reflection, and settings with 系统/明亮/黑夜 appearance (default 系统) and persisted V0 settings. The desktop pet is shown only when the user turns it on in Settings, the menu bar, or the nest's explicit "让 Joey 到桌面" button; starting companionship does not reveal it automatically.
 
 ---
 
@@ -498,8 +498,8 @@ Rules:
 The main window, and it should feel like entering Joey's home.
 
 - Opens on the **system primary display** (`NSScreen.screens[0]` — menu bar / arrangement primary), not `NSScreen.main`. Remembers the last frame via AppKit autosave; if that frame is off-screen after a display change, re-centre on primary.
-- Window metadata title: **Joey 的家**. Traffic lights + gear; floating chrome title on home is blank (room immersion). Daypart atmosphere is visual only — no desk welcome line restating night/dusk mood.
-- Room scene fills the content area. The nest is not a separate renderer: it hosts the same layered `JoeyDesktopScene` with the same `JoeyAssetPackage` as the desktop pet, feeds it the pose `PetRuntime` resolved, and therefore matches faces, props, breathing, blinks and ear/tail motion exactly. `sleep` is the standing closed-eye pose with relaxed ears; `doze` is the lighter, slightly tilted nap. At dusk the room applies a 0.18 sage-grey wash (`nestPetTint`) to the layered pet so it sits in the dim light; the desktop pet stays untinted.
+- Window metadata title: **Joey 的家**. Traffic lights + gear; floating chrome title on home is blank (room immersion). No desk welcome line restating mood.
+- Room scene fills the content area. The nest is not a separate renderer: it hosts the same layered `JoeyDesktopScene` with the same `JoeyAssetPackage` as the desktop pet, feeds it the pose `PetRuntime` resolved, and therefore matches faces, props, breathing, blinks and ear/tail motion exactly. `sleep` is the standing closed-eye pose with relaxed ears; `doze` is the lighter, slightly tilted nap. In 黑夜 the room applies a 0.18 sage-grey wash (`nestPetTint`) to the layered pet so it sits in the dim light; the desktop pet stays untinted.
 - Joey stays in the nest. The room pet is not draggable; a click asks the runtime for one short greeting (`happy` for ~2.8 s), and both the nest and the desktop pet play it.
 - While a companionship session is running (`陪伴中`), the runtime drives `look` (including during the invitation card), then `stretch` and `happy` at the matching moments, and the nest follows. Quiet hours show the same `sleep` pose in both places.
 - The wall clock shows the real local time with hour, minute, and second hands (second hand ticks once per second, no continuous sweep); clicking it opens **设置** on **通用**. The hover hint is `调整提醒时间`.
@@ -521,7 +521,7 @@ The main window, and it should feel like entering Joey's home.
   - Plant label: `今天休息 2 次` (empty: `今天还没有休息`)
   - Wall frame: no painted caption; hover + VoiceOver use `回顾这周`
 - Primary action **horizontally centred** near the floor (scene x ≈ 540): **开始一起工作**; while running it becomes **结束陪伴** with a status chip `陪伴中 · mm:ss` centred above it.
-- Room atmosphere follows local clock dayparts (morning / day / dusk / night): recolor sky, hills, wall, floor, curtains, outdoor sun/moon disc; optional night stars. Curtains sway gently (Reduce Motion → static). **No** sun beams, floor pools, wall projections or desk lamps. Nest and Joey keep the shipped nest geometry. Frozen board: [`docs/reference/joeypet-home-v1.html`](docs/reference/joeypet-home-v1.html).
+- Room atmosphere follows the shared light/dark chrome cluster (系统 / 明亮 / 黑夜) — not the local clock. Light uses the day nest palette; dark uses the settings-family dark tokens (stars + moon disc). Curtains sway gently (Reduce Motion → static). **No** sun beams, floor pools, wall projections or desk lamps. Nest and Joey keep the shipped nest geometry. Frozen board: [`docs/reference/joeypet-home-v1.html`](docs/reference/joeypet-home-v1.html) (daypart preview is historical).
 - Starting a session never requires showing the desktop pet. If Joey is hidden, he stays hidden between reminders and surfaces only for an invitation.
 - No cards, no charts, no streaks, no "Today's productivity".
 
@@ -552,7 +552,7 @@ Native, quieter, more functional than the room. No illustration, no hero copy, n
 | 通用 | 安静时段 | Time-range field: two editable halves, centre dash, double-click selects all | 时段内不邀请 |
 | 通用 | 背景音 | Menu-style chooser：无背景音 + catalog beds；每条有小喇叭试听 | 陪伴中播放 |
 | 通用 | 提示音 | Menu-style chooser：无提示音 + catalog cues；每条有小喇叭试听 | 开始与邀请时 |
-| 通用 | 外观 | Segmented 时段 / 系统 / 明亮 / 黑夜 | （无副标题；分段控件自明） |
+| 通用 | 外观 | Segmented 系统 / 明亮 / 黑夜 | （无副标题；默认系统，跟随 macOS） |
 | 宠物 | 在桌面显示 Joey | Switch | （无副标题） |
 | 宠物 | 显示位置 | Segmented 右下角 / 左下角 | （无副标题） |
 | 关于 | 版本 · 反馈 · 声音致谢 | 反馈 → 发邮件（优先系统「邮件」） | 副标题显示邮箱；打不开时复制地址 |
@@ -835,6 +835,7 @@ Git history and the archive branch explain why they were replaced.
 | 2026-11-24 | Nest home: daypart palettes + curtain sway (no beams); desk welcome replaces companionship duration; CTA centred; board `joeypet-home-v1.html`. |
 | 2026-11-25 | Appearance is 时段 / 系统; home immersive under transparent titlebar; chrome shares daypart or macOS tone with settings/reflection. |
 | 2026-11-25 | Appearance adds locked 明亮 / 黑夜; four options, default 时段. |
+| 2026-11-25 | Appearance drops 时段; 系统 / 明亮 / 黑夜 only (default 系统); nest uses settings light/dark cluster. |
 | 2026-11-25 | Settings sidebar + detail share one surface (light `window-bg`, dark `window-chrome`; no night-wall clash). |
 | 2026-11-25 | Settings IA simplified to 通用 / 宠物 / 关于; shorter row copy. |
 | 2026-11-25 | Settings feedback uses mailto (no local draft / no backend). |
