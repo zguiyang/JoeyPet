@@ -51,7 +51,7 @@ final class PetPanelController {
 
         petRuntime = PetRuntime(sceneSize: Self.panelSize)
         spriteView.presentScene(petRuntime.scene)
-        sessionSurfaces = SessionSurfacesController(petPanel: panel, appearance: .light)
+        sessionSurfaces = SessionSurfacesController(petPanel: panel, appearance: .daypart)
 
         panel.contentView = spriteView
         configureInteractions()

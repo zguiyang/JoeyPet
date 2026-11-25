@@ -14,116 +14,131 @@ struct RoomSceneView: View {
     var onInviteDoNotDisturb: (() -> Void)?
 
     @Environment(\.joeyAppearance) private var appearance
+    @Environment(\.joeyChromeTone) private var chromeTone
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isFrameHovering = false
     @State private var isClockHovering = false
 
     private let designSize = CGSize(width: 1080, height: 680)
-    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+    /// Floor CTA sits on the scene midline (DESIGN §10.4), not under the desk.
+    private let floorCenterX: CGFloat = 540
+    /// Chrome / labels follow Settings appearance; the room canvas uses daypart.
+    private var chromeTheme: JoeyTheme { JoeyTheme(chromeTone: chromeTone) }
 
     var body: some View {
-        GeometryReader { geometry in
-            let scale = min(
-                geometry.size.width / designSize.width,
-                geometry.size.height / designSize.height
-            )
-            let sceneWidth = designSize.width * scale
-            let sceneHeight = designSize.height * scale
-            let originX = (geometry.size.width - sceneWidth) / 2
-            let originY = (geometry.size.height - sceneHeight) / 2
+        TimelineView(.animation(minimumInterval: reduceMotion ? 60 : 1 / 12)) { timeline in
+            let daypart = RoomDaypart.resolve(at: timeline.date)
+            let theme = JoeyTheme(appearance: appearance, daypart: daypart)
+            let curtainPhase = reduceMotion
+                ? 0
+                : sin(timeline.date.timeIntervalSinceReferenceDate / 5.5) * 3.2
 
-            ZStack(alignment: .topLeading) {
-                theme.roomWall
+            GeometryReader { geometry in
+                let scale = min(
+                    geometry.size.width / designSize.width,
+                    geometry.size.height / designSize.height
+                )
+                let sceneWidth = designSize.width * scale
+                let sceneHeight = designSize.height * scale
+                let originX = (geometry.size.width - sceneWidth) / 2
+                let originY = (geometry.size.height - sceneHeight) / 2
 
-                Canvas { context, _ in
-                    var painterContext = context
-                    painterContext.translateBy(x: originX, y: originY)
-                    painterContext.scaleBy(x: scale, y: scale)
-                    RoomPainter(theme: theme).draw(in: &painterContext)
-                }
+                ZStack(alignment: .topLeading) {
+                    theme.roomWall
 
-                RoomClockHandsView(theme: theme)
-                    .frame(width: 88 * scale, height: 88 * scale)
-                    .position(
-                        x: originX + 250 * scale,
-                        y: originY + 140 * scale
-                    )
-                    .allowsHitTesting(false)
+                    Canvas { context, _ in
+                        var painterContext = context
+                        painterContext.translateBy(x: originX, y: originY)
+                        painterContext.scaleBy(x: scale, y: scale)
+                        RoomPainter(theme: theme, curtainPhase: curtainPhase)
+                            .draw(in: &painterContext)
+                    }
 
-                clockButton(scale: scale)
-                    .position(
-                        x: originX + 250 * scale,
-                        y: originY + 140 * scale
-                    )
-
-                NestPetView(pose: status.pose, onGreet: onGreetPet)
-                    .frame(width: 288 * scale, height: 360 * scale)
-                    .position(
-                        x: originX + 340 * scale,
-                        y: originY + 436 * scale
-                    )
-
-                if status.situation.isInviteCardVisible(at: Date()) {
-                    InvitationCardView(
-                        onAccept: { onInviteAccept?() },
-                        onSnooze: { onInviteSnooze?() },
-                        onDoNotDisturb: { onInviteDoNotDisturb?() },
-                        caretEdge: .leading,
-                        scale: .nest
-                    )
-                    .position(
-                        x: originX + 560 * scale,
-                        y: originY + 400 * scale
-                    )
-                }
-
-                clockLabel
-                    .position(
-                        x: originX + 250 * scale,
-                        y: originY + 214 * scale
-                    )
-
-                notebookLabel
-                    .frame(width: 320, alignment: .trailing)
-                    .position(
-                        x: originX + sceneWidth - 40 * scale - 160,
-                        y: originY + 342 * scale
-                    )
-
-                plantLabel
-                    .frame(width: 320, alignment: .leading)
-                    .position(
-                        x: originX + 40 * scale + 160,
-                        y: originY + 342 * scale
-                    )
-
-                reflectionButton(scale: scale)
-                    .position(
-                        x: originX + 760 * scale,
-                        y: originY + 215 * scale
-                    )
-
-                if status.isSessionActive, let startedAt = status.sessionStartedAt {
-                    JoeyCompanionChipView(startedAt: startedAt)
+                    RoomClockHandsView(theme: theme)
+                        .frame(width: 88 * scale, height: 88 * scale)
                         .position(
-                            x: originX + 620 * scale,
-                            y: originY + sceneHeight - 40 * scale - 71
+                            x: originX + 250 * scale,
+                            y: originY + 140 * scale
                         )
-                }
+                        .allowsHitTesting(false)
 
-                JoeyPrimaryButton(
-                    title: primaryTitle,
-                    systemImage: primaryIcon,
-                    action: primaryAction
-                )
-                .position(
-                    x: originX + 620 * scale,
-                    y: originY + sceneHeight - 40 * scale - 25
-                )
+                    clockButton(scale: scale)
+                        .position(
+                            x: originX + 250 * scale,
+                            y: originY + 140 * scale
+                        )
+
+                    // Nest + Joey keep the shipped home geometry (not the Design AI nest).
+                    NestPetView(pose: status.pose, daypart: daypart, onGreet: onGreetPet)
+                        .frame(width: 288 * scale, height: 360 * scale)
+                        .position(
+                            x: originX + 340 * scale,
+                            y: originY + 436 * scale
+                        )
+
+                    if status.situation.isInviteCardVisible(at: Date()) {
+                        InvitationCardView(
+                            onAccept: { onInviteAccept?() },
+                            onSnooze: { onInviteSnooze?() },
+                            onDoNotDisturb: { onInviteDoNotDisturb?() },
+                            caretEdge: .leading,
+                            scale: .nest
+                        )
+                        .position(
+                            x: originX + 560 * scale,
+                            y: originY + 400 * scale
+                        )
+                    }
+
+                    clockLabel
+                        .position(
+                            x: originX + 250 * scale,
+                            y: originY + 214 * scale
+                        )
+
+                    welcomeLabel(daypart: daypart)
+                        .frame(width: 320, alignment: .trailing)
+                        .position(
+                            x: originX + sceneWidth - 40 * scale - 160,
+                            y: originY + 342 * scale
+                        )
+
+                    plantLabel
+                        .frame(width: 320, alignment: .leading)
+                        .position(
+                            x: originX + 40 * scale + 160,
+                            y: originY + 342 * scale
+                        )
+
+                    reflectionButton(scale: scale)
+                        .position(
+                            x: originX + 760 * scale,
+                            y: originY + 215 * scale
+                        )
+
+                    if status.isSessionActive, let startedAt = status.sessionStartedAt {
+                        JoeyCompanionChipView(startedAt: startedAt)
+                            .position(
+                                x: originX + floorCenterX * scale,
+                                y: originY + sceneHeight - 40 * scale - 71
+                            )
+                    }
+
+                    JoeyPrimaryButton(
+                        title: primaryTitle,
+                        systemImage: primaryIcon,
+                        action: primaryAction
+                    )
+                    .position(
+                        x: originX + floorCenterX * scale,
+                        y: originY + sceneHeight - 40 * scale - 25
+                    )
+                }
+                .frame(width: geometry.size.width, height: geometry.size.height)
+                .clipped()
             }
-            .frame(width: geometry.size.width, height: geometry.size.height)
-            .clipped()
+            .background(theme.roomWall)
         }
-        .background(theme.roomWall)
     }
 
     private var primaryTitle: String {
@@ -151,7 +166,7 @@ struct RoomSceneView: View {
                     Text("Joey 大约每 ")
                     Text("\(rhythmMinutes) 分钟")
                         .fontWeight(.semibold)
-                        .foregroundStyle(theme.sageDeep)
+                        .foregroundStyle(chromeTheme.sageDeep)
                     Text("来叫你一次")
                 }
             }
@@ -197,18 +212,9 @@ struct RoomSceneView: View {
         return formatter.string(from: date)
     }
 
-    private var notebookLabel: some View {
+    private func welcomeLabel(daypart: RoomDaypart) -> some View {
         JoeyRoomLabel {
-            if status.summary.todayCompanionship > 0 {
-                HStack(spacing: 0) {
-                    Text("今天陪了 ")
-                    Text(status.summary.todayCompanionshipText)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(theme.sageDeep)
-                }
-            } else {
-                Text(JoeyCopy.emptyToday)
-            }
+            Text(daypart.welcomeLine)
         }
     }
 
@@ -219,7 +225,7 @@ struct RoomSceneView: View {
                     Text("今天休息 ")
                     Text("\(status.summary.todayBreaks) 次")
                         .fontWeight(.semibold)
-                        .foregroundStyle(theme.sageDeep)
+                        .foregroundStyle(chromeTheme.sageDeep)
                 }
             } else {
                 Text(JoeyCopy.emptyBreaks)
@@ -235,16 +241,16 @@ struct RoomSceneView: View {
                     if isFrameHovering {
                         Text(JoeyCopy.reviewHint)
                             .font(JoeyType.caption)
-                            .foregroundStyle(theme.ink)
+                            .foregroundStyle(chromeTheme.ink)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 5)
                             .background(
                                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                    .fill(theme.popover)
+                                    .fill(chromeTheme.popover)
                             )
                             .overlay(
                                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                    .stroke(theme.hairline, lineWidth: 1)
+                                    .stroke(chromeTheme.hairline, lineWidth: 1)
                             )
                             .joeyShadowMD()
                             .offset(y: -34)
@@ -266,16 +272,16 @@ struct RoomSceneView: View {
                     if isClockHovering {
                         Text(JoeyCopy.clockHint)
                             .font(JoeyType.caption)
-                            .foregroundStyle(theme.ink)
+                            .foregroundStyle(chromeTheme.ink)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 5)
                             .background(
                                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                    .fill(theme.popover)
+                                    .fill(chromeTheme.popover)
                             )
                             .overlay(
                                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                    .stroke(theme.hairline, lineWidth: 1)
+                                    .stroke(chromeTheme.hairline, lineWidth: 1)
                             )
                             .joeyShadowMD()
                             .offset(y: -34)
@@ -365,6 +371,8 @@ private struct RoomClockHandsView: View {
 
 private struct RoomPainter {
     let theme: JoeyTheme
+    /// Gentle curtain sway in design points; 0 when Reduce Motion is on.
+    var curtainPhase: CGFloat = 0
 
     func draw(in context: inout GraphicsContext) {
         drawShell(&context)
@@ -428,6 +436,33 @@ private struct RoomPainter {
         var inner = context
         inner.clip(to: Path(roundedRect: windowRect.insetBy(dx: 4, dy: 4), cornerRadius: 6))
 
+        // Outdoor disc (sun by day, moon at night) — no beams.
+        let discCenter = CGPoint(x: 575, y: 148)
+        let discRadius: CGFloat = theme.roomShowsStars ? 14 : 18
+        inner.fill(
+            Path(ellipseIn: CGRect(
+                x: discCenter.x - discRadius,
+                y: discCenter.y - discRadius,
+                width: discRadius * 2,
+                height: discRadius * 2
+            )),
+            with: .color(theme.roomOutdoorDisc.opacity(theme.roomShowsStars ? 0.92 : 0.85))
+        )
+        if theme.roomShowsStars {
+            for point in [
+                CGPoint(x: 460, y: 128),
+                CGPoint(x: 505, y: 118),
+                CGPoint(x: 548, y: 136),
+                CGPoint(x: 600, y: 122),
+                CGPoint(x: 620, y: 150)
+            ] {
+                inner.fill(
+                    Path(ellipseIn: CGRect(x: point.x, y: point.y, width: 2.2, height: 2.2)),
+                    with: .color(Color.white.opacity(0.55))
+                )
+            }
+        }
+
         var hill1 = Path()
         hill1.move(to: CGPoint(x: 430, y: 200))
         hill1.addCurve(
@@ -480,17 +515,18 @@ private struct RoomPainter {
             with: .color(theme.roomSill)
         )
 
+        let sway = curtainPhase
         var leftCurtain = Path()
         leftCurtain.move(to: CGPoint(x: 418, y: 90))
         leftCurtain.addCurve(
-            to: CGPoint(x: 414, y: 294),
-            control1: CGPoint(x: 400, y: 130),
-            control2: CGPoint(x: 404, y: 200)
+            to: CGPoint(x: 414 + sway, y: 294),
+            control1: CGPoint(x: 400 + sway * 0.4, y: 130),
+            control2: CGPoint(x: 404 + sway * 0.8, y: 200)
         )
-        leftCurtain.addLine(to: CGPoint(x: 434, y: 294))
+        leftCurtain.addLine(to: CGPoint(x: 434 + sway * 0.35, y: 294))
         leftCurtain.addCurve(
             to: CGPoint(x: 438, y: 90),
-            control1: CGPoint(x: 424, y: 200),
+            control1: CGPoint(x: 424 + sway * 0.5, y: 200),
             control2: CGPoint(x: 424, y: 130)
         )
         leftCurtain.closeSubpath()
@@ -499,14 +535,14 @@ private struct RoomPainter {
         var rightCurtain = Path()
         rightCurtain.move(to: CGPoint(x: 652, y: 90))
         rightCurtain.addCurve(
-            to: CGPoint(x: 656, y: 294),
-            control1: CGPoint(x: 670, y: 130),
-            control2: CGPoint(x: 666, y: 200)
+            to: CGPoint(x: 656 - sway, y: 294),
+            control1: CGPoint(x: 670 - sway * 0.4, y: 130),
+            control2: CGPoint(x: 666 - sway * 0.8, y: 200)
         )
-        rightCurtain.addLine(to: CGPoint(x: 636, y: 294))
+        rightCurtain.addLine(to: CGPoint(x: 636 - sway * 0.35, y: 294))
         rightCurtain.addCurve(
             to: CGPoint(x: 632, y: 90),
-            control1: CGPoint(x: 646, y: 200),
+            control1: CGPoint(x: 646 - sway * 0.5, y: 200),
             control2: CGPoint(x: 646, y: 130)
         )
         rightCurtain.closeSubpath()
@@ -704,6 +740,7 @@ private struct RoomPainter {
         )
         nest.closeSubpath()
         context.fill(nest, with: .color(theme.roomNest))
+        context.stroke(nest, with: .color(theme.roomNestRim.opacity(0.85)), lineWidth: 2.5)
 
         fillEllipse(&context, center: CGPoint(x: 340, y: 586), rx: 154, ry: 42, color: theme.roomCushion)
         fillEllipse(&context, center: CGPoint(x: 340, y: 580), rx: 140, ry: 34, color: theme.roomCushion2)

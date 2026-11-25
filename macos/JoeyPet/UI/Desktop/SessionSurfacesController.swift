@@ -45,7 +45,7 @@ final class SessionSurfacesController {
         self.appearance = appearance
 
         for panel in panels {
-            panel.appearance = appearance.nsAppearance
+            panel.appearance = appearance.nsAppearance()
             panel.hasShadow = true
         }
         invitationHost.translatesAutoresizingMaskIntoConstraints = true
@@ -147,7 +147,7 @@ final class SessionSurfacesController {
         guard appearance != self.appearance else { return }
         self.appearance = appearance
         for panel in panels {
-            panel.appearance = appearance.nsAppearance
+            panel.appearance = appearance.nsAppearance()
             panel.invalidateShadow()
         }
         if let lastSituation {
@@ -224,7 +224,12 @@ final class SessionSurfacesController {
     }
 
     private func setRoot(_ host: NSHostingView<AnyView>, _ view: some View) {
-        host.rootView = AnyView(view.environment(\.joeyAppearance, appearance))
+        let tone = appearance.resolveChromeTone()
+        host.rootView = AnyView(
+            view
+                .environment(\.joeyAppearance, appearance)
+                .environment(\.joeyChromeTone, tone)
+        )
     }
 
     private func present(

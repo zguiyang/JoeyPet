@@ -40,6 +40,7 @@
 		D7PET133305978720070926E /* AmbientBehaviorScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET033305978720070926E /* AmbientBehaviorScheduler.swift */; };
 		D7PET132305978720070926E /* JoeyDesktopScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7PET032305978720070926E /* JoeyDesktopScene.swift */; };
 		D7F000000000000000000001 /* JoeyTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000002 /* JoeyTheme.swift */; };
+		D7F0000000000000000000A1 /* RoomDaypart.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F0000000000000000000A2 /* RoomDaypart.swift */; };
 		D7F000000000000000000003 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000004 /* AppSettings.swift */; };
 		D7F000000000000000000005 /* CompanionSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000006 /* CompanionSummary.swift */; };
 		D7F000000000000000000007 /* JoeyComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000008 /* JoeyComponents.swift */; };
@@ -101,6 +102,7 @@
 		D7PET033305978720070926E /* AmbientBehaviorScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientBehaviorScheduler.swift; sourceTree = "<group>"; };
 		D7PET032305978720070926E /* JoeyDesktopScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeyDesktopScene.swift; sourceTree = "<group>"; };
 		D7F000000000000000000002 /* JoeyTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeyTheme.swift; sourceTree = "<group>"; };
+		D7F0000000000000000000A2 /* RoomDaypart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoomDaypart.swift; sourceTree = "<group>"; };
 		D7F000000000000000000004 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		D7F000000000000000000006 /* CompanionSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionSummary.swift; sourceTree = "<group>"; };
 		D7F000000000000000000008 /* JoeyComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeyComponents.swift; sourceTree = "<group>"; };
@@ -284,6 +286,7 @@
 			isa = PBXGroup;
 			children = (
 				D7F000000000000000000002 /* JoeyTheme.swift */,
+				D7F0000000000000000000A2 /* RoomDaypart.swift */,
 			);
 			path = Design;
 			sourceTree = "<group>";
@@ -474,6 +477,7 @@
 				D7PET133305978720070926E /* AmbientBehaviorScheduler.swift in Sources */,
 				D7PET132305978720070926E /* JoeyDesktopScene.swift in Sources */,
 				D7F000000000000000000001 /* JoeyTheme.swift in Sources */,
+				D7F0000000000000000000A1 /* RoomDaypart.swift in Sources */,
 				D7F000000000000000000003 /* AppSettings.swift in Sources */,
 				D7AUD101305978720070926E /* JoeyAudioCatalog.swift in Sources */,
 				D7AUD102305978720070926E /* JoeyAudioController.swift in Sources */,

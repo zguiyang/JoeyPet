@@ -25,9 +25,10 @@ struct JoeyPrimaryButton: View {
     let action: () -> Void
 
     @Environment(\.joeyAppearance) private var appearance
+    @Environment(\.joeyChromeTone) private var chromeTone
     @State private var isHovering = false
 
-    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+    private var theme: JoeyTheme { JoeyTheme(chromeTone: chromeTone) }
 
     var body: some View {
         Button(action: action) {
@@ -61,9 +62,10 @@ struct JoeySecondaryButton: View {
     let action: () -> Void
 
     @Environment(\.joeyAppearance) private var appearance
+    @Environment(\.joeyChromeTone) private var chromeTone
     @State private var isHovering = false
 
-    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+    private var theme: JoeyTheme { JoeyTheme(chromeTone: chromeTone) }
 
     var body: some View {
         Button(action: action) {
@@ -108,9 +110,13 @@ struct WindowChromeHeader: View {
     let title: String
     var height: CGFloat = 32
 
+    @Environment(\.joeyChromeTone) private var chromeTone
     @Environment(\.joeyAppearance) private var appearance
 
-    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+    private var theme: JoeyTheme {
+        let daypart = appearance == .daypart ? RoomDaypart.resolve(at: Date()) : nil
+        return JoeyTheme(chromeTone: chromeTone, daypart: daypart)
+    }
 
     var body: some View {
         ZStack {
@@ -126,7 +132,7 @@ struct WindowChromeHeader: View {
         .frame(height: height)
         .overlay(alignment: .bottom) {
             Rectangle()
-                .fill(theme.hairline)
+                .fill(theme.hairline.opacity(0.55))
                 .frame(height: 1)
         }
     }
@@ -141,8 +147,9 @@ struct JoeyRoomLabel<Content: View>: View {
     }
 
     @Environment(\.joeyAppearance) private var appearance
+    @Environment(\.joeyChromeTone) private var chromeTone
 
-    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+    private var theme: JoeyTheme { JoeyTheme(chromeTone: chromeTone) }
 
     var body: some View {
         content
@@ -178,8 +185,9 @@ struct JoeyPetTipView<Content: View>: View {
     @ViewBuilder var content: () -> Content
 
     @Environment(\.joeyAppearance) private var appearance
+    @Environment(\.joeyChromeTone) private var chromeTone
 
-    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+    private var theme: JoeyTheme { JoeyTheme(chromeTone: chromeTone) }
 
     var body: some View {
         content()

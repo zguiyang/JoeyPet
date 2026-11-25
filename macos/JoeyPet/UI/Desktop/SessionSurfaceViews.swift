@@ -5,8 +5,9 @@ struct JoeyCompanionChipView: View {
     let startedAt: Date
 
     @Environment(\.joeyAppearance) private var appearance
+    @Environment(\.joeyChromeTone) private var chromeTone
 
-    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+    private var theme: JoeyTheme { JoeyTheme(chromeTone: chromeTone) }
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
@@ -48,6 +49,7 @@ struct InvitationCardView: View {
     var scale: InvitationCardScale = .desktop
 
     @Environment(\.joeyAppearance) private var appearance
+    @Environment(\.joeyChromeTone) private var chromeTone
     @State private var hoveredAction: CardAction?
 
     private enum CardAction: Hashable {
@@ -56,7 +58,7 @@ struct InvitationCardView: View {
         case doNotDisturb
     }
 
-    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+    private var theme: JoeyTheme { JoeyTheme(chromeTone: chromeTone) }
     private var isNest: Bool { scale == .nest }
     private var cardWidth: CGFloat { isNest ? 200 : 236 }
     private var cardRadius: CGFloat { isNest ? JoeyRadius.inviteCardNest : JoeyRadius.inviteCard }
@@ -176,6 +178,7 @@ struct RecoveryPanelView: View {
     let onSkip: () -> Void
 
     @Environment(\.joeyAppearance) private var appearance
+    @Environment(\.joeyChromeTone) private var chromeTone
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var hoveredAction: RecoveryAction?
 
@@ -184,7 +187,7 @@ struct RecoveryPanelView: View {
         case skip
     }
 
-    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+    private var theme: JoeyTheme { JoeyTheme(chromeTone: chromeTone) }
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
@@ -317,8 +320,9 @@ struct JoeyToastView: View {
     let text: String
 
     @Environment(\.joeyAppearance) private var appearance
+    @Environment(\.joeyChromeTone) private var chromeTone
 
-    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+    private var theme: JoeyTheme { JoeyTheme(chromeTone: chromeTone) }
 
     var body: some View {
         Text(text)

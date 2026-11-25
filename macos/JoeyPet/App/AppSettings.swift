@@ -116,9 +116,7 @@ final class AppSettings {
 
         self.quietStartMinutes = defaults.object(forKey: Key.quietStart) as? Int ?? 22 * 60
         self.quietEndMinutes = defaults.object(forKey: Key.quietEnd) as? Int ?? 8 * 60
-        self.appearance = JoeyAppearance(
-            rawValue: defaults.string(forKey: Key.appearance) ?? ""
-        ) ?? .light
+        self.appearance = JoeyAppearance.fromStored(defaults.string(forKey: Key.appearance))
         self.petCorner = PetCorner(
             rawValue: defaults.string(forKey: Key.petCorner) ?? ""
         ) ?? .bottomRight

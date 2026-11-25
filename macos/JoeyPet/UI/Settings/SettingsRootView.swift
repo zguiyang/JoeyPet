@@ -3,6 +3,8 @@ import SwiftUI
 
 struct SettingsRootView: View {
     @Bindable var settings: AppSettings
+    /// Clears the traffic-light band so the sidebar can run full-height.
+    var topInset: CGFloat = 0
     /// Only wired in Debug; Release builds never show the Debug section.
     var onDebugAction: ((DebugPetAction) -> Void)?
     @State private var selection: SettingsSection = .rhythm
@@ -13,13 +15,18 @@ struct SettingsRootView: View {
     private let audioCatalog = JoeyAudioCatalog.load()
     private let soundPreview = JoeySoundPreviewPlayer()
 
-    private var theme: JoeyTheme { JoeyTheme(appearance: settings.appearance) }
+    private var theme: JoeyTheme {
+        JoeyTheme(
+            appearance: settings.appearance,
+            daypart: settings.appearance == .daypart ? RoomDaypart.resolve(at: Date()) : nil
+        )
+    }
 
     var body: some View {
         HStack(spacing: 0) {
             sidebar
             Rectangle()
-                .fill(theme.hairline)
+                .fill(theme.hairline.opacity(0.7))
                 .frame(width: 1)
                 .frame(maxHeight: .infinity)
             // Sidebar stays put; only the detail pane scrolls when Debug (or
@@ -28,14 +35,27 @@ struct SettingsRootView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     detail
                 }
-                .padding(.init(top: 24, leading: 28, bottom: 24, trailing: 28))
+                .padding(.init(top: 20, leading: 28, bottom: 24, trailing: 28))
                 .frame(maxWidth: .infinity, alignment: .topLeading)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .background(theme.windowBg)
         }
+        .padding(.top, topInset)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(theme.windowBg)
+        .background {
+            HStack(spacing: 0) {
+                theme.windowChrome
+                    .frame(width: 200)
+                theme.windowBg
+            }
+            .ignoresSafeArea()
+        }
         .environment(\.joeyAppearance, settings.appearance)
+        .environment(
+            \.joeyChromeTone,
+            settings.appearance.resolveChromeTone(at: Date())
+        )
         .onAppear {
             settings.ambientSoundID = audioCatalog.sanitizedAmbientID(settings.ambientSoundID)
             settings.cueSoundID = audioCatalog.sanitizedCueID(settings.cueSoundID)
@@ -53,7 +73,8 @@ struct SettingsRootView: View {
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 8)
-        .padding(.vertical, 12)
+        .padding(.top, 8)
+        .padding(.bottom, 12)
         .frame(width: 200)
         .frame(maxHeight: .infinity, alignment: .top)
         .background(theme.windowChrome)
@@ -87,7 +108,7 @@ struct SettingsRootView: View {
 
     /// The reference uses sage-deep in light and plain sage in dusk.
     private var selectedTextColor: Color {
-        settings.appearance == .dusk ? theme.sage : theme.sageDeep
+        theme.chromeTone == .dark ? theme.sage : theme.sageDeep
     }
 
     @ViewBuilder
@@ -172,12 +193,12 @@ struct SettingsRootView: View {
     private var appearancePane: some View {
         SettingsPane(title: "外观与位置", description: "Joey 在桌面上的样子。") {
             SettingsRowList {
-                SettingsRow("外观", subtitle: "白天和黄昏各有一套配色") {
+                SettingsRow("外观", subtitle: "时段跟首页氛围；系统跟 macOS 浅色/深色") {
                     JoeySegmentedControl(
-                        titles: ["白天", "黄昏"],
-                        selectedIndex: settings.appearance == .light ? 0 : 1
+                        titles: JoeyAppearance.allCases.map(\.title),
+                        selectedIndex: JoeyAppearance.allCases.firstIndex(of: settings.appearance) ?? 0
                     ) { index in
-                        settings.appearance = index == 0 ? .light : .dusk
+                        settings.appearance = JoeyAppearance.allCases[index]
                     }
                     .accessibilityLabel("外观")
                 }
@@ -359,7 +380,8 @@ private struct SettingsPane<Content: View>: View {
     }
 
     @Environment(\.joeyAppearance) private var appearance
-    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+    @Environment(\.joeyChromeTone) private var chromeTone
+    private var theme: JoeyTheme { JoeyTheme(chromeTone: chromeTone) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -387,12 +409,13 @@ private struct SettingsRowList<Content: View>: View {
     }
 
     @Environment(\.joeyAppearance) private var appearance
+    @Environment(\.joeyChromeTone) private var chromeTone
 
     var body: some View {
         VStack(spacing: 0) {
             content
             Rectangle()
-                .fill(JoeyTheme(appearance: appearance).hairline)
+                .fill(JoeyTheme(chromeTone: chromeTone).hairline)
                 .frame(height: 1)
         }
     }
@@ -410,9 +433,10 @@ private struct SettingsRow<Control: View>: View {
     }
 
     @Environment(\.joeyAppearance) private var appearance
+    @Environment(\.joeyChromeTone) private var chromeTone
     @ScaledMetric(relativeTo: .body) private var titleSize: CGFloat = 13.5
     @ScaledMetric(relativeTo: .caption) private var subtitleSize: CGFloat = 12
-    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+    private var theme: JoeyTheme { JoeyTheme(chromeTone: chromeTone) }
 
     var body: some View {
         HStack(alignment: .center, spacing: 20) {
@@ -451,9 +475,10 @@ private struct SoundPicker: View {
     let preview: JoeySoundPreviewPlayer
 
     @Environment(\.joeyAppearance) private var appearance
+    @Environment(\.joeyChromeTone) private var chromeTone
     @State private var isOpen = false
     @State private var isHovering = false
-    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+    private var theme: JoeyTheme { JoeyTheme(chromeTone: chromeTone) }
 
     private var selectedTitle: String {
         if selection == JoeyAudioCatalog.noneID { return noneTitle }
@@ -510,8 +535,9 @@ private struct SoundPickerMenu: View {
     let onPick: () -> Void
 
     @Environment(\.joeyAppearance) private var appearance
+    @Environment(\.joeyChromeTone) private var chromeTone
     @State private var hoveredID: String?
-    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+    private var theme: JoeyTheme { JoeyTheme(chromeTone: chromeTone) }
 
     /// Popover ScrollView needs a concrete height or it grows with content and clips.
     private var trackListHeight: CGFloat {
@@ -619,8 +645,9 @@ private struct SoundPickerRow: View {
     let onPreview: () -> Void
 
     @Environment(\.joeyAppearance) private var appearance
+    @Environment(\.joeyChromeTone) private var chromeTone
     @State private var speakerHovered = false
-    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+    private var theme: JoeyTheme { JoeyTheme(chromeTone: chromeTone) }
 
     private var rowFill: Color {
         if isSelected { return theme.panel2 }
@@ -689,7 +716,8 @@ private struct JoeySegmentedControl: View {
     let onSelect: (Int) -> Void
 
     @Environment(\.joeyAppearance) private var appearance
-    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+    @Environment(\.joeyChromeTone) private var chromeTone
+    private var theme: JoeyTheme { JoeyTheme(chromeTone: chromeTone) }
 
     var body: some View {
         HStack(spacing: 0) {
@@ -742,8 +770,9 @@ private struct JoeySwitch: View {
     let label: String
 
     @Environment(\.joeyAppearance) private var appearance
+    @Environment(\.joeyChromeTone) private var chromeTone
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+    private var theme: JoeyTheme { JoeyTheme(chromeTone: chromeTone) }
 
     var body: some View {
         Button {
@@ -754,7 +783,7 @@ private struct JoeySwitch: View {
                     .fill(isOn ? theme.sage : theme.hairlineStrong)
 
                 Circle()
-                    .fill(appearance == .dusk ? Color(hex: 0xE9E3D7) : .white)
+                    .fill(chromeTone == .dark ? Color(hex: 0xE9E3D7) : .white)
                     .frame(width: 17, height: 17)
                     .shadow(color: .black.opacity(0.25), radius: 2, x: 0, y: 1)
                     .offset(x: isOn ? 17 : 2)
@@ -784,6 +813,7 @@ private struct QuietHoursField: View {
     @Binding var endMinutes: Int
 
     @Environment(\.joeyAppearance) private var appearance
+    @Environment(\.joeyChromeTone) private var chromeTone
     @State private var startText: String
     @State private var endText: String
 
@@ -794,7 +824,7 @@ private struct QuietHoursField: View {
         _endText = State(initialValue: Self.format(endMinutes.wrappedValue))
     }
 
-    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+    private var theme: JoeyTheme { JoeyTheme(chromeTone: chromeTone) }
 
     var body: some View {
         HStack(spacing: 6) {
@@ -941,8 +971,9 @@ private struct SettingsSmallButton: View {
     let action: () -> Void
 
     @Environment(\.joeyAppearance) private var appearance
+    @Environment(\.joeyChromeTone) private var chromeTone
     @State private var isHovering = false
-    private var theme: JoeyTheme { JoeyTheme(appearance: appearance) }
+    private var theme: JoeyTheme { JoeyTheme(chromeTone: chromeTone) }
 
     var body: some View {
         Button(action: action) {

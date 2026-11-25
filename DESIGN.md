@@ -44,10 +44,10 @@ Engineering AGENTS.md, docs/tech-stack.md        → AppKit/SwiftUI/SpriteKit sp
 | Nest home (main window, room scene) | Agreed | Implemented (room shell, draggable Joey; session CTA wired) |
 | Rhythm reflection (garden view) | Agreed | Implemented (seed / sprout / tall sprout / tree stages; fed by session data) |
 | Settings | Agreed | Implemented (page inside the main window) |
-| Light + dusk appearances | Agreed | Implemented |
+| Appearance 时段 / 系统 | Agreed | Implemented (chrome follows home daypart or macOS) |
 | Calm Space / Mac Care shell | Legacy | Removed — archive branch only |
 
-> Shipped today: the desktop panel (drag, hide, show; hidden by default), menu bar item, the companion chip, rest invitation, 30-second recovery, completion feedback, the nest window with a working start / end companionship action, first-run "show Joey" step, next-reminder line, reflection, and settings with light/dusk appearance and persisted V0 settings. The desktop pet is shown only when the user turns it on in Settings, the menu bar, or the nest's explicit "让 Joey 到桌面" button; starting companionship does not reveal it automatically.
+> Shipped today: the desktop panel (drag, hide, show; hidden by default), menu bar item, the companion chip, rest invitation, 30-second recovery, completion feedback, the nest window with a working start / end companionship action, first-run "show Joey" step, next-reminder line, reflection, and settings with 时段/系统 appearance and persisted V0 settings. The desktop pet is shown only when the user turns it on in Settings, the menu bar, or the nest's explicit "让 Joey 到桌面" button; starting companionship does not reveal it automatically.
 
 ---
 
@@ -255,10 +255,10 @@ All layout derives from the live window size in code. The 1440 × 900 numbers de
 ### 7.2 Window chrome
 
 - **Native macOS window**: real traffic lights, native title, native resize/move/key-inactive appearance. Never draw fake traffic lights.
-- **No toolbar. No in-window tab bar. No navigation bar.** System chrome already provides the window frame.
+- **No toolbar. No in-window tab bar. No solid navigation bar on the home room.** System chrome already provides traffic lights; the illustrated room paints under a transparent titlebar.
 - **One chrome control only:** a settings gear at the titlebar trailing edge. Nothing else lives in the titlebar.
-- Titlebar height ~40 pt; content is full-bleed below it, with the illustrated room meeting the titlebar edge.
-- Title text is real ("Joey 的家", "节奏回顾", "JoeyPet 设置"), because the reference shows it. If hidden mode is used, the title must still exist as window metadata for window management.
+- Illustrated surfaces (home + reflection) are immersive: no opaque title strip; sky/garden paints under the transparent titlebar with a light floating title. Settings uses a full-height sidebar under the same transparent titlebar (no solid nav band); sidebar + detail share the resolved 时段/系统 tone.
+- Window title metadata stays real ("Joey 的家", "节奏回顾", "JoeyPet 设置") for window management even when the home label is subtle.
 
 ### 7.3 Navigation lives in the scene
 
@@ -508,11 +508,12 @@ The main window, and it should feel like entering Joey's home.
 - Joey stays in the nest. The room pet is not draggable; a click asks the runtime for one short greeting (`happy` for ~2.8 s), and both the nest and the desktop pet play it.
 - While a companionship session is running (`陪伴中`), the runtime drives `look` (including during the invitation card), then `stretch` and `happy` at the matching moments, and the nest follows. Quiet hours show the same `sleep` pose in both places.
 - The wall clock shows the real local time with hour and minute hands; clicking it opens `JoeyPet 设置` on **节奏与提醒**. The hover hint is `调整提醒时间`.
-- Three object-bound facts, nothing else:
+- Object-bound copy (no companionship-duration on home — that stays in 回顾):
   - Clock label: `Joey 大约每 45 分钟来叫你一次`
-  - Notebook label: `今天陪了 2 小时 10 分`
-  - Plant label: `今天休息 2 次`
-- Primary action centred near the floor: **开始一起工作**; while running it becomes **结束陪伴** with a status chip `陪伴中 · mm:ss` above it.
+  - Plant label: `今天休息 2 次` (empty: `今天还没有休息`)
+  - Desk welcome: one pet-voice line by local daypart (`一年之计在于晨。` / `我在这儿陪着你。` / `今天够了，慢慢收一收。` / `夜里也安静陪着。`)
+- Primary action **horizontally centred** near the floor (scene x ≈ 540): **开始一起工作**; while running it becomes **结束陪伴** with a status chip `陪伴中 · mm:ss` centred above it.
+- Room atmosphere follows local clock dayparts (morning / day / dusk / night): recolor sky, hills, wall, floor, curtains, outdoor sun/moon disc; optional night stars. Curtains sway gently (Reduce Motion → static). **No** sun beams, floor pools, wall projections or desk lamps. Nest and Joey keep the shipped nest geometry. Frozen board: [`docs/reference/joeypet-home-v1.html`](docs/reference/joeypet-home-v1.html).
 - Starting a session never requires showing the desktop pet. If Joey is hidden, he stays hidden between reminders and surfaces only for an invitation.
 - No cards, no charts, no streaks, no "Today's productivity".
 
@@ -541,7 +542,7 @@ Native, quieter, more functional than the room. No illustration, no hero copy, n
 | 背景音 | Menu-style chooser：无背景音 + catalog beds；每条有小喇叭试听 | 陪伴中播放；勿扰或安静时段会静音（试听不受影响） |
 | 提示音 | Menu-style chooser：无提示音 + catalog cues；每条有小喇叭试听 | 开始陪伴与休息邀请时播放；勿扰或安静时段会静音（试听不受影响） |
 | 安静时段 | Time-range field: two editable halves, centre dash, double-click selects all | 这段时间不会邀请；正在进行的休息会先走完 |
-| 外观 | Segmented 白天 / 黄昏 | 白天和黄昏各有一套配色 |
+| 外观 | Segmented 时段 / 系统 | 时段：整窗 chrome 跟首页当前时段；系统：跟 macOS 浅色/深色。默认时段 |
 | 显示位置 | Segmented 右下角 / 左下角 | 拖动后以你放的位置为准 |
 | 在桌面上显示 Joey | Switch | 关掉不会结束陪伴，到点仍会短暂露面提醒 |
 | 反馈 | Button → textarea | 只保存在这台 Mac，不会上传 |
@@ -808,3 +809,5 @@ Git history and the archive branch explain why they were replaced.
 | 2026-11-23 | V0 defers edge docking, collapse and `peek`. Dragging still clamps on screen and persists the release position; the edge-dock geometry and peek wiring are removed. `carry` remains. |
 | 2026-11-24 | Removed `step` / ambient walking from V0 (product meaning weak; walk art broke character identity). |
 | 2026-11-24 | Quiet-hours life bridges: enter and exit through a 1.8 s `yawn` before `sleep` / day pose; recovery and complete still finish first. |
+| 2026-11-24 | Nest home: daypart palettes + curtain sway (no beams); desk welcome replaces companionship duration; CTA centred; board `joeypet-home-v1.html`. |
+| 2026-11-25 | Appearance is 时段 / 系统; home immersive under transparent titlebar; chrome shares daypart or macOS tone with settings/reflection. |

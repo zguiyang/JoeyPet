@@ -110,12 +110,25 @@ struct JoeyPetTests {
         var notified: JoeyAppearance?
         settings.onAppearanceChanged = { notified = $0 }
 
-        settings.appearance = .dusk
+        settings.appearance = .system
 
-        #expect(notified == .dusk)
-        #expect(settings.appearance == .dusk)
-        #expect(JoeyAppearance.light.nsAppearance?.name == .aqua)
-        #expect(JoeyAppearance.dusk.nsAppearance?.name == .darkAqua)
+        #expect(notified == .system)
+        #expect(settings.appearance == .system)
+        #expect(JoeyAppearance.system.nsAppearance() == nil)
+
+        let morning = testDate(2026, 11, 24, 9, 0)
+        let night = testDate(2026, 11, 24, 23, 0)
+        #expect(JoeyAppearance.daypart.resolveChromeTone(at: morning, calendar: testCalendar()) == .light)
+        #expect(JoeyAppearance.daypart.resolveChromeTone(at: night, calendar: testCalendar()) == .dark)
+        #expect(JoeyAppearance.daypart.nsAppearance(at: morning)?.name == .aqua)
+        #expect(JoeyAppearance.daypart.nsAppearance(at: night)?.name == .darkAqua)
+    }
+
+    @Test func appearanceMigratesLegacyLightAndDuskToDaypart() {
+        #expect(JoeyAppearance.fromStored("light") == .daypart)
+        #expect(JoeyAppearance.fromStored("dusk") == .daypart)
+        #expect(JoeyAppearance.fromStored("system") == .system)
+        #expect(JoeyAppearance.fromStored(nil) == .daypart)
     }
 
     @Test func desktopPetIsHiddenByDefault() {
@@ -1613,5 +1626,24 @@ struct PetRuntimeTests {
         planner.markFired(at: start.addingTimeInterval(30)) { _ in 60 }
         #expect(planner.isDue(at: start.addingTimeInterval(89)) == false)
         #expect(planner.isDue(at: start.addingTimeInterval(90)))
+    }
+}
+
+struct RoomDaypartTests {
+    @Test func resolveFollowsLocalHourWindows() {
+        let calendar = testCalendar()
+        #expect(RoomDaypart.resolve(at: testDate(2026, 11, 24, 6, 0), calendar: calendar) == .morning)
+        #expect(RoomDaypart.resolve(at: testDate(2026, 11, 24, 12, 0), calendar: calendar) == .day)
+        #expect(RoomDaypart.resolve(at: testDate(2026, 11, 24, 18, 0), calendar: calendar) == .dusk)
+        #expect(RoomDaypart.resolve(at: testDate(2026, 11, 24, 22, 0), calendar: calendar) == .night)
+        #expect(RoomDaypart.resolve(at: testDate(2026, 11, 24, 3, 0), calendar: calendar) == .night)
+    }
+
+    @Test func welcomeLinesArePetVoiceNotWorkPraise() {
+        for daypart in RoomDaypart.allCases {
+            #expect(!daypart.welcomeLine.contains("工作"))
+            #expect(!daypart.welcomeLine.contains("陪了"))
+            #expect(!daypart.welcomeLine.isEmpty)
+        }
     }
 }
