@@ -2,7 +2,7 @@ import AVFoundation
 import Foundation
 import OSLog
 
-/// Dual-player bed + one-shot. Mute when DND or quiet hours; ambient only during companionship.
+/// Dual-player bed + one-shot. Mute on DND, or quiet hours while alone; ambient only during companionship.
 @MainActor
 final class JoeyAudioController {
     private static let logger = Logger(subsystem: "com.zguiyang.JoeyPet", category: "JoeyAudio")
@@ -35,11 +35,12 @@ final class JoeyAudioController {
 
     /// Call on every situation change and after selection updates.
     func sync(situation: PetSituation, now: Date = Date()) {
+        let sessionActive = situation.session != nil
         let silence = JoeyAudioMutePolicy.shouldSilence(
             isDoNotDisturb: situation.isDoNotDisturb,
-            isQuietActive: situation.isQuietActive
+            isQuietActive: situation.isQuietActive,
+            hasSession: sessionActive
         )
-        let sessionActive = situation.session != nil
         let inviteVisible = situation.isInviteCardVisible(at: now)
 
         let silenceChanged = silence != isSilenced

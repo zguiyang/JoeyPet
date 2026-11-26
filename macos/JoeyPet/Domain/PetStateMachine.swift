@@ -81,6 +81,8 @@ enum PetStateMachine {
             var next = state
             var effects: [PetEffect] = [.resume]
             next.isSystemSleeping = false
+            // Recover that expired while frozen is abandoned, not completed.
+            abandonOverdueRecoverIfNeeded(&next, now: now, effects: &effects)
             normalize(&next, now: now, calendar: calendar)
             applyDueTimers(&next, now: now, calendar: calendar, effects: &effects)
             return finish(next, old: state, now: now, effects: effects)
@@ -89,6 +91,7 @@ enum PetStateMachine {
             var next = state
             var effects: [PetEffect] = [.resume]
             next.isScreenLocked = false
+            abandonOverdueRecoverIfNeeded(&next, now: now, effects: &effects)
             normalize(&next, now: now, calendar: calendar)
             applyDueTimers(&next, now: now, calendar: calendar, effects: &effects)
             return finish(next, old: state, now: now, effects: effects)
@@ -141,17 +144,7 @@ enum PetStateMachine {
             effects.append(.persist)
 
         case .sessionEnd:
-            next.session = nil
-            next.companion = nil
-            next.inviteShownAt = nil
-            next.snoozeUntil = nil
-            next.snoozeUsedThisSession = false
-            next.recoveryEndsAt = nil
-            next.completeEndsAt = nil
-            next.isDozing = false
-            next.isYawning = false
-            next.yawnUntil = nil
-            next.wasAwayLong = false
+            endSessionSilently(&next, now: now, settleQuiet: true)
             effects.append(.persist)
 
         case .inviteAccepted:
@@ -291,6 +284,11 @@ enum PetStateMachine {
             effects.append(.pauseAmbient)
 
         case .presenceAway30:
+            // Track long away even during a companionship session so return can settle it.
+            if next.session != nil {
+                next.wasAwayLong = true
+                break
+            }
             guard next.canEnterDoze(at: now) else { break }
             next.wasAwayLong = true
             if !next.isDozing {
@@ -301,6 +299,12 @@ enum PetStateMachine {
             }
 
         case .presenceReturned:
+            if next.wasAwayLong, next.session != nil {
+                endSessionSilently(&next, now: now, settleQuiet: true)
+                effects.append(.persist)
+                effects.append(.log("sessionEndedByLongAway"))
+                break
+            }
             guard next.isDozing || next.wasAwayLong else { break }
             next.wasAwayLong = false
             beginLifeYawn(&next, at: now)
@@ -351,34 +355,66 @@ enum PetStateMachine {
 
         if state.isDoNotDisturb {
             suppressPrompts(&state, now: now)
-        } else if state.isQuietActive {
-            switch state.companion {
-            case .invite:
-                state.companion = state.session != nil ? .idle : nil
-                state.lastInvitationClosedAt = now
-                state.inviteShownAt = nil
-            case .approach:
-                state.companion = state.session != nil ? .idle : nil
-            default:
-                break
-            }
         } else if state.session != nil, state.companion == nil {
             state.companion = .idle
         }
 
-        // Life-like quiet bridges: yawn before sinking into sleep, and yawn again
-        // when the window ends. Skip enter-yawn while recovery/complete still owns
-        // the pose; those finish first, then settle into sleep.
+        // Quiet enter edge: end any open session (Joey goes to sleep), then yawn.
+        // Sessions started while already quiet are left alone until the user ends
+        // them or a safety settle (6 h / long away) fires.
         if !wasQuiet, state.isQuietActive {
-            switch state.companion {
-            case .recover, .complete:
-                break
-            default:
-                beginLifeYawn(&state, at: now)
+            if state.session != nil {
+                endSessionSilently(&state, now: now, settleQuiet: false)
             }
+            beginLifeYawn(&state, at: now)
         } else if wasQuiet, !state.isQuietActive {
             beginLifeYawn(&state, at: now)
         }
+    }
+
+    /// Clears companionship without counting a break. When `settleQuiet` is true
+    /// and quiet hours are active, Joey yawns back into sleep.
+    private static func endSessionSilently(
+        _ state: inout PetSituation,
+        now: Date,
+        settleQuiet: Bool
+    ) {
+        if state.companion == .invite {
+            state.lastInvitationClosedAt = now
+        }
+        state.session = nil
+        state.companion = nil
+        state.inviteShownAt = nil
+        state.snoozeUntil = nil
+        state.snoozeUsedThisSession = false
+        state.recoveryEndsAt = nil
+        state.completeEndsAt = nil
+        state.isDozing = false
+        state.wasAwayLong = false
+        if settleQuiet, state.isQuietActive {
+            beginLifeYawn(&state, at: now)
+        } else {
+            state.isYawning = false
+            state.yawnUntil = nil
+        }
+    }
+
+    /// Recover whose wall-clock deadline passed while frozen → skip, no count.
+    private static func abandonOverdueRecoverIfNeeded(
+        _ state: inout PetSituation,
+        now: Date,
+        effects: inout [PetEffect]
+    ) {
+        guard state.companion == .recover,
+              let ends = state.recoveryEndsAt,
+              ends <= now
+        else { return }
+        state.companion = state.session != nil ? .idle : nil
+        state.recoveryEndsAt = nil
+        state.lastInvitationClosedAt = now
+        state.inviteShownAt = nil
+        effects.append(.log("recoveryAbandonedAfterFreeze"))
+        effects.append(.persist)
     }
 
     /// Short wake/settle yawn used for presence return and quiet-hour edges.
@@ -439,6 +475,23 @@ enum PetStateMachine {
             effects.append(.persist)
         }
 
+        // Visible invitation unanswered for too long → soft dismiss, no guilt.
+        if !state.isMenuOpen, !state.isDragging,
+           let deadline = state.visibleInviteDeadline(), deadline <= now {
+            state.companion = state.session != nil ? .idle : nil
+            state.lastInvitationClosedAt = now
+            state.inviteShownAt = nil
+            effects.append(.log("visibleInviteTimedOut"))
+            effects.append(.persist)
+        }
+
+        // Forgotten companionship: silent end after the session cap.
+        if let maxDeadline = state.sessionMaxDeadline(), maxDeadline <= now {
+            endSessionSilently(&state, now: now, settleQuiet: true)
+            effects.append(.log("sessionEndedByMaxDuration"))
+            effects.append(.persist)
+        }
+
         if state.companion == .recover,
            let ends = state.recoveryEndsAt,
            ends <= now {
@@ -478,8 +531,9 @@ enum PetStateMachine {
     ) {
         state.companion = state.session != nil ? .idle : nil
         state.completeEndsAt = nil
-        if state.isQuietActive {
-            // Quiet won the desk: settle with a yawn, then deep sleep.
+        // Only sink into quiet sleep when no session remains (night-started
+        // sessions keep companion pose after a break).
+        if state.isQuietActive, state.session == nil {
             beginLifeYawn(&state, at: now)
         }
     }
@@ -538,7 +592,8 @@ enum PetStateMachine {
 
     private static func presentInvite(_ state: inout PetSituation, at now: Date) {
         state.companion = .invite
-        state.inviteShownAt = state.isHidden ? now : nil
+        // Always stamp show time: hidden uses 60 s reveal TTL; visible uses 5 min soft dismiss.
+        state.inviteShownAt = now
         state.isDozing = false
         state.isYawning = false
         state.yawnUntil = nil

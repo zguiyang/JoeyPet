@@ -75,10 +75,18 @@ struct JoeyAudioCatalog: Equatable, Sendable {
     }
 }
 
-/// Pure mute gate: DND or quiet hours silence both ambient and cues.
+/// Pure mute gate: DND always; quiet hours only while there is no session.
 enum JoeyAudioMutePolicy {
-    static func shouldSilence(isDoNotDisturb: Bool, isQuietActive: Bool) -> Bool {
-        isDoNotDisturb || isQuietActive
+    /// Quiet hours mute only when Joey is alone asleep. A session started inside
+    /// quiet still plays companionship ambient and invite cues.
+    static func shouldSilence(
+        isDoNotDisturb: Bool,
+        isQuietActive: Bool,
+        hasSession: Bool = false
+    ) -> Bool {
+        if isDoNotDisturb { return true }
+        if isQuietActive, !hasSession { return true }
+        return false
     }
 }
 

@@ -144,6 +144,10 @@ struct InvitationPolicy: Equatable, Sendable {
     var completeDuration: TimeInterval
     /// How long a hidden Joey may surface for one invitation before returning to hiding.
     var hiddenRevealDuration: TimeInterval
+    /// How long a visible invitation card may sit unanswered before a soft dismiss.
+    var inviteVisibleDuration: TimeInterval
+    /// Silent session end after this much companionship (forgotten overnight, etc.).
+    var maxSessionDuration: TimeInterval
 
     init(
         minimumGapMinutes: Int = 15,
@@ -152,7 +156,9 @@ struct InvitationPolicy: Equatable, Sendable {
         approachLeadMinutes: Int = 5,
         recoveryDuration: TimeInterval = 30,
         completeDuration: TimeInterval = 2.6,
-        hiddenRevealDuration: TimeInterval = 60
+        hiddenRevealDuration: TimeInterval = 60,
+        inviteVisibleDuration: TimeInterval = 5 * 60,
+        maxSessionDuration: TimeInterval = 6 * 60 * 60
     ) {
         self.minimumGapMinutes = minimumGapMinutes
         self.rhythmMinutes = rhythmMinutes
@@ -161,6 +167,8 @@ struct InvitationPolicy: Equatable, Sendable {
         self.recoveryDuration = recoveryDuration
         self.completeDuration = completeDuration
         self.hiddenRevealDuration = hiddenRevealDuration
+        self.inviteVisibleDuration = inviteVisibleDuration
+        self.maxSessionDuration = maxSessionDuration
     }
 
     /// Allowed custom / preset rhythm range. Presets are 45 / 60 / 90; any int in range is valid.
@@ -280,9 +288,10 @@ struct PetSituation: Equatable, Sendable {
         return snoozeUntil > now
     }
 
-    /// Do-not-disturb, quiet hours and system states all silence invitations.
+    /// Do-not-disturb and system freeze silence invitations.
+    /// Quiet hours alone do not: a session started inside quiet still keeps rhythm invites.
     var promptsSuppressed: Bool {
-        isDoNotDisturb || isQuietActive || isSystemSleeping || isScreenLocked
+        isDoNotDisturb || isSystemSleeping || isScreenLocked
     }
 
     /// A hidden Joey only returns to the desktop to deliver an active prompt.
@@ -329,10 +338,15 @@ struct PetSituation: Equatable, Sendable {
     func resolvedDesktop(at now: Date) -> DesktopState {
         if isDragging { return .dragging }
         if isHidden, !isTemporarilyRevealed(at: now) { return .hidden }
+        // An open session (including one started inside quiet) wins over quiet sleep.
+        if session != nil {
+            if isDoNotDisturb { return .doNotDisturb }
+            if isSnoozeActive(at: now) { return .snoozed }
+            return .companion
+        }
         if isQuietActive { return .quiet }
         if isDoNotDisturb { return .doNotDisturb }
         if isSnoozeActive(at: now) { return .snoozed }
-        if session != nil { return .companion }
         return .alone
     }
 
@@ -343,8 +357,6 @@ struct PetSituation: Equatable, Sendable {
         case .dragging:
             return .look
         case .quiet:
-            if companion == .recover { return .stretch }
-            if companion == .complete { return .happy }
             // Quiet enter/exit bridge: yawn once, then settle into deep sleep.
             if isYawnActive(at: now) { return .yawn }
             return .sleep
@@ -386,8 +398,7 @@ struct PetSituation: Equatable, Sendable {
         return true
     }
 
-    /// Quiet hours may finish a running recovery, so only DND and system
-    /// states hide the panel.
+    /// Only DND and system freeze hide the recovery panel.
     func isRecoveryPanelVisible(at now: Date) -> Bool {
         guard session != nil, companion == .recover else { return false }
         return !isDoNotDisturb && !isSystemSleeping && !isScreenLocked
@@ -407,6 +418,18 @@ struct PetSituation: Equatable, Sendable {
     func hiddenRevealDeadline() -> Date? {
         guard isHidden, companion == .invite, let inviteShownAt else { return nil }
         return inviteShownAt.addingTimeInterval(policy.hiddenRevealDuration)
+    }
+
+    /// Soft-dismiss deadline for a visible (non-hidden) invitation card.
+    func visibleInviteDeadline() -> Date? {
+        guard !isHidden, companion == .invite, let inviteShownAt else { return nil }
+        return inviteShownAt.addingTimeInterval(policy.inviteVisibleDuration)
+    }
+
+    /// Silent end when companionship has run this long.
+    func sessionMaxDeadline() -> Date? {
+        guard let session else { return nil }
+        return session.startedAt.addingTimeInterval(policy.maxSessionDuration)
     }
 
     func canEnterDoze(at now: Date) -> Bool {

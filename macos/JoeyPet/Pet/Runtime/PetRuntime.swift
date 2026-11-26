@@ -296,6 +296,8 @@ final class PetRuntime {
 
         enqueue(situation.snoozeUntil)
         enqueue(situation.hiddenRevealDeadline())
+        enqueue(situation.visibleInviteDeadline())
+        enqueue(situation.sessionMaxDeadline())
         enqueue(situation.dragSettledAt)
         if situation.companion == .recover {
             enqueue(situation.recoveryEndsAt)
