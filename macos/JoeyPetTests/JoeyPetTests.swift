@@ -190,6 +190,13 @@ struct JoeyPetTests {
         #expect(JoeyAudioMutePolicy.shouldSilence(isDoNotDisturb: true, isQuietActive: false))
         #expect(JoeyAudioMutePolicy.shouldSilence(isDoNotDisturb: false, isQuietActive: true))
         #expect(JoeyAudioMutePolicy.shouldSilence(isDoNotDisturb: true, isQuietActive: true))
+        #expect(
+            !JoeyAudioMutePolicy.shouldSilence(
+                isDoNotDisturb: false,
+                isQuietActive: true,
+                hasSession: true
+            )
+        )
     }
 
     @Test func audioCatalogLoadsBundledTracksAndSanitizes() {
@@ -342,8 +349,7 @@ struct PetDomainTests {
         situation.isDragging = false
         #expect(situation.resolvedDesktop(at: now) == .hidden)
         situation.isHidden = false
-        #expect(situation.resolvedDesktop(at: now) == .quiet)
-        situation.isQuietActive = false
+        // Open session wins over quiet; DND still covers prompts while the session runs.
         #expect(situation.resolvedDesktop(at: now) == .doNotDisturb)
         situation.isDoNotDisturb = false
         #expect(situation.resolvedDesktop(at: now) == .snoozed)
@@ -353,6 +359,8 @@ struct PetDomainTests {
 
         situation.session = nil
         situation.companion = nil
+        #expect(situation.resolvedDesktop(at: now) == .quiet)
+        situation.isQuietActive = false
         #expect(situation.resolvedDesktop(at: now) == .alone)
     }
 
@@ -512,7 +520,7 @@ struct PetDomainTests {
         #expect(resumed.session != nil)
     }
 
-    @Test func quietHoursClosesInviteAndSleeps() {
+    @Test func quietHoursEndsSessionClosesInviteAndSleeps() {
         let calendar = testCalendar()
         let start = testDate(2026, 11, 23, 21, 0)
         let due = start.addingTimeInterval(45 * 60)
@@ -541,8 +549,8 @@ struct PetDomainTests {
         #expect(quiet.state.resolvedDesktop(at: quietTime) == .quiet)
         #expect(quiet.state.isYawning)
         #expect(quiet.state.resolvedPose(at: quietTime) == .yawn)
-        #expect(quiet.state.companion == .idle)
-        #expect(quiet.state.session != nil)
+        #expect(quiet.state.companion == nil)
+        #expect(quiet.state.session == nil)
         #expect(quiet.effects.contains(.dismissInviteCard))
 
         let asleepTime = quietTime.addingTimeInterval(1.8)
@@ -559,7 +567,7 @@ struct PetDomainTests {
         #expect(asleep.effects.contains(.play(.sleep)))
     }
 
-    @Test func quietHoursLetsRecoveryFinishBeforeSleeping() {
+    @Test func quietHoursAbandonsRecoveryWithoutCountingAndSleeps() {
         let calendar = testCalendar()
         let start = testDate(2026, 11, 23, 21, 0)
         let due = start.addingTimeInterval(45 * 60)
@@ -584,31 +592,23 @@ struct PetDomainTests {
         ).state
 
         let quietTime = testDate(2026, 11, 23, 23, 0)
-        let completed = PetStateMachine.reduce(
+        let settled = PetStateMachine.reduce(
             recovering,
             event: .tick,
             now: quietTime,
             calendar: calendar
         )
-        #expect(completed.state.resolvedDesktop(at: quietTime) == .quiet)
-        #expect(completed.state.companion == .complete)
-        #expect(completed.state.resolvedPose(at: quietTime) == .happy)
-        #expect(completed.effects.contains(.completeRecovery))
+        #expect(settled.state.resolvedDesktop(at: quietTime) == .quiet)
+        #expect(settled.state.session == nil)
+        #expect(settled.state.companion == nil)
+        #expect(settled.state.isYawning)
+        #expect(settled.state.resolvedPose(at: quietTime) == .yawn)
+        #expect(!settled.effects.contains(.completeRecovery))
+        #expect(settled.effects.contains(.hideRecoveryPanel))
 
-        let sleepTime = quietTime.addingTimeInterval(2.6)
-        let settling = PetStateMachine.reduce(
-            completed.state,
-            event: .tick,
-            now: sleepTime,
-            calendar: calendar
-        ).state
-        #expect(settling.companion == .idle)
-        #expect(settling.isYawning)
-        #expect(settling.resolvedPose(at: sleepTime) == .yawn)
-
-        let asleepTime = sleepTime.addingTimeInterval(1.8)
+        let asleepTime = quietTime.addingTimeInterval(1.8)
         let sleeping = PetStateMachine.reduce(
-            settling,
+            settled.state,
             event: .tick,
             now: asleepTime,
             calendar: calendar
@@ -899,7 +899,7 @@ struct PetDomainTests {
         #expect(settled.resolvedPose(at: now.addingTimeInterval(3)) == .sit)
     }
 
-    @Test func presenceIsIgnoredDuringCompanion() {
+    @Test func presenceIdleDoesNotDozeDuringCompanion() {
         let calendar = testCalendar()
         let start = testDate(2026, 11, 23, 9, 0)
 
@@ -917,6 +917,150 @@ struct PetDomainTests {
         ).state
         #expect(!idle.isDozing)
         #expect(idle.resolvedPose(at: start.addingTimeInterval(90)) == .look)
+    }
+
+    @Test func sessionStartDuringQuietKeepsCompanionshipAndInvites() {
+        let calendar = testCalendar()
+        let night = testDate(2026, 11, 23, 23, 0)
+
+        let started = PetStateMachine.reduce(
+            PetSituation(),
+            event: .sessionStart,
+            now: night,
+            calendar: calendar
+        ).state
+        #expect(started.isQuietActive)
+        #expect(started.session != nil)
+        #expect(started.resolvedDesktop(at: night) == .companion)
+        #expect(started.resolvedPose(at: night) == .look)
+
+        let due = night.addingTimeInterval(45 * 60)
+        let invited = PetStateMachine.reduce(
+            started,
+            event: .tick,
+            now: due,
+            calendar: calendar
+        ).state
+        #expect(invited.companion == .invite)
+        #expect(invited.isInviteCardVisible(at: due))
+
+        let ended = PetStateMachine.reduce(
+            invited,
+            event: .sessionEnd,
+            now: due,
+            calendar: calendar
+        ).state
+        #expect(ended.session == nil)
+        #expect(ended.isQuietActive)
+        #expect(ended.isYawning)
+        #expect(ended.resolvedDesktop(at: due) == .quiet)
+    }
+
+    @Test func visibleInviteTimesOutSoftly() {
+        let calendar = testCalendar()
+        let start = testDate(2026, 11, 23, 9, 0)
+        let due = start.addingTimeInterval(45 * 60)
+
+        let started = PetStateMachine.reduce(
+            PetSituation(),
+            event: .sessionStart,
+            now: start,
+            calendar: calendar
+        ).state
+        let invited = PetStateMachine.reduce(
+            started,
+            event: .tick,
+            now: due,
+            calendar: calendar
+        ).state
+        #expect(invited.companion == .invite)
+        #expect(invited.inviteShownAt != nil)
+
+        let timedOut = due.addingTimeInterval(5 * 60)
+        let settled = PetStateMachine.reduce(
+            invited,
+            event: .tick,
+            now: timedOut,
+            calendar: calendar
+        )
+        #expect(settled.state.companion == .idle)
+        #expect(settled.state.session != nil)
+        #expect(!settled.state.isInviteCardVisible(at: timedOut))
+        #expect(settled.effects.contains(.dismissInviteCard))
+        #expect(settled.effects.contains(.log("visibleInviteTimedOut")))
+    }
+
+    @Test func maxSessionDurationEndsSilently() {
+        let calendar = testCalendar()
+        let start = testDate(2026, 11, 23, 9, 0)
+        var situation = PetSituation()
+        situation.session = CompanionSession(startedAt: start)
+        situation.companion = .idle
+        situation.policy.maxSessionDuration = 6 * 60 * 60
+
+        let overdue = start.addingTimeInterval(6 * 60 * 60)
+        let ended = PetStateMachine.reduce(
+            situation,
+            event: .tick,
+            now: overdue,
+            calendar: calendar
+        )
+        #expect(ended.state.session == nil)
+        #expect(ended.state.companion == nil)
+        #expect(ended.effects.contains(.log("sessionEndedByMaxDuration")))
+    }
+
+    @Test func longAwayReturnEndsOpenSession() {
+        let calendar = testCalendar()
+        let start = testDate(2026, 11, 23, 9, 0)
+        let started = PetStateMachine.reduce(
+            PetSituation(),
+            event: .sessionStart,
+            now: start,
+            calendar: calendar
+        ).state
+
+        let away = PetStateMachine.reduce(
+            started,
+            event: .presenceAway30,
+            now: start.addingTimeInterval(30 * 60),
+            calendar: calendar
+        ).state
+        #expect(away.wasAwayLong)
+        #expect(away.session != nil)
+        #expect(!away.isDozing)
+
+        let returned = PetStateMachine.reduce(
+            away,
+            event: .presenceReturned,
+            now: start.addingTimeInterval(31 * 60),
+            calendar: calendar
+        )
+        #expect(returned.state.session == nil)
+        #expect(returned.effects.contains(.log("sessionEndedByLongAway")))
+    }
+
+    @Test func frozenOverdueRecoverSkipsOnWake() {
+        let calendar = testCalendar()
+        let start = testDate(2026, 11, 23, 9, 0)
+        var situation = PetSituation()
+        situation.session = CompanionSession(startedAt: start)
+        situation.companion = .recover
+        situation.recoveryEndsAt = start.addingTimeInterval(30)
+        situation.isSystemSleeping = true
+
+        let wokenAt = start.addingTimeInterval(120)
+        let woken = PetStateMachine.reduce(
+            situation,
+            event: .systemWake,
+            now: wokenAt,
+            calendar: calendar
+        )
+        #expect(woken.state.companion == .idle)
+        #expect(woken.state.session != nil)
+        #expect(woken.state.recoveryEndsAt == nil)
+        #expect(!woken.effects.contains(.completeRecovery))
+        #expect(woken.effects.contains(.log("recoveryAbandonedAfterFreeze")))
     }
 
     @Test func completedBreakReturnsToIdleWithoutCarry() {
