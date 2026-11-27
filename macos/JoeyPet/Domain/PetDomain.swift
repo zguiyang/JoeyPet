@@ -249,8 +249,18 @@ struct PetSituation: Equatable, Sendable {
     var companion: CompanionSubstate?
     var lastInvitationClosedAt: Date?
     var snoozeUsedThisSession = false
+    /// How many recoveries were accepted in this companionship session.
+    var sessionAcceptedCount = 0
+    /// Recipe bound to the current invite / recovery surfaces (same id for both).
+    var activeRecipeID: RecoveryRecipeID?
+    /// Last recipe shown on an invite; used to avoid an immediate repeat.
+    var lastRecipeID: RecoveryRecipeID?
     var recoveryEndsAt: Date?
     var completeEndsAt: Date?
+
+    var activeRecipe: RecoveryRecipe? {
+        activeRecipeID.map(RecoveryRecipeCatalog.recipe(id:))
+    }
 
     var isDozing = false
     var isYawning = false
@@ -363,14 +373,14 @@ struct PetSituation: Equatable, Sendable {
         case .doNotDisturb:
             return .doze
         case .snoozed:
-            if companion == .recover { return .stretch }
+            if companion == .recover { return recoveryPose }
             if companion == .complete { return .happy }
             if isYawnActive(at: now) { return .yawn }
             if isDozing { return .doze }
             return .sit
         case .companion:
             switch companion {
-            case .recover: return .stretch
+            case .recover: return recoveryPose
             case .complete: return .happy
             case .invite: return .look
             case .approach, .idle, nil: return .look
@@ -380,6 +390,11 @@ struct PetSituation: Equatable, Sendable {
             if isDozing { return .doze }
             return .sit
         }
+    }
+
+    /// Look-afar keeps `look`; other recipes keep the existing stretch demo.
+    private var recoveryPose: PetPose {
+        activeRecipeID == .lookFar ? .look : .stretch
     }
 
     /// Pose follows the flag until `applyDueTimers` clears it. `yawnUntil` is only

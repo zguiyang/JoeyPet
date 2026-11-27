@@ -395,6 +395,7 @@ struct PetDomainTests {
             calendar: calendar
         )
         #expect(invited.state.companion == .invite)
+        #expect(invited.state.activeRecipeID == .lookFar)
         #expect(invited.state.resolvedPose(at: due) == .look)
         #expect(invited.effects.contains(.showInviteCard))
 
@@ -405,7 +406,11 @@ struct PetDomainTests {
             calendar: calendar
         )
         #expect(accepted.state.companion == .recover)
-        #expect(accepted.state.resolvedPose(at: due) == .stretch)
+        #expect(accepted.state.activeRecipeID == .lookFar)
+        #expect(accepted.state.sessionAcceptedCount == 1)
+        #expect(accepted.state.recoveryEndsAt == due.addingTimeInterval(30))
+        // lookFar keeps the look pose; other recipes use stretch.
+        #expect(accepted.state.resolvedPose(at: due) == .look)
         #expect(accepted.effects.contains(.dismissInviteCard))
         #expect(accepted.effects.contains(.showRecoveryPanel))
 
@@ -1224,6 +1229,79 @@ struct PetDomainTests {
         #expect(GardenDayPlantStage.from(dayBreaks: Int.max) == .full)
     }
 
+    @Test func recoveryRecipePickerRotatesWithWalkSlotAndNoRepeat() {
+        #expect(RecoveryRecipeCatalog.pick(sessionAcceptedIndex: 0).id == .lookFar)
+        #expect(RecoveryRecipeCatalog.pick(sessionAcceptedIndex: 1).id == .standBlink)
+        #expect(RecoveryRecipeCatalog.pick(sessionAcceptedIndex: 2).id == .walkStretch)
+        #expect(RecoveryRecipeCatalog.pick(sessionAcceptedIndex: 3).id == .hydrate)
+        // Index 5 would be standBlink by modulo 4, but % 3 == 2 forces walkStretch.
+        #expect(RecoveryRecipeCatalog.pick(sessionAcceptedIndex: 5).id == .walkStretch)
+        #expect(RecoveryRecipeCatalog.pick(sessionAcceptedIndex: 5).durationSec == 120)
+
+        let avoided = RecoveryRecipeCatalog.pick(
+            sessionAcceptedIndex: 1,
+            lastRecipeID: .standBlink
+        )
+        #expect(avoided.id == .walkStretch)
+
+        #expect(RecoveryRecipeCatalog.recipe(id: .lookFar).clampedDurationSec == 30)
+        #expect(RecoveryRecipeCatalog.recipe(id: .hydrate).clampedDurationSec == 25)
+    }
+
+    @Test func inviteAndRecoverShareRecipeAndDuration() {
+        let calendar = testCalendar()
+        let start = testDate(2026, 11, 23, 9, 0)
+        let due = start.addingTimeInterval(45 * 60)
+
+        var state = PetStateMachine.reduce(
+            PetSituation(),
+            event: .sessionStart,
+            now: start,
+            calendar: calendar
+        ).state
+        state = PetStateMachine.reduce(state, event: .tick, now: due, calendar: calendar).state
+        #expect(state.activeRecipeID == .lookFar)
+
+        state = PetStateMachine.reduce(
+            state,
+            event: .inviteAccepted,
+            now: due,
+            calendar: calendar
+        ).state
+        #expect(state.activeRecipeID == .lookFar)
+        #expect(state.sessionAcceptedCount == 1)
+        #expect(state.recoveryEndsAt == due.addingTimeInterval(30))
+
+        let afterFirst = due.addingTimeInterval(30 + 2.6)
+        state = PetStateMachine.reduce(
+            state,
+            event: .recoveryFinished,
+            now: due.addingTimeInterval(30),
+            calendar: calendar
+        ).state
+        state = PetStateMachine.reduce(
+            state,
+            event: .completeFinished,
+            now: afterFirst,
+            calendar: calendar
+        ).state
+
+        let secondDue = afterFirst.addingTimeInterval(45 * 60)
+        state = PetStateMachine.reduce(state, event: .tick, now: secondDue, calendar: calendar).state
+        #expect(state.companion == .invite)
+        #expect(state.activeRecipeID == .standBlink)
+
+        state = PetStateMachine.reduce(
+            state,
+            event: .inviteAccepted,
+            now: secondDue,
+            calendar: calendar
+        ).state
+        #expect(state.activeRecipeID == .standBlink)
+        #expect(state.recoveryEndsAt == secondDue.addingTimeInterval(45))
+        #expect(state.resolvedPose(at: secondDue) == .stretch)
+    }
+
     @Test func lifetimeBreaksSurviveDayAndWeekRollover() {
         let calendar = testCalendar()
         let monday = testDate(2026, 11, 23, 9, 0)
@@ -1398,6 +1476,7 @@ struct PetDomainTests {
         )
         #expect(invitePresentation.showsInvitation)
         #expect(!invitePresentation.showsRecovery)
+        #expect(invitePresentation.recipe?.id == .lookFar)
 
         let recovering = PetStateMachine.reduce(
             invited,
@@ -1412,6 +1491,7 @@ struct PetDomainTests {
         )
         #expect(!recoveryPresentation.showsInvitation)
         #expect(recoveryPresentation.showsRecovery)
+        #expect(recoveryPresentation.recipe?.id == .lookFar)
         #expect(recoveryPresentation.recoveryEndsAt == due.addingTimeInterval(30))
         #expect(!recoveryPresentation.newlyCompleted)
 

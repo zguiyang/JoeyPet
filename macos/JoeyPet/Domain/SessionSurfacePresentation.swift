@@ -8,6 +8,8 @@ struct SessionSurfacePresentation: Equatable, Sendable {
     let showsInvitation: Bool
     let showsRecovery: Bool
     let recoveryEndsAt: Date?
+    /// Recipe for the open invite / recovery (same id on both surfaces).
+    let recipe: RecoveryRecipe?
     /// True on the first frame where a recovery turns into the completion beat.
     let newlyCompleted: Bool
 
@@ -20,6 +22,8 @@ struct SessionSurfacePresentation: Equatable, Sendable {
         showsRecovery = situation.isRecoveryPanelVisible(at: now)
             && situation.recoveryEndsAt != nil
         recoveryEndsAt = situation.recoveryEndsAt
+        let showingPrompt = showsInvitation || showsRecovery
+        recipe = showingPrompt ? situation.activeRecipe : nil
         newlyCompleted = situation.companion == .complete && previous?.companion != .complete
     }
 }

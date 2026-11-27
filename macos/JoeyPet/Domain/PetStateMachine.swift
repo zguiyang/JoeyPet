@@ -113,6 +113,9 @@ enum PetStateMachine {
             next.inviteShownAt = nil
             next.snoozeUntil = nil
             next.snoozeUsedThisSession = false
+            next.sessionAcceptedCount = 0
+            next.activeRecipeID = nil
+            next.lastRecipeID = nil
             next.recoveryEndsAt = nil
             next.completeEndsAt = nil
             next.isDozing = false
@@ -128,8 +131,9 @@ enum PetStateMachine {
 
         case .debugForceRecover:
             prepareDebugCompanionSurface(&next, at: now)
+            assignRecipeIfNeeded(&next)
             next.companion = .recover
-            next.recoveryEndsAt = now.addingTimeInterval(next.policy.recoveryDuration)
+            next.recoveryEndsAt = now.addingTimeInterval(recoveryDuration(for: next))
             next.completeEndsAt = nil
             next.inviteShownAt = nil
             effects.append(.persist)
@@ -149,8 +153,10 @@ enum PetStateMachine {
 
         case .inviteAccepted:
             guard next.session != nil, next.companion == .invite else { break }
+            assignRecipeIfNeeded(&next)
             next.companion = .recover
-            next.recoveryEndsAt = now.addingTimeInterval(next.policy.recoveryDuration)
+            next.recoveryEndsAt = now.addingTimeInterval(recoveryDuration(for: next))
+            next.sessionAcceptedCount += 1
             next.lastInvitationClosedAt = now
             next.inviteShownAt = nil
             next.isDozing = false
@@ -167,6 +173,7 @@ enum PetStateMachine {
                 )
             }
             next.companion = .idle
+            next.activeRecipeID = nil
             next.lastInvitationClosedAt = now
             next.inviteShownAt = nil
             effects.append(.persist)
@@ -186,6 +193,7 @@ enum PetStateMachine {
         case .inviteDismissed:
             guard next.companion == .invite else { break }
             next.companion = next.session != nil ? .idle : nil
+            next.activeRecipeID = nil
             next.lastInvitationClosedAt = now
             next.inviteShownAt = nil
             effects.append(.persist)
@@ -194,6 +202,7 @@ enum PetStateMachine {
             guard next.companion == .recover else { break }
             next.companion = next.session != nil ? .idle : nil
             next.recoveryEndsAt = nil
+            next.activeRecipeID = nil
             next.lastInvitationClosedAt = now
             next.inviteShownAt = nil
             effects.append(.persist)
@@ -387,6 +396,9 @@ enum PetStateMachine {
         state.inviteShownAt = nil
         state.snoozeUntil = nil
         state.snoozeUsedThisSession = false
+        state.sessionAcceptedCount = 0
+        state.activeRecipeID = nil
+        state.lastRecipeID = nil
         state.recoveryEndsAt = nil
         state.completeEndsAt = nil
         state.isDozing = false
@@ -442,6 +454,7 @@ enum PetStateMachine {
             break
         }
         state.inviteShownAt = nil
+        state.activeRecipeID = nil
     }
 
     /// Advances every wall-clock overlay that is due. Shared by `.tick` and by
@@ -531,6 +544,7 @@ enum PetStateMachine {
     ) {
         state.companion = state.session != nil ? .idle : nil
         state.completeEndsAt = nil
+        state.activeRecipeID = nil
         // Only sink into quiet sleep when no session remains (night-started
         // sessions keep companion pose after a break).
         if state.isQuietActive, state.session == nil {
@@ -547,6 +561,7 @@ enum PetStateMachine {
             )
         }
         state.companion = state.session != nil ? .idle : nil
+        state.activeRecipeID = nil
         state.lastInvitationClosedAt = now
         state.inviteShownAt = nil
     }
@@ -591,6 +606,7 @@ enum PetStateMachine {
     }
 
     private static func presentInvite(_ state: inout PetSituation, at now: Date) {
+        assignRecipeIfNeeded(&state, forceRepick: true)
         state.companion = .invite
         // Always stamp show time: hidden uses 60 s reveal TTL; visible uses 5 min soft dismiss.
         state.inviteShownAt = now
@@ -613,7 +629,26 @@ enum PetStateMachine {
         if state.session == nil {
             state.session = CompanionSession(startedAt: now)
             state.snoozeUsedThisSession = false
+            state.sessionAcceptedCount = 0
+            state.lastRecipeID = nil
         }
+    }
+
+    private static func assignRecipeIfNeeded(
+        _ state: inout PetSituation,
+        forceRepick: Bool = false
+    ) {
+        if !forceRepick, state.activeRecipeID != nil { return }
+        let recipe = RecoveryRecipeCatalog.pick(
+            sessionAcceptedIndex: state.sessionAcceptedCount,
+            lastRecipeID: state.lastRecipeID
+        )
+        state.activeRecipeID = recipe.id
+        state.lastRecipeID = recipe.id
+    }
+
+    private static func recoveryDuration(for state: PetSituation) -> TimeInterval {
+        state.activeRecipe?.clampedDurationSec ?? state.policy.recoveryDuration
     }
 
     /// Diffs poses/surfaces at a single `now`. Time-bound pose overlays must be

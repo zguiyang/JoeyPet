@@ -42,6 +42,7 @@
 		D7F000000000000000000001 /* JoeyTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000002 /* JoeyTheme.swift */; };
 		D7F000000000000000000003 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000004 /* AppSettings.swift */; };
 		D7F000000000000000000005 /* CompanionSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000006 /* CompanionSummary.swift */; };
+		D7F000000000000000000040 /* RecoveryRecipe.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000041 /* RecoveryRecipe.swift */; };
 		D7F000000000000000000007 /* JoeyComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F000000000000000000008 /* JoeyComponents.swift */; };
 		D7F000000000000000000009 /* MainWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F00000000000000000000A /* MainWindowController.swift */; };
 		D7F00000000000000000000D /* NestRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F00000000000000000000E /* NestRootView.swift */; };
@@ -103,6 +104,7 @@
 		D7F000000000000000000002 /* JoeyTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeyTheme.swift; sourceTree = "<group>"; };
 		D7F000000000000000000004 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		D7F000000000000000000006 /* CompanionSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionSummary.swift; sourceTree = "<group>"; };
+		D7F000000000000000000041 /* RecoveryRecipe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryRecipe.swift; sourceTree = "<group>"; };
 		D7F000000000000000000008 /* JoeyComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoeyComponents.swift; sourceTree = "<group>"; };
 		D7F00000000000000000000A /* MainWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowController.swift; sourceTree = "<group>"; };
 		D7F00000000000000000000E /* NestRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NestRootView.swift; sourceTree = "<group>"; };
@@ -184,6 +186,7 @@
 			isa = PBXGroup;
 			children = (
 				D7F000000000000000000006 /* CompanionSummary.swift */,
+				D7F000000000000000000041 /* RecoveryRecipe.swift */,
 				D7PET01B305978720070926E /* PetTransientBehavior.swift */,
 				D7PET002305978720070926E /* PetState.swift */,
 				D7PET027305978720070926E /* PetPreferences.swift */,
@@ -479,6 +482,7 @@
 				D7AUD102305978720070926E /* JoeyAudioController.swift in Sources */,
 				D7AUD103305978720070926E /* JoeySoundPreviewPlayer.swift in Sources */,
 				D7F000000000000000000005 /* CompanionSummary.swift in Sources */,
+				D7F000000000000000000040 /* RecoveryRecipe.swift in Sources */,
 				D7F000000000000000000007 /* JoeyComponents.swift in Sources */,
 				D7F000000000000000000009 /* MainWindowController.swift in Sources */,
 				D7F00000000000000000000D /* NestRootView.swift in Sources */,
