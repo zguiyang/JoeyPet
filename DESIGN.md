@@ -554,7 +554,7 @@ Native, quieter, more functional than the room. No illustration, no hero copy, n
 | 通用 | 勿扰模式 | Switch | 暂停邀请 |
 | 通用 | 安静时段 | Time-range field: two editable halves, centre dash, double-click selects all | 时段内不邀请 |
 | 通用 | 背景音 | Menu-style chooser：无背景音 + catalog beds；每条有小喇叭试听 | 陪伴中播放 |
-| 通用 | 提示音 | Menu-style chooser：无提示音 + catalog cues；每条有小喇叭试听 | 开始与邀请时 |
+| 通用 | 提示音 | Menu-style chooser：无提示音 + catalog cues；每条有小喇叭试听 | 开始用所选；休息固定木风铃；关则皆静音 |
 | 通用 | 外观 | Segmented 系统 / 明亮 / 黑夜 | （无副标题；默认系统，跟随 macOS） |
 | 宠物 | 在桌面显示 Joey | Switch | （无副标题） |
 | 宠物 | 显示位置 | Segmented 右下角 / 左下角 | （无副标题） |

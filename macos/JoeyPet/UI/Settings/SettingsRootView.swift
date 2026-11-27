@@ -153,7 +153,7 @@ struct SettingsRootView: View {
                     .accessibilityLabel("背景音")
                 }
 
-                SettingsRow("提示音", subtitle: "开始与邀请时") {
+                SettingsRow("提示音", subtitle: "休息另用木风铃") {
                     SoundPicker(
                         selection: $settings.cueSoundID,
                         noneTitle: JoeyAudioCatalog.noneCueTitle,
