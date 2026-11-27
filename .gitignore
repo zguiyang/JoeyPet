@@ -37,16 +37,15 @@ macos/scripts/output/
 __pycache__/
 *.py[cod]
 
-# Local agent / build tooling (machine-specific; keep local only)
+# Local agent / build tooling (machine-specific)
 .agents/
 .mobilebuildmcp/
 skills-lock.json
-AGENTS.md
 
-# Local product / handoff docs (not part of the public app tree)
-DESIGN.md
+# Local handoff / planning docs (keep AGENTS.md + DESIGN.md tracked for AI)
 V0_FEATURE_SCOPE.md
 开发交接文档.md
+docs/
 
 # Local workspace build data (QA scripts use workspace-relative DerivedData)
 .derived-data/

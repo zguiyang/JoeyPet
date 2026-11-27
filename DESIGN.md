@@ -1,0 +1,857 @@
+# JoeyPet — V0 Design Contract
+
+**Status:** Design source of truth for the V0 desktop-companion product.
+**Scope:** visual language, layout, tokens, components, copy voice, motion, and the six agreed surfaces.
+**Frozen visual reference:** [`docs/reference/joeypet-ui-v0.html`](docs/reference/joeypet-ui-v0.html) — the reviewed high-fidelity design artifact (six states, light + dusk). Open it in a browser. It is a **visual target, not implementation code**.
+**Not in scope here:** product acceptance rules ([`V0_FEATURE_SCOPE.md`](V0_FEATURE_SCOPE.md)), pet animation runtime ([`docs/pet-runtime.md`](docs/pet-runtime.md)).
+
+The previous Mac Care / Calm Space contract is **Legacy**. It lives in the `archive/mac-care-calm-space-2026-11` branch and must not guide new work.
+
+---
+
+## 1. Design authority
+
+Sources are layered, not ranked. Each layer answers a different question:
+
+```text
+Platform    Apple HIG (official macOS pages)     → interaction, native behavior, accessibility
+Product     This file                            → visual language, layout, tokens, copy, motion
+Exception   docs/decisions/ ADRs                 → one named deviation from this file or HIG
+Reference   docs/reference/joeypet-ui-v0.html    → the frozen visual target for the six states
+Engineering AGENTS.md, docs/tech-stack.md        → AppKit/SwiftUI/SpriteKit split, zero deps
+```
+
+- **This file is the reviewable baseline.** Implementation is checked against it.
+- **The HTML reference resolves visual ambiguity, not product rules.** If it disagrees with this file, this file wins; fix the reference in the same task when the artifact is wrong.
+- **Apple HIG governs platform behavior and accessibility.** Prefer the official pages (`https://developer.apple.com/design/human-interface-guidelines/<page>.md`).
+- **The legacy Calm Space main-window decision is retired.** It lives only in the archive branch; do not cite it as permission for custom chrome on new surfaces.
+
+---
+
+## 2. Status vocabulary
+
+| Status | Meaning |
+|--------|---------|
+| **Agreed** | Frozen V0 design. Build it as specified. |
+| **Pending** | Agreed but not implemented yet. Never present it as shipped. |
+| **Legacy** | Retired direction. Do not restore without a new product decision. |
+
+| Surface | Design | Implementation |
+|---------|--------|----------------|
+| Desktop Joey (idle, drag, hide, menu) | Agreed | Implemented (V0 base), hidden by default |
+| Rest invitation | Agreed | Implemented (desktop card, dismiss toasts, snooze / pause) |
+| 30-second recovery | Agreed | Implemented (real countdown, done / skip) |
+| Nest home (main window, room scene) | Agreed | Implemented (room shell, draggable Joey; session CTA wired) |
+| Rhythm reflection (garden view) | Agreed | Implemented (seed / sprout / tall sprout / tree stages; fed by session data) |
+| Settings | Agreed | Implemented (page inside the main window) |
+| Appearance 系统 / 明亮 / 黑夜 | Agreed | Implemented (default 系统; nest uses the same light/dark cluster as settings) |
+| Calm Space / Mac Care shell | Legacy | Removed — archive branch only |
+
+> Shipped today: the desktop panel (drag, hide, show; hidden by default), menu bar item, the companion chip, rest invitation, 30-second recovery, completion feedback, the nest window with a working start / end companionship action, first-run "show Joey" step, next-reminder line, reflection, and settings with 系统/明亮/黑夜 appearance (default 系统) and persisted V0 settings. The desktop pet is shown only when the user turns it on in Settings, the menu bar, or the nest's explicit "让 Joey 到桌面" button; starting companionship does not reveal it automatically.
+
+---
+
+## 3. Product visual language
+
+JoeyPet is a small, warm, living desktop pet for Chinese knowledge workers.
+
+> 你忙你的，Joey 在旁边陪着。到了该休息的时候，它会轻轻叫你一下。
+
+| Keyword | Meaning |
+|---------|---------|
+| **Storybook** | Soft 2D illustration, hand-made warmth, no 3D, no pixel art. |
+| **Calm** | Quiet at rest; no decorative loops on static data. |
+| **Alive** | Posture, gaze, props and breath carry life — not UI decoration. |
+| **Warm** | Ivory paper light, sage growth, apricot kindness. |
+| **Unhurried** | One idea and one primary action per state. |
+| **Honest** | Only real states. No fake metrics, fake progress, or invented growth. |
+
+**JoeyPet is not** a productivity dashboard, habit tracker, Pomodoro app, task manager, system monitor, or health app. It is not childish or gamified.
+
+**Never use:** warnings or OS alert dialogs for invitations; punishment, guilt, failure, broken streaks, scores; XP bars, levels, loot, shops, leaderboards; dense cards or KPI grids; pixel art, 3D characters, cyberpunk, neon, glossy glassmorphism.
+
+**Primary UI language:** Simplified Chinese (V0). Copy must stay short enough for English later.
+
+---
+
+## 4. Color
+
+### 4.1 Core tokens
+
+Every surface colour comes from a token. Never hardcode a hex in a view.
+
+| Token | Light | Dusk | Role |
+|-------|-------|------|------|
+| `ivory` | `#F7F3EB` | — | Desktop ground, page background |
+| `ivory-2` | `#F1E9DA` | — | Secondary ground, warm band |
+| `ink` | `#3F3A35` | `#E9E3D7` | Primary text, pet outline |
+| `ink-2` | `#6B6259` | `#BFB8AB` | Secondary text, labels |
+| `muted` | `#6E6459` | `#B0A89C` | Captions, helper text |
+| `sage` | `#86A98A` | `#86A98A` | Growth, calm completion, primary action |
+| `sage-deep` | `#4F6D54` | `#A9C6AC` | Emphasis on light surfaces, active labels |
+| `sage-ink` | `#263227` | `#1E2A20` | Text on sage fills |
+| `sage-soft` | `#E8EEE3` | `rgba(134,169,138,.16)` | Selected rows, hover fills |
+| `apricot` | `#EFAE7D` | `#EFAE7D` | Warm pet interaction, rest invitation accent |
+| `apricot-ink` | `#A96B42` | `#A96B42` | Apricot text on light |
+| `mist` | `#90B9C9` | `#90B9C9` | Quiet mode, evening atmosphere |
+| `mist-deep` | `#5E8B9D` | `#5E8B9D` | Mist emphasis |
+| `mist-soft` | `#DFE9EB` | `#DFE9EB` | Mist wash |
+| `clay` | `#C9B08C` | `#C9B08C` | Paper, wood, tape, illustration props |
+| `hairline` | `rgba(63,58,53,.14)` | `rgba(233,227,215,.14)` | 1 px strokes, dividers |
+| `hairline-strong` | `rgba(63,58,53,.24)` | `rgba(233,227,215,.24)` | Secondary button border, fields |
+| `focus` | `#4F6D54` | `#86A98A` | Sage focus for native controls; never system blue |
+
+### 4.2 Surfaces
+
+| Token | Light | Dusk | Use |
+|-------|-------|------|-----|
+| `window-bg` | `#FBF8F0` | `#313A3B` | Illustrated content; Settings light surface (sidebar + detail) |
+| `window-chrome` | `#F2ECE1` | `#262E2F` | Titlebar; Settings dark surface (sidebar + detail) |
+| `panel` | `#FFFDF7` | `#37403F` | Cards, panels, sign |
+| `panel-2` | `#F8F3E9` | `#2F3838` | Inset fills, segmented track, hover |
+| `popover` | `#FFFDF8` | `#394241` | Chips, menus, tooltips, labels |
+
+### 4.3 Semantic rules
+
+- **Sage = growth, calm completion, the one primary action.** Do not use it for warnings.
+- **Apricot = warmth between user and pet.** Invitation accent, pet blush, mug. Not a status colour.
+- **Mist = quiet / evening.** Quiet hours, dusk atmosphere, "Joey is resting".
+- **Never colour alone.** Every state pairs colour with text, an icon, or a shape.
+- **Dusk is an independently tuned palette**, not an inversion. Check it whenever you change a light value.
+
+### 4.4 Measured contrast (design pass)
+
+| Pair | Ratio | Verdict |
+|------|-------|---------|
+| `ink` on `ivory` | 10.2:1 | Pass |
+| `muted` on `panel` (light) | 5.7:1 | Pass |
+| `muted` on `panel` (dusk) | 4.5:1 | Pass (floor) |
+| `sage-deep` on `sage-soft` | 4.9:1 | Pass |
+| `sage-ink` on `sage` | 5.1:1 | Pass |
+
+Treat these as the floor. Any new pair must be measured before shipping; do not claim compliance otherwise.
+
+---
+
+## 5. Typography
+
+### 5.1 Family
+
+System font only:
+
+```text
+-apple-system, "SF Pro Text", "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif
+```
+
+Display sizes may prefer SF Pro Display. Never bundle SF Pro, never install Inter, no third-party faces.
+
+### 5.2 Scale
+
+| Role | Size | Weight | Line height | Tracking |
+|------|------|--------|-------------|----------|
+| Invitation message | 27 | 650 | 1.38 | 0 |
+| Recovery title (panel) | 20 | 600 | 1.35 | 0 |
+| Reflection emphasis | 23 | 650 | 1.35 | 0 |
+| Reflection headline | 21 | 650 | 1.45 | 0 |
+| Settings page title | 17 | 650 | 1.4 | 0 |
+| Primary button label | 16 | 600 | 1.2 | 0.005em |
+| Body / secondary | 13.5 | 400 | 1.65 | 0 |
+| Settings row title | 13.5 | 600 | 1.4 | 0 |
+| Nav item / menu item | 13.5 | 400–600 | 1.35 | 0 |
+| Reflection body | 13 | 400 | 1.7 | 0 |
+| Room label / chip | 12.5 | 400–650 | 1.45 | 0 |
+| Settings row description | 12 | 400 | 1.5 | 0 |
+| Meta / group label | 11.5 | 400–600 | 1.4 | 0.02em |
+| Smallest caption | 11 | 400 | 1.5 | 0.02em |
+
+Rules:
+
+- **CJK display line height 1.35–1.45.** Never the Latin 1.0–1.2; Chinese glyphs fill the em box and lines will collide.
+- **No negative tracking on CJK.** Display tracking is `0`.
+- **No uppercase micro-labels.** Chinese has no case; do not fake an English eyebrow above every block.
+- **Three weights only:** 400 read, 550–600 emphasize, 650 announce. Nothing above 650.
+- **Tabular numerals** (`font-variant-numeric: tabular-nums`) for timers, break counts, dates, and clock text.
+- Body copy never exceeds ~34 Chinese characters per line at these sizes; do not stretch a sentence across a 400 px card.
+
+### 5.3 SwiftUI mapping
+
+| Design | SwiftUI |
+|--------|---------|
+| 13.5 / 1.65 body | `.body` (macOS 13 pt) with `.lineSpacing(3)` |
+| 16 / 600 button | `.callout.weight(.semibold)` or explicit `.system(size: 16, weight: .semibold)` |
+| 21 / 650 headline | `.title2.weight(.semibold)` |
+| 23 / 650 | `.system(size: 23, weight: .semibold)` |
+| 12.5 / 11.5 meta | `.caption` / `.caption2` |
+| Timers | `.monospacedDigit()` |
+
+650 has no native SwiftUI weight; use `.semibold` (600) rather than inventing a custom face. Do not use Dynamic Type for the illustration-side captions; do allow it for Settings rows and feedback text.
+
+---
+
+## 6. Spacing, radius, elevation
+
+### 6.1 Spacing
+
+A 4/8 rhythm: `2 4 6 8 10 12 14 16 18 20 22 24 26 28 30 32 40 44 52`. No arbitrary values.
+
+Recurring measures:
+
+| Context | Value |
+|---------|-------|
+| Panel padding | 26–30 (large panels), 18–22 (cards) |
+| Row padding | 14 vertical |
+| Section gap | 18–24 |
+| Control gap | 8–10 |
+| Text gap (title → body) | 4–7 |
+| Window inset | 40–52 from the scene edge |
+
+### 6.2 Radius
+
+| Token | Value | Use |
+|-------|-------|-----|
+| `r-lg` | 22 | Invitation card |
+| `r-xl` | 26 | Large panels (legacy size token) |
+| Recovery card | 22 | 30-second recovery panel |
+| `r-md` | 16 | Primary button, room CTA, sign, secondary button |
+| `r-sm` | 12 | Popover menu, window |
+| nested | 6–10 | Rows, chips, fields, segmented items |
+| `pill` | 999 | Status chip, toast |
+
+Nested radius: outer = inner + padding. **Not every element is a pill** — pills are reserved for transient status (chip, toast) and the status dot.
+
+### 6.3 Elevation
+
+| Token | Value |
+|-------|-------|
+| `shadow-sm` | `0 1px 2px rgba(63,58,53,.06), 0 2px 6px rgba(63,58,53,.05)` |
+| `shadow-md` | `0 2px 6px rgba(63,58,53,.08), 0 10px 30px rgba(63,58,53,.12)` |
+| `shadow-lg` | `0 6px 20px rgba(63,58,53,.14), 0 24px 60px rgba(63,58,53,.20)` |
+
+Dusk shadows are black-based (`rgba(0,0,0,.24–.44)`). The only glow allowed is the 3 px status-dot halo. No glow on panels, no gradient chrome on controls.
+
+### 6.4 Paper texture
+
+Allowed only as an extremely subtle background grain: 120 px noise tile at **1.8 % opacity, multiply**. Never on text, cards, or controls.
+
+---
+
+## 7. Windows and layout
+
+### 7.1 Geometry
+
+| Surface | Size | Notes |
+|---------|------|-------|
+| Design canvas | 1440 × 900 | Desktop composition reference |
+| Nest window (default) | 1080 × 720 | Min 880 × 560 |
+| Settings | 200 sidebar + detail inside the nest window | Shares the 1080 × 720 window; no second window |
+| Settings sidebar | 200 | Divider + detail |
+| Invitation card | Desktop ≈ 236 / nest ≈ 200 | Anchored beside Joey |
+| Recovery panel | ≈ 300 wide | Joey’s screen, dead centre (horizontal + vertical) |
+| Nest window | 1080 × 720 default | System primary display (`screens[0]`); remembers last frame |
+| Reflection copy | 388 wide | Top-left, directly on the garden; no panel |
+
+All layout derives from the live window size in code. The 1440 × 900 numbers describe proportion, not a fixed frame to hardcode.
+
+### 7.2 Window chrome
+
+- **Native macOS window**: real traffic lights, native title, native resize/move/key-inactive appearance. Never draw fake traffic lights.
+- **No toolbar. No in-window tab bar. No solid navigation bar on the home room.** System chrome already provides traffic lights; the illustrated room paints under a transparent titlebar.
+- **One chrome control only:** a settings gear at the titlebar trailing edge. Nothing else lives in the titlebar.
+- Illustrated surfaces (home + reflection) are immersive: no opaque title strip; sky/garden paints under the transparent titlebar. Home leaves the floating title blank for immersion; reflection keeps a light floating title (`节奏回顾`). Settings uses a full-height sidebar under the same transparent titlebar (no solid nav band); sidebar and detail share one surface — light `window-bg`, dark `window-chrome` (hierarchy via type and selection, not a second fill).
+- Window title metadata stays real ("Joey 的家", "节奏回顾", "设置") for window management even when the home floating label is blank.
+
+### 7.3 Navigation lives in the scene
+
+The main window is **one room**, not a container of pages.
+
+| Destination | Scene affordance | Return |
+|-------------|------------------|--------|
+| Rhythm reflection | Wall frame (hover only: 回顾这周) | 回巢 button, bottom-right |
+| Settings | Gear in the titlebar | Gear toggles back to the previous page |
+
+- The scene affordance is a real hit target; hovering shows the 回顾这周 tooltip. Do not paint a function word on the frame art. Never draw a hover or focus outline around the scene area.
+- Never add a second navigation layer (tab bar, segmented control, breadcrumb) to the room.
+- Reflection and settings are **views inside the same window**, not separate windows. The window title changes while either is open.
+- Settings returns to whichever page was open before the gear was pressed.
+
+### 7.4 Safe area
+
+Keep Joey, the primary action, and all text ≥ 40 px from the window edge. The invitation card and recovery panel must never cover Joey's face. Desktop Joey sits clear of the Dock and menu bar geometry.
+
+### 7.5 Desktop composition
+
+Layer order (back → front): wallpaper gradient + hills → menubar → windows/panels → desktop pet → chip / hint / menu → toast.
+
+Wallpaper: warm ivory base with an apricot radial at the top-right and a sage radial at the left, plus three soft hills (sage → sage → clay). Dusk replaces the same layers with deep blue-grey values. This is desktop atmosphere, not an app background.
+
+---
+
+## 8. Components
+
+### 8.1 Buttons
+
+| Variant | Height | Radius | Fill / border | Label |
+|---------|--------|--------|---------------|-------|
+| Primary | 50 | 16 | `sage` fill, `sage-ink` text, soft inner highlight | 16 / 600 |
+| Secondary | 40 (small 38) | 16 | transparent, 1 px `hairline-strong` | 13.5 / 400 |
+| Quiet | 40 (small 38) | 16 | transparent, `muted` text | 13.5 / 400 |
+
+Rules:
+
+- **Exactly one primary action per state.** Secondary and quiet actions sit below or beside it.
+- Hover: primary brightens 3 %; secondary fills `panel-2`; quiet text moves to `ink`. Never lighten text to grey on hover.
+- Pressed: 1 px downward translate.
+- Focus: sage ring, visible on keyboard focus. Mouse clicks show caret and selection only; text inputs never gain a blue outline.
+- No icon in every button. Icons only where they speed recognition (play, home, gear).
+
+### 8.2 Status chip
+
+Pill, `popover` fill, 1 px hairline, 12.5 px, `7/13` padding, tabular numerals. Left mark is an 8 px sage leaf square rotated −45° (not an emoji, not a dot when it means growth). Appears only while a session is active; hides otherwise.
+
+### 8.3 Toast
+
+Pill at the top centre of the desktop, 13 px, `9/18` padding, `shadow-md`, 2.6 s dwell, 220 ms in / out. One short sentence, no action, no exclamation stacking.
+
+### 8.4 Room label
+
+Small in-scene information tag: `popover` fill, 1 px hairline, radius 9, `6/11` padding, 12.5 px / 1.45. The number is wrapped in a bold `sage-deep` span. Labels belong to objects (clock, notebook, plant); they are not floating KPI cards.
+
+### 8.5 Progress ring
+
+104 px, 8 px stroke, radius 46, track `panel-2`, progress `sage` with round caps, 1 s linear updates. Centre: `mm:ss` at 22 px / 650 tabular only — do not duplicate the countdown as "剩余 N 秒". The ring never uses gradient or shadow.
+
+### 8.6 Controls
+
+| Control | Spec |
+|---------|------|
+| Switch | 36 × 21 track, 17 px knob, sage when on, 160 ms |
+| Segmented | `panel-2` track, radius 8, 2 px inset, active item `panel` + `shadow-sm` |
+| Time field | radius 8, 1 px hairline, `panel-2` fill, tabular numerals; caret and sage selection only |
+| Textarea | radius 10, 1 px `hairline-strong`, 72 px min height; caret and sage selection only |
+| Menu | radius 12, 6 px padding, 8 px row radius, 1 px divider, `shadow-lg` |
+
+Controls follow macOS sizing and behavior. Custom styling is limited to fill, radius, and typography — not to interaction models.
+
+### 8.7 Icons and illustration
+
+- Icons: one family, 24 px grid, 1.6 px stroke, round caps and joins, currentColor. Filled icons never sit at the same hierarchy level as outlined ones.
+- **No emoji as functional icons.**
+- Joey, the room, the garden path, and all props are original vectors. Never substitute a stock illustration or a generated stand-in for Joey.
+- Charts, paths, and diagrams are drawn, never photographed.
+
+---
+
+## 9. Illustration: Joey and the room
+
+### 9.1 Character
+
+Rounded, expressive, four-head-tall storybook creature. Canvas 320 × 400.
+
+| Part | Value |
+|------|-------|
+| Body | `#F3E3CD`, belly shade `#EBD7BE` at 50 % |
+| Inner ear | `#EFC8AA` |
+| Paws / hand | `#F8ECDA`, arm shade `#EDDAC1` |
+| Eye | `#3F3A35` with a 2.8 px white catchlight |
+| Blush | `#EFAE7D` at 26 % |
+| Nose | `#C98F6E` |
+| Mouth | `#6F5F53`, 2.3 px stroke |
+| Scarf | `#86A98A`, 9 px stroke |
+| Contact shadow | `#3F3A35` at 8 %, radial |
+
+Silhouette rules: no neck (head and body merge), long upright ears, round belly, short paws, one curled tail. Never add outline strokes to the body — the shape does the work.
+
+### 9.2 Poses
+
+Eleven poses. The first six are the V0 state set; the rest cover ambient and low-attention moments. All derive from the same body, arms, and face layers — never redraw the silhouette per pose, and never scale the whole pet to fake one.
+
+| Pose | Reads as | Used in |
+|------|----------|---------|
+| `sit` | Quiet company, breathing | Idle, nest |
+| `look` | Turned toward the user, attentive; quieter 5.4 s breath (peak 1.028) than `sit` | Session active, nearly time to rest — see [`joeypet-look-frames-v0.html`](docs/reference/joeypet-look-frames-v0.html) |
+| `sign` | Holding a small handwritten sign | Kept as atlas art; V0 invitation no longer uses it |
+| `stretch` | Arms up, eyes closed, small mouth; 6 s breath (peak 1.032) + soft arm reach | Recovery demo — see [`joeypet-stretch-frames-v0.html`](docs/reference/joeypet-stretch-frames-v0.html) |
+| `happy` | Arc eyes, open smile, brighter blush; 2.6 s one-shot soft hop | After a completed break — see [`joeypet-happy-frames-v0.html`](docs/reference/joeypet-happy-frames-v0.html) |
+| `sleep` | Standing, ears relaxed outward, eyes closed in soft arcs; 8 s quiet breath (peak 1.010, sway ≤ ±0.2°) + rare ear/head micros | Quiet hours — see [`joeypet-sleep-spritesheet-v0.svg`](docs/reference/joeypet-sleep-spritesheet-v0.svg) |
+| `groom` | Paw to the ear, eyes half-closed; 2.8 s one-shot soft stroke | Idle, quiet room — see [`joeypet-groom-spritesheet-v0.svg`](docs/reference/joeypet-groom-spritesheet-v0.svg) |
+| `yawn` | Eyes squeezed shut, wide small mouth, head back; 1.8 s one-shot tip (+2° → +3.8°) | Waking / long sit — see [`joeypet-yawn-spritesheet-v0.svg`](docs/reference/joeypet-yawn-spritesheet-v0.svg) |
+| `doze` | Head low, eyes flat lines, loose shoulders; 7.2 s breath+sway (±1.1°, peak 1.011) + random ear/head/tail micros | Light sleep / DND — see [`joeypet-doze-spritesheet-v0.svg`](docs/reference/joeypet-doze-spritesheet-v0.svg) |
+| `peek` | Head leaning out from the screen edge, eyes and paws inside the visible strip, near edge tucked behind the panel | Not wired in V0 — edge docking is deferred |
+
+Pose layer rules:
+
+- Animate only the layers allowed to move: body (small translate / tilt), arms (swappable), face (eyes / mouth / blush), props. The body never changes outline.
+- Contact shadow stays fixed in place; its opacity may change with height, its position may not.
+- Props follow the hand; they do not float independently.
+- Switch pose at the body level and keep the contact shadow anchored. Never cross-fade through a full-body morph that loses the silhouette.
+
+Transitions run 240–420 ms, ease-out; exits are ~65 % of entrance; no bounce, no jelly, no window parallax.
+
+| From → to | Trigger | Duration | Note |
+|-----------|---------|----------|------|
+| `sit` → `look` | Invitation 5 min away, or session start | 300 ms | Eyes lift only, body still |
+| `look` (hold) | Invitation due | — | Joey stays attentive; the invitation card carries the copy |
+| `look` → `stretch` | User accepts | 300 ms | Arms rise into the recovery stretch |
+| `stretch` → `happy` | 30 s completed | 300 ms | Eyes arc first, then mouth opens |
+| `happy` → `sit` | Hold 2.6 s | 420 ms | Breathing restarts on the way down |
+| `sit` → `doze` | 90 s without interaction | 600 ms | Head lowers first, eyes close last |
+| `doze` → `yawn` | User returns to the desk | 400 ms | Wake with a yawn |
+| `yawn` → `look` | Yawn ends | 400 ms | Then `look` or `sit` by context |
+| `sit` / `look` / `doze` / session → `yawn` → `sleep` | Quiet hours begin | yawn 1.8 s, then sleep | End any open session first (abandon recover as skip), settle with a yawn, then deep sleep |
+| `sleep` → `yawn` → `sit` / `look` | Quiet hours end | yawn 1.8 s, then day pose | Wake with a yawn, then return by context |
+| `look` → `sit` / `look` | Snooze / pause / dismiss | 240 ms | Card fades; pose returns with the situation |
+| `look` → `sit` | Session ends | 240 ms | Gaze falls back |
+
+Panels, cards, and menus keep the 300–420 ms UI timing. Do not run the pose through one shared CSS transition — drive it per row above, or arm and sign will smear together.
+
+### 9.3 Room
+
+A single warm room, 1080 × 680: ivory wall, warm wood floor, one window with hills, a wall clock, a framed picture (hover opens 节奏回顾), a potted plant, a woven nest with a sage cushion, and a small desk with a notebook, mug, and a tiny pot.
+
+- **Information lives in objects:** clock = next invitation, notebook = today's companionship time, plant label = today's completed breaks.
+- **Growth is additive and non-regressive:** both surfaces use seed → sprout → young → full with **hard visual ceilings** (counters may rise; art does not). Nest pot (lifetime): 0 / 1 / 5 / 15+ → full uses the original static pot footprint (foliage top ≈ y 366, pot x ≈ 96…146; never covers the clock at 250,140). Week garden (per day): 0 / 1 / 3 / 5+ → saturated tree at most 1.18× base canopy, clamped inside the 128 pt day column; no continuous scale from raw break counts. No leaf piles.
+- No levels, XP, counters on the wall, trophy shelf, or scoreboard.
+- Prop colours use the `room-*` token family (wall, floor, frame, sky, hill, nest, cushion, desk, paper, mug, leaf), so light and dusk swap in one place.
+
+### 9.4 Ambient motion
+
+Small, low-contrast loops are what make Joey feel alive. They must stay quiet, predictable, and absent under Reduce Motion.
+
+| Loop | Cycle | Property | Note |
+|------|-------|----------|------|
+| Breath | 4.2–6 s | scaleY 1 → 1.046 | Origin at the base; the floor line never moves; see idle breathing frames HTML |
+| Blink | 2.5–6 s, 180 ms per blink | 3 frames | Never two blinks back to back |
+| Ear flick | Random 12–35 s, 240 ms | −7° → 4° | Ears only; head stays still |
+| Tail sway | In phase with breath | ±8° | Tip lags the base |
+| Weight shift | 6–9 s | ±2 px, 0.5° tilt | Body only, feet planted |
+| Groom | Spread ~3.8 s | One paw, −15° | Plays as a short transient |
+| Yawn | 1.8 s | Head 10.5°, nose | Only after idle or waking |
+| Peek | 3.6 s | 4 px down, ears up | Docked-edge only |
+
+Rules:
+
+- At most two loops at once: one sustained (breath) plus one transient (blink, ear flick, groom).
+- Transient events are ≥ 12 s apart; the same transient repeats no sooner than 60 s.
+- Groom and yawn are mutually exclusive; none plays during invitation, recovery, or drag.
+- Pause ambient loops when the window is hidden, minimised, occluded, or the app is inactive; resume from the last frame.
+- `prefers-reduced-motion` / Reduce Motion freezes every loop at a readable static frame. No pose may depend on motion to be understood.
+
+---
+
+## 10. The six states
+
+### 10.1 Desktop companionship
+
+- Joey sits in the bottom-right corner of the desktop: 168 × 210, 40 px from the right, 92 px above the bottom, clear of the Dock.
+- No window, no container, no card behind him. He is the interface.
+- Idle breath 4.8 s, scaleY 1 → 1.046 with a tiny tilt, origin at the base (aligned with `joeypet-idle-breathing-frames-v0.html`).
+- While a session runs, a chip above him reads `陪伴中 · mm:ss`.
+- Hover reveals `拖动换位置 · 点击打开菜单`; the cursor is a grab hand; dragging clamps to the screen with an 8 px margin and persists after drag end.
+- Click opens a small menu: **结束陪伴** / **隐藏 Joey** / divider / **勿扰模式**.
+- Quiet hours: end any open companionship first, settle with `yawn` then hold `sleep`; no chip, no menu prompt, no motion beyond breath once asleep. A session started inside quiet shows the usual companion chip and invites. Exit the window with another `yawn` before returning to the day pose.
+- Hidden mode: Joey leaves the desktop but keeps the rhythm. When an invitation is due he surfaces briefly, delivers it, then slips away again. The user can still hide at any time; hiding never ends the session.
+
+### 10.2 Rest invitation
+
+- Joey stays in `look` (attentive). Copy and actions live on a compact floating paper note — not on a handheld wooden sign.
+- The card anchors beside Joey (left or right by free space; prefer the side toward screen centre), at about shoulder height — not floating in the middle of the screen. Desktop ≈ **236** wide (≈1.4× Joey), nest ≈ **200**; radius 15 / 13; padding ~14. A small caret on the Joey-facing edge makes the note feel attached to the pet. No clay tape.
+- Title only (no helper subtitle). Actions are a **right-aligned compact row**: quiet text chips + a small sage primary with **square soft corners** (radius 8), not full-bleed pills.
+
+```text
+坐久啦，
+看远处歇一下？          ← example; copy comes from the active recovery recipe
+
+              [稍后提醒] [进入勿扰] [休息一下]
+```
+
+- Invite copy is bound to the **same recovery recipe** as the panel that follows (look far / stand & blink / walk & stretch / hydrate). Do not hardcode a single stretch line.
+
+- The same card family appears in the nest beside Joey when invite is active.
+- Companion chip and greeting「你好」share one paper tip chrome (`JoeyPetTipView`).
+- It is an invitation from a pet, never an alert: no title bar, no icon-warning, no modal scrim over the whole screen, no system beep.
+- Dismissing is always available and never punished. Snooze / do-not-disturb need **no toast** — the invite card leaves and the clock label updates (`HH:mm 再问你一次` / `勿扰中`).
+- Only one reminder per interval; never re-prompt immediately.
+- When Joey is hidden, the card appears with him for at most 60 seconds. If it is ignored, both slip away and the invitation counts as "later" once.
+
+### 10.3 Short recovery (recipe-driven duration)
+
+- Calm paper panel ≈ **300** wide, radius 22, padding ~22 / 18. Always on **Joey’s screen** (same as the invite): **dead centre** of that screen’s visible frame (horizontal and vertical). Do not use `NSScreen.main` (key-window screen). Joey may demonstrate `look` (look-afar) or `stretch` (other recipes) wherever he already is; this pass does not relocate him beside the panel.
+- Layout is a **centered vertical stack** (not a left-leading HStack): title → one hint → ring → compact action row. No unused right gutter; the card width tracks content weight. Do not add a second coaching line under the ring.
+- Actions match the invite control family: soft square corners (radius 8), compact sage primary + quiet text — not a full-bleed primary bar.
+- Frozen visual target: [`docs/reference/joeypet-recovery-panel-v0.html`](docs/reference/joeypet-recovery-panel-v0.html) (layout only; copy/duration follow the active recipe).
+- Copy and ring length come from the session recipe, for example:
+
+```text
+            望向远处
+     找个远处的点，眼睛放松
+
+              (ring)
+             00:30
+
+           [好了]  [先跳过]
+```
+
+- Catalog (session accept index 0-based): `lookFar` 30s → `standBlink` 45s → `walkStretch` 120s → `hydrate` 25s, then rotate; every third accept forces `walkStretch`; never repeat the previous recipe id. Duration hard floor/ceiling 20…180 s.
+- Progress is honest: a real countdown for that recipe drives the ring. No confetti, no score, no "achievement". Not medical advice.
+- Completing it increments today's break count and lifetime growth, returns Joey to `happy` for ~2.6 s; the plant label and nest pot stage update — no completion toast.
+- Skipping exits silently. The product never claims a break was detected.
+
+### 10.4 Nest home
+
+The main window, and it should feel like entering Joey's home.
+
+- Opens on the **system primary display** (`NSScreen.screens[0]` — menu bar / arrangement primary), not `NSScreen.main`. Remembers the last frame via AppKit autosave; if that frame is off-screen after a display change, re-centre on primary.
+- Window metadata title: **Joey 的家**. Traffic lights + gear; floating chrome title on home is blank (room immersion). No desk welcome line restating mood.
+- Room scene fills the content area. The nest is not a separate renderer: it hosts the same layered `JoeyDesktopScene` with the same `JoeyAssetPackage` as the desktop pet, feeds it the pose `PetRuntime` resolved, and therefore matches faces, props, breathing, blinks and ear/tail motion exactly. `sleep` is the standing closed-eye pose with relaxed ears; `doze` is the lighter, slightly tilted nap. In 黑夜 the room applies a 0.18 sage-grey wash (`nestPetTint`) to the layered pet so it sits in the dim light; the desktop pet stays untinted.
+- Joey stays in the nest. The room pet is not draggable; a click asks the runtime for one short greeting (`happy` for ~2.8 s), and both the nest and the desktop pet play it.
+- While a companionship session is running (`陪伴中`), the runtime drives `look` (including during the invitation card), then `stretch` and `happy` at the matching moments, and the nest follows. Quiet hours show the same `sleep` pose in both places.
+- The wall clock shows the real local time with hour, minute, and second hands (second hand ticks once per second, no continuous sweep); clicking it opens **设置** on **通用**. The hover hint is `调整提醒时间`.
+- Object-bound copy stays **status/result phrases only** (no companionship-duration on home — that stays in 回顾; no atmosphere asides):
+  - Clock label (no session): `大约每 45 分钟叫你一次` (same whether the desktop pet is visible)
+  - Clock label (session active) — one line, highest situation wins; omit the label when there is nothing factual to say:
+
+| Situation | Copy |
+|-----------|------|
+| Do not disturb | `勿扰中` |
+| Quiet hours | `安静时段` |
+| Snoozed | `HH:mm 再问你一次` |
+| Invite | `该休息了` (card carries the ask) |
+| Recover | `休息中` |
+| Complete | `刚休息完` |
+| Next invite due | `下次大约 HH:mm 叫你` |
+| Fallback (no due) | *(hide clock label)* |
+
+  - Plant label: `今天休息 2 次` (empty: `今天还没有休息`)
+  - Wall frame: no painted caption; hover + VoiceOver use `回顾这周`
+- Primary action **horizontally centred** near the floor (scene x ≈ 540): **开始一起工作**; while running it becomes **结束陪伴** with a status chip `陪伴中 · mm:ss` centred above it.
+- Room atmosphere follows the shared light/dark chrome cluster (系统 / 明亮 / 黑夜) — not the local clock. Light uses the day nest palette; dark uses the settings-family dark tokens (stars + moon disc). Curtains sway gently (Reduce Motion → static). **No** sun beams, floor pools, wall projections or desk lamps. Nest and Joey keep the shipped nest geometry. Frozen board: [`docs/reference/joeypet-home-v1.html`](docs/reference/joeypet-home-v1.html) (daypart preview is historical).
+- Starting a session never requires showing the desktop pet. If Joey is hidden, he stays hidden between reminders and surfaces only for an invitation.
+- No cards, no charts, no streaks, no "Today's productivity".
+
+### 10.5 Rhythm reflection
+
+A garden inside the same window, opened from the wall frame.
+
+- A small path across seven days. Every day leaves something visible: 0 seed, 1–2 sprout, 3–4 taller sprout, 5+ a small tree (hard ceiling, slightly larger than the old tree, never unbounded). No bars, no axes, no percentages.
+- Copy (388 wide, top-left, directly on the garden): date range `11月16日 – 11月22日`, headline `这周一起休息 6 次`, sub `今天陪了 2 小时 10 分 · 周三没有记录` (period-free short phrases). No card, panel, border or shadow behind this text.
+- Empty week (0 breaks): headline `这一周还没有一起休息过` — never lead with `0 次`. Sub may stay empty (garden seeds carry the empty days) or only state today's companionship if any.
+- Numbers are facts, not scores. Never say "only", "missed", "failed", or "keep it up".
+- Return: **回巢**, bottom-right.
+- Data must be self-consistent: today's breaks ≤ this week's total; if today has none, say so plainly.
+
+### 10.6 Settings
+
+Native, quieter, more functional than the room. No illustration, no hero copy, no sage hero blocks.
+
+- Page title **设置** inside the shared window; 200 px sidebar + detail.
+- Sidebar and detail share one fill (not room-wall daypart paint): light `window-bg`, dark `window-chrome`. A hairline divider and type weight carry the split; controls still sit on `panel` / `panel-2`.
+- Sidebar is one flat list, no group headings: 通用 · 宠物 · 关于（Debug 仅 Debug 构建）。
+- Rows by section:
+
+| Section | Row | Control | Copy |
+|---------|-----|---------|------|
+| 通用 | 提醒节奏 | 组合框：▾ 选 45 / 60 / 90，或直接输入分钟（15–180） | 开始陪伴后才计时 |
+| 通用 | 勿扰模式 | Switch | 暂停邀请 |
+| 通用 | 安静时段 | Time-range field: two editable halves, centre dash, double-click selects all | 时段内不邀请 |
+| 通用 | 背景音 | Menu-style chooser：无背景音 + catalog beds；每条有小喇叭试听 | 陪伴中播放 |
+| 通用 | 提示音 | Menu-style chooser：无提示音 + catalog cues；每条有小喇叭试听 | 开始与邀请时 |
+| 通用 | 外观 | Segmented 系统 / 明亮 / 黑夜 | （无副标题；默认系统，跟随 macOS） |
+| 宠物 | 在桌面显示 Joey | Switch | （无副标题） |
+| 宠物 | 显示位置 | Segmented 右下角 / 左下角 | （无副标题） |
+| 关于 | 版本 · 反馈 · 声音致谢 | 反馈 → 发邮件（优先系统「邮件」） | 副标题显示邮箱；打不开时复制地址 |
+
+- Each row gets at most one incidental line under the title. Do not stack a subtitle and a second note layer. Omit the subtitle when the control already states the fact.
+
+- 通用 / 宠物 / 关于 omit a page description — the rhythm rule lives once under **提醒节奏**. Session vocabulary is 陪伴; CTA `开始一起工作` stays as the open phrasing.
+- Time inputs use direct typing. Focus shows a caret and sage selection, never a blue outline.
+- Native `Form`/`Toggle`/`Picker`/`TextField` behavior; semantic system colours are acceptable here where native controls demand them, but the surface stays ivory/panel, never system-grey dashboard.
+
+---
+
+## 11. Copy voice
+
+Chinese-first, short, warm, factual.
+
+**Do**
+
+- Speak as Joey or about Joey in the third person: `Joey 大约每 45 分钟来叫你一次`
+- State facts plainly: `今天陪了 2 小时 10 分。周三没有记录。`
+- Give one instruction at a time: `找个六米外的点，肩膀放松`
+- Let the user off the hook (tone example for recovery / helper lines, **not** shown on the invite card): `不用走开，半分钟就够。`
+- Use everyday words: 休息, 陪你, 小窝, 好了, 先跳过.
+
+**Don't**
+
+- No exclamation piles, no `完成啦！`, no `太棒了！`, no praise like `真好`.
+- No meta explanation of product principles (`不会连着催第二次`, `不需要做任何汇报`, `空白不是失败`).
+- No triple-negation slogans (`不评分 · 不打卡 · 不追问感受`).
+- No uppercase English eyebrows (`JOEY 想问你`, `REST TIME`).
+- No productivity language: 效率, 产出, 达标, 连续打卡, 专注力提升.
+- No guilt: 又没休息, 只完成了, 中断了.
+- No invented metrics or fake personalisation.
+- No "轻轻/悄悄/静静" stacked on every line; one gentle adverb per screen at most.
+
+Length: invitation headline ≤ 12 characters per line; helper ≤ 18; toast ≤ 14.
+
+### 11.1 Copy restraint (hard rules)
+
+Every new or edited string — titles, subtitles, empty states, helpers, toasts, banners, alerts, menu labels, VoiceOver — must pass these before it ships. Priority is always **delete → shorten → merge → rewrite**. Do not expand a short label into a sentence just to look finished.
+
+1. **Delete before rewrite.** Before adding a title, subtitle, hint, or feedback line, ask: *if this text is removed, can the user still understand from layout, control labels, and visible state?* If yes, do not write it. Prefer omitting a page description, row subtitle, or second caption under a ring/clock that already states the fact.
+2. **No context restatement.** Inside a known page, module, or product shell, do not restate that identity in titles or helpers. Examples to reject: `JoeyPet 设置` on the settings window (use `设置`); product or section prefixes on rows that already sit under that sidebar; repeating “Joey” when the pet or nest scene already owns the context.
+3. **State change beats a second prompt.** When the UI already shows the outcome — card dismisses, chip/label updates, list/count changes, switch flips, pose changes — default to **no Toast, banner, or “已完成…” line**. Use a light toast only when (a) there is no reliable on-screen change *and* the user must know the result, or (b) an error / failure needs a short fact. Snooze and do-not-disturb follow the card + clock; they do not get confirmation toasts.
+4. **Native short-word style.** Labels, subtitles, and short statuses prefer period-free short phrases (`设置`, `休息中`, `时段内不邀请`, `勿扰中`). Reject customer-service tone, hand-holding tutorials, and manual-style long sentences (`可以粘贴到你常用的邮箱里发给我`, `关掉不会结束陪伴` when the control already names the action).
+
+Centralise strings in `JoeyCopy` (or the owning surface’s small enum). When copy in this file disagrees with a frozen HTML board, **this section wins** — fix the HTML in the same task.
+
+---
+
+## 12. Motion
+
+| Event | Duration | Easing | Property |
+|-------|----------|--------|----------|
+| State enter | 300 ms | `cubic-bezier(.22,.61,.36,1)` | opacity 0→1, translateY 6→0 |
+| Panel / card rise | 340–420 ms | same | opacity + 10 px rise |
+| Menu open | 160 ms | same | opacity + scale .97→1 + 4 px |
+| Chip / toast | 220–240 ms | same | opacity + 4–6 px |
+| Hover | 120–180 ms | ease-out | background / colour / 1 px lift |
+| Press | 120 ms | ease-out | translateY 1 px |
+| Theme switch | 350 ms | ease | background / border / colour |
+| Ring | 1 s linear per tick | linear | stroke-dashoffset |
+| Breath | 4.2–6 s loop | ease-in-out | scaleY 1→1.046 |
+
+Rules:
+
+- Motion explains state change, hierarchy, or causality. It is never decoration.
+- Exits run at ~65 % of entrance duration.
+- No bounce, no spring overshoot, no parallax on data.
+- **`prefers-reduced-motion` / Reduce Motion:** freeze breathing, drop transitions to 0.01 ms, park transitions at their end state, and keep the composition static. The information must survive with motion removed.
+- Ambient loops pause when the window is hidden, minimised, occluded, or the app is inactive.
+- Never animate a number that is not actually changing.
+
+---
+
+## 13. State and feedback
+
+| Situation | Response |
+|-----------|----------|
+| No session | Chip hidden; CTA `开始一起工作`; Joey `sit` |
+| Session running | Chip `陪伴中 · mm:ss`; CTA `结束陪伴`; Joey `look` |
+| Invitation due | Joey `look` + invitation card; one invitation only |
+| Invitation deferred | Invite card dismisses; clock shows `HH:mm 再问你一次`; schedule one later invitation, no toast, no repeat nagging |
+| Entered do-not-disturb | Invite card dismisses; clock / chip show `勿扰中`; no toast; no further invitations until the user turns it off |
+| Recovery running | Real countdown; no skip penalty |
+| Recovery completed | Break count +1, lifetime growth +1, Joey `happy` ~2.6 s; plant label + nest pot stage update; no toast |
+| Recovery skipped | Return to desktop silently; count unchanged |
+| Hidden Joey | Pet invisible but rhythm continues; an invitation surfaces him for at most 60 s, then he returns to hidden |
+| Quiet hours | Enter ends any session, then `yawn` → `sleep`; exit with `yawn` → day pose; no invitations while alone; a session started inside quiet keeps rhythm invites; breath only once asleep |
+| Empty reflection day | Show a visible seed in the soil; never a zero-score or a "failure" |
+
+Every feedback message states what happened in one sentence. Never a status code, never a machine voice.
+
+### 13.1 Desktop state priority
+
+Seven states, highest wins. A higher state overrides pose and interaction only; it never destroys time or counts recorded lower down.
+
+| # | State | Pose | Enters when | Cooldown |
+|---|-------|------|-------------|----------|
+| 1 | Dragging | `look` | Pointer is down and moving; follows the cursor, no ambient loop | None |
+| 2 | Hidden | — | Menu **隐藏 Joey**, or the Settings switch is off | Persistent; invitations still surface Joey briefly |
+| 3 | Quiet hours | `yawn` then `sleep` | Local time enters the window (default 22:00–08:00) **and there is no session**; end any open session on the enter edge, then settle yawn | Until window ends or the user starts a session inside quiet; exit via wake yawn |
+| 4 | Do not disturb | `doze` | Settings switch or desktop menu **勿扰模式** | Until the user turns it off |
+| 5 | Snoozed | `sit` | Invite **稍后提醒**; current session only | 10 min |
+| 6 | In session | `look` | User starts a session (including during quiet hours) | User ends, quiet enter edge, 6 h cap, or long-away return |
+| 7 | Alone | `sit` | App is running and there is no session | None |
+
+An open session resolves as **In session** ahead of Quiet hours for pose and invites; quiet still ends a day-long session on the enter edge.
+
+Snooze is a temporary substate of a session, not a new session. When it expires Joey returns to **In session**; it never produces a second invitation inside 45 minutes.
+
+Do not disturb is manual and persistent: it never expires on its own, and turning it off recalculates the next invitation immediately.
+
+Hidden is about presence, not permission: the rhythm keeps running, an invitation may surface Joey for at most 60 seconds, and the card returning counts as **Snoozed** once.
+
+### 13.2 Companion substates
+
+Five substates flow only inside a session:
+
+```text
+idle ──5 min to go──▶ approach ──due──▶ invite ──accept──▶ recover ──30 s done──▶ complete
+  ▲                                                                                 │
+  └──────────────────────────── 2.6 s, then back to idle ───────────────────────────┘
+```
+
+- `invite` and `recover` can exit to `idle` on snooze / do not disturb / dismiss.
+- `complete` holds `happy` for 2.6 s, then returns to `idle`.
+- When the session ends, the desktop returns to **Alone**.
+
+### 13.3 Guards and cooldowns
+
+| Rule | Check | Result |
+|------|-------|--------|
+| Session source | Only **开始一起工作** establishes a session; never infer work from keyboard or mouse activity | Otherwise stay **Alone** |
+| Invitation interval | ≥ 45 min since the last invitation was dismissed or completed | Otherwise do not enter `invite` |
+| Snooze | 10 min retry; only one snooze per session | Expiry returns to **In session** |
+| Do not disturb | No invitations, panels or toasts; pose stays `doze`, menu still works | Resume rhythm when the user turns it off |
+| Hidden reminder | Invitation is due while hidden | Surface Joey and the card; after 60 seconds return to hidden and treat as snoozed once |
+| Quiet hours | Enter ends the session (recover → skip), then 1.8 s `yawn` → `sleep`; no invitations while alone. Starting companionship inside quiet is allowed and keeps rhythm invites until the user ends or a safety settle fires | Exit with a 1.8 s wake `yawn`, then return to `sit` / `look` by context |
+| Visible invite TTL | Invitation card unanswered for 5 minutes | Soft dismiss; no guilt |
+| Session cap | Companionship running ≥ 6 hours | Silent session end; abandon recover as skip |
+| Long away return | Presence away ≥ 30 min then return while a session is open | Silent session end; abandon recover as skip |
+| Frozen recover | Recover deadline already passed across sleep/lock | Skip on wake; no break count |
+| Single invitation | At most one invitation card; no repeated invite while it exists | Extra requests are dropped |
+| Exit during recovery | Closing the recovery panel counts as a skip; no count, no failure | Return to the desktop quietly |
+
+### 13.4 Pose to runtime mapping
+
+Design poses are for people. At runtime they land on `PetPose`; `JoeyDesktopScene` maps each pose to its layered pose and is the single entry point, and scenes must not hardcode layer files.
+
+| Pose | Behavior id | Clip id | Playback |
+|------|-------------|---------|----------|
+| `sit` | `idle` | `idle_sit` | Loop; default fallback |
+| `look` | `idle` | `idle_look` | Loop; used in session |
+| `sign` | `notifying` | `notify_sign` | Atlas only in V0; invitation uses `look` + card |
+| `stretch` | `idle` | `recover_stretch` | Sustained; holds while the recovery panel counts down |
+| `happy` | `celebrating` | `complete_happy` | Once; returns to idle after 2.6 s |
+| `sleep` | `sleeping` | `sleep_curl` | Loop; quiet hours and extended idle |
+| `groom` | `idle` | `idle_groom` | Once; ambient transient |
+| `yawn` | `idle` | `idle_yawn` | Once; waking or long sitting |
+| `doze` | `sleeping` | `doze_short` | Loop; light sleep, interruptible |
+| `peek` | `idle` | `peek_edge` | Reserved; not reachable in V0 |
+
+Add a new pose to the state graph before adding it to the runtime. Clip ids are stable once shipped.
+
+---
+
+## 14. Accessibility
+
+| Area | Requirement |
+|------|-------------|
+| Contrast | Body ≥ 4.5:1, large text ≥ 3:1, essential graphics ≥ 3:1; audit dusk independently |
+| Colour | Never the only channel; pair with text, icon, or shape |
+| VoiceOver | One combined label for composite surfaces; decorative SVG hidden; every custom control named |
+| Keyboard | Full Keyboard Access; sage focus on native controls; primary action as default button; menu reachable |
+| Hit targets | ≥ 28 × 28 pt, never below 20 × 20 pt; ≥ 8 pt between adjacent targets; the hit region may exceed the glyph |
+| Text scaling | Settings and feedback survive system text size; illustration-side captions may stay fixed |
+| Motion | Reduce Motion honoured everywhere, including breathing and hover |
+| Language | `lang="zh-CN"`; dates and numbers use Chinese formats (`11月21日 周六`, `2 小时 10 分`) |
+
+Do not apply iOS 44 × 44 guidance to macOS controls.
+
+---
+
+## 15. SwiftUI / AppKit implementation notes
+
+| Concern | Decision |
+|---------|----------|
+| Tokens | Create `macos/JoeyPet/Design/JoeyPetTheme.swift` (colors, type, spacing, radius, motion) before the first screen. Views reference tokens only. |
+| Appearance | `Color` sets or a theme environment value for light/dusk; no per-view hex. |
+| Windows | AppKit owns windows and panels (`NSWindow`, `NSPanel`, `NSStatusItem`). SwiftUI owns content. Do not migrate to SwiftUI `App`/`WindowGroup`. |
+| Main window | Standard titled window, full-size content view, transparent titlebar, no toolbar, no titlebar separator. Native traffic lights. |
+| Desktop pet | Borderless non-activating `NSPanel`, draggable, position persisted after drag end, clamped to visible screen. |
+| Invitation | Panel anchored near the pet, not `NSAlert`. |
+| Recovery | In-window or pet-adjacent panel with a real timer driven by the domain model. |
+| Room / garden | SwiftUI `Canvas` or a static SpriteKit scene; keep drawing separate from state. Reuse `room-*` tokens for both appearances. |
+| Settings | Native controls inside a standard window; no custom-chrome recreation of `Form`. |
+| Copy | Centralise user-facing strings; no inline sentence fragments scattered across views. |
+
+Do **not** port the HTML/CSS artifact into the app. It is a visual reference; the implementation is native.
+
+---
+
+## 16. Review checklist
+
+Before marking any UI task done:
+
+1. One primary action per state; secondary/quiet actions do not compete.
+2. Every colour, size, radius, and duration comes from a token.
+3. Light **and** dusk checked, separately.
+4. CJK line height ≥ 1.35 on display text; no negative tracking on Chinese.
+5. No uppercase micro-labels, no emoji icons, no pill-shaped everything.
+6. Spacing follows the 4/8 rhythm; nothing overlaps the pet, the invitation card, or the CTA.
+7. Copy passes §11 voice **and** §11.1 restraint — delete-first, no context echo, no toast when state already speaks, short native words.
+8. Numbers are self-consistent (today ≤ week; clock matches the "resume at" time).
+9. Real states only; nothing simulated that the product cannot detect.
+10. Reduce Motion and keyboard focus verified.
+11. No toolbar, tab bar, or second navigation inside the main window.
+
+---
+
+## 17. Anti-patterns
+
+- Building a dashboard, checklist, timer app, or system monitor inside JoeyPet.
+- A KPI card grid, bar-chart analytics, or "efficiency score" on any surface.
+- XP, levels, streaks, trophies, shops, leaderboards, loot.
+- Guilt, failure states, or a scolding Joey.
+- Inferred working time from uptime or screen activity.
+- OS alerts, warning icons, or modal scrims for a rest invitation.
+- Toolbar, segmented mode switch, tab bar, or global sidebar in the main window.
+- Stitch-era Calm Space orb/dial canvas, dock, hover mode switch, or status block.
+- Uppercase eyebrows, triple-negation slogans, sugar-coated `完成啦`, or meta explanations of the product's own kindness.
+- Redundant copy: product/module prefixes inside an already-named surface; page blurbs that repeat a row subtitle; `剩余 N 秒` under an `mm:ss` ring; coaching subtitles the control already implies; confirmation toasts after an obvious state change.
+- Emoji used as icons; hand-drawn SVG people used as decoration.
+- Hardcoded hex in views; a second palette that drifts from §4.
+- Uppercase tracking on Chinese; negative tracking on Chinese; Latin display leading on Chinese headlines.
+- Fake metrics, fabricated growth, or "we detected your rest".
+- Copying the HTML reference's CSS into the app.
+
+---
+
+## 18. Legacy (do not implement)
+
+Retired in the 2026-11 focus shift, kept for traceability only (archive branch `archive/mac-care-calm-space-2026-11`):
+
+- Mac Care orb canvas, status block, floating dock, hover-expanding mode switch.
+- Full Disk Access onboarding, disk cleanup and Trash flows, application uninstall.
+- Calm Space three-stop gradient canvas, Work Rhythm dial, SpriteKit ambient scenes.
+- Settings sections 电脑状态 / 工作状态.
+- Stitch project JoeyPet as the design input (no longer the source; the frozen HTML in `docs/reference/` replaces it).
+
+Git history and the archive branch explain why they were replaced.
+
+---
+
+## 19. References
+
+| Topic | Document |
+|-------|----------|
+| V0 product scope | [`V0_FEATURE_SCOPE.md`](V0_FEATURE_SCOPE.md) |
+| Handoff and next steps | [`开发交接文档.md`](开发交接文档.md) |
+| Frozen UI design | [`docs/reference/joeypet-ui-v0.html`](docs/reference/joeypet-ui-v0.html) |
+| Frozen pose and state graph | [`docs/reference/joeypet-states-v0.html`](docs/reference/joeypet-states-v0.html) |
+| Pet animation and state | [`docs/pet-runtime.md`](docs/pet-runtime.md) |
+| Tech stack | [`docs/tech-stack.md`](docs/tech-stack.md) |
+| Agent hard rules | [`AGENTS.md`](AGENTS.md) |
+| UI intent triage | [`.agents/skills/joeypet-macos/references/ui-intent.md`](.agents/skills/joeypet-macos/references/ui-intent.md) |
+
+---
+
+## 20. Document history
+
+| Date | Change |
+|------|--------|
+| 2026-09-25 | Rebuilt as the native Calm Space implementation contract. |
+| 2026-10-27 | Introduced layered authority; documented dock + hover mode switch; Current/Legacy/Pending status. |
+| 2026-11-22 | Replaced the Calm Space contract with the V0 desktop-companion design: new tokens (ivory / ink / sage / apricot / mist), single-room window with in-scene navigation, six states, copy voice, motion and review rules; frozen HTML reference added; Calm Space moved to Legacy. |
+| 2026-11-22 | Extended Joey to twelve poses and added the pose/state graph: ambient loops, pose transitions, seven-state desktop priority, five companion substates, guards and cooldowns, and the pose → behavior/clip mapping via `PetStateAnimationMapping`. Frozen graph added at `docs/reference/joeypet-states-v0.html`. |
+| 2026-11-23 | `peek` now renders while the panel is docked-collapsed; dock exposure raised from 40% to 48% so one full eye stays inside the screen edge. The frozen graph and the dock geometry tests follow the same number. |
+| 2026-11-23 | `peek` art recomposed for the edge: the head leans toward the right of the canvas so the 48% docked strip keeps both eyes and both paws in view. The right edge uses the same art mirrored; the pose itself still has no horizontal motion. |
+| 2026-11-23 | V0 defers edge docking, collapse and `peek`. Dragging still clamps on screen and persists the release position; the edge-dock geometry and peek wiring are removed. |
+| 2026-11-25 | Nest wall clock: second hand ticks once per second; 12 hour + 60 minute marks. |
+| 2026-11-25 | Drop nest leaf accumulation and `carry` / 叼叶子 pose; recovery complete uses happy + break count only (no leaf toast). |
+| 2026-11-24 | Removed `step` / ambient walking from V0 (product meaning weak; walk art broke character identity). |
+| 2026-11-24 | Quiet-hours life bridges: enter and exit through a 1.8 s `yawn` before `sleep` / day pose; recovery and complete still finish first. |
+| 2026-11-26 | Stale companionship settle: quiet enter ends session; night start keeps invites; 5 min invite TTL; 6 h / long-away silent end; frozen recover skips. |
+| 2026-11-24 | Nest home: daypart palettes + curtain sway (no beams); desk welcome replaces companionship duration; CTA centred; board `joeypet-home-v1.html`. |
+| 2026-11-25 | Appearance is 时段 / 系统; home immersive under transparent titlebar; chrome shares daypart or macOS tone with settings/reflection. |
+| 2026-11-25 | Appearance adds locked 明亮 / 黑夜; four options, default 时段. |
+| 2026-11-25 | Appearance drops 时段; 系统 / 明亮 / 黑夜 only (default 系统); nest uses settings light/dark cluster. |
+| 2026-11-25 | Settings sidebar + detail share one surface (light `window-bg`, dark `window-chrome`; no night-wall clash). |
+| 2026-11-25 | Settings IA simplified to 通用 / 宠物 / 关于; shorter row copy. |
+| 2026-11-25 | Settings feedback uses mailto (no local draft / no backend). |
+| 2026-11-25 | Copy pass: nest session clock lines; empty-week headline; settings「陪伴」; toast length exception; invite helper is tone-only (not on card); HTML reference synced. |
+| 2026-11-25 | Copy restraint pass: drop product-prefix settings title, pane blurb, redundant subtitles, ring/recovery fluff, snooze/DND toasts; shorten completion toast and nest clock lines. |
+| 2026-11-27 | Nest + garden growth slowed with hard ceilings (nest lifetime 0/1/5/15; garden day 0/1/3/5; tree ≤1.18×); label still today's count; no leaves. |
+| 2026-11-27 | Recovery recipes rotate per session accept (lookFar / standBlink / walkStretch / hydrate) with dynamic duration; invite+panel share one recipe. |
+| 2026-11-25 | §11.1 Copy restraint hard rules (delete-first, no context echo, state beats toast, native short words); checklist + anti-patterns updated. |
+| 2026-11-25 | Copy restraint round 2: drop desk daypart welcome, painted frame「回顾」, home floating title, recovery breath line, lyric clock fallback; period-free reflection / greeting. |
