@@ -49,3 +49,6 @@ skills-lock.json
 # Local workspace build data (QA scripts use workspace-relative DerivedData)
 .derived-data/
 
+# Local release packaging output (upload via GitHub Releases)
+dist/
+
