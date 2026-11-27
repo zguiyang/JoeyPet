@@ -12,6 +12,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var statusItem: NSStatusItem?
     private var togglePetItem: NSMenuItem?
     private var doNotDisturbItem: NSMenuItem?
+    private var statusItemClock: Timer?
     private var homeWindowController: MainWindowController?
     #if DEBUG
     private var posePreviewWindowController: JoeyPosePreviewWindowController?
@@ -64,6 +65,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 self.settings.isDoNotDisturb = situation.isDoNotDisturb
             }
             self.audioController.sync(situation: situation)
+            self.syncStatusItemClock()
         }
         coordinator.onPoseChanged = { [weak self] pose in
             self?.companionStatus.update(pose: pose)
@@ -91,6 +93,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        statusItemClock?.invalidate()
+        statusItemClock = nil
         audioController.stop()
         coordinator?.stop()
     }
@@ -187,13 +191,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     // MARK: - Status item
 
     private func configureStatusItem() {
-        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        item.button?.image = NSImage(named: "JoeyPetMenuBarTemplate")
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        if let button = item.button {
+            button.image = NSImage(named: "JoeyPetMenuBarTemplate")
+            button.imagePosition = .imageLeft
+            button.imageHugsTitle = true
+        }
 
         let menu = NSMenu()
         menu.delegate = self
         menu.addItem(menuItem("打开 Joey 的家", #selector(showHome)))
+        menu.addItem(.separator())
         menu.addItem(menuItem("设置…", #selector(openSettings)))
+        menu.addItem(menuItem("关于 JoeyPet", #selector(showAbout)))
         menu.addItem(.separator())
 
         let toggle = menuItem("显示 Joey", #selector(toggleDesktopPet))
@@ -201,25 +211,54 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         togglePetItem = toggle
         menu.addItem(toggle)
 
-        let doNotDisturb = menuItem(
-            settings.isDoNotDisturb ? "关闭勿扰模式" : "勿扰模式",
-            #selector(toggleDoNotDisturb)
-        )
+        let doNotDisturb = menuItem("勿扰", #selector(toggleDoNotDisturb))
         doNotDisturb.state = settings.isDoNotDisturb ? .on : .off
         doNotDisturbItem = doNotDisturb
         menu.addItem(doNotDisturb)
 
         menu.addItem(.separator())
-        menu.addItem(menuItem("退出 JoeyPet", #selector(quit)))
+        menu.addItem(menuItem("退出", #selector(quit)))
 
         item.menu = menu
         statusItem = item
+        syncStatusItemClock()
     }
 
     func menuWillOpen(_ menu: NSMenu) {
         togglePetItem?.state = settings.showsDesktopPet ? .on : .off
         doNotDisturbItem?.state = settings.isDoNotDisturb ? .on : .off
-        doNotDisturbItem?.title = settings.isDoNotDisturb ? "关闭勿扰模式" : "勿扰模式"
+        refreshStatusItemTitle()
+    }
+
+    private func syncStatusItemClock() {
+        let needsClock = companionStatus.isSessionActive
+        if needsClock {
+            if statusItemClock == nil {
+                let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
+                    Task { @MainActor in
+                        self?.refreshStatusItemTitle()
+                    }
+                }
+                RunLoop.main.add(timer, forMode: .common)
+                statusItemClock = timer
+            }
+        } else {
+            statusItemClock?.invalidate()
+            statusItemClock = nil
+        }
+        refreshStatusItemTitle()
+    }
+
+    private func refreshStatusItemTitle() {
+        guard let button = statusItem?.button else { return }
+        let title = CompanionTimeText.menuBarTitle(
+            sessionStartedAt: companionStatus.sessionStartedAt,
+            now: Date()
+        )
+        button.title = title.map { " \($0)" } ?? ""
+        statusItem?.length = title == nil
+            ? NSStatusItem.squareLength
+            : NSStatusItem.variableLength
     }
 
     // MARK: - Windows
@@ -255,6 +294,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func openSettings() {
         showHome()
         homeWindowController?.openSettings()
+    }
+
+    @objc private func showAbout() {
+        NSApp.activate()
+        NSApp.orderFrontStandardAboutPanel(nil)
     }
 
     @objc private func toggleDesktopPet() {
