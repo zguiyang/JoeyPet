@@ -102,7 +102,7 @@ final class AppSettings {
         }
     }
 
-    /// One-shot for session start and rest invite. `JoeyAudioCatalog.noneID` = 无提示音.
+    /// Session-start one-shot; rest invite uses `JoeyCueRouting.restInviteCueID` when not `none`.
     var cueSoundID: String {
         didSet {
             guard cueSoundID != oldValue else { return }

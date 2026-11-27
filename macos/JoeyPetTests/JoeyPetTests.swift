@@ -210,6 +210,29 @@ struct JoeyPetTests {
         #expect(catalog.sanitizedCueID(JoeyAudioCatalog.noneID) == JoeyAudioCatalog.noneID)
         #expect(catalog.attributionTracks.contains(where: { $0.id == "wind_autumn_nicktayloe" }))
     }
+
+    @Test func cueRoutingKeepsStartSelectionAndFixesRestInvite() {
+        #expect(
+            JoeyCueRouting.resolvedCueID(selection: JoeyAudioCatalog.noneID, role: .sessionStart)
+                == nil
+        )
+        #expect(
+            JoeyCueRouting.resolvedCueID(selection: JoeyAudioCatalog.noneID, role: .restInvite)
+                == nil
+        )
+        #expect(
+            JoeyCueRouting.resolvedCueID(selection: "cue_ceramic_cups", role: .sessionStart)
+                == "cue_ceramic_cups"
+        )
+        #expect(
+            JoeyCueRouting.resolvedCueID(selection: "cue_ceramic_cups", role: .restInvite)
+                == JoeyCueRouting.restInviteCueID
+        )
+        #expect(
+            JoeyCueRouting.resolvedCueID(selection: "cue_bamboo", role: .restInvite)
+                == "cue_wooden_chime_breeze"
+        )
+    }
 }
 
 // MARK: - Pet domain

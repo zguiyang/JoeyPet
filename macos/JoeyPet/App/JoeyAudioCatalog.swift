@@ -75,6 +75,28 @@ struct JoeyAudioCatalog: Equatable, Sendable {
     }
 }
 
+/// Session-start vs rest-invite one-shots. Selection `"none"` silences both.
+enum JoeyCueRole: Equatable, Sendable {
+    case sessionStart
+    case restInvite
+}
+
+enum JoeyCueRouting {
+    /// Longer wooden chime — reserved for rest invites so they stay distinct from start.
+    static let restInviteCueID = "cue_wooden_chime_breeze"
+
+    /// Returns the catalog id to play, or `nil` when cues are off.
+    static func resolvedCueID(selection: String, role: JoeyCueRole) -> String? {
+        guard selection != JoeyAudioCatalog.noneID else { return nil }
+        switch role {
+        case .sessionStart:
+            return selection
+        case .restInvite:
+            return restInviteCueID
+        }
+    }
+}
+
 /// Pure mute gate: DND always; quiet hours only while there is no session.
 enum JoeyAudioMutePolicy {
     /// Quiet hours mute only when Joey is alone asleep. A session started inside

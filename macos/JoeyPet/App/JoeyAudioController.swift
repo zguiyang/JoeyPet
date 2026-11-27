@@ -53,12 +53,12 @@ final class JoeyAudioController {
         } else {
             var didPlayCue = false
             if sessionChanged, sessionActive {
-                playCueIfConfigured()
+                playCueIfConfigured(role: .sessionStart)
                 didPlayCue = true
             }
             syncAmbientPlayback()
             if inviteVisible, !wasInviteVisible, !didPlayCue {
-                playCueIfConfigured()
+                playCueIfConfigured(role: .restInvite)
             }
             if silenceChanged, sessionActive {
                 syncAmbientPlayback()
@@ -111,8 +111,10 @@ final class JoeyAudioController {
         }
     }
 
-    private func playCueIfConfigured() {
-        guard !isSilenced, let track = catalog.cue(id: cueID) else { return }
+    private func playCueIfConfigured(role: JoeyCueRole) {
+        guard !isSilenced else { return }
+        guard let resolvedID = JoeyCueRouting.resolvedCueID(selection: cueID, role: role) else { return }
+        guard let track = catalog.cue(id: resolvedID) else { return }
         guard let url = track.bundleURL() else {
             Self.logger.error("Cue file missing: \(track.relativePath, privacy: .public)")
             return
@@ -120,7 +122,8 @@ final class JoeyAudioController {
         do {
             let player = try AVAudioPlayer(contentsOf: url)
             player.numberOfLoops = 0
-            player.volume = cueVolume
+            // Rest invite is slightly louder so it cuts through focus without shouting.
+            player.volume = role == .restInvite ? min(cueVolume + 0.06, 0.55) : cueVolume
             player.prepareToPlay()
             cuePlayer?.stop()
             cuePlayer = player
