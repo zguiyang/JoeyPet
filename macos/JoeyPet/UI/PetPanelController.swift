@@ -255,7 +255,7 @@ final class PetPanelController {
             case .invite:
                 return "想请你休息一下"
             case .recover:
-                return "正在望向远处"
+                return situation.activeRecipe?.accessibilityRecovering ?? "正在休息"
             case .complete:
                 return "好了"
             case .approach, .idle, nil:

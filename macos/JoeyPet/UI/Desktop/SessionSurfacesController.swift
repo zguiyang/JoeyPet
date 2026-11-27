@@ -89,10 +89,12 @@ final class SessionSurfacesController {
         }
 
         if presentation.showsInvitation {
+            let recipe = presentation.recipe ?? RecoveryRecipeCatalog.recipe(id: .lookFar)
             let placement = invitationPlacement(size: NSSize(width: 236, height: 120))
             setRoot(
                 invitationHost,
                 InvitationCardView(
+                    recipe: recipe,
                     onAccept: { [weak self] in self?.onAcceptInvitation?() },
                     onSnooze: { [weak self] in self?.onSnooze?() },
                     onDoNotDisturb: { [weak self] in self?.onEnterDoNotDisturb?() },
@@ -114,9 +116,11 @@ final class SessionSurfacesController {
         }
 
         if presentation.showsRecovery, let endsAt = presentation.recoveryEndsAt {
+            let recipe = presentation.recipe ?? RecoveryRecipeCatalog.recipe(id: .lookFar)
             setRoot(
                 recoveryHost,
                 RecoveryPanelView(
+                    recipe: recipe,
                     endsAt: endsAt,
                     onDone: { [weak self] in self?.onFinishRecovery?() },
                     onSkip: { [weak self] in self?.onSkipRecovery?() }

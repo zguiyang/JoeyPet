@@ -79,6 +79,8 @@ struct RoomSceneView: View {
 
                     if status.situation.isInviteCardVisible(at: Date()) {
                         InvitationCardView(
+                            recipe: status.situation.activeRecipe
+                                ?? RecoveryRecipeCatalog.recipe(id: .lookFar),
                             onAccept: { onInviteAccept?() },
                             onSnooze: { onInviteSnooze?() },
                             onDoNotDisturb: { onInviteDoNotDisturb?() },

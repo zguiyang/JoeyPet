@@ -41,6 +41,7 @@ enum InvitationCardScale: Equatable, Sendable {
 
 /// Rest invitation — a quiet paper note beside Joey (invite-greeting family v1).
 struct InvitationCardView: View {
+    var recipe: RecoveryRecipe = RecoveryRecipeCatalog.recipe(id: .lookFar)
     let onAccept: () -> Void
     let onSnooze: () -> Void
     let onDoNotDisturb: () -> Void
@@ -66,7 +67,7 @@ struct InvitationCardView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("坐久啦，\n我们一起伸个懒腰？")
+            Text(recipe.inviteCopy)
                 .font(titleFont)
                 .lineSpacing(isNest ? 2 : 3)
                 .foregroundStyle(theme.ink)
@@ -168,10 +169,10 @@ struct InvitationCardView: View {
     }
 }
 
-/// 30-second recovery panel — centered vertical stack (recovery-panel v0).
+/// Recovery panel — centered vertical stack; duration comes from the active recipe.
 struct RecoveryPanelView: View {
+    var recipe: RecoveryRecipe = RecoveryRecipeCatalog.recipe(id: .lookFar)
     let endsAt: Date
-    var total: TimeInterval = 30
     let onDone: () -> Void
     let onSkip: () -> Void
 
@@ -185,18 +186,19 @@ struct RecoveryPanelView: View {
     }
 
     private var theme: JoeyTheme { JoeyTheme(chromeTone: chromeTone) }
+    private var total: TimeInterval { recipe.clampedDurationSec }
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
             let remaining = max(0, endsAt.timeIntervalSince(context.date))
 
             VStack(spacing: 0) {
-                Text("望向远处")
+                Text(recipe.recoveryTitle)
                     .font(JoeyType.recoveryTitle)
                     .foregroundStyle(theme.ink)
                     .multilineTextAlignment(.center)
 
-                Text("找个六米外的点，肩膀放松")
+                Text(recipe.recoveryHint)
                     .font(JoeyType.recoveryHint)
                     .lineSpacing(2)
                     .foregroundStyle(theme.muted)
