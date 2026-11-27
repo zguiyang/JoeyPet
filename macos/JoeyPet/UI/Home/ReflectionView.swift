@@ -287,19 +287,26 @@ private struct GardenPainter {
         )
     }
 
+    /// Hard ceiling for the saturated day-tree. Grows a bit past the old tree,
+    /// but stays inside the 128 pt day column and below the headline band.
+    private static let saturatedTreeScale: CGFloat = 1.18
+    /// Young sprout scale — fixed; never derived from raw break count.
+    private static let youngSproutGrowth: CGFloat = 1.32
+
     private func drawDays(_ context: inout GraphicsContext) {
         for index in 0..<7 {
             let x = 120 + index * 128
+            let origin = CGPoint(x: x, y: 500)
             let count = index < breaks.count ? breaks[index] : 0
-            switch count {
-            case 0:
-                drawSeed(&context, origin: CGPoint(x: x, y: 500))
-            case 1:
-                drawSprout(&context, origin: CGPoint(x: x, y: 500))
-            case 2:
-                drawSprout(&context, origin: CGPoint(x: x, y: 500), growth: 1.32)
-            default:
-                drawTree(&context, origin: CGPoint(x: x, y: 500))
+            switch GardenDayPlantStage.from(dayBreaks: count) {
+            case .seed:
+                drawSeed(&context, origin: origin)
+            case .sprout:
+                drawSprout(&context, origin: origin)
+            case .young:
+                drawSprout(&context, origin: origin, growth: Self.youngSproutGrowth)
+            case .full:
+                drawTree(&context, origin: origin, scale: Self.saturatedTreeScale)
             }
 
             context.draw(
@@ -340,55 +347,69 @@ private struct GardenPainter {
         }
     }
 
-    private func drawTree(_ context: inout GraphicsContext, origin: CGPoint) {
+    /// Saturated garden tree. `scale` is clamped to `saturatedTreeScale` — never
+    /// pass raw break counts in; neighbouring columns are 128 pt apart.
+    private func drawTree(
+        _ context: inout GraphicsContext,
+        origin: CGPoint,
+        scale: CGFloat = GardenPainter.saturatedTreeScale
+    ) {
+        let clamped = min(max(scale, 1), Self.saturatedTreeScale)
         context.drawLayer { layer in
             layer.translateBy(x: origin.x, y: origin.y)
+            // Soil stays unscaled so the path line and weekday labels keep their seats.
             layer.fill(
                 Path(ellipseIn: CGRect(x: 4, y: 47, width: 32, height: 10)),
                 with: .color(theme.roomSill)
             )
 
-            var trunk = Path()
-            trunk.move(to: CGPoint(x: 20, y: 48))
-            trunk.addCurve(
-                to: CGPoint(x: 22, y: -8),
-                control1: CGPoint(x: 18, y: 30),
-                control2: CGPoint(x: 20, y: 10)
-            )
-            layer.stroke(
-                trunk,
-                with: .color(theme.roomStem),
-                style: StrokeStyle(lineWidth: 5, lineCap: .round)
-            )
+            layer.drawLayer { canopy in
+                canopy.translateBy(x: 20, y: 48)
+                canopy.scaleBy(x: clamped, y: clamped)
+                canopy.translateBy(x: -20, y: -48)
 
-            layer.fill(
-                Path(ellipseIn: CGRect(x: -2, y: -40, width: 34, height: 30)),
-                with: .color(theme.roomLeaf.opacity(0.85))
-            )
-            layer.fill(
-                Path(ellipseIn: CGRect(x: 10, y: -56, width: 32, height: 30)),
-                with: .color(theme.roomLeaf)
-            )
-            layer.fill(
-                Path(ellipseIn: CGRect(x: 18, y: -38, width: 32, height: 28)),
-                with: .color(theme.roomLeaf.opacity(0.92))
-            )
-            layer.fill(
-                Path(ellipseIn: CGRect(x: 4, y: -30, width: 38, height: 26)),
-                with: .color(theme.roomLeaf)
-            )
-            layer.fill(
-                Path(ellipseIn: CGRect(x: 14, y: -50, width: 12, height: 8)),
-                with: .color(theme.roomCushion2.opacity(0.45))
-            )
-            layer.fill(
-                Path(ellipseIn: CGRect(x: 9, y: -31, width: 5, height: 5)),
-                with: .color(theme.apricot)
-            )
-            layer.fill(
-                Path(ellipseIn: CGRect(x: 31, y: -26, width: 4, height: 4)),
-                with: .color(theme.apricot.opacity(0.9))
-            )
+                var trunk = Path()
+                trunk.move(to: CGPoint(x: 20, y: 48))
+                trunk.addCurve(
+                    to: CGPoint(x: 22, y: -8),
+                    control1: CGPoint(x: 18, y: 30),
+                    control2: CGPoint(x: 20, y: 10)
+                )
+                canopy.stroke(
+                    trunk,
+                    with: .color(theme.roomStem),
+                    style: StrokeStyle(lineWidth: 5, lineCap: .round)
+                )
+
+                canopy.fill(
+                    Path(ellipseIn: CGRect(x: -2, y: -40, width: 34, height: 30)),
+                    with: .color(theme.roomLeaf.opacity(0.85))
+                )
+                canopy.fill(
+                    Path(ellipseIn: CGRect(x: 10, y: -56, width: 32, height: 30)),
+                    with: .color(theme.roomLeaf)
+                )
+                canopy.fill(
+                    Path(ellipseIn: CGRect(x: 18, y: -38, width: 32, height: 28)),
+                    with: .color(theme.roomLeaf.opacity(0.92))
+                )
+                canopy.fill(
+                    Path(ellipseIn: CGRect(x: 4, y: -30, width: 38, height: 26)),
+                    with: .color(theme.roomLeaf)
+                )
+                canopy.fill(
+                    Path(ellipseIn: CGRect(x: 14, y: -50, width: 12, height: 8)),
+                    with: .color(theme.roomCushion2.opacity(0.45))
+                )
+                canopy.fill(
+                    Path(ellipseIn: CGRect(x: 9, y: -31, width: 5, height: 5)),
+                    with: .color(theme.apricot)
+                )
+                canopy.fill(
+                    Path(ellipseIn: CGRect(x: 31, y: -26, width: 4, height: 4)),
+                    with: .color(theme.apricot.opacity(0.9))
+                )
+            }
         }
     }
 
@@ -397,6 +418,8 @@ private struct GardenPainter {
         origin: CGPoint,
         growth: CGFloat = 1
     ) {
+        // Never feed raw break counts here — young is the sprout ceiling.
+        let clamped = min(max(growth, 1), Self.youngSproutGrowth)
         context.drawLayer { layer in
             layer.translateBy(x: origin.x, y: origin.y)
             layer.fill(
@@ -405,7 +428,7 @@ private struct GardenPainter {
             )
             layer.drawLayer { plant in
                 plant.translateBy(x: 20, y: 48)
-                plant.scaleBy(x: 1 + (growth - 1) * 0.12, y: growth)
+                plant.scaleBy(x: 1 + (clamped - 1) * 0.12, y: clamped)
                 plant.translateBy(x: -20, y: -48)
 
                 var stem = Path()

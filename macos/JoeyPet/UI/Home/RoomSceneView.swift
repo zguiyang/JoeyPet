@@ -47,7 +47,11 @@ struct RoomSceneView: View {
                         var painterContext = context
                         painterContext.translateBy(x: originX, y: originY)
                         painterContext.scaleBy(x: scale, y: scale)
-                        RoomPainter(theme: theme, curtainPhase: curtainPhase)
+                        RoomPainter(
+                            theme: theme,
+                            curtainPhase: curtainPhase,
+                            plantStage: status.summary.nestPlantStage
+                        )
                             .draw(in: &painterContext)
                     }
 
@@ -388,6 +392,8 @@ private struct RoomPainter {
     let theme: JoeyTheme
     /// Gentle curtain sway in design points; 0 when Reduce Motion is on.
     var curtainPhase: CGFloat = 0
+    /// Irreversible pot growth from lifetime completed breaks.
+    var plantStage: PlantGrowthStage = .seed
 
     func draw(in context: inout GraphicsContext) {
         drawShell(&context)
@@ -696,6 +702,90 @@ private struct RoomPainter {
         pot.closeSubpath()
         context.fill(pot, with: .color(theme.roomPot))
 
+        // Soil lip — always present so empty and growing pots share one vessel.
+        fillEllipse(
+            &context,
+            center: CGPoint(x: 120, y: 502),
+            rx: 14,
+            ry: 5,
+            color: theme.roomSill
+        )
+
+        switch plantStage {
+        case .seed:
+            drawPlantSeed(&context)
+        case .sprout:
+            drawPlantSprout(&context, growth: 1)
+        case .young:
+            drawPlantSprout(&context, growth: 1.32)
+        case .full:
+            drawPlantFull(&context)
+        }
+    }
+
+    private func drawPlantSeed(_ context: inout GraphicsContext) {
+        context.drawLayer { seed in
+            seed.translateBy(x: 120, y: 492)
+            seed.rotate(by: .degrees(-24))
+            seed.fill(
+                Path(ellipseIn: CGRect(x: -5.5, y: -8.5, width: 11, height: 17)),
+                with: .color(theme.apricotInk.opacity(0.9))
+            )
+            seed.fill(
+                Path(ellipseIn: CGRect(x: -2, y: -5, width: 4, height: 7)),
+                with: .color(theme.apricot.opacity(0.6))
+            )
+        }
+    }
+
+    /// Young nest sprout scale — fixed ceiling, not derived from lifetime breaks.
+    private static let youngSproutGrowth: CGFloat = 1.32
+
+    private func drawPlantSprout(_ context: inout GraphicsContext, growth: CGFloat) {
+        let clamped = min(max(growth, 1), Self.youngSproutGrowth)
+        context.drawLayer { plant in
+            plant.translateBy(x: 120, y: 500)
+            plant.scaleBy(x: 1 + (clamped - 1) * 0.12, y: clamped)
+            plant.translateBy(x: -120, y: -500)
+
+            var stem = Path()
+            stem.move(to: CGPoint(x: 120, y: 500))
+            stem.addCurve(
+                to: CGPoint(x: 125, y: 436),
+                control1: CGPoint(x: 120, y: 474),
+                control2: CGPoint(x: 123, y: 452)
+            )
+            plant.stroke(
+                stem,
+                with: .color(theme.roomStem),
+                style: StrokeStyle(lineWidth: 3, lineCap: .round)
+            )
+            plant.drawLayer { leaf in
+                leaf.translateBy(x: 134, y: 448)
+                leaf.rotate(by: .degrees(28))
+                leaf.fill(
+                    Path(ellipseIn: CGRect(x: -8, y: -13, width: 16, height: 26)),
+                    with: .color(theme.roomLeaf)
+                )
+            }
+            plant.drawLayer { leaf in
+                leaf.translateBy(x: 108, y: 456)
+                leaf.rotate(by: .degrees(-30))
+                leaf.fill(
+                    Path(ellipseIn: CGRect(x: -7, y: -11, width: 14, height: 22)),
+                    with: .color(theme.roomLeaf.opacity(0.8))
+                )
+            }
+            plant.fill(
+                Path(ellipseIn: CGRect(x: 113, y: 424, width: 14, height: 20)),
+                with: .color(theme.roomLeaf)
+            )
+        }
+    }
+
+    /// Layout ceiling for nest growth — identical footprint to the pre-growth pot.
+    /// Must not be scaled up; foliage stays below the clock (centre 250,140).
+    private func drawPlantFull(_ context: inout GraphicsContext) {
         var stems = Path()
         stems.move(to: CGPoint(x: 120, y: 500))
         stems.addCurve(
