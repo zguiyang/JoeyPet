@@ -453,7 +453,8 @@ Rules:
 
 ### 10.2 Rest invitation
 
-- Joey stays in `look` (attentive). Copy and actions live on a compact floating paper note — not on a handheld wooden sign.
+- **Default:** Joey stays in `look` (attentive). Copy and actions live on a compact floating paper note — not on a handheld wooden sign.
+- **Optional fullscreen** (Settings「全屏邀请」, default off): after the rest cue and Joey’s look beat (~0.35 s), a soft veil covers Joey’s current display (not every monitor). Same actions as the card; accepting keeps the same stage for recovery. Do Not Disturb and quiet hours still suppress the whole invite — no veil. Visual target: [`docs/reference/joeypet-fullscreen-rest-v1.html`](docs/reference/joeypet-fullscreen-rest-v1.html).
 - The card anchors beside Joey (left or right by free space; prefer the side toward screen centre), at about shoulder height — not floating in the middle of the screen. Desktop ≈ **236** wide (≈1.4× Joey), nest ≈ **200**; radius 15 / 13; padding ~14. A small caret on the Joey-facing edge makes the note feel attached to the pet. No clay tape.
 - Title only (no helper subtitle). Actions are a **right-aligned compact row**: quiet text chips + a small sage primary with **square soft corners** (radius 8), not full-bleed pills.
 
@@ -555,6 +556,7 @@ Native, quieter, more functional than the room. No illustration, no hero copy, n
 | 通用 | 安静时段 | Time-range field: two editable halves, centre dash, double-click selects all | 时段内不邀请 |
 | 通用 | 背景音 | Menu-style chooser：无背景音 + catalog beds；每条有小喇叭试听 | 陪伴中播放 |
 | 通用 | 提示音 | Menu-style chooser：无提示音 + catalog cues；每条有小喇叭试听 | 开始用所选；休息固定木风铃；关则皆静音 |
+| 通用 | 全屏邀请 | Switch（默认关） | 到点盖住 Joey 所在屏；勿扰 / 安静时段不出现 |
 | 通用 | 外观 | Segmented 系统 / 明亮 / 黑夜 | （无副标题；默认系统，跟随 macOS） |
 | 宠物 | 在桌面显示 Joey | Switch | （无副标题） |
 | 宠物 | 显示位置 | Segmented 右下角 / 左下角 | （无副标题） |

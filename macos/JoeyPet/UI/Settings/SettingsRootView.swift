@@ -164,6 +164,13 @@ struct SettingsRootView: View {
                     .accessibilityLabel("提示音")
                 }
 
+                SettingsRow("全屏邀请", subtitle: "到点盖住当前屏幕") {
+                    JoeySwitch(
+                        isOn: $settings.usesFullscreenRestInvite,
+                        label: "全屏邀请"
+                    )
+                }
+
                 SettingsRow("外观") {
                     JoeySegmentedControl(
                         titles: JoeyAppearance.allCases.map(\.title),
