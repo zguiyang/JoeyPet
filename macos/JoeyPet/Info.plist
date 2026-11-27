@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>SUFeedURL</key>
+	<string>https://github.com/zguiyang/JoeyPet/releases/latest/download/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>2u3gxRWRljI1GOH0Z9HL7nQcFkAOsvSvLGb68PhdZvs=</string>
+	<key>SUEnableAutomaticChecks</key>
+	<false/>
+	<key>SUAutomaticallyUpdate</key>
+	<false/>
+	<key>SUScheduledCheckInterval</key>
+	<integer>0</integer>
+</dict>
+</plist>
