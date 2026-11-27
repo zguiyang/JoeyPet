@@ -52,3 +52,8 @@ docs/
 
 # Local release packaging output (upload via GitHub Releases)
 dist/
+
+# Sparkle EdDSA private key + local release helper (public key lives in Info.plist)
+macos/signing/
+macos/scripts/sign_sparkle_update.sh
+

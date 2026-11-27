@@ -26,7 +26,7 @@ Read [`开发交接文档.md`](开发交接文档.md), [`V0_FEATURE_SCOPE.md`](V
 
 Swift, SwiftUI, AppKit, SpriteKit, Swift Concurrency, Apple frameworks first, Foundation, UserDefaults / `@AppStorage`, OSLog / `Logger`, SPM, Swift Testing (preferred).
 
-**V1 runtime third-party dependencies = 0.**
+**Runtime third-party dependencies:** none, except **Sparkle** (`macos/Vendor/Sparkle/`, ADR 014) for GitHub Release in-app updates. Do not add other third-party libraries without a new ADR.
 
 ## Forbidden (do not introduce)
 

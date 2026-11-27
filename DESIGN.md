@@ -558,7 +558,7 @@ Native, quieter, more functional than the room. No illustration, no hero copy, n
 | 通用 | 外观 | Segmented 系统 / 明亮 / 黑夜 | （无副标题；默认系统，跟随 macOS） |
 | 宠物 | 在桌面显示 Joey | Switch | （无副标题） |
 | 宠物 | 显示位置 | Segmented 右下角 / 左下角 | （无副标题） |
-| 关于 | 版本 · 反馈 · 声音致谢 | 反馈 → 发邮件（优先系统「邮件」） | 副标题显示邮箱；打不开时复制地址 |
+| 关于 | 检查更新 · 反馈 · 声音致谢 | 检查更新：按钮随状态变（检查更新 / 检查中… / 更新 / 重试）；同行显示当前版本；行内状态 `已是最新` / `可更新到 x.y.z` / `检查失败`（不弹「已是最新」系统窗）。有新版本点「更新」走 Sparkle 下载/重启窗。反馈 → 发邮件（优先系统「邮件」） | 副标题：更新状态或反馈邮箱；打不开邮件时复制地址 |
 
 - Each row gets at most one incidental line under the title. Do not stack a subtitle and a second note layer. Omit the subtitle when the control already states the fact.
 
