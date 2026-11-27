@@ -34,10 +34,3 @@ export JOEYPET_DEVELOPMENT_TEAM=YOUR_TEAM_ID
 ```
 
 This builds into `macos/.derived-data/joeypet-dev` and installs **JoeyPet Dev** into `~/Applications`.
-
-## Related docs
-
-- [V0 feature scope](../V0_FEATURE_SCOPE.md)
-- [Design contract](../DESIGN.md)
-- [Development workflow](../docs/development.md)
-- [Pet runtime](../docs/pet-runtime.md)

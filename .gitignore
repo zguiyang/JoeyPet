@@ -37,18 +37,19 @@ macos/scripts/output/
 __pycache__/
 *.py[cod]
 
-# Local agent / build tooling (machine-specific)
+# Local agent / build tooling (machine-specific; keep local only)
+.agents/
 .mobilebuildmcp/
 skills-lock.json
+AGENTS.md
 
-# Locally installed agent skills (repository-owned skill: joeypet-macos)
-.agents/skills/**
-!.agents/skills/joeypet-macos/
-!.agents/skills/joeypet-macos/**
+# Local product / handoff docs (not part of the public app tree)
+DESIGN.md
+V0_FEATURE_SCOPE.md
+开发交接文档.md
 
 # Local workspace build data (QA scripts use workspace-relative DerivedData)
 .derived-data/
 
 # Local release packaging output (upload via GitHub Releases)
 dist/
-
