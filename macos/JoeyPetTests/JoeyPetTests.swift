@@ -1578,6 +1578,13 @@ struct PetDomainTests {
                 to: start.addingTimeInterval(-5)
             ) == "00:00"
         )
+        #expect(CompanionTimeText.menuBarTitle(sessionStartedAt: nil, now: start) == nil)
+        #expect(
+            CompanionTimeText.menuBarTitle(
+                sessionStartedAt: start,
+                now: start.addingTimeInterval(135)
+            ) == "02:15"
+        )
     }
 }
 

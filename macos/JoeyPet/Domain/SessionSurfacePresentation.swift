@@ -28,11 +28,17 @@ struct SessionSurfacePresentation: Equatable, Sendable {
     }
 }
 
-/// Session clock text used by the desktop chip and the nest chip.
+/// Session clock text used by the desktop chip, nest chip, and menu bar.
 enum CompanionTimeText {
     /// `mm:ss`, with minutes growing past 99 instead of wrapping.
     static func elapsedText(from start: Date, to now: Date) -> String {
         let total = max(0, Int(now.timeIntervalSince(start)))
         return String(format: "%02d:%02d", total / 60, total % 60)
+    }
+
+    /// Condensed menu-bar title beside the Joey icon; `nil` when idle.
+    static func menuBarTitle(sessionStartedAt: Date?, now: Date) -> String? {
+        guard let sessionStartedAt else { return nil }
+        return elapsedText(from: sessionStartedAt, to: now)
     }
 }
