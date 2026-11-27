@@ -4,6 +4,16 @@
 
 JoeyPet is a native macOS desktop pet. Joey lives quietly on your desktop, keeps you company while you work, and gently invites short breaks when it’s time to rest.
 
+<p align="center">
+  <img src="assets/readme/nest.png" alt="JoeyPet nest — companionship session" width="720" />
+</p>
+
+<p align="center">
+  <img src="assets/readme/desktop-joey.png" alt="Joey on the desktop" height="180" />
+  &nbsp;&nbsp;&nbsp;
+  <img src="assets/readme/settings.png" alt="JoeyPet settings" width="420" />
+</p>
+
 ## Installation
 
 **Requires** macOS 14 or later.

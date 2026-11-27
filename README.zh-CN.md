@@ -4,6 +4,16 @@
 
 JoeyPet 是一款原生 macOS 桌面宠物。Joey 安静地生活在桌面上，陪你工作，并在到点时温和地邀请你短暂休息。
 
+<p align="center">
+  <img src="assets/readme/nest.png" alt="JoeyPet 小窝 — 陪伴中" width="720" />
+</p>
+
+<p align="center">
+  <img src="assets/readme/desktop-joey.png" alt="桌面上的 Joey" height="180" />
+  &nbsp;&nbsp;&nbsp;
+  <img src="assets/readme/settings.png" alt="JoeyPet 设置" width="420" />
+</p>
+
 ## 安装
 
 **系统要求**：macOS 14 或更高。
