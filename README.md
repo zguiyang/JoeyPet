@@ -55,3 +55,11 @@ Then open JoeyPet normally. If the app is not in Applications, replace the path 
 - [ ] Custom pet models / appearances
 - [ ] Custom cue / ambient sounds
 - [ ] AI companionship
+
+## License
+
+JoeyPet is licensed under the [PolyForm Noncommercial License 1.0.0](./LICENSE).
+
+- Personal / noncommercial use: free
+- Redistribution and modification: allowed if you keep the copyright notice and license
+- Commercial use: requires a paid authorization — contact [zhaoguiyang18@outlook.com](mailto:zhaoguiyang18@outlook.com)

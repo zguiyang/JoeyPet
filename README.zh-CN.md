@@ -55,3 +55,11 @@ xattr -cr /Applications/JoeyPet.app
 - [ ] 自定义宠物形象 / 模型
 - [ ] 自定义提示音 / 环境音
 - [ ] AI 陪伴
+
+## 许可证
+
+JoeyPet 采用 [PolyForm Noncommercial License 1.0.0](./LICENSE)（非商业许可）。
+
+- 个人 / 非商业使用：免费
+- 二次分发与修改：可以，需保留著作权声明与许可证
+- 商业使用：需另行付费授权 — 联系 [zhaoguiyang18@outlook.com](mailto:zhaoguiyang18@outlook.com)
