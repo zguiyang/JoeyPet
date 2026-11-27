@@ -138,7 +138,7 @@
       "file": "Cues/cue_wooden_chime_breeze.mp3",
       "license": "CC0",
       "loop": false,
-      "notes": "Trim to a single 0.8–2s strike before shipping playback."
+      "notes": "Trimmed ~1.7s rest-invite cue; also selectable for session start."
     }
   ]
 }
