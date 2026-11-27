@@ -408,8 +408,8 @@ Panels, cards, and menus keep the 300–420 ms UI timing. Do not run the pose th
 
 A single warm room, 1080 × 680: ivory wall, warm wood floor, one window with hills, a wall clock, a framed picture (hover opens 节奏回顾), a potted plant, a woven nest with a sage cushion, and a small desk with a notebook, mug, and a tiny pot.
 
-- **Information lives in objects:** clock = next invitation, notebook = today's companionship time, plant = today's completed breaks.
-- **Growth is additive and non-regressive in 回顾:** completed breaks feed the week garden (seed → sprout → tree). The nest itself does not accumulate leaves.
+- **Information lives in objects:** clock = next invitation, notebook = today's companionship time, plant label = today's completed breaks.
+- **Growth is additive and non-regressive:** both surfaces use seed → sprout → young → full with **hard visual ceilings** (counters may rise; art does not). Nest pot (lifetime): 0 / 1 / 5 / 15+ → full uses the original static pot footprint (foliage top ≈ y 366, pot x ≈ 96…146; never covers the clock at 250,140). Week garden (per day): 0 / 1 / 3 / 5+ → saturated tree at most 1.18× base canopy, clamped inside the 128 pt day column; no continuous scale from raw break counts. No leaf piles.
 - No levels, XP, counters on the wall, trophy shelf, or scoreboard.
 - Prop colours use the `room-*` token family (wall, floor, frame, sky, hill, nest, cushion, desk, paper, mug, leaf), so light and dusk swap in one place.
 
@@ -490,7 +490,7 @@ Rules:
 ```
 
 - Progress is honest: a real 30 s countdown drives the ring. No confetti, no score, no "achievement".
-- Completing it increments today's break count and returns Joey to `happy` for ~2.6 s; the plant label updates — no completion toast.
+- Completing it increments today's break count and lifetime growth, returns Joey to `happy` for ~2.6 s; the plant label and nest pot stage update — no completion toast.
 - Skipping exits silently. The product never claims a break was detected.
 
 ### 10.4 Nest home
@@ -529,7 +529,7 @@ The main window, and it should feel like entering Joey's home.
 
 A garden inside the same window, opened from the wall frame.
 
-- A small path across seven days. Every day leaves something visible: 0 breaks shows a seed in the soil, 1 break a sprout, 2 a taller sprout, 3+ a small tree. No bars, no axes, no percentages.
+- A small path across seven days. Every day leaves something visible: 0 seed, 1–2 sprout, 3–4 taller sprout, 5+ a small tree (hard ceiling, slightly larger than the old tree, never unbounded). No bars, no axes, no percentages.
 - Copy (388 wide, top-left, directly on the garden): date range `11月16日 – 11月22日`, headline `这周一起休息 6 次`, sub `今天陪了 2 小时 10 分 · 周三没有记录` (period-free short phrases). No card, panel, border or shadow behind this text.
 - Empty week (0 breaks): headline `这一周还没有一起休息过` — never lead with `0 次`. Sub may stay empty (garden seeds carry the empty days) or only state today's companionship if any.
 - Numbers are facts, not scores. Never say "only", "missed", "failed", or "keep it up".
@@ -638,7 +638,7 @@ Rules:
 | Invitation deferred | Invite card dismisses; clock shows `HH:mm 再问你一次`; schedule one later invitation, no toast, no repeat nagging |
 | Entered do-not-disturb | Invite card dismisses; clock / chip show `勿扰中`; no toast; no further invitations until the user turns it off |
 | Recovery running | Real countdown; no skip penalty |
-| Recovery completed | Break count +1, Joey `happy` ~2.6 s; plant label updates; no toast |
+| Recovery completed | Break count +1, lifetime growth +1, Joey `happy` ~2.6 s; plant label + nest pot stage update; no toast |
 | Recovery skipped | Return to desktop silently; count unchanged |
 | Hidden Joey | Pet invisible but rhythm continues; an invitation surfaces him for at most 60 s, then he returns to hidden |
 | Quiet hours | Enter ends any session, then `yawn` → `sleep`; exit with `yawn` → day pose; no invitations while alone; a session started inside quiet keeps rhythm invites; breath only once asleep |
@@ -848,5 +848,6 @@ Git history and the archive branch explain why they were replaced.
 | 2026-11-25 | Settings feedback uses mailto (no local draft / no backend). |
 | 2026-11-25 | Copy pass: nest session clock lines; empty-week headline; settings「陪伴」; toast length exception; invite helper is tone-only (not on card); HTML reference synced. |
 | 2026-11-25 | Copy restraint pass: drop product-prefix settings title, pane blurb, redundant subtitles, ring/recovery fluff, snooze/DND toasts; shorten completion toast and nest clock lines. |
+| 2026-11-27 | Nest + garden growth slowed with hard ceilings (nest lifetime 0/1/5/15; garden day 0/1/3/5; tree ≤1.18×); label still today's count; no leaves. |
 | 2026-11-25 | §11.1 Copy restraint hard rules (delete-first, no context echo, state beats toast, native short words); checklist + anti-patterns updated. |
 | 2026-11-25 | Copy restraint round 2: drop desk daypart welcome, painted frame「回顾」, home floating title, recovery breath line, lyric clock fallback; period-free reflection / greeting. |

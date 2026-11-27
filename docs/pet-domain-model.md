@@ -334,6 +334,7 @@ nextDue  = lastInvitationClosedAt + effectiveGap
 | `todayBreaks` | Int | 当日休息次数 |
 | `weekStartKey` | String | 本周周一的 `yyyy-MM-dd` |
 | `weekBreakCounts` | [Int] | 7 天休息次数 |
+| `lifetimeBreaks` | Int | 累计完成休息次数；跨日跨周不清零；驱动小窝盆栽档位 |
 | `quietStartMinutes` | Int | 默认 1320（22:00） |
 | `quietEndMinutes` | Int | 默认 480（08:00） |
 | `rhythmMinutes` | Int | 15…180（快捷预设 45 / 60 / 90） |
@@ -343,7 +344,9 @@ nextDue  = lastInvitationClosedAt + effectiveGap
 
 - 会话在 App 退出时结束；`sessionStartedAt`、`snoozeUsedThisSession`、`inviteShownAt` 只存在内存。
 - 勿扰、安静、上次邀请关闭时间、每日统计跨启动保留。
-- 完成一次休息：`todayBreaks +1`、`weekBreakCounts` 当日 +1。
+- 完成一次休息：`todayBreaks +1`、`weekBreakCounts` 当日 +1、`lifetimeBreaks +1`。
+- 小窝盆栽档位（lifetime）：0 seed / ≥1 sprout / ≥5 young / ≥15 full（`NestPlantStage`）；节奏回顾每日列：0 seed / ≥1 sprout / ≥3 young / ≥5 full（`GardenDayPlantStage`）。
+- **视觉硬顶：** 计数可继续加，绘制停在 `.full`。小窝满株＝成长前盆栽占位；回顾满株＝基树 ×≤1.18（夹在 128 pt 日列内），禁止用原始次数做连续缩放。
 - 跳过/关闭：不扣次数、不惩罚。
 - 会话进行中每分钟把当日陪伴秒数写入 store；会话结束/退出时再写一次，避免崩溃丢失整天数据。
 - 跨午夜会话：当日陪伴时长按 `[sessionStartedAt, min(now, 当日结束)]` 与当日的交集计算，不靠午夜定时器累加。
@@ -593,3 +596,4 @@ P1 与 P2 可并行；P3 必须等两者完成。每个 PR 保持可构建、可
 | 2026-11-23 | P8 回退：贴边停靠、收起与 `peek` 暂缓接入 V0。移除 `dockChanged`、`isDocked`、镜像渲染、停靠几何与 manifest `docking`；拖动只保留释放位置持久化。`step` 保留。 |
 | 2026-11-25 | 移除窝内叶子堆积与 `carry` / 叼叶子；休息完成后仅 `happy` + 计数，无叶子 toast。 |
 | 2026-11-26 | 忘关收场：进入安静结束会话；安静内可开始并仍邀请；可见邀请 5 分钟软关闭；恢复放弃/冻结过期不计数；6 小时或长离开归来无声结束。 |
+| 2026-11-27 | 轻成长：lifetime 盆栽 + 回顾日列放慢台阶并硬顶（nest 15 / garden day 5；树 ≤1.18×）。 |
