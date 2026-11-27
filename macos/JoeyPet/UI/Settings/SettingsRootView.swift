@@ -3,6 +3,7 @@ import SwiftUI
 
 struct SettingsRootView: View {
     @Bindable var settings: AppSettings
+    @Bindable var updateService: JoeyUpdateService
     /// Clears the traffic-light band so the sidebar can run full-height.
     var topInset: CGFloat = 0
     /// Only wired in Debug; Release builds never show the Debug section.
@@ -227,11 +228,25 @@ struct SettingsRootView: View {
     private var aboutPane: some View {
         SettingsPane(title: "关于") {
             SettingsRowList {
-                SettingsRow("版本", subtitle: "") {
-                    Text(appVersion)
-                        .font(.system(size: 13))
-                        .monospacedDigit()
-                        .foregroundStyle(theme.ink2)
+                SettingsRow(
+                    "检查更新",
+                    subtitle: JoeyUpdatePresentation.statusText(updateService.phase) ?? ""
+                ) {
+                    HStack(spacing: 10) {
+                        Text(appVersion)
+                            .font(.system(size: 13))
+                            .monospacedDigit()
+                            .foregroundStyle(theme.ink2)
+                            .accessibilityLabel("当前版本 \(appVersion)")
+
+                        SettingsSmallButton(
+                            title: JoeyUpdatePresentation.buttonTitle(updateService.phase)
+                        ) {
+                            updateService.checkForUpdates()
+                        }
+                        .disabled(!JoeyUpdatePresentation.isButtonEnabled(updateService.phase))
+                        .accessibilityLabel(JoeyUpdatePresentation.buttonTitle(updateService.phase))
+                    }
                 }
 
                 SettingsRow("反馈", subtitle: FeedbackMail.address) {

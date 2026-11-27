@@ -48,6 +48,7 @@ struct NestRootView: View {
     @Bindable var settings: AppSettings
     @Bindable var navigation: NestNavigation
     var status: CompanionStatus
+    var updateService: JoeyUpdateService
     var topChromeHeight: CGFloat = 40
     let onPrimaryAction: () -> Void
     let onGreetPet: () -> Void
@@ -136,6 +137,7 @@ struct NestRootView: View {
         ZStack(alignment: .top) {
             SettingsRootView(
                 settings: settings,
+                updateService: updateService,
                 topInset: topChromeHeight,
                 onDebugAction: onDebugAction
             )

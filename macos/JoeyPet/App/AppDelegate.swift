@@ -6,6 +6,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private let settings = AppSettings()
     private let companionStatus = CompanionStatus()
+    private let updateService = JoeyUpdateService()
     private let audioController = JoeyAudioController()
     private var panelController: PetPanelController?
     private var coordinator: PetCoordinator?
@@ -268,6 +269,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             homeWindowController = MainWindowController(
                 settings: settings,
                 status: companionStatus,
+                updateService: updateService,
                 onPrimaryAction: { [weak self] in self?.toggleCompanionship() },
                 onGreetPet: { [weak self] in self?.coordinator?.greetPet() },
                 onInviteAccept: { [weak self] in

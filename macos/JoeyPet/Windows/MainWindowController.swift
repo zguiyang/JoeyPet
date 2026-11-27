@@ -14,6 +14,7 @@ final class MainWindowController: NSWindowController {
     init(
         settings: AppSettings,
         status: CompanionStatus,
+        updateService: JoeyUpdateService,
         onPrimaryAction: @escaping () -> Void,
         onGreetPet: @escaping () -> Void,
         onInviteAccept: (() -> Void)? = nil,
@@ -42,6 +43,7 @@ final class MainWindowController: NSWindowController {
             settings: settings,
             navigation: navigation,
             status: status,
+            updateService: updateService,
             onPrimaryAction: onPrimaryAction,
             onGreetPet: onGreetPet,
             onInviteAccept: onInviteAccept,

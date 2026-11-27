@@ -79,6 +79,7 @@ struct JoeyPetTests {
         let home = MainWindowController(
             settings: settings,
             status: CompanionStatus(),
+            updateService: JoeyUpdateService(),
             onPrimaryAction: {},
             onGreetPet: {}
         )
@@ -1585,6 +1586,24 @@ struct PetDomainTests {
                 now: start.addingTimeInterval(135)
             ) == "02:15"
         )
+    }
+
+    @Test func updatePresentationCopyMatchesAboutStates() {
+        #expect(JoeyUpdatePresentation.statusText(.idle) == nil)
+        #expect(JoeyUpdatePresentation.statusText(.checking) == nil)
+        #expect(JoeyUpdatePresentation.statusText(.upToDate) == "已是最新")
+        #expect(JoeyUpdatePresentation.statusText(.available(version: "0.2.0")) == "可更新到 0.2.0")
+        #expect(JoeyUpdatePresentation.statusText(.failed) == "检查失败")
+
+        #expect(JoeyUpdatePresentation.buttonTitle(.idle) == "检查更新")
+        #expect(JoeyUpdatePresentation.buttonTitle(.checking) == "检查中…")
+        #expect(JoeyUpdatePresentation.buttonTitle(.upToDate) == "检查更新")
+        #expect(JoeyUpdatePresentation.buttonTitle(.available(version: "0.2.0")) == "更新")
+        #expect(JoeyUpdatePresentation.buttonTitle(.failed) == "重试")
+
+        #expect(JoeyUpdatePresentation.isButtonEnabled(.idle))
+        #expect(!JoeyUpdatePresentation.isButtonEnabled(.checking))
+        #expect(JoeyUpdatePresentation.isButtonEnabled(.available(version: "0.2.0")))
     }
 }
 
