@@ -71,7 +71,8 @@ final class PetRuntime {
         CompanionSummary(
             todayCompanionship: TimeInterval(persisted.todayCompanionshipSeconds),
             todayBreaks: persisted.todayBreaks,
-            weekBreakCounts: persisted.weekBreakCounts
+            weekBreakCounts: persisted.weekBreakCounts,
+            lifetimeBreaks: persisted.lifetimeBreaks
         )
     }
 
@@ -466,6 +467,7 @@ final class PetRuntime {
     private func recordCompletedBreak(at date: Date) {
         var state = persisted.normalized(now: date, calendar: calendar)
         state.todayBreaks += 1
+        state.lifetimeBreaks += 1
         let index = PetDayKey.weekdayIndex(for: date, calendar: calendar)
         if state.weekBreakCounts.indices.contains(index) {
             state.weekBreakCounts[index] += 1

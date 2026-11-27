@@ -454,6 +454,8 @@ struct PetPersistedState: Equatable, Sendable {
     var todayBreaks: Int
     var weekStartKey: String
     var weekBreakCounts: [Int]
+    /// Completed short breaks across all days; never reset by day or week rollover.
+    var lifetimeBreaks: Int
     var quietWindow: QuietWindow
     var rhythmMinutes: Int
     var showsDesktopPet: Bool
@@ -470,6 +472,7 @@ struct PetPersistedState: Equatable, Sendable {
             todayBreaks: 0,
             weekStartKey: PetDayKey.weekStartKey(for: now, calendar: calendar),
             weekBreakCounts: Array(repeating: 0, count: 7),
+            lifetimeBreaks: 0,
             quietWindow: QuietWindow(),
             rhythmMinutes: 45,
             showsDesktopPet: false
@@ -494,6 +497,7 @@ struct PetPersistedState: Equatable, Sendable {
         copy.weekBreakCounts = copy.weekBreakCounts.map { max(0, $0) }
         copy.todayCompanionshipSeconds = max(0, copy.todayCompanionshipSeconds)
         copy.todayBreaks = max(0, copy.todayBreaks)
+        copy.lifetimeBreaks = max(0, copy.lifetimeBreaks)
 
         copy.rhythmMinutes = InvitationPolicy.clampedRhythmMinutes(copy.rhythmMinutes)
         if !(0...1439).contains(copy.quietWindow.startMinutes) {
@@ -552,6 +556,7 @@ final class UserDefaultsPetSessionStore: PetSessionStoring {
         static let todayBreaks = "joey.todayBreaks"
         static let weekStartKey = "joey.weekStartKey"
         static let weekBreakCounts = "joey.weekBreakCounts"
+        static let lifetimeBreaks = "joey.lifetimeBreaks"
         static let showsDesktopPet = PetPreferences.showsDesktopPetKey
     }
 
@@ -566,6 +571,16 @@ final class UserDefaultsPetSessionStore: PetSessionStoring {
         let quietEnd = defaults.object(forKey: Key.quietEnd) as? Int ?? 8 * 60
         let rhythm = defaults.object(forKey: Key.rhythm) as? Int ?? 45
 
+        let weekBreaks = defaults.array(forKey: Key.weekBreakCounts) as? [Int]
+            ?? Array(repeating: 0, count: 7)
+        // First launch after this field: seed from visible week so testers keep growth.
+        let lifetime: Int
+        if defaults.object(forKey: Key.lifetimeBreaks) == nil {
+            lifetime = weekBreaks.reduce(0, +)
+        } else {
+            lifetime = defaults.integer(forKey: Key.lifetimeBreaks)
+        }
+
         let state = PetPersistedState(
             isDoNotDisturb: defaults.object(forKey: Key.doNotDisturb) as? Bool ?? false,
             lastInvitationClosedAt: date(forKey: Key.lastInvitationClosedAt),
@@ -573,8 +588,8 @@ final class UserDefaultsPetSessionStore: PetSessionStoring {
             todayCompanionshipSeconds: defaults.integer(forKey: Key.todayCompanionshipSeconds),
             todayBreaks: defaults.integer(forKey: Key.todayBreaks),
             weekStartKey: defaults.string(forKey: Key.weekStartKey) ?? "",
-            weekBreakCounts: defaults.array(forKey: Key.weekBreakCounts) as? [Int]
-                ?? Array(repeating: 0, count: 7),
+            weekBreakCounts: weekBreaks,
+            lifetimeBreaks: lifetime,
             quietWindow: QuietWindow(startMinutes: quietStart, endMinutes: quietEnd),
             rhythmMinutes: rhythm,
             showsDesktopPet: PetPreferences.showsDesktopPet(defaults: defaults)
@@ -590,6 +605,7 @@ final class UserDefaultsPetSessionStore: PetSessionStoring {
         defaults.set(state.todayBreaks, forKey: Key.todayBreaks)
         defaults.set(state.weekStartKey, forKey: Key.weekStartKey)
         defaults.set(state.weekBreakCounts, forKey: Key.weekBreakCounts)
+        defaults.set(state.lifetimeBreaks, forKey: Key.lifetimeBreaks)
         defaults.set(state.quietWindow.startMinutes, forKey: Key.quietStart)
         defaults.set(state.quietWindow.endMinutes, forKey: Key.quietEnd)
         defaults.set(state.rhythmMinutes, forKey: Key.rhythm)

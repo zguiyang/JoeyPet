@@ -1174,6 +1174,7 @@ struct PetDomainTests {
         state.todayBreaks = 5
         state.weekStartKey = "1999-01-01"
         state.weekBreakCounts = [9, 9, 9, 9, 9, 9, 9]
+        state.lifetimeBreaks = 12
         state.quietWindow = QuietWindow(startMinutes: 23 * 60, endMinutes: 7 * 60)
         state.rhythmMinutes = 60
         state.showsDesktopPet = true
@@ -1190,6 +1191,53 @@ struct PetDomainTests {
         #expect(loaded.todayBreaks == 0)
         #expect(loaded.weekStartKey == PetDayKey.weekStartKey(for: now, calendar: calendar))
         #expect(loaded.weekBreakCounts == Array(repeating: 0, count: 7))
+        #expect(loaded.lifetimeBreaks == 12)
+    }
+
+    @Test func nestPlantStageFollowsLifetimeBreaksSlowly() {
+        #expect(NestPlantStage.sproutAtBreaks == 1)
+        #expect(NestPlantStage.youngAtBreaks == 5)
+        #expect(NestPlantStage.saturatedAtBreaks == 15)
+        #expect(NestPlantStage.from(lifetimeBreaks: 0) == .seed)
+        #expect(NestPlantStage.from(lifetimeBreaks: 1) == .sprout)
+        #expect(NestPlantStage.from(lifetimeBreaks: 4) == .sprout)
+        #expect(NestPlantStage.from(lifetimeBreaks: 5) == .young)
+        #expect(NestPlantStage.from(lifetimeBreaks: 14) == .young)
+        #expect(NestPlantStage.from(lifetimeBreaks: NestPlantStage.saturatedAtBreaks) == .full)
+        // Visual size saturates; counters may keep climbing for months.
+        #expect(NestPlantStage.from(lifetimeBreaks: 99) == .full)
+        #expect(NestPlantStage.from(lifetimeBreaks: Int.max) == .full)
+        #expect(NestPlantStage.from(lifetimeBreaks: -1) == .seed)
+    }
+
+    @Test func gardenDayPlantStageFollowsDayBreaksWithCeiling() {
+        #expect(GardenDayPlantStage.sproutAtBreaks == 1)
+        #expect(GardenDayPlantStage.youngAtBreaks == 3)
+        #expect(GardenDayPlantStage.saturatedAtBreaks == 5)
+        #expect(GardenDayPlantStage.from(dayBreaks: 0) == .seed)
+        #expect(GardenDayPlantStage.from(dayBreaks: 1) == .sprout)
+        #expect(GardenDayPlantStage.from(dayBreaks: 2) == .sprout)
+        #expect(GardenDayPlantStage.from(dayBreaks: 3) == .young)
+        #expect(GardenDayPlantStage.from(dayBreaks: 4) == .young)
+        #expect(GardenDayPlantStage.from(dayBreaks: 5) == .full)
+        #expect(GardenDayPlantStage.from(dayBreaks: 99) == .full)
+        #expect(GardenDayPlantStage.from(dayBreaks: Int.max) == .full)
+    }
+
+    @Test func lifetimeBreaksSurviveDayAndWeekRollover() {
+        let calendar = testCalendar()
+        let monday = testDate(2026, 11, 23, 9, 0)
+        var state = PetPersistedState.empty(now: monday, calendar: calendar)
+        state.todayBreaks = 2
+        state.weekBreakCounts = [2, 0, 0, 0, 0, 0, 0]
+        state.lifetimeBreaks = 20
+
+        let nextWeek = testDate(2026, 11, 30, 9, 0)
+        let rolled = state.normalized(now: nextWeek, calendar: calendar)
+        #expect(rolled.todayBreaks == 0)
+        #expect(rolled.weekBreakCounts == Array(repeating: 0, count: 7))
+        #expect(rolled.lifetimeBreaks == 20)
+        #expect(NestPlantStage.from(lifetimeBreaks: rolled.lifetimeBreaks) == .full)
     }
 
     @Test func weekIndexStartsOnMonday() {
@@ -1709,6 +1757,9 @@ struct PetRuntimeTests {
         #expect(runtime.situation.companion == .complete)
         #expect(store.state.todayBreaks == 1)
         #expect(runtime.summary.todayBreaks == 1)
+        #expect(store.state.lifetimeBreaks == 1)
+        #expect(runtime.summary.lifetimeBreaks == 1)
+        #expect(runtime.summary.nestPlantStage == PlantGrowthStage.sprout)
         let index = PetDayKey.weekdayIndex(for: current, calendar: calendar)
         #expect(store.state.weekBreakCounts[index] == 1)
     }
