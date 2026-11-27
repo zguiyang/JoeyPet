@@ -2,54 +2,86 @@
 
 [简体中文](./README.zh-CN.md)
 
-A tiny desktop pet that quietly accompanies healthy work rhythms.
+A quiet desktop pet for gentler work and rest rhythms.
 
-JoeyPet is a lightweight, native desktop pet designed to live quietly on your desktop and gently invite short recovery breaks.
+JoeyPet lives on your Mac desktop, keeps you company while you work, and invites short recoveries when the time feels right. It is not a chatbot, task manager, or productivity supervisor — just a small pet that shares the day with you.
 
-JoeyPet is not an AI companion or chatbot. It focuses on a quiet desktop
-presence, gentle work-rhythm companionship and a small sense of shared growth.
+## Features
+
+- **Desktop Joey** — drag, hide, and bring him back; stays out of the way by default
+- **Work companionship** — you start a session; Joey keeps the rhythm with you
+- **Gentle rest invites** — snooze, take a break, or turn on Do Not Disturb
+- **Short recoveries** — look far, stand and blink, walk and stretch, or hydrate — copy and duration rotate each invite
+- **Shared growth** — the nest and reflection quietly change as you keep company
+- **Local-first** — no account, no cloud sync, no analytics
 
 ## Download
 
-Latest build: [GitHub Releases](https://github.com/zguiyang/JoeyPet/releases/latest)
+Latest release: [GitHub Releases](https://github.com/zguiyang/JoeyPet/releases/latest)
 
-- **Preferred:** `JoeyPet-*-macOS.dmg` — open and drag JoeyPet into Applications
-- Or: `JoeyPet-*-macOS.zip` — unzip to get `JoeyPet.app`
+| Asset | Use |
+|-------|-----|
+| `JoeyPet-*-macOS.dmg` | Open the disk image and drag JoeyPet into **Applications** |
+| `JoeyPet-*-macOS.zip` | Unzip to get `JoeyPet.app` |
 
 **Requires** macOS 14 or later.
 
 ### First launch
 
-macOS may block apps downloaded from the internet until you confirm once:
+macOS may stop the app the first time you open a download. Use either method once:
 
-1. Open the app. If macOS says it can’t be opened, dismiss that dialog.
-2. Go to **System Settings → Privacy & Security**, scroll to **Security**.
-3. When JoeyPet is listed as blocked, click **Open Anyway**, then confirm.
+**Option A — System Settings**
 
-You can also **Control-click** `JoeyPet.app` → **Open** to get the same confirmation flow.
+1. Open JoeyPet. If macOS says it can’t be opened, dismiss the dialog.
+2. Open **System Settings → Privacy & Security**.
+3. Scroll to **Security**. When JoeyPet is listed as blocked, click **Open Anyway**, then confirm.
 
-After install, open the nest to start. Desktop Joey stays hidden by default — turn on “Show Joey on Desktop” in Settings or the menu bar.
+**Option B — Terminal**
 
-## Repository Layout
+```bash
+xattr -cr /Applications/JoeyPet.app
+```
+
+If the app is not in Applications yet, use the path where you placed `JoeyPet.app`. Then open JoeyPet normally.
+
+You can also **Control-click** the app → **Open** for the same confirmation flow as Option A.
+
+### After install
+
+Open the nest to get started. Desktop Joey is hidden by default — turn on **Show Joey on Desktop** in Settings or from the menu bar.
+
+## Privacy
+
+Preferences and light stats stay on your Mac (UserDefaults). JoeyPet may use system idle time to notice when you’ve stepped away; it does not read keystrokes or mouse content. Feedback uses mailto — nothing is uploaded in the background.
+
+## Build from source
+
+```bash
+open macos/JoeyPet.xcodeproj
+```
+
+Use the **JoeyPet** scheme, **Release** configuration, destination **My Mac**.
+
+## Repository layout
 
 ```text
 macos/        macOS app (Xcode project, Swift sources, tests, platform scripts)
-docs/         shared product, design and ADR documentation
-.agents/      repository-level agent skills
+docs/         product, design, and ADR documentation
+.agents/      repository agent skills
 ```
 
 ## Documentation
 
-- [AGENTS.md](./AGENTS.md) — rules for coding agents
-- [DESIGN.md](./DESIGN.md) — V0 native UI/UX design contract
-- [V0 UI reference](./docs/reference/joeypet-ui-v0.html) — frozen visual target
-- [V0_FEATURE_SCOPE.md](./V0_FEATURE_SCOPE.md) — current test-version product scope
-- [开发交接文档.md](./开发交接文档.md) — current handoff and development boundary
+- [AGENTS.md](./AGENTS.md) — agent development rules
+- [DESIGN.md](./DESIGN.md) — native UI/UX design contract
+- [UI reference](./docs/reference/joeypet-ui-v0.html) — frozen visual target
+- [V0_FEATURE_SCOPE.md](./V0_FEATURE_SCOPE.md) — product scope
+- [开发交接文档.md](./开发交接文档.md) — handoff notes
 
 ## Principles
 
 - Lightweight and resource-friendly
 - Native macOS experience
 - Privacy-friendly and local-first
-- Playful interaction without becoming an AI companion
+- Playful without becoming an AI companion
 - Gentle reminders without supervision or pressure
