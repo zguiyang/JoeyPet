@@ -58,6 +58,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
 
         let panel = PetPanelController(corner: settings.petCorner)
+        panel.usesFullscreenRestInvite = { [weak self] in
+            self?.settings.usesFullscreenRestInvite ?? false
+        }
         let coordinator = PetCoordinator(panelController: panel)
         coordinator.onSituationChanged = { [weak self] situation, summary in
             guard let self else { return }

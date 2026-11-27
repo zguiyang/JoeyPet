@@ -24,6 +24,12 @@ final class PetPanelController {
     /// Mirrors every reduced situation so the host can follow session state.
     var onSituationChanged: ((PetSituation) -> Void)?
 
+    /// Opt-in fullscreen rest stage (Settings). Default off.
+    var usesFullscreenRestInvite: () -> Bool {
+        get { sessionSurfaces.usesFullscreenRestInvite }
+        set { sessionSurfaces.usesFullscreenRestInvite = newValue }
+    }
+
     private var corner: PetCorner
 
     convenience init(corner: PetCorner = .bottomRight) {

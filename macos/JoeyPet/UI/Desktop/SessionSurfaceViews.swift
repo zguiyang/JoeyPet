@@ -319,3 +319,197 @@ struct JoeyToastView: View {
             .fixedSize()
     }
 }
+
+/// Opt-in full-screen rest stage (invite + recover on one veil).
+enum FullscreenRestPhase: Equatable, Sendable {
+    case invite
+    case recover
+}
+
+struct FullscreenRestStageView: View {
+    let phase: FullscreenRestPhase
+    var recipe: RecoveryRecipe = RecoveryRecipeCatalog.recipe(id: .lookFar)
+    var endsAt: Date?
+    let onAccept: () -> Void
+    let onSnooze: () -> Void
+    let onDoNotDisturb: () -> Void
+    let onDone: () -> Void
+    let onSkip: () -> Void
+
+    @Environment(\.joeyChromeTone) private var chromeTone
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var hoveredAction: StageAction?
+
+    private enum StageAction: Hashable {
+        case accept, snooze, doNotDisturb, done, skip
+    }
+
+    private var theme: JoeyTheme { JoeyTheme(chromeTone: chromeTone) }
+    private var isLight: Bool { chromeTone == .light }
+
+    var body: some View {
+        ZStack {
+            atmosphere
+            content
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .tint(theme.focus)
+    }
+
+    private var atmosphere: some View {
+        ZStack {
+            theme.windowBg
+            RadialGradient(
+                colors: [
+                    theme.sage.opacity(isLight ? 0.18 : 0.16),
+                    .clear
+                ],
+                center: UnitPoint(x: 0.5, y: 0.38),
+                startRadius: 40,
+                endRadius: 520
+            )
+            RadialGradient(
+                colors: [
+                    theme.mist.opacity(isLight ? 0.15 : 0.13),
+                    .clear
+                ],
+                center: UnitPoint(x: 0.5, y: 0.64),
+                startRadius: 20,
+                endRadius: 420
+            )
+            // Soft vignette — dusk a touch deeper.
+            RadialGradient(
+                colors: [
+                    .clear,
+                    Color.black.opacity(isLight ? 0.08 : 0.22)
+                ],
+                center: .center,
+                startRadius: 160,
+                endRadius: 780
+            )
+        }
+        .ignoresSafeArea()
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        switch phase {
+        case .invite:
+            inviteContent
+        case .recover:
+            recoverContent
+        }
+    }
+
+    private var inviteContent: some View {
+        VStack(spacing: 0) {
+            Text(recipe.inviteCopy)
+                .font(.system(size: 34, weight: .medium))
+                .lineSpacing(4)
+                .multilineTextAlignment(.center)
+                .foregroundStyle(theme.ink)
+                .frame(maxWidth: 520)
+
+            HStack(spacing: 18) {
+                quietTextButton("稍后提醒", action: .snooze, perform: onSnooze)
+                quietTextButton("进入勿扰", action: .doNotDisturb, perform: onDoNotDisturb)
+                primaryButton("休息一下", action: .accept, perform: onAccept)
+            }
+            .padding(.top, 42)
+        }
+    }
+
+    private var recoverContent: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            let ends = endsAt ?? context.date
+            let remaining = max(0, ends.timeIntervalSince(context.date))
+            let total = recipe.clampedDurationSec
+            let fraction = max(0, min(1, remaining / max(total, 1)))
+
+            VStack(spacing: 0) {
+                Text(recipe.recoveryTitle)
+                    .font(.system(size: 26, weight: .medium))
+                    .foregroundStyle(theme.ink)
+
+                Text(recipe.recoveryHint)
+                    .font(.system(size: 14))
+                    .foregroundStyle(theme.muted)
+                    .padding(.top, 8)
+
+                ZStack {
+                    Circle()
+                        .stroke(theme.panel2, lineWidth: 5)
+                    Circle()
+                        .trim(from: 0, to: fraction)
+                        .stroke(
+                            isLight ? theme.sageDeep : theme.sage,
+                            style: StrokeStyle(lineWidth: 5.5, lineCap: .round)
+                        )
+                        .rotationEffect(.degrees(-90))
+                        .animation(reduceMotion ? nil : .linear(duration: 1), value: fraction)
+                    Text(clockText(remaining))
+                        .font(.system(size: 32, weight: .medium).monospacedDigit())
+                        .foregroundStyle(theme.ink)
+                }
+                .frame(width: 196, height: 196)
+                .padding(.top, 28)
+                .padding(.bottom, 8)
+
+                HStack(spacing: 14) {
+                    primaryButton("好了", action: .done, perform: onDone, compact: true)
+                    quietTextButton("先跳过", action: .skip, perform: onSkip)
+                }
+                .padding(.top, 16)
+            }
+        }
+    }
+
+    private func primaryButton(
+        _ title: String,
+        action: StageAction,
+        perform: @escaping () -> Void,
+        compact: Bool = false
+    ) -> some View {
+        Button(action: perform) {
+            Text(title)
+                .font(.system(size: compact ? 13 : 14, weight: .semibold))
+                .foregroundStyle(theme.sageInk)
+                .padding(.horizontal, compact ? 15 : 18)
+                .frame(height: compact ? 29 : 32)
+                .background(
+                    RoundedRectangle(cornerRadius: JoeyRadius.inviteControl, style: .continuous)
+                        .fill(theme.sage)
+                        .brightness(hoveredAction == action ? 0.03 : 0)
+                )
+                .contentShape(
+                    RoundedRectangle(cornerRadius: JoeyRadius.inviteControl, style: .continuous)
+                )
+        }
+        .buttonStyle(JoeyPressButtonStyle())
+        .onHover { hoveredAction = $0 ? action : nil }
+        .accessibilityLabel(Text(title))
+    }
+
+    private func quietTextButton(
+        _ title: String,
+        action: StageAction,
+        perform: @escaping () -> Void
+    ) -> some View {
+        Button(action: perform) {
+            Text(title)
+                .font(.system(size: 14))
+                .foregroundStyle(hoveredAction == action ? theme.ink : theme.ink2)
+                .padding(.horizontal, 4)
+                .frame(height: 32)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(JoeyPressButtonStyle())
+        .onHover { hoveredAction = $0 ? action : nil }
+        .accessibilityLabel(Text(title))
+    }
+
+    private func clockText(_ remaining: TimeInterval) -> String {
+        let seconds = max(0, Int(remaining.rounded(.up)))
+        return String(format: "%02d:%02d", seconds / 60, seconds % 60)
+    }
+}

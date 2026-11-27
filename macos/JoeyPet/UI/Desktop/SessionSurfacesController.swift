@@ -15,40 +15,55 @@ final class SessionSurfacesController {
     var onEnterDoNotDisturb: (() -> Void)?
     var onFinishRecovery: (() -> Void)?
     var onSkipRecovery: (() -> Void)?
+    /// Settings opt-in; read each update so toggles apply mid-session.
+    var usesFullscreenRestInvite: () -> Bool = { false }
 
     private let petPanel: NSPanel
     private var appearance: JoeyAppearance
     private var lastSituation: PetSituation?
     private var moveObserver: NSObjectProtocol?
     private var toastTask: Task<Void, Never>?
+    private var fullscreenRevealTask: Task<Void, Never>?
+    /// After the delayed invite veil appears, keep the stage up through recover.
+    private var fullscreenStageArmed = false
 
     private let chipPanel = SurfacePanel(interactive: false)
     private let invitationPanel = SurfacePanel(interactive: true)
     private let recoveryPanel = SurfacePanel(interactive: true)
     private let toastPanel = SurfacePanel(interactive: false)
     private let greetingTipPanel = SurfacePanel(interactive: false)
+    private let fullscreenPanel = SurfacePanel(interactive: true, elevated: true)
 
     private let chipHost = NSHostingView(rootView: AnyView(EmptyView()))
     private let invitationHost = NSHostingView(rootView: AnyView(EmptyView()))
     private let recoveryHost = NSHostingView(rootView: AnyView(EmptyView()))
     private let toastHost = NSHostingView(rootView: AnyView(EmptyView()))
     private let greetingTipHost = NSHostingView(rootView: AnyView(EmptyView()))
+    private let fullscreenHost = NSHostingView(rootView: AnyView(EmptyView()))
 
     private var isGreetingTipVisible = false
+
+    /// Beat between Joey look / cue and the veil (matches design exploration).
+    private static let fullscreenInviteDelay: TimeInterval = 0.35
+    private static let fullscreenFadeDuration: TimeInterval = 0.55
 
     init(petPanel: NSPanel, appearance: JoeyAppearance) {
         self.petPanel = petPanel
         self.appearance = appearance
 
-        for panel in panels {
+        for panel in cardPanels {
             panel.appearance = appearance.nsAppearance()
             panel.hasShadow = true
         }
+        fullscreenPanel.appearance = appearance.nsAppearance()
+        fullscreenPanel.hasShadow = false
+
         invitationHost.translatesAutoresizingMaskIntoConstraints = true
         chipHost.translatesAutoresizingMaskIntoConstraints = true
         recoveryHost.translatesAutoresizingMaskIntoConstraints = true
         toastHost.translatesAutoresizingMaskIntoConstraints = true
         greetingTipHost.translatesAutoresizingMaskIntoConstraints = true
+        fullscreenHost.translatesAutoresizingMaskIntoConstraints = true
 
         chipPanel.contentView = chipHost
         invitationPanel.contentView = invitationHost
@@ -57,6 +72,7 @@ final class SessionSurfacesController {
         toastPanel.ignoresMouseEvents = true
         greetingTipPanel.contentView = greetingTipHost
         greetingTipPanel.ignoresMouseEvents = true
+        fullscreenPanel.contentView = fullscreenHost
 
         observePetPanelMoves()
     }
@@ -71,24 +87,30 @@ final class SessionSurfacesController {
         let presentation = SessionSurfacePresentation(
             situation: situation,
             previous: previous,
-            now: now
+            now: now,
+            preferFullscreenRest: usesFullscreenRestInvite()
         )
 
+        // Chip stays under the veil when fullscreen is up; still update while visible.
         if presentation.showsCompanionChip, let session = situation.session {
             setRoot(chipHost, JoeyCompanionChipView(startedAt: session.startedAt))
-            present(
-                chipPanel,
-                host: chipHost,
-                fallback: NSSize(width: 150, height: 30),
-                origin: chipOrigin,
-                duration: 0.24,
-                rise: 6
-            )
+            if !presentation.showsFullscreenStage {
+                present(
+                    chipPanel,
+                    host: chipHost,
+                    fallback: NSSize(width: 150, height: 30),
+                    origin: chipOrigin,
+                    duration: 0.24,
+                    rise: 6
+                )
+            } else {
+                dismiss(chipPanel, entrance: 0.18)
+            }
         } else {
             dismiss(chipPanel, entrance: 0.24)
         }
 
-        if presentation.showsInvitation {
+        if presentation.showsCardInvitation {
             let recipe = presentation.recipe ?? RecoveryRecipeCatalog.recipe(id: .lookFar)
             let placement = invitationPlacement(size: NSSize(width: 236, height: 120))
             setRoot(
@@ -115,7 +137,7 @@ final class SessionSurfacesController {
             dismiss(invitationPanel, entrance: 0.38)
         }
 
-        if presentation.showsRecovery, let endsAt = presentation.recoveryEndsAt {
+        if presentation.showsCardRecovery, let endsAt = presentation.recoveryEndsAt {
             let recipe = presentation.recipe ?? RecoveryRecipeCatalog.recipe(id: .lookFar)
             setRoot(
                 recoveryHost,
@@ -137,6 +159,8 @@ final class SessionSurfacesController {
         } else {
             dismiss(recoveryPanel, entrance: 0.38)
         }
+
+        updateFullscreenStage(presentation: presentation)
         // Completion: happy pose + plant break count already mark the outcome — no toast.
     }
 
@@ -156,6 +180,8 @@ final class SessionSurfacesController {
     func hideAll() {
         toastTask?.cancel()
         toastTask = nil
+        cancelFullscreenReveal()
+        fullscreenStageArmed = false
         isGreetingTipVisible = false
         for panel in panels {
             panel.orderOut(nil)
@@ -206,10 +232,104 @@ final class SessionSurfacesController {
         }
     }
 
+    // MARK: - Fullscreen stage
+
+    private func updateFullscreenStage(presentation: SessionSurfacePresentation) {
+        guard presentation.showsFullscreenStage else {
+            cancelFullscreenReveal()
+            fullscreenStageArmed = false
+            dismiss(fullscreenPanel, entrance: Self.fullscreenFadeDuration)
+            return
+        }
+
+        let recipe = presentation.recipe ?? RecoveryRecipeCatalog.recipe(id: .lookFar)
+        let phase: FullscreenRestPhase = presentation.showsFullscreenRecover ? .recover : .invite
+        setRoot(
+            fullscreenHost,
+            FullscreenRestStageView(
+                phase: phase,
+                recipe: recipe,
+                endsAt: presentation.recoveryEndsAt,
+                onAccept: { [weak self] in self?.onAcceptInvitation?() },
+                onSnooze: { [weak self] in self?.onSnooze?() },
+                onDoNotDisturb: { [weak self] in self?.onEnterDoNotDisturb?() },
+                onDone: { [weak self] in self?.onFinishRecovery?() },
+                onSkip: { [weak self] in self?.onSkipRecovery?() }
+            )
+        )
+
+        if fullscreenPanel.isVisible || fullscreenStageArmed {
+            fullscreenStageArmed = true
+            layoutFullscreenPanel()
+            if !fullscreenPanel.isVisible {
+                presentFullscreen(animated: false)
+            }
+            return
+        }
+
+        // First invite frame: let cue + look land, then fade the veil in.
+        if presentation.showsFullscreenInvite {
+            scheduleFullscreenReveal()
+        } else {
+            // Recover without a prior invite reveal (edge) — show immediately.
+            fullscreenStageArmed = true
+            presentFullscreen(animated: true)
+        }
+    }
+
+    private func scheduleFullscreenReveal() {
+        guard fullscreenRevealTask == nil else { return }
+        fullscreenRevealTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(Self.fullscreenInviteDelay))
+            guard !Task.isCancelled, let self else { return }
+            self.fullscreenRevealTask = nil
+            self.fullscreenStageArmed = true
+            self.presentFullscreen(animated: true)
+        }
+    }
+
+    private func cancelFullscreenReveal() {
+        fullscreenRevealTask?.cancel()
+        fullscreenRevealTask = nil
+    }
+
+    private func presentFullscreen(animated: Bool) {
+        layoutFullscreenPanel()
+        let reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        if fullscreenPanel.isVisible {
+            fullscreenPanel.orderFrontRegardless()
+            return
+        }
+
+        fullscreenPanel.alphaValue = (animated && !reduceMotion) ? 0 : 1
+        fullscreenPanel.orderFrontRegardless()
+
+        guard animated, !reduceMotion else {
+            fullscreenPanel.alphaValue = 1
+            return
+        }
+
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = Self.fullscreenFadeDuration
+            context.timingFunction = CAMediaTimingFunction(controlPoints: 0.22, 0.61, 0.36, 1)
+            fullscreenPanel.animator().alphaValue = 1
+        }
+    }
+
+    private func layoutFullscreenPanel() {
+        let frame = activeScreenFrame
+        fullscreenPanel.setFrame(frame, display: true)
+        fullscreenHost.frame = NSRect(origin: .zero, size: frame.size)
+    }
+
     // MARK: - Panels
 
-    private var panels: [SurfacePanel] {
+    private var cardPanels: [SurfacePanel] {
         [chipPanel, invitationPanel, recoveryPanel, toastPanel, greetingTipPanel]
+    }
+
+    private var panels: [SurfacePanel] {
+        cardPanels + [fullscreenPanel]
     }
 
     private func setRoot(_ host: NSHostingView<AnyView>, _ view: some View) {
@@ -283,10 +403,17 @@ final class SessionSurfacesController {
 
     // MARK: - Placement
 
+    private var activeScreen: NSScreen? {
+        NSScreen.screens.first { $0.frame.intersects(petPanel.frame) } ?? NSScreen.main
+    }
+
     private var activeVisibleFrame: NSRect {
-        let screen = NSScreen.screens.first { $0.visibleFrame.intersects(petPanel.frame) }
-            ?? NSScreen.main
-        return screen?.visibleFrame ?? petPanel.frame
+        activeScreen?.visibleFrame ?? petPanel.frame
+    }
+
+    /// Full display bounds (covers menu bar / Dock chrome) for the rest veil.
+    private var activeScreenFrame: NSRect {
+        activeScreen?.frame ?? petPanel.frame
     }
 
     private func clamped(_ origin: NSPoint, size: NSSize) -> NSPoint {
@@ -416,6 +543,9 @@ final class SessionSurfacesController {
             let size = recoveryPanel.frame.size
             recoveryPanel.setFrameOrigin(recoveryOrigin(size: size))
         }
+        if fullscreenPanel.isVisible {
+            layoutFullscreenPanel()
+        }
         repositionGreetingTip()
         chipPanel.invalidateShadow()
         invitationPanel.invalidateShadow()
@@ -435,7 +565,7 @@ final class SessionSurfacesController {
 private final class SurfacePanel: NSPanel {
     private let interactive: Bool
 
-    init(interactive: Bool) {
+    init(interactive: Bool, elevated: Bool = false) {
         self.interactive = interactive
         super.init(
             contentRect: NSRect(x: 0, y: 0, width: 1, height: 1),
@@ -445,7 +575,10 @@ private final class SurfacePanel: NSPanel {
         )
 
         isFloatingPanel = true
-        level = .floating
+        // Rest veil sits above Joey + session chips on the same screen.
+        level = elevated
+            ? NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.floatingWindow)) + 2)
+            : .floating
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         isOpaque = false
         backgroundColor = .clear
