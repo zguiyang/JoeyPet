@@ -34,16 +34,14 @@ Then open JoeyPet normally. If the app is not in Applications, replace the path 
 
 ## Features
 
-| Status | Feature |
-|--------|---------|
-| Done | Desktop Joey — drag, hide, show; quiet presence on the desktop |
-| Done | Start a work companionship session from the nest |
-| Done | Rest invites on your interval — take a break, snooze, or Do Not Disturb |
-| Done | Short recoveries with rotating recipes (look far / stand & blink / walk & stretch / hydrate) |
-| Done | Nest home — today’s focus time, rest count, and next invite hint |
-| Done | Light shared growth in the nest as you keep company |
-| Done | Reflection — today and recent days, without scores or rankings |
-| Done | Settings — rest interval, quiet hours, Do Not Disturb, desktop show/hide, position |
-| Todo | Custom pet models / appearances |
-| Todo | Custom cue / ambient sounds |
-| Todo | AI companionship |
+- [x] Desktop Joey — drag, hide, show; quiet presence on the desktop
+- [x] Start a work companionship session from the nest
+- [x] Rest invites on your interval — take a break, snooze, or Do Not Disturb
+- [x] Short recoveries with rotating recipes (look far / stand & blink / walk & stretch / hydrate)
+- [x] Nest home — today’s focus time, rest count, and next invite hint
+- [x] Light shared growth in the nest as you keep company
+- [x] Reflection — today and recent days, without scores or rankings
+- [x] Settings — rest interval, quiet hours, Do Not Disturb, desktop show/hide, position
+- [ ] Custom pet models / appearances
+- [ ] Custom cue / ambient sounds
+- [ ] AI companionship
