@@ -459,10 +459,12 @@ Rules:
 
 ```text
 坐久啦，
-我们一起伸个懒腰？
+看远处歇一下？          ← example; copy comes from the active recovery recipe
 
               [稍后提醒] [进入勿扰] [休息一下]
 ```
+
+- Invite copy is bound to the **same recovery recipe** as the panel that follows (look far / stand & blink / walk & stretch / hydrate). Do not hardcode a single stretch line.
 
 - The same card family appears in the nest beside Joey when invite is active.
 - Companion chip and greeting「你好」share one paper tip chrome (`JoeyPetTipView`).
@@ -471,17 +473,17 @@ Rules:
 - Only one reminder per interval; never re-prompt immediately.
 - When Joey is hidden, the card appears with him for at most 60 seconds. If it is ignored, both slip away and the invitation counts as "later" once.
 
-### 10.3 30-second recovery
+### 10.3 Short recovery (recipe-driven duration)
 
-- Calm paper panel ≈ **300** wide, radius 22, padding ~22 / 18. Always on **Joey’s screen** (same as the invite): **dead centre** of that screen’s visible frame (horizontal and vertical). Do not use `NSScreen.main` (key-window screen). Joey may demonstrate `stretch` wherever he already is; this pass does not relocate him beside the panel.
+- Calm paper panel ≈ **300** wide, radius 22, padding ~22 / 18. Always on **Joey’s screen** (same as the invite): **dead centre** of that screen’s visible frame (horizontal and vertical). Do not use `NSScreen.main` (key-window screen). Joey may demonstrate `look` (look-afar) or `stretch` (other recipes) wherever he already is; this pass does not relocate him beside the panel.
 - Layout is a **centered vertical stack** (not a left-leading HStack): title → one hint → ring → compact action row. No unused right gutter; the card width tracks content weight. Do not add a second coaching line under the ring.
 - Actions match the invite control family: soft square corners (radius 8), compact sage primary + quiet text — not a full-bleed primary bar.
-- Frozen visual target: [`docs/reference/joeypet-recovery-panel-v0.html`](docs/reference/joeypet-recovery-panel-v0.html).
-- Copy:
+- Frozen visual target: [`docs/reference/joeypet-recovery-panel-v0.html`](docs/reference/joeypet-recovery-panel-v0.html) (layout only; copy/duration follow the active recipe).
+- Copy and ring length come from the session recipe, for example:
 
 ```text
             望向远处
-     找个六米外的点，肩膀放松
+     找个远处的点，眼睛放松
 
               (ring)
              00:30
@@ -489,7 +491,8 @@ Rules:
            [好了]  [先跳过]
 ```
 
-- Progress is honest: a real 30 s countdown drives the ring. No confetti, no score, no "achievement".
+- Catalog (session accept index 0-based): `lookFar` 30s → `standBlink` 45s → `walkStretch` 120s → `hydrate` 25s, then rotate; every third accept forces `walkStretch`; never repeat the previous recipe id. Duration hard floor/ceiling 20…180 s.
+- Progress is honest: a real countdown for that recipe drives the ring. No confetti, no score, no "achievement". Not medical advice.
 - Completing it increments today's break count and lifetime growth, returns Joey to `happy` for ~2.6 s; the plant label and nest pot stage update — no completion toast.
 - Skipping exits silently. The product never claims a break was detected.
 
@@ -849,5 +852,6 @@ Git history and the archive branch explain why they were replaced.
 | 2026-11-25 | Copy pass: nest session clock lines; empty-week headline; settings「陪伴」; toast length exception; invite helper is tone-only (not on card); HTML reference synced. |
 | 2026-11-25 | Copy restraint pass: drop product-prefix settings title, pane blurb, redundant subtitles, ring/recovery fluff, snooze/DND toasts; shorten completion toast and nest clock lines. |
 | 2026-11-27 | Nest + garden growth slowed with hard ceilings (nest lifetime 0/1/5/15; garden day 0/1/3/5; tree ≤1.18×); label still today's count; no leaves. |
+| 2026-11-27 | Recovery recipes rotate per session accept (lookFar / standBlink / walkStretch / hydrate) with dynamic duration; invite+panel share one recipe. |
 | 2026-11-25 | §11.1 Copy restraint hard rules (delete-first, no context echo, state beats toast, native short words); checklist + anti-patterns updated. |
 | 2026-11-25 | Copy restraint round 2: drop desk daypart welcome, painted frame「回顾」, home floating title, recovery breath line, lyric clock fallback; period-free reflection / greeting. |

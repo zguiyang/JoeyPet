@@ -114,7 +114,7 @@ AmbientEvent                       叠加在姿态上的小循环/瞬态
 | `idle` | `look` | 会话进行中，未到邀请窗口 | 到点进入 `approach` |
 | `approach` | `look` | 距邀请还有 5 分钟 | 到点进入 `invite` |
 | `invite` | `look` | 邀请到点；文案与操作在浮动邀请卡上 | 接受→`recover`；稍后→`snoozed`；进入勿扰→`doNotDisturb`；关闭→`idle` |
-| `recover` | `stretch` | 用户接受邀请 | 30 秒结束或“先跳过” |
+| `recover` | recipe pose (`look` / `stretch`) | 用户接受邀请 | recipe 时长结束或“先跳过” |
 | `complete` | `happy` | 恢复完成 | 2.6 秒后回当前桌面姿态 |
 
 ### 4.3 PetPose（12）
@@ -345,6 +345,8 @@ nextDue  = lastInvitationClosedAt + effectiveGap
 - 会话在 App 退出时结束；`sessionStartedAt`、`snoozeUsedThisSession`、`inviteShownAt` 只存在内存。
 - 勿扰、安静、上次邀请关闭时间、每日统计跨启动保留。
 - 完成一次休息：`todayBreaks +1`、`weekBreakCounts` 当日 +1、`lifetimeBreaks +1`。
+- 短恢复处方：`RecoveryRecipeCatalog.pick(sessionAcceptedIndex)`；邀请与恢复共用 `activeRecipeID`；`recoveryEndsAt = now + recipe.duration`（20…180s）。
+- 会话内轮询：lookFar → standBlink → walkStretch → hydrate；第 0 次 lookFar；`index % 3 == 2` 强制 walkStretch；禁止与 `lastRecipeID` 相同。
 - 小窝盆栽档位（lifetime）：0 seed / ≥1 sprout / ≥5 young / ≥15 full（`NestPlantStage`）；节奏回顾每日列：0 seed / ≥1 sprout / ≥3 young / ≥5 full（`GardenDayPlantStage`）。
 - **视觉硬顶：** 计数可继续加，绘制停在 `.full`。小窝满株＝成长前盆栽占位；回顾满株＝基树 ×≤1.18（夹在 128 pt 日列内），禁止用原始次数做连续缩放。
 - 跳过/关闭：不扣次数、不惩罚。
@@ -597,3 +599,4 @@ P1 与 P2 可并行；P3 必须等两者完成。每个 PR 保持可构建、可
 | 2026-11-25 | 移除窝内叶子堆积与 `carry` / 叼叶子；休息完成后仅 `happy` + 计数，无叶子 toast。 |
 | 2026-11-26 | 忘关收场：进入安静结束会话；安静内可开始并仍邀请；可见邀请 5 分钟软关闭；恢复放弃/冻结过期不计数；6 小时或长离开归来无声结束。 |
 | 2026-11-27 | 轻成长：lifetime 盆栽 + 回顾日列放慢台阶并硬顶（nest 15 / garden day 5；树 ≤1.18×）。 |
+| 2026-11-27 | 短恢复处方轮询：会话接受序驱动种类与时长；邀请/面板同 id。 |
