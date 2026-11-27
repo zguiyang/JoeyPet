@@ -168,6 +168,7 @@ struct JoeyPetTests {
         let settings = AppSettings(defaults: testDefaults.defaults)
         #expect(settings.ambientSoundID == JoeyAudioCatalog.noneID)
         #expect(settings.cueSoundID == AppSettings.defaultCueSoundID)
+        #expect(settings.usesFullscreenRestInvite == false)
 
         var notified: (String, String)?
         settings.onSoundSelectionChanged = { ambient, cue in
@@ -175,12 +176,14 @@ struct JoeyPetTests {
         }
         settings.ambientSoundID = "rain_soft_lynks"
         settings.cueSoundID = JoeyAudioCatalog.noneID
+        settings.usesFullscreenRestInvite = true
         #expect(notified?.0 == "rain_soft_lynks")
         #expect(notified?.1 == JoeyAudioCatalog.noneID)
 
         let reloaded = AppSettings(defaults: testDefaults.defaults)
         #expect(reloaded.ambientSoundID == "rain_soft_lynks")
         #expect(reloaded.cueSoundID == JoeyAudioCatalog.noneID)
+        #expect(reloaded.usesFullscreenRestInvite)
     }
 
     @Test func audioMutePolicySilencesOnDoNotDisturbOrQuiet() {
@@ -1499,8 +1502,21 @@ struct PetDomainTests {
             now: due
         )
         #expect(invitePresentation.showsInvitation)
+        #expect(invitePresentation.showsCardInvitation)
+        #expect(!invitePresentation.showsFullscreenInvite)
         #expect(!invitePresentation.showsRecovery)
         #expect(invitePresentation.recipe?.id == .lookFar)
+
+        let fullscreenInvite = SessionSurfacePresentation(
+            situation: invited,
+            previous: started,
+            now: due,
+            preferFullscreenRest: true
+        )
+        #expect(fullscreenInvite.showsInvitation)
+        #expect(!fullscreenInvite.showsCardInvitation)
+        #expect(fullscreenInvite.showsFullscreenInvite)
+        #expect(fullscreenInvite.showsFullscreenStage)
 
         let recovering = PetStateMachine.reduce(
             invited,
@@ -1515,9 +1531,21 @@ struct PetDomainTests {
         )
         #expect(!recoveryPresentation.showsInvitation)
         #expect(recoveryPresentation.showsRecovery)
+        #expect(recoveryPresentation.showsCardRecovery)
+        #expect(!recoveryPresentation.showsFullscreenRecover)
         #expect(recoveryPresentation.recipe?.id == .lookFar)
         #expect(recoveryPresentation.recoveryEndsAt == due.addingTimeInterval(30))
         #expect(!recoveryPresentation.newlyCompleted)
+
+        let fullscreenRecover = SessionSurfacePresentation(
+            situation: recovering,
+            previous: invited,
+            now: due,
+            preferFullscreenRest: true
+        )
+        #expect(!fullscreenRecover.showsCardRecovery)
+        #expect(fullscreenRecover.showsFullscreenRecover)
+        #expect(fullscreenRecover.showsFullscreenStage)
 
         let completed = PetStateMachine.reduce(
             recovering,

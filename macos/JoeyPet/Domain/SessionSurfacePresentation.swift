@@ -5,15 +5,32 @@ import Foundation
 /// owner of product state.
 struct SessionSurfacePresentation: Equatable, Sendable {
     let showsCompanionChip: Bool
+    /// Domain wants an invitation (card or fullscreen).
     let showsInvitation: Bool
+    /// Domain wants recovery (card or fullscreen).
     let showsRecovery: Bool
     let recoveryEndsAt: Date?
     /// Recipe for the open invite / recovery (same id on both surfaces).
     let recipe: RecoveryRecipe?
     /// True on the first frame where a recovery turns into the completion beat.
     let newlyCompleted: Bool
+    /// Settings opt-in: rest invite/recover use the screen-covering stage.
+    let preferFullscreenRest: Bool
 
-    init(situation: PetSituation, previous: PetSituation?, now: Date) {
+    /// Paper invite beside Joey (default path).
+    var showsCardInvitation: Bool { showsInvitation && !preferFullscreenRest }
+    /// Centered recovery card (default path).
+    var showsCardRecovery: Bool { showsRecovery && !preferFullscreenRest }
+    var showsFullscreenInvite: Bool { showsInvitation && preferFullscreenRest }
+    var showsFullscreenRecover: Bool { showsRecovery && preferFullscreenRest }
+    var showsFullscreenStage: Bool { showsFullscreenInvite || showsFullscreenRecover }
+
+    init(
+        situation: PetSituation,
+        previous: PetSituation?,
+        now: Date,
+        preferFullscreenRest: Bool = false
+    ) {
         let desktop = situation.resolvedDesktop(at: now)
         // Hidden invite reveals the panel with desktop `.companion`; keep the
         // chip so the temporary reveal still reads as an active session.
@@ -25,6 +42,7 @@ struct SessionSurfacePresentation: Equatable, Sendable {
         let showingPrompt = showsInvitation || showsRecovery
         recipe = showingPrompt ? situation.activeRecipe : nil
         newlyCompleted = situation.companion == .complete && previous?.companion != .complete
+        self.preferFullscreenRest = preferFullscreenRest
     }
 }
 

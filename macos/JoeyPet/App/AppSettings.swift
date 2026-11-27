@@ -16,6 +16,7 @@ final class AppSettings {
         static let showsDesktopPet = PetPreferences.showsDesktopPetKey
         static let ambientSound = "joey.ambientSoundID"
         static let cueSound = "joey.cueSoundID"
+        static let fullscreenRestInvite = "joey.usesFullscreenRestInvite"
     }
 
     /// Preset shortcuts shown in the rhythm combo menu.
@@ -111,6 +112,14 @@ final class AppSettings {
         }
     }
 
+    /// Opt-in rest stage: covers Joey’s screen after cue + look. Default off.
+    var usesFullscreenRestInvite: Bool {
+        didSet {
+            guard usesFullscreenRestInvite != oldValue else { return }
+            defaults.set(usesFullscreenRestInvite, forKey: Key.fullscreenRestInvite)
+        }
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
 
@@ -130,6 +139,8 @@ final class AppSettings {
         self.ambientSoundID = defaults.string(forKey: Key.ambientSound)
             ?? JoeyAudioCatalog.noneID
         self.cueSoundID = defaults.string(forKey: Key.cueSound) ?? Self.defaultCueSoundID
+        self.usesFullscreenRestInvite =
+            defaults.object(forKey: Key.fullscreenRestInvite) as? Bool ?? false
     }
 
     var quietWindow: QuietWindow {
